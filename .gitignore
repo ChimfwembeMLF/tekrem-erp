@@ -27,8 +27,8 @@ yarn-debug.log*
 yarn-error.log*
 
 # Ignore Laravel storage and cache
-/storage/
-/bootstrap/cache/
+# /storage/
+# /bootstrap/
 
 # Ignore test coverage
 coverage/
@@ -38,7 +38,7 @@ coverage/
 /cypress/screenshots/
 
 # Ignore database
-/database/*.sqlite
+# /database/*.sqlite
 
 # Ignore compiled assets
 /public/hot
