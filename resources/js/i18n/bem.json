@@ -1,0 +1,153 @@
+{
+  "app": {
+    "name": "TekRem ERP",
+    "tagline": "Technology Remedies Innovations"
+  },
+  "navigation": {
+    "dashboard": "Dashbodi",
+    "profile": "Imikalile",
+    "settings": "Amasettingi",
+    "logout": "Fuma",
+    "login": "Ingila",
+    "register": "Ilembya",
+    "home": "Ku Ng'anda",
+    "about": "Palwa Ifwe",
+    "services": "Imilimo",
+    "portfolio": "Incito Shesu",
+    "contact": "Tukumane",
+    "notifications": "Amashiwiko"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Amashiwi Ayankama",
+    "remember_me": "Njibukishe",
+    "forgot_password": "Nalaba amashiwi yandi ayankama?",
+    "login": "Ingila",
+    "register": "Ilembya",
+    "name": "Ishina",
+    "confirm_password": "Shininkisha Amashiwi Ayankama",
+    "already_registered": "Bushe naulembwa kale?",
+    "reset_password": "Pyanika Amashiwi Ayankama",
+    "verify_email": "Shininkisha Email",
+    "resend_verification_email": "Tumako Nakabili Email Yakushininkisha",
+    "verification_link_sent": "Ubutantiko bupya ubwakushininkisha nabututumwa ku email yobe."
+  },
+  "dashboard": {
+    "title": "Dashbodi",
+    "welcome": "Mwaiseni ku dashbodi yenu",
+    "stats": "Ifintu Fyapabufi",
+    "recent_activity": "Incito Shapamupya",
+    "quick_actions": "Incito Shakubangula"
+  },
+  "admin": {
+    "users": "Abomfwi",
+    "roles": "Imilimo",
+    "permissions": "Insambu",
+    "settings": "Amasettingi",
+    "logs": "Ifyalembwa",
+    "system": "Sistemu"
+  },
+  "crm": {
+    "title": "CRM",
+    "clients": "Abakasitoma",
+    "leads": "Abalefwaya",
+    "communications": "Ukwishibana",
+    "opportunities": "Amashuko",
+    "chats": "Ukulanshanya",
+    "chat": "LiveChat",
+    "conversation": "Ukulanshanya",
+    "analytics": "Ukusala",
+    "dashboard": "Dashbodi"
+  },
+  "finance": {
+    "title": "Amali",
+    "accounts": "Amaaccount",
+    "transactions": "Amatransaction",
+    "invoices": "Amainvoice",
+    "payments": "Ukulipila",
+    "quotations": "Amaquotation",
+    "expenses": "Inkongole",
+    "budgets": "Amabudget",
+    "categories": "Amacategory",
+    "reports": "Amalipoti",
+    "income_statement": "Ilyashi lya Income",
+    "cash_flow": "Ukuya kwa Mali",
+    "balance_sheet": "Balance Sheet",
+    "expense_report": "Ilipoti lya Inkongole",
+    "total_balance": "Balance Yonse",
+    "monthly_income": "Income ya Mweshi",
+    "monthly_expenses": "Inkongole sha Mweshi",
+    "net_income": "Net Income",
+    "pending_invoices": "Amainvoice Ayalindila",
+    "overdue_invoices": "Amainvoice Ayacila"
+  },
+  "hr": {
+    "title": "HR",
+    "employees": "Ababomfi",
+    "leave": "Ukuya",
+    "attendance": "Ukwisa",
+    "performance": "Incito"
+  },
+  "projects": {
+    "title": "Imipango",
+    "projects": "Imipango",
+    "tasks": "Incito",
+    "timelines": "Inshita",
+    "resources": "Ifipe"
+  },
+  "support": {
+    "title": "Ukufwila",
+    "tickets": "Amaticket",
+    "knowledge_base": "Ukwishiba",
+    "faq": "Amepusho Ayatuntulu"
+  },
+  "analytics": {
+    "title": "Ukusala",
+    "reports": "Amalipoti",
+    "kpi": "KPIs",
+    "charts": "Ifilangililo",
+    "data": "Ifintu"
+  },
+  "settings": {
+    "general": "Fyonse",
+    "users": "Abomfwi",
+    "advanced": "Fyakusuma"
+  },
+  "common": {
+    "create": "Panga",
+    "edit": "Cinja",
+    "delete": "Futa",
+    "view": "Mona",
+    "save": "Sunga",
+    "cancel": "Leka",
+    "back": "Bwela",
+    "next": "Konkako",
+    "previous": "Kubwelelako",
+    "search": "Fwaya",
+    "filter": "Salanganya",
+    "sort": "Bika",
+    "actions": "Incito",
+    "status": "Imibele",
+    "date": "Ubushiku",
+    "time": "Inshita",
+    "description": "Ukulondolola",
+    "details": "Ifintu Fyonse",
+    "name": "Ishina",
+    "email": "Email",
+    "phone": "Lamya",
+    "address": "Keyala",
+    "city": "Umusumba",
+    "country": "Icalo",
+    "zip": "Inambala ya Poso",
+    "submit": "Tuma",
+    "reset": "Bwekeshapo",
+    "loading": "Ileleta...",
+    "no_results": "Tapali ifisangwa",
+    "success": "Nacicitika",
+    "error": "Icilubo",
+    "warning": "Icenjelo",
+    "info": "Ilyashi",
+    "language": "Ululimi",
+    "reports": "Amalipoti"
+  }
+}
