@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 // Public Website Routes
-Route::get('/',[WebsiteController::class, 'index'])->name('home');
+Route::get('/tekrem-erp',[WebsiteController::class, 'index'])->name('home');
 
 Route::get('/about', [WebsiteController::class, 'about'])->name('about');
 
