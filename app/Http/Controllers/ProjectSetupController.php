@@ -104,7 +104,6 @@ class ProjectSetupController extends Controller
             'enable_time_tracking' => 'boolean',
             'enable_manual_time_entry' => 'boolean',
             'enable_timer_tracking' => 'boolean',
-            'enable_time_approval' => 'boolean',
             'minimum_time_increment' => 'required|integer|min:1|max:60',
             'enable_billable_hours' => 'boolean',
             'default_hourly_rate' => 'nullable|numeric|min:0',
@@ -135,8 +134,6 @@ class ProjectSetupController extends Controller
         $validated = $request->validate([
             'enable_milestones' => 'boolean',
             'enable_milestone_dependencies' => 'boolean',
-            'enable_milestone_budgets' => 'boolean',
-            'enable_milestone_approval' => 'boolean',
             'auto_create_milestones' => 'boolean',
             'milestone_notification_days' => 'nullable|integer|min:1|max:90',
             'enable_milestone_reports' => 'boolean',
@@ -265,7 +262,6 @@ class ProjectSetupController extends Controller
             'enable_time_tracking' => Setting::get('projects.time_tracking.enable_time_tracking', true),
             'enable_manual_time_entry' => Setting::get('projects.time_tracking.enable_manual_time_entry', true),
             'enable_timer_tracking' => Setting::get('projects.time_tracking.enable_timer_tracking', true),
-            'enable_time_approval' => Setting::get('projects.time_tracking.enable_time_approval', false),
             'minimum_time_increment' => Setting::get('projects.time_tracking.minimum_time_increment', 15),
             'enable_billable_hours' => Setting::get('projects.time_tracking.enable_billable_hours', true),
             'default_hourly_rate' => Setting::get('projects.time_tracking.default_hourly_rate', 50),
@@ -283,8 +279,6 @@ class ProjectSetupController extends Controller
         return [
             'enable_milestones' => Setting::get('projects.milestones.enable_milestones', true),
             'enable_milestone_dependencies' => Setting::get('projects.milestones.enable_milestone_dependencies', true),
-            'enable_milestone_budgets' => Setting::get('projects.milestones.enable_milestone_budgets', true),
-            'enable_milestone_approval' => Setting::get('projects.milestones.enable_milestone_approval', false),
             'auto_create_milestones' => Setting::get('projects.milestones.auto_create_milestones', false),
             'milestone_notification_days' => Setting::get('projects.milestones.milestone_notification_days', 7),
             'enable_milestone_reports' => Setting::get('projects.milestones.enable_milestone_reports', true),

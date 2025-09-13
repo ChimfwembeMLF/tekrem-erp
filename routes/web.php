@@ -242,8 +242,36 @@ Route::middleware([
         Route::put('/{project}', [\App\Http\Controllers\ProjectController::class, 'update'])->name('update');
         Route::delete('/{project}', [\App\Http\Controllers\ProjectController::class, 'destroy'])->name('destroy');
 
+        // Agile Board route
+        Route::get('/agile-board',[\App\Http\Controllers\AgileBoardController::class, 'agileBoard'])->name('agile-board');
+   
+        // Sprints CRUD
+        Route::get('/sprints', [\App\Http\Controllers\SprintController::class, 'index'])->name('sprints.index');
+        Route::get('/sprints/{sprint}', [\App\Http\Controllers\SprintController::class, 'show'])->name('sprints.show');
+        Route::post('/sprints', [\App\Http\Controllers\SprintController::class, 'store'])->name('sprints.store');
+        Route::put('/sprints/{sprint}', [\App\Http\Controllers\SprintController::class, 'update'])->name('sprints.update');
+        Route::patch('/sprints/{sprint}', [\App\Http\Controllers\SprintController::class, 'update']);
+        Route::delete('/sprints/{sprint}', [\App\Http\Controllers\SprintController::class, 'destroy'])->name('sprints.destroy');
+
+        // User Stories CRUD
+        Route::get('/user-stories', [\App\Http\Controllers\UserStoryController::class, 'index'])->name('user-stories.index');
+       Route::get('/user-stories/{userStory}', [\App\Http\Controllers\UserStoryController::class, 'show'])->name('user-stories.show');
+        Route::post('/user-stories', [\App\Http\Controllers\UserStoryController::class, 'store'])->name('user-stories.store');
+        Route::put('/user-stories/{userStory}', [\App\Http\Controllers\UserStoryController::class, 'update'])->name('user-stories.update');
+        Route::patch('/user-stories/{userStory}', [\App\Http\Controllers\UserStoryController::class, 'update']);
+        Route::delete('/user-stories/{userStory}', [\App\Http\Controllers\UserStoryController::class, 'destroy'])->name('user-stories.destroy');
+
+        // Epics CRUD
+         Route::get('/epics', [\App\Http\Controllers\EpicController::class, 'index'])->name('epics.index');
+       Route::get('/epics/{epic}', [\App\Http\Controllers\EpicController::class, 'show'])->name('epics.show');
+        Route::post('/epics', [\App\Http\Controllers\EpicController::class, 'store'])->name('epics.store');
+        Route::put('/epics/{epic}', [\App\Http\Controllers\EpicController::class, 'update'])->name('epics.update');
+        Route::patch('/epics/{epic}', [\App\Http\Controllers\EpicController::class, 'update']);
+        Route::delete('/epics/{epic}', [\App\Http\Controllers\EpicController::class, 'destroy'])->name('epics.destroy');
         // Kanban Board
         Route::get('/{project}/kanban', [\App\Http\Controllers\ProjectController::class, 'kanban'])->name('kanban');
+       
+
 
         // Milestones
         Route::prefix('{project}/milestones')->name('milestones.')->group(function () {

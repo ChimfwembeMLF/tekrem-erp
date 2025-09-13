@@ -249,48 +249,7 @@ class ProjectSeeder extends Seeder
      */
     private function createMilestonesForProject(Project $project, $users): void
     {
-        $milestoneTemplates = [
-            [
-                'name' => 'Project Kickoff',
-                'description' => 'Initial project setup and team alignment',
-                'priority' => 'high',
-                'progress' => $project->status === 'completed' ? 100 : ($project->progress > 0 ? 100 : 0),
-                'status' => $project->status === 'completed' ? 'completed' : ($project->progress > 0 ? 'completed' : 'pending'),
-                'order' => 1,
-            ],
-            [
-                'name' => 'Requirements Analysis',
-                'description' => 'Detailed analysis of project requirements',
-                'priority' => 'high',
-                'progress' => $project->status === 'completed' ? 100 : ($project->progress > 20 ? 100 : ($project->progress > 0 ? 50 : 0)),
-                'status' => $project->status === 'completed' ? 'completed' : ($project->progress > 20 ? 'completed' : ($project->progress > 0 ? 'in-progress' : 'pending')),
-                'order' => 2,
-            ],
-            [
-                'name' => 'Development Phase',
-                'description' => 'Main development work',
-                'priority' => 'critical',
-                'progress' => $project->status === 'completed' ? 100 : ($project->progress > 50 ? 80 : ($project->progress > 20 ? 30 : 0)),
-                'status' => $project->status === 'completed' ? 'completed' : ($project->progress > 50 ? 'in-progress' : ($project->progress > 20 ? 'in-progress' : 'pending')),
-                'order' => 3,
-            ],
-            [
-                'name' => 'Testing & QA',
-                'description' => 'Quality assurance and testing phase',
-                'priority' => 'high',
-                'progress' => $project->status === 'completed' ? 100 : ($project->progress > 80 ? 60 : 0),
-                'status' => $project->status === 'completed' ? 'completed' : ($project->progress > 80 ? 'in-progress' : 'pending'),
-                'order' => 4,
-            ],
-            [
-                'name' => 'Deployment',
-                'description' => 'Final deployment and launch',
-                'priority' => 'critical',
-                'progress' => $project->status === 'completed' ? 100 : 0,
-                'status' => $project->status === 'completed' ? 'completed' : 'pending',
-                'order' => 5,
-            ],
-        ];
+    $milestoneTemplates = [];
 
         foreach ($milestoneTemplates as $milestoneData) {
             $milestone = $project->milestones()->create([

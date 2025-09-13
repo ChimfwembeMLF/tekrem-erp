@@ -48,11 +48,8 @@ class CommunicationSeeder extends Seeder
         ];
 
         $meetingContents = [
-            'Kickoff meeting to introduce team members and review project scope and deliverables.',
-            'Weekly status meeting to review progress and address any blockers or concerns.',
-            'Requirements gathering session with key stakeholders to define project specifications.',
-            'Demo session to showcase completed features and gather feedback for next iteration.',
-            'Project closure meeting to review deliverables and discuss ongoing support options.'
+            // Agile meetings only: demo session for feedback
+            'Demo session to showcase completed features and gather feedback for next iteration.'
         ];
 
         $noteContents = [

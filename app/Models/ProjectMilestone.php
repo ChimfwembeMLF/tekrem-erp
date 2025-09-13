@@ -176,14 +176,8 @@ class ProjectMilestone extends Model
      */
     protected function checkProjectCompletion(): void
     {
-        $project = $this->project;
-        $allMilestonesCompleted = $project->milestones()
-            ->where('status', '!=', 'completed')
-            ->doesntExist();
-
-        if ($allMilestonesCompleted && $project->status !== 'completed') {
-            $project->update(['status' => 'completed', 'progress' => 100]);
-        }
+    // In Agile, project completion is iterative and not tied to all milestones being completed.
+    // This method is now a no-op.
     }
 
     /**

@@ -342,34 +342,28 @@ export default function Sidebar({ settings }: SidebarProps) {
       active: route().current('projects.dashboard')
     },
     {
-      href: route('projects.index'),
-      label: t('projects.projects', 'All Projects'),
-      icon: <FolderOpen className="h-5 w-5" />,
-      active: route().current('projects.index') || route().current('projects.show') || route().current('projects.edit') || route().current('projects.create')
-    },
-    {
-      href: route('projects.my-tasks'),
-      label: t('projects.my_tasks', 'My Tasks'),
-      icon: <CheckSquare className="h-5 w-5" />,
-      active: route().current('projects.my-tasks')
-    },
-    {
-      href: route('projects.tags.index'),
-      label: t('projects.tags', 'Tags'),
-      icon: <Tag className="h-5 w-5" />,
-      active: route().current('projects.tags.*')
-    },
-    {
-      href: route('projects.templates.index'),
-      label: t('projects.templates', 'Templates'),
-      icon: <Layout className="h-5 w-5" />,
-      active: route().current('projects.templates.*')
-    },
-    {
-      href: route('projects.analytics'),
-      label: t('projects.analytics', 'Analytics'),
+      href: route('projects.agile-board'),
+      label: t('projects.agile_board', 'Agile Board'),
       icon: <BarChart3 className="h-5 w-5" />,
-      active: route().current('projects.analytics.*')
+      active: route().current('projects.agile-board')
+    },
+    {
+      href: route('projects.sprints.index'),
+      label: t('projects.sprints', 'Sprints'),
+      icon: <Calendar className="h-5 w-5" />,
+      active: route().current('projects.sprints.*')
+    },
+    {
+      href: route('projects.user-stories.index'),
+      label: t('projects.user_stories', 'User Stories'),
+      icon: <FileText className="h-5 w-5" />,
+      active: route().current('projects.user-stories.*')
+    },
+    {
+      href: route('projects.epics.index'),
+      label: t('projects.epics', 'Epics'),
+      icon: <FolderOpen className="h-5 w-5" />,
+      active: route().current('projects.epics.*')
     },
   ] : [];
 

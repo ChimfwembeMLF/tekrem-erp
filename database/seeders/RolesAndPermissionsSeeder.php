@@ -112,7 +112,6 @@ class RolesAndPermissionsSeeder extends Seeder
             'create transactions',
             'edit transactions',
             'delete transactions',
-            'approve transactions',
             'view all transactions',
             'export transactions',
             'import transactions',
@@ -123,7 +122,6 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit invoices',
             'delete invoices',
             'send invoices',
-            'approve invoices',
             'view all invoices',
             'export invoices',
 
@@ -132,7 +130,6 @@ class RolesAndPermissionsSeeder extends Seeder
             'create payments',
             'edit payments',
             'delete payments',
-            'approve payments',
             'view all payments',
             'export payments',
 
@@ -142,7 +139,6 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit quotations',
             'delete quotations',
             'send quotations',
-            'approve quotations',
             'convert quotations',
             'view all quotations',
 
@@ -151,7 +147,6 @@ class RolesAndPermissionsSeeder extends Seeder
             'create expenses',
             'edit expenses',
             'delete expenses',
-            'approve expenses',
             'view all expenses',
 
             // Budgets
@@ -159,7 +154,6 @@ class RolesAndPermissionsSeeder extends Seeder
             'create budgets',
             'edit budgets',
             'delete budgets',
-            'approve budgets',
 
             // Categories
             'view categories',
@@ -187,14 +181,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'create departments',
             'edit departments',
             'delete departments',
-            'manage department hierarchy',
 
             // Leave Management
             'view leave',
             'create leave',
             'edit leave',
             'delete leave',
-            'approve leave',
             'view all leave',
             'manage leave types',
 
@@ -203,7 +195,6 @@ class RolesAndPermissionsSeeder extends Seeder
             'create performance',
             'edit performance',
             'delete performance',
-            'approve performance',
             'view all performance',
 
             // Attendance

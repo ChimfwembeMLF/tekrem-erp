@@ -3,6 +3,9 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\MomoWebhookController;
+use App\Http\Controllers\SprintController;
+use App\Http\Controllers\UserStoryController;
+use App\Http\Controllers\EpicController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -18,3 +21,6 @@ Route::prefix('momo')->name('api.momo.')->group(function () {
         Route::get('webhook/{webhook}/status', [MomoWebhookController::class, 'status'])->name('webhook.status');
     });
 });
+Route::apiResource('sprints', SprintController::class);
+Route::apiResource('user-stories', UserStoryController::class);
+Route::apiResource('epics', EpicController::class);

@@ -536,32 +536,7 @@ Ensure the JSON is valid and complete.";
     {
         $category = $projectData['category'] ?? 'general';
 
-        // Basic milestones based on project category
-        switch (strtolower($category)) {
-            case 'software':
-            case 'development':
-                return [
-                    ['name' => 'Project Planning', 'description' => 'Define requirements and create project plan', 'priority' => 'high', 'estimated_days' => 7, 'order' => 1],
-                    ['name' => 'Design & Architecture', 'description' => 'Create system design and architecture', 'priority' => 'high', 'estimated_days' => 14, 'order' => 2],
-                    ['name' => 'Development Phase 1', 'description' => 'Core functionality development', 'priority' => 'critical', 'estimated_days' => 30, 'order' => 3],
-                    ['name' => 'Testing & QA', 'description' => 'Quality assurance and testing', 'priority' => 'high', 'estimated_days' => 14, 'order' => 4],
-                    ['name' => 'Deployment', 'description' => 'Production deployment and go-live', 'priority' => 'critical', 'estimated_days' => 7, 'order' => 5],
-                ];
-            case 'marketing':
-                return [
-                    ['name' => 'Strategy Development', 'description' => 'Develop marketing strategy and goals', 'priority' => 'high', 'estimated_days' => 10, 'order' => 1],
-                    ['name' => 'Content Creation', 'description' => 'Create marketing materials and content', 'priority' => 'medium', 'estimated_days' => 21, 'order' => 2],
-                    ['name' => 'Campaign Launch', 'description' => 'Launch marketing campaigns', 'priority' => 'critical', 'estimated_days' => 7, 'order' => 3],
-                    ['name' => 'Performance Analysis', 'description' => 'Analyze campaign performance and optimize', 'priority' => 'medium', 'estimated_days' => 14, 'order' => 4],
-                ];
-            default:
-                return [
-                    ['name' => 'Project Initiation', 'description' => 'Project kickoff and planning', 'priority' => 'high', 'estimated_days' => 7, 'order' => 1],
-                    ['name' => 'Execution Phase 1', 'description' => 'First phase of project execution', 'priority' => 'medium', 'estimated_days' => 21, 'order' => 2],
-                    ['name' => 'Review & Adjustment', 'description' => 'Mid-project review and adjustments', 'priority' => 'medium', 'estimated_days' => 7, 'order' => 3],
-                    ['name' => 'Final Delivery', 'description' => 'Project completion and delivery', 'priority' => 'critical', 'estimated_days' => 14, 'order' => 4],
-                ];
-        }
+    return [];
     }
 
     /**

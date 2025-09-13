@@ -1,3 +1,71 @@
+export type StoryStatus = 'backlog' | 'in-progress' | 'done' | 'review' | 'retrospective';
+
+export interface UserStory {
+  id: number;
+  title: string;
+  description?: string;
+  story_points: number;
+  status: StoryStatus;
+  sprint_id?: number;
+  epic_id?: number;
+  project_id: number;
+}
+
+export interface Sprint {
+  id: number;
+  name: string;
+  start_date: string;
+  end_date: string;
+  goal?: string;
+  project_id: number;
+  user_stories?: UserStory[];
+  review_notes?: string;
+  retrospective_notes?: string;
+}
+
+export interface Epic {
+  id: number;
+  title: string;
+  description?: string;
+  project_id: number;
+  user_stories?: UserStory[];
+}
+
+export interface AgileBoardProps {
+  sprints: Sprint[];
+  epics: Epic[];
+  userStories: UserStory[];
+}
+export interface UserStory {
+  id: number;
+  title: string;
+  description?: string;
+  story_points: number;
+  status: 'backlog' | 'in-progress' | 'done' | 'review' | 'retrospective';
+  sprint_id?: number;
+  epic_id?: number;
+  project_id: number;
+}
+
+export interface Sprint {
+  id: number;
+  name: string;
+  start_date: string;
+  end_date: string;
+  goal?: string;
+  project_id: number;
+  user_stories?: UserStory[];
+  review_notes?: string;
+  retrospective_notes?: string;
+}
+
+export interface Epic {
+  id: number;
+  title: string;
+  description?: string;
+  project_id: number;
+  user_stories?: UserStory[];
+}
 type DateTime = string;
 
 export interface User {
