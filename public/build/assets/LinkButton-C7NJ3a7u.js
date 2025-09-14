@@ -1,0 +1,1 @@
+import{j as n,x as o}from"./app-BMIA6nir.js";import{a as s}from"./createLucideIcon-Cg8jdX0w.js";function a({children:t,href:e,className:r}){return n.jsx(o,{href:e,className:s("inline-flex text-sm text-muted-foreground hover:text-primary underline underline-offset-4 transition-colors",r),children:t})}export{a as L};
