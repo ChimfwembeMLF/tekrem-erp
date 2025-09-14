@@ -41,7 +41,7 @@ export default function GuestLayout({
 
         {/* Header */}
         {showHeader && (
-          <header className="sticky top-0 z-40 w-full bg-secondary backdrop-blur supports-[backdrop-filter]:bg-primary/60">
+          <header className="sticky top-0 z-40 w-full bg-secondary backdrop-blur supports-[backdrop-filter]:bg-secondary/60">
             <div className="border-b border-primary flex justify-between px-6 p-4">
                 <div className="flex gap-4">
                 <Link className="hover:scale-110 transition-transform border-l border-primary/30 pl-4 first:border-none first:pl-0" href="#">
@@ -119,7 +119,7 @@ export default function GuestLayout({
         <main>{children}</main>
 
         {/* Footer */}
-        <footer className="border-t bg-background">
+        <footer className="border-t bg-secondary">
           <div className="container mx-auto py-12">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
               <div>

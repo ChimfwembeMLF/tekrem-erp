@@ -28,13 +28,13 @@ const TeamCard: React.FC<TeamCardProps> = ({
   image,
   socials,
 }) => (
-  <div className="bg-white dark:bg-gray-700 rounded-lg shadow-lg p-6 max-w-sm transition hover:shadow-xl hover:-translate-y-1 duration-200">
+  <div className="bg-white dark:bg-primary/40 rounded-lg shadow-lg p-6 max-w-sm transition hover:shadow-xl hover:-translate-y-1 duration-200">
     <div className="flex flex-col items-center">
       {image ? (
         <img
           src={image}
           alt={name}
-          className="h-20 w-20 rounded-full object-cover mb-4 border-2 border-gray-200 dark:border-gray-600"
+          className="h-32 w-32 rounded-lg object-cover mb-4 border-2 border-secondary dark:border-secondary/60"
         />
       ) : (
         <div

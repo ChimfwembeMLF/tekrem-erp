@@ -15,103 +15,103 @@ interface Props {
 export default function Home({ canLogin, canRegister }: Props) {
   const route = useRoute();
   const page = useTypedPage();
-  const settings : any = page.props.settings || {};
+  const settings: any = page.props.settings || {};
 
   const orgData = [
-  {
-    name: "Chimfwembe Kangwa",
-    initials: "CK",
-    role: "CTO / Developer",
-    bio: "Passionate about scalable systems and modern development practices.",
-    color: "from-teal-500 to-cyan-600",
-    image: "https://via.placeholder.com/100",
-    socials: [
-      { platform: "linkedin", url: "#" },
-      { platform: "github", url: "#" },
-    ],
-  },
-  {
-    name: "Joseph Banda",
-    initials: "JB",
-    role: "Operations Manager / Developer",
-    bio: "Focused on process optimization and reliable software delivery.",
-    color: "from-emerald-500 to-green-600",
-    image: "https://via.placeholder.com/100",
-    socials: [
-      { platform: "linkedin", url: "#" },
-      { platform: "twitter", url: "#" },
-    ],
-  },
-  {
-    name: "Fackson Kangwa",
-    initials: "FK",
-    role: "UI/UX Designer / Developer",
-    bio: "Designing intuitive user experiences and modern interfaces.",
-    color: "from-indigo-500 to-violet-600",
-    image: "https://via.placeholder.com/100",
-    socials: [
-      { platform: "linkedin", url: "#" },
-      { platform: "facebook", url: "#" },
-    ],
-  },
-  {
-    name: "Joel Chabana",
-    initials: "JC",
-    role: "Marketing Manager / Finance",
-    bio: "Blending finance knowledge with creative marketing strategies.",
-    color: "from-pink-500 to-rose-600",
-    image: "https://via.placeholder.com/100",
-    socials: [
-      { platform: "linkedin", url: "#" },
-      { platform: "twitter", url: "#" },
-    ],
-  },
-  {
-    name: "Joseph Banda",
-    initials: "JB",
-    role: "Sales Representative / Finance",
-    bio: "Driving growth through client relationships and financial insight.",
-    color: "from-yellow-500 to-orange-600",
-    image: "https://via.placeholder.com/100",
-    socials: [
-      { platform: "linkedin", url: "#" },
-      { platform: "facebook", url: "#" },
-    ],
-  },
-  {
-    name: "Temwani Tembo",
-    initials: "TT",
-    role: "Project Manager",
-    bio: "Ensuring projects are delivered on time with high quality.",
-    color: "from-fuchsia-500 to-purple-600",
-    image: "https://via.placeholder.com/100",
-    socials: [
-      { platform: "linkedin", url: "#" },
-      { platform: "twitter", url: "#" },
-    ],
-  },
-  {
-    name: "Savior Footprints",
-    initials: "SF",
-    role: "Creative / Graphic Designer",
-    bio: "Crafting unique visuals and brand identities that stand out.",
-    color: "from-sky-500 to-blue-600",
-    image: "https://via.placeholder.com/100",
-    socials: [
-      { platform: "linkedin", url: "#" },
-      { platform: "instagram", url: "#" }, // you can add this if you extend icons
-    ],
-  },
-];
+    {
+      name: "Chimfwembe Kangwa",
+      initials: "CK",
+      role: "CTO / Developer",
+      bio: "Passionate about scalable systems and modern development practices.",
+      color: "from-teal-500 to-cyan-600",
+      image: "https://via.placeholder.com/100",
+      socials: [
+        { platform: "linkedin", url: "#" },
+        { platform: "github", url: "#" },
+      ],
+    },
+    {
+      name: "Joseph Banda",
+      initials: "JB",
+      role: "Operations Manager / Developer",
+      bio: "Focused on process optimization and reliable software delivery.",
+      color: "from-emerald-500 to-green-600",
+      image: "https://via.placeholder.com/100",
+      socials: [
+        { platform: "linkedin", url: "#" },
+        { platform: "twitter", url: "#" },
+      ],
+    },
+    {
+      name: "Fackson Kangwa",
+      initials: "FK",
+      role: "UI/UX Designer / Developer",
+      bio: "Designing intuitive user experiences and modern interfaces.",
+      color: "from-indigo-500 to-violet-600",
+      image: "https://via.placeholder.com/100",
+      socials: [
+        { platform: "linkedin", url: "#" },
+        { platform: "facebook", url: "#" },
+      ],
+    },
+    {
+      name: "Joel Chabana",
+      initials: "JC",
+      role: "Marketing Manager / Finance",
+      bio: "Blending finance knowledge with creative marketing strategies.",
+      color: "from-pink-500 to-rose-600",
+      image: "https://via.placeholder.com/100",
+      socials: [
+        { platform: "linkedin", url: "#" },
+        { platform: "twitter", url: "#" },
+      ],
+    },
+    {
+      name: "Joseph Banda",
+      initials: "JB",
+      role: "Sales Representative / Finance",
+      bio: "Driving growth through client relationships and financial insight.",
+      color: "from-yellow-500 to-orange-600",
+      image: "https://via.placeholder.com/100",
+      socials: [
+        { platform: "linkedin", url: "#" },
+        { platform: "facebook", url: "#" },
+      ],
+    },
+    {
+      name: "Temwani Tembo",
+      initials: "TT",
+      role: "Project Manager",
+      bio: "Ensuring projects are delivered on time with high quality.",
+      color: "from-fuchsia-500 to-purple-600",
+      image: "https://via.placeholder.com/100",
+      socials: [
+        { platform: "linkedin", url: "#" },
+        { platform: "twitter", url: "#" },
+      ],
+    },
+    {
+      name: "Savior Footprints",
+      initials: "SF",
+      role: "Creative / Graphic Designer",
+      bio: "Crafting unique visuals and brand identities that stand out.",
+      color: "from-sky-500 to-blue-600",
+      image: "https://via.placeholder.com/100",
+      socials: [
+        { platform: "linkedin", url: "#" },
+        { platform: "instagram", url: "#" }, // you can add this if you extend icons
+      ],
+    },
+  ];
 
   return (
     <GuestLayout title="Home">
       <Head title="Home" />
 
       {/* Hero Section */}
-      <div className="relative bg-white dark:bg-gray-900">
+      <div className="relative bg-white dark:bg-secondary">
         <div className="max-w-7xl mx-auto">
-          <div className="relative z-10 pb-8 bg-white dark:bg-gray-900 sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
+          <div className="relative z-10 pb-8 bg-white dark:bg-secondary sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
             <svg
               className="hidden lg:block absolute right-0 inset-y-0 h-full w-48 text-white dark:text-gray-900 transform translate-x-1/2"
               fill="currentColor"
@@ -137,7 +137,7 @@ export default function Home({ canLogin, canRegister }: Props) {
                   <div className="rounded-md shadow">
                     <Link
                       href={route('services')}
-                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 md:py-4 md:text-lg md:px-10"
+                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-primary/80 transition-all duration-300 md:py-4 md:text-lg md:px-10"
                     >
                       Our Services
                     </Link>
@@ -165,7 +165,7 @@ export default function Home({ canLogin, canRegister }: Props) {
       </div>
 
       {/* Statistics Section */}
-      <div className="bg-blue-50 dark:bg-gray-800 py-16">
+      <div className="bg-blue-50 dark:bg-secondary py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase">Our Impact</h2>
@@ -195,7 +195,7 @@ export default function Home({ canLogin, canRegister }: Props) {
       </div>
 
       {/* Features Section */}
-      <div className="py-12 bg-gray-50 dark:bg-gray-800">
+      <div className="py-12 bg-gray-50 dark:bg-secondary/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:text-center">
             <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase">Features</h2>
@@ -274,10 +274,10 @@ export default function Home({ canLogin, canRegister }: Props) {
       </div>
 
       {/* Why Choose Us Section */}
-      <div className="bg-white dark:bg-gray-900 py-16">
+      <div className="bg-white dark:bg-secondary py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:text-center">
-            <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase">Why Choose Us</h2>
+            <h2 className="text-base text-primary font-semibold tracking-wide uppercase">Why Choose Us</h2>
             <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
               Your Trusted Technology Partner
             </p>
@@ -328,27 +328,27 @@ export default function Home({ canLogin, canRegister }: Props) {
         </div>
       </div>
 
-{/* Organisation Chart */}
-<section>
-<div className="bg-gray-50 dark:bg-gray-800 py-16">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div className="lg:text-center mb-12">
-      <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase">Our Team</h2>
-      <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-        Meet Our Leadership
-      </p>
-      <p className="mt-4 max-w-2xl text-xl text-gray-500 dark:text-gray-400 lg:mx-auto">
-        Our experienced team of technology professionals is dedicated to delivering exceptional results.
-      </p>
-    </div>
+      {/* Organisation Chart */}
+      <section>
+        <div className="bg-gray-50 dark:bg-secondary/80 py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="lg:text-center mb-12">
+              <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase">Our Team</h2>
+              <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+                Meet Our Leadership
+              </p>
+              <p className="mt-4 max-w-2xl text-xl text-gray-500 dark:text-gray-400 lg:mx-auto">
+                Our experienced team of technology professionals is dedicated to delivering exceptional results.
+              </p>
+            </div>
 
-    <OrgChart data={orgData} />
-  </div>
-</div>
+            <OrgChart data={orgData} />
+          </div>
+        </div>
 
-</section>
+      </section>
       {/* Enhanced Testimonials Section */}
-      <div className="bg-white dark:bg-gray-900 py-16 sm:py-24">
+      <div className="bg-white dark:bg-secondary py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:text-center mb-12">
             <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase">Testimonials</h2>
@@ -374,7 +374,7 @@ export default function Home({ canLogin, canRegister }: Props) {
                     <div className="flex mt-1">
                       {[...Array(5)].map((_, i) => (
                         <svg key={i} className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                          <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
+                          <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
                         </svg>
                       ))}
                     </div>
@@ -400,7 +400,7 @@ export default function Home({ canLogin, canRegister }: Props) {
                     <div className="flex mt-1">
                       {[...Array(5)].map((_, i) => (
                         <svg key={i} className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                          <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
+                          <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
                         </svg>
                       ))}
                     </div>
@@ -426,7 +426,7 @@ export default function Home({ canLogin, canRegister }: Props) {
                     <div className="flex mt-1">
                       {[...Array(5)].map((_, i) => (
                         <svg key={i} className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                          <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
+                          <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
                         </svg>
                       ))}
                     </div>
@@ -444,15 +444,15 @@ export default function Home({ canLogin, canRegister }: Props) {
         </div>
       </div>
 
-    {/* Enhanced Partners Section with Infinite Carousel */}
-<div className="bg-gray-50 dark:bg-gray-800 py-16 overflow-hidden">
-<PartnerSection />
+      {/* Enhanced Partners Section with Infinite Carousel */}
+      <div className="bg-gray-50 dark:bg-secondary/80 py-16 overflow-hidden">
+        <PartnerSection />
 
-</div>
+      </div>
 
 
       {/* CTA Section */}
-      <div className="bg-blue-600">
+      <div className="bg-secondary/80">
         <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between">
           <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
             <span className="block">Ready to get started?</span>
@@ -472,7 +472,7 @@ export default function Home({ canLogin, canRegister }: Props) {
       </div>
 
       {/* Latest News Section */}
-      <div className="bg-white dark:bg-gray-900 py-16">
+      <div className="bg-white dark:bg-secondary py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:text-center mb-12">
             <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase">Latest News</h2>
