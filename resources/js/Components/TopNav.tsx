@@ -34,7 +34,7 @@ interface TopNavProps {
 
 export default function TopNav({ settings }: TopNavProps) {
   const route = useRoute();
-  const { t } = useTranslate();
+  const { t, i18n, currentLanguage } = useTranslate();
   const page = useTypedPage();
 
   function switchToTeam(e: React.FormEvent, team: Team) {
@@ -80,15 +80,12 @@ export default function TopNav({ settings }: TopNavProps) {
             <DropdownMenuLabel>{t('common.language', 'Language')}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuRadioGroup
-              value={useTranslate().currentLanguage}
-              onValueChange={(value) => {
-                const { i18n } = useTranslate();
-                i18n.changeLanguage(value);
-              }}
+              value={currentLanguage}
+              onValueChange={(value) => i18n.changeLanguage(value)}
             >
               <DropdownMenuRadioItem value="en">
                 <div className="flex items-center">
-                  {useTranslate().currentLanguage === 'en' && (
+                  {currentLanguage === 'en' && (
                     <Check className="mr-2 h-4 w-4" />
                   )}
                   <span>English</span>
@@ -96,7 +93,7 @@ export default function TopNav({ settings }: TopNavProps) {
               </DropdownMenuRadioItem>
               <DropdownMenuRadioItem value="bem">
                 <div className="flex items-center">
-                  {useTranslate().currentLanguage === 'bem' && (
+                  {currentLanguage === 'bem' && (
                     <Check className="mr-2 h-4 w-4" />
                   )}
                   <span>Bemba</span>

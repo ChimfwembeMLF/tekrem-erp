@@ -40,24 +40,26 @@ export function ThemeProvider({
     console.log('ThemeProvider: Using default theme settings (not in Inertia context)');
   }
 
-  // Get theme from settings or localStorage or default
-  const [theme, setThemeState] = useState<Theme>(
-    () => {
-      try {
-        // First check if settings has dark_mode
-        if (settings &&
-            'dark_mode' in settings &&
-            settings.dark_mode &&
-            ['light', 'dark', 'system'].includes(settings.dark_mode)) {
-          return settings.dark_mode as Theme;
-        }
-      } catch (error) {
-        // Ignore errors when accessing settings
-      }
-
-      return getTheme() || defaultTheme;
+  // Always prefer localStorage, then settings, then default
+  const [theme, setThemeState] = useState<Theme>(() => {
+    const localTheme = getTheme();
+    if (localTheme && ["light", "dark", "system"].includes(localTheme)) {
+      return localTheme;
     }
-  );
+    try {
+      const s = settings as any;
+      if (
+        s &&
+        typeof s.dark_mode === "string" &&
+        ["light", "dark", "system"].includes(s.dark_mode)
+      ) {
+        return s.dark_mode as Theme;
+      }
+    } catch (error) {
+      // Ignore errors when accessing settings
+    }
+    return defaultTheme;
+  });
 
   // Initialize theme system
   useEffect(() => {

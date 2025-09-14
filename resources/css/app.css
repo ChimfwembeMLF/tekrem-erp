@@ -6,6 +6,30 @@
     display: none;
 }
 
+@font-face {
+  font-family: 'Gilmer Heavy';
+  src: url('/fonts/Gilmer-Heavy.woff2') format('woff2');
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: 'Gilmer Regular';
+  src: url('/fonts/Gilmer-Regular.woff2') format('woff2');
+  font-weight: 400;
+}
+
+/* Optional global font */
+body {
+  font-family: 'Gilmer Regular', sans-serif;
+}
+
+.partner-logo:hover {
+  background-color: hsl(var(--primary));
+}
+
+.partner-logo:hover span {
+  color: hsl(var(--primary-foreground));
+}
 
 
 @layer base {
@@ -16,10 +40,10 @@
         --card-foreground: 240 10% 3.9%;
         --popover: 0 0% 100%;
         --popover-foreground: 240 10% 3.9%;
-        --primary: 240 5.9% 10%;
-        --primary-foreground: 0 0% 98%;
-        --secondary: 240 4.8% 95.9%;
-        --secondary-foreground: 240 5.9% 10%;
+        --primary: 243 58% 81%; /* Mauvelous (#F394AF) in HSL approx */
+        --primary-foreground: 0 0% 100%; /* white text */
+        --secondary: 220 86% 36%; /* Egyptian Blue (#0D3AA9) in HSL approx */
+        --secondary-foreground: 0 0% 100%; /* white text */
         --muted: 240 4.8% 95.9%;
         --muted-foreground: 240 3.8% 46.1%;
         --accent: 240 4.8% 95.9%;
@@ -43,10 +67,10 @@
         --card-foreground: 0 0% 98%;
         --popover: 240 10% 3.9%;
         --popover-foreground: 0 0% 98%;
-        --primary: 0 0% 98%;
-        --primary-foreground: 240 5.9% 10%;
-        --secondary: 240 3.7% 15.9%;
-        --secondary-foreground: 0 0% 98%;
+        --primary: 243 58% 81%; 
+        --primary-foreground: 0 0% 100%;
+        --secondary: 220 86% 36%;
+        --secondary-foreground: 0 0% 100%;
         --muted: 240 3.7% 15.9%;
         --muted-foreground: 240 5% 64.9%;
         --accent: 240 3.7% 15.9%;

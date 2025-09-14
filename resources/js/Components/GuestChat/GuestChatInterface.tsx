@@ -8,7 +8,7 @@ import { Badge } from '@/Components/ui/badge';
 import { Label } from '@/Components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 
-
+// 
 interface Message {
   id: number;
   message: string;
@@ -135,7 +135,7 @@ export default function GuestChatInterface({
   // Guest Information Form
   if (showGuestForm) {
     return (
-      <div className="h-full flex flex-col">
+      <div className="min-h-[350px] mx-4 my-10 flex flex-col">
         {/* Header */}
         <div className="p-3 border-b">
           <h3 className="font-semibold text-sm mb-1">Welcome to TekRem Support</h3>

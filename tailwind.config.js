@@ -52,6 +52,10 @@ export default {
                 'collapsible-up': 'collapsible-up 0.2s ease-out',
             },
     		colors: {
+				primary: 'hsl(var(--primary))',
+               'primary-foreground': 'hsl(var(--primary-foreground))',
+			    secondary: 'hsl(var(--secondary))',
+               'secondary-foreground': 'hsl(var(--secondary-foreground))',
     			background: 'hsl(var(--background))',
     			foreground: 'hsl(var(--foreground))',
     			card: {
@@ -61,15 +65,7 @@ export default {
     			popover: {
     				DEFAULT: 'hsl(var(--popover))',
     				foreground: 'hsl(var(--popover-foreground))'
-    			},
-    			primary: {
-    				DEFAULT: 'hsl(var(--primary))',
-    				foreground: 'hsl(var(--primary-foreground))'
-    			},
-    			secondary: {
-    				DEFAULT: 'hsl(var(--secondary))',
-    				foreground: 'hsl(var(--secondary-foreground))'
-    			},
+    			},    			
     			muted: {
     				DEFAULT: 'hsl(var(--muted))',
     				foreground: 'hsl(var(--muted-foreground))'

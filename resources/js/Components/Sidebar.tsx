@@ -532,8 +532,8 @@ export default function Sidebar({ settings }: SidebarProps) {
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-2 px-4 py-3">
-        <ApplicationMark className="h-8 w-8" />
-        <span className="font-bold text-xl">{settings.site_name || 'TekRem ERP'}</span>
+        <ApplicationMark />
+        {/* <span className="font-bold text-xl">{settings.site_name || 'TekRem ERP'}</span> */}
       </div>
 
       <div className="mt-6 flex flex-col gap-1 px-2 overflow-y-auto flex-1">
