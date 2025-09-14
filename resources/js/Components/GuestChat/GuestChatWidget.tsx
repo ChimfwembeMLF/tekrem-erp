@@ -259,7 +259,7 @@ export default function GuestChatWidget() {
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
-      <Card className={`w-96 shadow-2xl rounded-t-lg transition-all duration-200 ${isMinimized ? 'h-16' : 'h-[calc(100vh-3rem)]'}`}>
+      <Card className={`w-96 shadow-2xl rounded-t-lg transition-all duration-200 ${isMinimized ? 'h-16' : 'h-[calc(100vh-16rem)]'}`}>
         <GuestChatHeader
           guestSession={guestSession}
           conversation={conversation}
