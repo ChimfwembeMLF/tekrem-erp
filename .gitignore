@@ -48,7 +48,6 @@ coverage/
 *.swp
 *.swo
 
-# # Do NOT ignore public/build, node_modules, or vendor
-# public/build
-# node_modules
-# vendor
+
+# Ignore build output
+public/build
