@@ -52,11 +52,11 @@ export default function MobileNav({ settings }: MobileNavProps) {
           <span className="sr-only">Toggle menu</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+      <SheetContent side="top" className="dark:bg-secondary/70 w-full">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
-            <ApplicationMark className="h-8 w-8" />
-            <span>{settings.site_name || 'TekRem ERP'}</span>
+            <ApplicationMark />
+            {/* <span>{settings.site_name || 'TekRem ERP'}</span> */}
           </SheetTitle>
         </SheetHeader>
 

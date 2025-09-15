@@ -4,6 +4,7 @@ import { Button } from '@/Components/ui/button';
 import { CardHeader } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
 import { Avatar, AvatarFallback } from '@/Components/ui/avatar';
+import Logo from '../../../../public/fav.svg'
 
 interface GuestSession {
   id: number;
@@ -82,12 +83,12 @@ export default function GuestChatHeader({
   };
 
   return (
-    <CardHeader className="flex flex-row items-center rounded-t-lg justify-between space-y-0 pb-2 bg-primary text-primary-foreground">
+    <CardHeader className="flex flex-row items-center rounded-t-lg justify-between space-y-0 pb-2 bg-secondary text-primary-foreground">
       <div className="flex items-center space-x-3 flex-1 min-w-0">
         {/* Company Logo/Icon */}
         <div className="flex-shrink-0">
           <div className="w-8 h-8 bg-primary-foreground/20 rounded-full flex items-center justify-center">
-            <MessageCircle className="w-4 h-4" />
+            <img src={Logo} className="w-16 h-16" />
           </div>
         </div>
 

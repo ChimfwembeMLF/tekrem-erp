@@ -33,7 +33,7 @@ export default function MainNav({ settings }: MainNavProps) {
               href={route('home')}
               className={cn(
                 navigationMenuTriggerStyle(),
-                isActive(route('home'), true) ? 'bg-accent text-accent-foreground font-medium' : ''
+                isActive(route('home'), true) ? 'bg-primary hover:bg-primary font-medium' : 'bg-transperent hover:bg-primary duration-300 ease-in transition-all hover:text-secondary'
               )}
             >
               Home
@@ -47,7 +47,7 @@ export default function MainNav({ settings }: MainNavProps) {
               href={route('about')}
               className={cn(
                 navigationMenuTriggerStyle(),
-                isActive(route('about')) ? 'bg-accent text-accent-foreground font-medium' : ''
+                isActive(route('about')) ? 'bg-primary/60 hover:bg-primary font-medium' : 'bg-transperent hover:bg-primary duration-300 ease-in transition-all hover:text-secondary'
               )}
             >
               About
@@ -58,7 +58,7 @@ export default function MainNav({ settings }: MainNavProps) {
         <NavigationMenuItem>
           <NavigationMenuTrigger
             className={cn(
-              isActive(route('services')) ? 'bg-accent text-accent-foreground font-medium' : ''
+              isActive(route('services')) ? 'bg-primary/60 hover:bg-primary font-medium' : 'bg-transperent hover:bg-primary duration-300 ease-in transition-all hover:text-secondary'
             )}
           >
             Services
@@ -99,7 +99,7 @@ export default function MainNav({ settings }: MainNavProps) {
         <NavigationMenuItem>
           <NavigationMenuTrigger
             className={cn(
-              isActive('/guest/portfolio') ? 'bg-accent text-accent-foreground font-medium' : ''
+              isActive('/guest/portfolio') ? 'bg-primary/60 hover:bg-primary font-medium' : 'bg-transperent hover:bg-primary duration-300 ease-in transition-all hover:text-secondary'
             )}
           >
             Portfolio
@@ -137,7 +137,7 @@ export default function MainNav({ settings }: MainNavProps) {
         <NavigationMenuItem>
           <NavigationMenuTrigger
             className={cn(
-              isActive('/guest/support') || isActive('/guest/inquiry') || isActive('/guest/quote') || isActive('/guest/project') ? 'bg-accent text-accent-foreground font-medium' : ''
+              isActive('/guest/support') || isActive('/guest/inquiry') || isActive('/guest/quote') || isActive('/guest/project') ? 'bg-primary/60 hover:bg-primary font-medium' : 'bg-transperent hover:bg-primary duration-300 ease-in transition-all hover:text-secondary'
             )}
           >
             Get Started
@@ -184,7 +184,7 @@ export default function MainNav({ settings }: MainNavProps) {
               href={route('contact')}
               className={cn(
                 navigationMenuTriggerStyle(),
-                isActive(route('contact')) ? 'bg-accent text-accent-foreground font-medium' : ''
+                isActive(route('contact')) ? 'bg-accent text-accent-foreground font-medium' : 'bg-transperent hover:bg-primary duration-300 ease-in transition-all hover:text-secondary'
               )}
             >
               Contact

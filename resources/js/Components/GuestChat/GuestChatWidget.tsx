@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback } from '@/Components/ui/avatar';
 import { toast } from 'sonner';
 import GuestChatHeader from './GuestChatHeader';
 import GuestChatInterface from './GuestChatInterface';
-
+import Logo from '../../../../public/fav.svg'
 interface Message {
   id: number;
   message: string;
@@ -240,13 +240,13 @@ export default function GuestChatWidget() {
   // Widget trigger button
   if (!isOpen) {
     return (
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-6 right-6 z-50 md:bottom-6 md:right-6 bottom-6 right-6 w-auto flex justify-end md:justify-end px-0 md:px-0">
         <Button
           onClick={toggleWidget}
-          className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 bg-primary hover:bg-primary/90"
+          className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 bg-primary hover:bg-primary/90 relative"
           size="icon"
         >
-          <MessageCircle className="h-6 w-6" />
+          <img className='w-32' src={Logo} />
           {unreadCount > 0 && (
             <Badge className="absolute -top-2 -right-2 h-6 w-6 flex items-center justify-center p-0 text-xs bg-red-500">
               {unreadCount > 9 ? '9+' : unreadCount}
@@ -258,8 +258,13 @@ export default function GuestChatWidget() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
-      <Card className={`w-96 shadow-2xl rounded-t-lg transition-all duration-200 ${isMinimized ? 'h-16' : 'h-[calc(100vh-16rem)]'}`}>
+    <div
+      className={`fixed inset-0 z-50 flex justify-center items-center md:bottom-6 md:right-6 md:left-auto md:inset-auto md:justify-end md:items-end px-0 md:px-0 transition-transform duration-500 ease-in-out ${isOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'} md:translate-x-0 md:opacity-100`}
+      style={{ pointerEvents: isOpen ? 'auto' : 'none' }}
+    >
+      <Card
+        className={`w-full h-full max-w-none md:w-96 md:h-[calc(100vh-4rem)] shadow-2xl rounded-none md:rounded-t-lg transition-all duration-200 ${isMinimized ? 'h-16' : ''}`}
+      >
         <GuestChatHeader
           guestSession={guestSession}
           conversation={conversation}

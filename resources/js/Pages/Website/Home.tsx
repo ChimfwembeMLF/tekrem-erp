@@ -6,7 +6,7 @@ import useRoute from '@/Hooks/useRoute';
 import useTypedPage from '@/Hooks/useTypedPage';
 import OrgChart from '@/Components/OrgChart';
 import PartnerSection from '@/Components/PartnerSection';
-
+import HeroImage from '../../../../public/hero.jpeg'
 interface Props {
   canLogin: boolean;
   canRegister: boolean;
@@ -95,7 +95,7 @@ export default function Home({ canLogin, canRegister }: Props) {
       initials: "SF",
       role: "Creative / Graphic Designer",
       bio: "Crafting unique visuals and brand identities that stand out.",
-      color: "from-sky-500 to-blue-600",
+      color: "from-sky-500 to-primary",
       image: "https://via.placeholder.com/100",
       socials: [
         { platform: "linkedin", url: "#" },
@@ -114,12 +114,12 @@ export default function Home({ canLogin, canRegister }: Props) {
           <div className="relative z-10 pb-8 bg-white dark:bg-secondary sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
             <svg
               className="hidden lg:block absolute right-0 inset-y-0 h-full w-48 text-white dark:text-gray-900 transform translate-x-1/2"
-              fill="currentColor"
+              // fill="currentColor"
               viewBox="0 0 100 100"
               preserveAspectRatio="none"
               aria-hidden="true"
             >
-              <polygon points="50,0 100,0 50,100 0,100" />
+              <polygon points="50,0 100,0 50,100 0,100" className="fill-white dark:fill-secondary" />
             </svg>
 
             <div className="relative pt-6 px-4 sm:px-6 lg:px-8"></div>
@@ -158,7 +158,7 @@ export default function Home({ canLogin, canRegister }: Props) {
         <div className="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
           <img
             className="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full"
-            src="https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2850&q=80"
+            src={HeroImage}
             alt="Team working on software development"
           />
         </div>
@@ -168,26 +168,26 @@ export default function Home({ canLogin, canRegister }: Props) {
       <div className="bg-blue-50 dark:bg-secondary py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase">Our Impact</h2>
+            <h2 className="text-base text-primary font-semibold tracking-wide uppercase">Our Impact</h2>
             <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
               Delivering Results That Matter
             </p>
           </div>
           <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
             <div className="text-center">
-              <div className="text-4xl font-extrabold text-blue-600">100+</div>
+              <div className="text-4xl font-extrabold text-primary">100+</div>
               <div className="mt-2 text-lg font-medium text-gray-700 dark:text-gray-300">Clients Served</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-extrabold text-blue-600">250+</div>
+              <div className="text-4xl font-extrabold text-primary">250+</div>
               <div className="mt-2 text-lg font-medium text-gray-700 dark:text-gray-300">Projects Completed</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-extrabold text-blue-600">10+</div>
+              <div className="text-4xl font-extrabold text-primary">10+</div>
               <div className="mt-2 text-lg font-medium text-gray-700 dark:text-gray-300">Years Experience</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-extrabold text-blue-600">98%</div>
+              <div className="text-4xl font-extrabold text-primary">98%</div>
               <div className="mt-2 text-lg font-medium text-gray-700 dark:text-gray-300">Client Satisfaction</div>
             </div>
           </div>
@@ -198,7 +198,7 @@ export default function Home({ canLogin, canRegister }: Props) {
       <div className="py-12 bg-gray-50 dark:bg-secondary/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:text-center">
-            <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase">Features</h2>
+            <h2 className="text-base text-primary font-semibold tracking-wide uppercase">Features</h2>
             <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
               A better way to build your business
             </p>
@@ -289,7 +289,7 @@ export default function Home({ canLogin, canRegister }: Props) {
           <div className="mt-16">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               <div className="flex flex-col items-center text-center">
-                <div className="flex items-center justify-center h-20 w-20 rounded-full bg-blue-100 text-blue-600 mb-4">
+                <div className="flex items-center justify-center h-20 w-20 rounded-full bg-blue-100 text-primary mb-4">
                   <svg className="h-10 w-10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                   </svg>
@@ -301,7 +301,7 @@ export default function Home({ canLogin, canRegister }: Props) {
               </div>
 
               <div className="flex flex-col items-center text-center">
-                <div className="flex items-center justify-center h-20 w-20 rounded-full bg-blue-100 text-blue-600 mb-4">
+                <div className="flex items-center justify-center h-20 w-20 rounded-full bg-blue-100 text-primary mb-4">
                   <svg className="h-10 w-10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
@@ -313,7 +313,7 @@ export default function Home({ canLogin, canRegister }: Props) {
               </div>
 
               <div className="flex flex-col items-center text-center">
-                <div className="flex items-center justify-center h-20 w-20 rounded-full bg-blue-100 text-blue-600 mb-4">
+                <div className="flex items-center justify-center h-20 w-20 rounded-full bg-blue-100 text-primary mb-4">
                   <svg className="h-10 w-10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
@@ -333,7 +333,7 @@ export default function Home({ canLogin, canRegister }: Props) {
         <div className="bg-gray-50 dark:bg-secondary/80 py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="lg:text-center mb-12">
-              <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase">Our Team</h2>
+              <h2 className="text-base text-primary font-semibold tracking-wide uppercase">Our Team</h2>
               <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
                 Meet Our Leadership
               </p>
@@ -351,7 +351,7 @@ export default function Home({ canLogin, canRegister }: Props) {
       <div className="bg-white dark:bg-secondary py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:text-center mb-12">
-            <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase">Testimonials</h2>
+            <h2 className="text-base text-primary font-semibold tracking-wide uppercase">Testimonials</h2>
             <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
               What Our Clients Say
             </p>
@@ -365,7 +365,7 @@ export default function Home({ canLogin, canRegister }: Props) {
               {/* Enhanced Testimonial 1 */}
               <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-700 rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
                 <div className="flex items-center mb-6">
-                  <div className="h-16 w-16 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
+                  <div className="h-16 w-16 rounded-full bg-gradient-to-r from-blue-500 to-primary flex items-center justify-center shadow-lg">
                     <span className="text-white font-bold text-xl">ZB</span>
                   </div>
                   <div className="ml-4">
@@ -462,7 +462,7 @@ export default function Home({ canLogin, canRegister }: Props) {
             <div className="inline-flex rounded-md shadow">
               <Link
                 href={route('contact')}
-                className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-blue-600 bg-white hover:bg-blue-50"
+                className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-primary bg-white hover:bg-blue-50"
               >
                 Get in touch
               </Link>
@@ -475,7 +475,7 @@ export default function Home({ canLogin, canRegister }: Props) {
       <div className="bg-white dark:bg-secondary py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:text-center mb-12">
-            <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase">Latest News</h2>
+            <h2 className="text-base text-primary font-semibold tracking-wide uppercase">Latest News</h2>
             <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
               Stay Updated with Our Blog
             </p>
@@ -494,14 +494,14 @@ export default function Home({ canLogin, canRegister }: Props) {
                 </div>
               </div>
               <div className="p-6">
-                <div className="text-sm text-blue-600 mb-2">June 15, 2023</div>
+                <div className="text-sm text-primary mb-2">June 15, 2023</div>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                   The Future of AI in Business Applications
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
                   Explore how artificial intelligence is transforming business operations and customer experiences.
                 </p>
-                <Link href="#" className="text-blue-600 hover:text-blue-800 font-medium">
+                <Link href="#" className="text-primary hover:text-blue-800 font-medium">
                   Read More →
                 </Link>
               </div>
@@ -516,14 +516,14 @@ export default function Home({ canLogin, canRegister }: Props) {
                 </div>
               </div>
               <div className="p-6">
-                <div className="text-sm text-blue-600 mb-2">May 28, 2023</div>
+                <div className="text-sm text-primary mb-2">May 28, 2023</div>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                   Cybersecurity Best Practices for SMEs
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
                   Essential security measures that small and medium enterprises should implement to protect their data.
                 </p>
-                <Link href="#" className="text-blue-600 hover:text-blue-800 font-medium">
+                <Link href="#" className="text-primary hover:text-blue-800 font-medium">
                   Read More →
                 </Link>
               </div>
@@ -538,14 +538,14 @@ export default function Home({ canLogin, canRegister }: Props) {
                 </div>
               </div>
               <div className="p-6">
-                <div className="text-sm text-blue-600 mb-2">April 10, 2023</div>
+                <div className="text-sm text-primary mb-2">April 10, 2023</div>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                   Digital Transformation in Zambia's Financial Sector
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
                   How local financial institutions are leveraging technology to improve services and reach more customers.
                 </p>
-                <Link href="#" className="text-blue-600 hover:text-blue-800 font-medium">
+                <Link href="#" className="text-primary hover:text-blue-800 font-medium">
                   Read More →
                 </Link>
               </div>
@@ -553,7 +553,7 @@ export default function Home({ canLogin, canRegister }: Props) {
           </div>
 
           <div className="mt-10 text-center">
-            <Link href="#" className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+            <Link href="#" className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-blue-700">
               View All Posts
             </Link>
           </div>

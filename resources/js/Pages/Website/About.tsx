@@ -15,14 +15,14 @@ import {
 
 export default function About() {
   const page = useTypedPage();
-  const settings = page.props.settings || {};
+  const settings: any = page.props.settings || {};
 
   return (
     <GuestLayout title="About Us">
       <Head title="About Us" />
 
       {/* Hero Section */}
-      <div className="relative bg-white dark:bg-gray-900 py-16 sm:py-24">
+      <div className="relative bg-white dark:bg-secondary py-16 sm:py-24">
         <div className="lg:mx-auto lg:max-w-7xl lg:px-8 lg:grid lg:grid-cols-2 lg:gap-24 lg:items-start">
           <div className="relative sm:py-16 lg:py-0">
             <div className="relative mx-auto max-w-md px-4 sm:max-w-3xl sm:px-6 lg:px-0 lg:max-w-none">
@@ -80,55 +80,55 @@ export default function About() {
       </div>
 
       {/* Mission, Vision, Values Section */}
-      <div className="bg-muted py-16 sm:py-24">
+      <div className="bg-blue-50 dark:bg-secondary/90 py-16 sm:py-24">
         <div className="container mx-auto">
           <div className="text-center">
-            <Badge variant="outline" className="mb-2 text-primary">Our Foundation</Badge>
+            <Badge variant="secondary" className="mb-2 text-white dark:bg-primary">Our Foundation</Badge>
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
               Mission, Vision & Values
             </h2>
-            <Separator className="mx-auto w-24 my-6" />
+            <Separator className="mx-auto w-48 border-2 border-primary my-6" />
           </div>
 
           <div className="mt-16">
             <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
               {/* Mission */}
-              <Card className="overflow-hidden">
+              <Card className="overflow-hidden dark:bg-primary border-none">
                 <div className="p-1 bg-gradient-to-r from-blue-500 to-blue-700"></div>
                 <CardContent className="p-6 text-center">
                   <div className="mx-auto bg-primary/10 p-3 rounded-full w-14 h-14 flex items-center justify-center mb-4">
                     <Zap className="h-7 w-7 text-primary" />
                   </div>
-                  <h3 className="text-xl font-medium mb-3">Our Mission</h3>
-                  <p className="text-muted-foreground">
+                  <h3 className="text-xl text-secondary font-medium mb-3">Our Mission</h3>
+                  <p className="text-muted-secondary">
                     To empower businesses with innovative technology solutions that drive growth, efficiency, and competitive advantage in the digital age.
                   </p>
                 </CardContent>
               </Card>
 
               {/* Vision */}
-              <Card className="overflow-hidden">
+              <Card className="overflow-hidden dark:bg-primary border-none">
                 <div className="p-1 bg-gradient-to-r from-blue-500 to-blue-700"></div>
                 <CardContent className="p-6 text-center">
                   <div className="mx-auto bg-primary/10 p-3 rounded-full w-14 h-14 flex items-center justify-center mb-4">
-                    <Eye className="h-7 w-7 text-primary" />
+                    <Eye className="h-7 w-7 text-secondary" />
                   </div>
-                  <h3 className="text-xl font-medium mb-3">Our Vision</h3>
-                  <p className="text-muted-foreground">
+                  <h3 className="text-xl text-secondary font-medium mb-3">Our Vision</h3>
+                  <p className="text-muted-secondary">
                     To be the leading technology partner for businesses in Africa, known for our innovation, quality, and commitment to client success.
                   </p>
                 </CardContent>
               </Card>
 
               {/* Values */}
-              <Card className="overflow-hidden">
+              <Card className="overflow-hidden dark:bg-primary border-none">
                 <div className="p-1 bg-gradient-to-r from-blue-500 to-blue-700"></div>
                 <CardContent className="p-6">
                   <div className="mx-auto bg-primary/10 p-3 rounded-full w-14 h-14 flex items-center justify-center mb-4 text-center">
-                    <Shield className="h-7 w-7 text-primary" />
+                    <Shield className="h-7 w-7 text-secondary" />
                   </div>
-                  <h3 className="text-xl font-medium mb-3 text-center">Our Values</h3>
-                  <ul className="space-y-3 text-muted-foreground">
+                  <h3 className="text-xl text-secondary font-medium mb-3 text-center">Our Values</h3>
+                  <ul className="space-y-2 text-muted-secondary">
                     <li className="flex items-center">
                       <CheckCircle2 className="h-5 w-5 text-primary mr-2 flex-shrink-0" />
                       <span>Innovation: We embrace new technologies and creative solutions</span>
@@ -154,10 +154,10 @@ export default function About() {
       </div>
 
       {/* Team Section */}
-      <div className="bg-background py-16 sm:py-24">
+      <div className="dark:bg-secondary py-16 sm:py-24">
         <div className="container mx-auto">
           <div className="text-center">
-            <Badge variant="outline" className="mb-2 text-primary">Our Team</Badge>
+            <Badge variant="secondary" className="mb-2 text-white dark:bg-primary">Our Team</Badge>
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
               Meet the Experts Behind Our Success
             </h2>
@@ -170,7 +170,8 @@ export default function About() {
           <div className="mt-16">
             <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-3">
               {/* Team Member 1 */}
-              <Card className="overflow-hidden border-none shadow-lg">
+              <Card className="overflow-hidden dark:bg-primary border-none shadow-lg">
+                <div className="p-1 bg-gradient-to-r from-blue-500 to-blue-700"></div>
                 <CardContent className="p-0">
                   <div className="p-6 text-center">
                     <Avatar className="h-40 w-40 mx-auto mb-6">
@@ -182,7 +183,7 @@ export default function About() {
                     </Avatar>
                     <h3 className="text-xl font-medium">Jane Doe</h3>
                     <Badge variant="secondary" className="mt-1">CEO & Founder</Badge>
-                    <p className="mt-4 text-muted-foreground">
+                    <p className="mt-4 text-muted-primary">
                       15+ years of experience in technology leadership and business development.
                     </p>
                   </div>
@@ -190,7 +191,8 @@ export default function About() {
               </Card>
 
               {/* Team Member 2 */}
-              <Card className="overflow-hidden border-none shadow-lg">
+              <Card className="overflow-hidden dark:bg-primary border-none shadow-lg">
+                <div className="p-1 bg-gradient-to-r from-blue-500 to-blue-700"></div>
                 <CardContent className="p-0">
                   <div className="p-6 text-center">
                     <Avatar className="h-40 w-40 mx-auto mb-6">
@@ -202,7 +204,7 @@ export default function About() {
                     </Avatar>
                     <h3 className="text-xl font-medium">John Smith</h3>
                     <Badge variant="secondary" className="mt-1">CTO</Badge>
-                    <p className="mt-4 text-muted-foreground">
+                    <p className="mt-4 text-muted-primary">
                       Expert in software architecture with a focus on scalable enterprise solutions.
                     </p>
                   </div>
@@ -210,7 +212,8 @@ export default function About() {
               </Card>
 
               {/* Team Member 3 */}
-              <Card className="overflow-hidden border-none shadow-lg">
+              <Card className="overflow-hidden dark:bg-primary border-none shadow-lg">
+                <div className="p-1 bg-gradient-to-r from-blue-500 to-blue-700"></div>
                 <CardContent className="p-0">
                   <div className="p-6 text-center">
                     <Avatar className="h-40 w-40 mx-auto mb-6">
@@ -222,7 +225,7 @@ export default function About() {
                     </Avatar>
                     <h3 className="text-xl font-medium">Sarah Johnson</h3>
                     <Badge variant="secondary" className="mt-1">Lead Designer</Badge>
-                    <p className="mt-4 text-muted-foreground">
+                    <p className="mt-4 text-muted-primary">
                       Award-winning designer specializing in user experience and interface design.
                     </p>
                   </div>

@@ -31,10 +31,10 @@ export default function PartnerSection() {
             { name: "Intel", logo: "💻"}
           ].map((partner, i) => (
             <div key={i} className="flex-shrink-0 group">
-              <div className={`bg-secondary rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-95 min-w-[200px]`}>
+              <div className={`0transition-all duration-300 transform hover:scale-95 min-w-[200px]`}>
                 <div className="flex items-center justify-center space-x-3">
                   <span className="text-3xl">{partner.logo}</span>
-                  <span className="text-white font-bold text-lg">{partner.name}</span>
+                  <span className="dark:text-white font-bold text-lg">{partner.name}</span>
                 </div>
               </div>
             </div>

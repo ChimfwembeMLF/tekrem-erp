@@ -36,46 +36,43 @@ export default function GuestLayout({
   // console.log(settings);
   return (
     <AppProvider>
-      <div className={`min-h-screen bg-background ${settings.font_family || 'font-sans'}`}>
+      <div className={`min-h-screen ${settings.font_family || 'font-sans'}`}>
         <Head title={title} />
 
         {/* Header */}
         {showHeader && (
           <header className="sticky top-0 z-40 w-full bg-secondary backdrop-blur supports-[backdrop-filter]:bg-secondary/60">
             <div className="border-b border-primary flex justify-between px-6 p-4">
-                <div className="flex gap-4">
-                <Link className="hover:scale-110 transition-transform border-l border-primary/30 pl-4 first:border-none first:pl-0" href="#">
-                  <Facebook size={24} />
+              <div className="flex gap-2">
+                <Link className="hover:scale-110 transition-transform border-l border-primary/30 first:border-none first:pl-0" href="#">
+                  <Facebook className='w-4 text-gray-200' />
                 </Link>
                 <div className="border-l border-primary/30" />
 
                 <Link className="hover:scale-110 transition-transform" href="#">
-                  <Twitter size={24} />
+                  <Twitter className='w-4 text-gray-200' />
                 </Link>
                 <div className="border-l border-primary/30" />
                 <Link className="hover:scale-110 transition-transform" href="#">
-                  <Instagram size={24} />
+                  <Instagram className='w-4 text-gray-200' />
                 </Link>
                 <div className="border-l border-primary/30" />
                 <Link className="hover:scale-110 transition-transform" href="#">
-                  <Linkedin size={24} />
+                  <Linkedin className='w-4 text-gray-200' />
                 </Link>
-                </div>
-              <span className="font-bold text-primary text-xl hidden md:inline-block">
-                {settings.site_name || 'TEKREM ERP'}
-              </span>
+              </div>
             </div>
             <div className="container mx-auto flex h-16 items-center">
-              <div className="flex justify-between w-full">
+              <div className="flex justify-around w-full">
+
                 {/* Logo */}
-                <div className="flex items-center gap-2">
+                <div className="w-full flex justify-between gap-2">
                   <MobileNav settings={settings} />
 
-                  <Link href={route('home')} className="flex items-center gap-2">
+                  <Link href={route('home')} className='pr-4'>
                     <ApplicationMark />
                   </Link>
                 </div>
-
                 {/* Desktop Navigation */}
                 <MainNav settings={settings} />
 
@@ -119,7 +116,7 @@ export default function GuestLayout({
         <main>{children}</main>
 
         {/* Footer */}
-        <footer className="border-t bg-secondary">
+        <footer className="bg-secondary backdrop-blur supports-[backdrop-filter]:bg-secondary/60">
           <div className="container mx-auto py-12">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
               <div>
@@ -153,7 +150,7 @@ export default function GuestLayout({
                 </ul>
               </div>
             </div>
-            <div className="mt-8 border-t pt-8 flex flex-col md:flex-row justify-between">
+            <div className="mt-8 border-t border-primary pt-8 flex flex-col md:flex-row justify-between">
               <p className="text-base text-muted-foreground">
                 &copy; {new Date().getFullYear()} {settings.company_name || 'Technology Remedies Innovations'}. All rights reserved.
               </p>
