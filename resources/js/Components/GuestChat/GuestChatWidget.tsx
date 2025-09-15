@@ -53,6 +53,8 @@ export default function GuestChatWidget() {
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [guestSession, setGuestSession] = useState<GuestSession | null>(null);
   const [newMessage, setNewMessage] = useState('');
+  // Refactored: maintain File[] for attachments
+  const [attachments, setAttachments] = useState<File[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showGuestForm, setShowGuestForm] = useState(false);
   const [guestInfo, setGuestInfo] = useState({
@@ -61,6 +63,7 @@ export default function GuestChatWidget() {
     guest_phone: '',
     inquiry_type: 'general',
   });
+  const [initError, setInitError] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -93,6 +96,7 @@ export default function GuestChatWidget() {
   const initializeSession = async () => {
     try {
       setIsLoading(true);
+      setInitError(null);
       const response = await fetch('/guest-chat/initialize', {
         method: 'POST',
         headers: {
@@ -107,15 +111,18 @@ export default function GuestChatWidget() {
         setConversation(data.conversation);
         setMessages(data.messages || []);
         setIsInitialized(true);
+        console.debug('Guest chat initialized successfully:', data);
 
         // Show guest form if no name is provided
         if (!data.session.guest_name) {
           setShowGuestForm(true);
         }
       } else {
+        setInitError('Failed to initialize chat session. Please try again.');
         toast.error('Failed to initialize chat session');
       }
     } catch (error) {
+      setInitError('Failed to connect to chat service. Please check your connection and try again.');
       toast.error('Failed to connect to chat service');
     } finally {
       setIsLoading(false);
@@ -176,13 +183,19 @@ export default function GuestChatWidget() {
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || isLoading) return;
+  if ((!newMessage.trim() && (!attachments || attachments.length === 0)) || isLoading) return;
 
     try {
       setIsLoading(true);
       const formData = new FormData();
       formData.append('message', newMessage);
       formData.append('message_type', 'text');
+      // Attach all files/images robustly
+      if (attachments && attachments.length > 0) {
+        attachments.forEach((file, idx) => {
+          formData.append('attachments[]', file);
+        });
+      }
 
       const response = await fetch('/guest-chat/send', {
         method: 'POST',
@@ -196,16 +209,15 @@ export default function GuestChatWidget() {
         const data = await response.json();
         setMessages(prev => [...prev, data.message]);
         setNewMessage('');
+  setAttachments([]);
 
         // Handle AI response if present
         if (data.ai_response) {
-          // Add AI response to messages after a short delay for better UX
           setTimeout(() => {
             setMessages(prev => [...prev, data.ai_response]);
           }, 1000);
         }
 
-        // Update conversation last message time
         if (conversation) {
           setConversation(prev => prev ? { ...prev, last_message_at: new Date().toISOString() } : null);
         }
@@ -257,6 +269,19 @@ export default function GuestChatWidget() {
     );
   }
 
+  // Show error if initialization failed
+  if (initError) {
+    return (
+      <div className="fixed inset-0 z-50 flex justify-center items-center bg-white/90">
+        <div className="p-8 bg-white rounded-lg shadow-xl border max-w-sm w-full text-center">
+          <h2 className="text-lg font-semibold mb-2">Chat Initialization Error</h2>
+          <p className="text-sm text-red-600 mb-4">{initError}</p>
+          <Button onClick={initializeSession} className="w-full">Retry</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`fixed inset-0 z-50 flex justify-center items-center md:bottom-6 md:right-6 md:left-auto md:inset-auto md:justify-end md:items-end px-0 md:px-0 transition-transform duration-500 ease-in-out ${isOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'} md:translate-x-0 md:opacity-100`}
@@ -282,6 +307,8 @@ export default function GuestChatWidget() {
               guestSession={guestSession}
               newMessage={newMessage}
               setNewMessage={setNewMessage}
+              attachments={attachments}
+              setAttachments={setAttachments}
               isLoading={isLoading}
               showGuestForm={showGuestForm}
               guestInfo={guestInfo}

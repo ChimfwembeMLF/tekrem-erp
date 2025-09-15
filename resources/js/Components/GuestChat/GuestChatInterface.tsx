@@ -1,12 +1,16 @@
-import React from 'react';
-import { Send, Paperclip, Image, User, Bot, Sparkles } from 'lucide-react';
-import { Button } from '@/Components/ui/button';
-import { Input } from '@/Components/ui/input';
-import { Textarea } from '@/Components/ui/textarea';
+import React, { useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import { User, Bot, Sparkles } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/Components/ui/avatar';
 import { Badge } from '@/Components/ui/badge';
 import { Label } from '@/Components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
+import ChatInput from './ChatInput';
+// import EmojiMartPicker from './EmojiMartPicker';
+// Common emojis for quick reactions (reuse from LiveChat)
+const quickEmojis = ['👍', '❤️', '😂', '😮', '😢', '😡', '👏', '🎉'];
+import { Button } from '@/Components/ui/button';
+import { Input } from '@/Components/ui/input';
 
 // 
 interface Message {
@@ -49,6 +53,8 @@ interface GuestChatInterfaceProps {
   guestSession: GuestSession | null;
   newMessage: string;
   setNewMessage: (message: string) => void;
+  attachments: File[];
+  setAttachments: (files: File[]) => void;
   isLoading: boolean;
   showGuestForm: boolean;
   guestInfo: {
@@ -71,6 +77,8 @@ export default function GuestChatInterface({
   guestSession,
   newMessage,
   setNewMessage,
+  attachments,
+  setAttachments,
   isLoading,
   showGuestForm,
   guestInfo,
@@ -81,6 +89,46 @@ export default function GuestChatInterface({
   onKeyPress,
   messagesEndRef,
 }: GuestChatInterfaceProps) {
+  // Attachment preview state for new ChatInput (derived from attachments)
+  const [attachmentPreviews, setAttachmentPreviews] = useState<Array<{ url: string; name: string; type: string; onRemove: () => void }>>([]);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  // Handle file upload (non-image)
+  const handleFileUpload = (files: FileList) => {
+    if (!files.length) return;
+    const newFiles = Array.from(files).slice(0, 5 - attachments.length);
+  setAttachments((prev: File[]) => [...prev, ...newFiles].slice(0, 5));
+  };
+
+  // Handle image upload
+  const handleImageUpload = (files: FileList) => {
+    if (!files.length) return;
+    const newFiles = Array.from(files).slice(0, 5 - attachments.length);
+  setAttachments((prev: File[]) => [...prev, ...newFiles].slice(0, 5));
+  };
+  // Sync attachmentPreviews with attachments state
+  React.useEffect(() => {
+    setAttachmentPreviews(
+      attachments.map(file => ({
+        url: URL.createObjectURL(file),
+        name: file.name,
+        type: file.type,
+        onRemove: () => {
+          setAttachments((prev: File[]) => prev.filter((f: File) => f.name !== file.name));
+        },
+      }))
+    );
+  }, [attachments, setAttachments]);
+
+  // Modal state for attachment previews
+  const [showMoreModal, setShowMoreModal] = useState(false);
+  const [previewModal, setPreviewModal] = useState<{ url: string; name: string; type: string } | null>(null);
+
+  // Handle emoji select
+  const handleEmojiSelect = (emoji: string) => {
+  setNewMessage((prev: string) => prev + emoji);
+    setShowEmojiPicker(false);
+  };
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -101,7 +149,14 @@ export default function GuestChatInterface({
 
   const getMessageSender = (message: Message) => {
     if (isAIMessage(message)) {
-      return 'TekRem AI Assistant';
+      // Prefer backend Remy branding if present
+      if (message.metadata?.remy_branding?.display_name) {
+        return message.metadata.remy_branding.display_name;
+      }
+      if (message.metadata?.remy_name) {
+        return message.metadata.remy_name;
+      }
+      return 'Remy';
     }
     if (isHumanAgentMessage(message)) {
       return message.user?.name || 'Agent';
@@ -152,7 +207,7 @@ export default function GuestChatInterface({
               <Input
                 id="guest_name"
                 value={guestInfo.guest_name}
-                onChange={(e) => setGuestInfo({ ...guestInfo, guest_name: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGuestInfo({ ...guestInfo, guest_name: e.target.value })}
                 placeholder="Your name"
                 className="h-8 text-sm"
               />
@@ -164,7 +219,7 @@ export default function GuestChatInterface({
                 id="guest_email"
                 type="email"
                 value={guestInfo.guest_email}
-                onChange={(e) => setGuestInfo({ ...guestInfo, guest_email: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGuestInfo({ ...guestInfo, guest_email: e.target.value })}
                 placeholder="your.email@example.com"
                 className="h-8 text-sm"
               />
@@ -175,7 +230,7 @@ export default function GuestChatInterface({
               <Input
                 id="guest_phone"
                 value={guestInfo.guest_phone}
-                onChange={(e) => setGuestInfo({ ...guestInfo, guest_phone: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGuestInfo({ ...guestInfo, guest_phone: e.target.value })}
                 placeholder="+260 XXX XXX XXX"
                 className="h-8 text-sm"
               />
@@ -185,7 +240,7 @@ export default function GuestChatInterface({
               <Label htmlFor="inquiry_type" className="text-xs">How can we help you?</Label>
               <Select
                 value={guestInfo.inquiry_type}
-                onValueChange={(value) => setGuestInfo({ ...guestInfo, inquiry_type: value })}
+                onValueChange={(value: string) => setGuestInfo({ ...guestInfo, inquiry_type: value })}
               >
                 <SelectTrigger className="h-8 text-sm">
                   <SelectValue />
@@ -270,7 +325,9 @@ export default function GuestChatInterface({
                       {isAIMessage(message) ? (
                         <>
                           <Sparkles className="w-3 h-3 text-purple-600" />
-                          <span className="text-xs font-medium text-purple-600">TekRem AI Assistant</span>
+                          <span className="text-xs font-medium text-purple-600">
+                            {getMessageSender(message)}
+                          </span>
                         </>
                       ) : isHumanAgentMessage(message) ? (
                         <>
@@ -291,9 +348,36 @@ export default function GuestChatInterface({
                     </div>
                   )}
 
-                  <p className={`text-sm ${isAIMessage(message) ? 'text-gray-800' : ''}`}>
-                    {message.message}
-                  </p>
+                  {/* Message body: render markdown and attachments */}
+                  <div className={`text-sm break-words ${isAIMessage(message) ? 'text-gray-800' : ''}`}>
+                    <ReactMarkdown>{message.message}</ReactMarkdown>
+                    {/* Render all attachments (images and files) for any sender */}
+                    {message.attachments && message.attachments.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {message.attachments.map((att: any, idx: number) => (
+                          att.url && att.type && att.type.startsWith('image/') ? (
+                            <img
+                              key={idx}
+                              src={att.url}
+                              alt={att.name || 'attachment'}
+                              className="max-h-32 max-w-[120px] rounded border object-contain"
+                              style={{ width: 'auto', height: '80px' }}
+                            />
+                          ) : att.url ? (
+                            <a
+                              key={idx}
+                              href={att.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-xs text-blue-600 border hover:underline max-w-[120px] truncate"
+                            >
+                              <span className="truncate">{att.name || 'Download attachment'}</span>
+                            </a>
+                          ) : null
+                        ))}
+                      </div>
+                    )}
+                  </div>
 
                   <div className="flex items-center justify-between mt-1">
                     <span className={`text-xs ${
@@ -314,11 +398,7 @@ export default function GuestChatInterface({
                         {message.status === 'read' ? '✓✓' : '✓'}
                       </span>
                     )}
-                    {isAIMessage(message) && (
-                      <span className="text-xs text-purple-600/70">
-                        AI Response
-                      </span>
-                    )}
+                    {/* No extra label for Remy, branding is above */}
                   </div>
                 </div>
               </div>
@@ -329,30 +409,116 @@ export default function GuestChatInterface({
         </div>
       </div>
 
-      {/* Message Input */}
-      <div className="border-t p-3 flex-shrink-0">
-        <div className="flex justify-between items-center gap-2">
-          <div className="flex-1">
-            <Textarea
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={onKeyPress}
-              placeholder="Type your message..."
-              className="min-h-[20px] max-h-[40px] resize-none"
-              disabled={isLoading}
-            />
+      {/* ChatInput from LiveChat */}
+      <div className="border-t p-3 flex-shrink-0 relative">
+        <ChatInput
+          value={newMessage}
+          onChange={setNewMessage}
+          onSend={e => { e?.preventDefault(); onSendMessage(); }}
+          isLoading={isLoading}
+          onKeyDown={onKeyPress}
+          onEmojiClick={() => setShowEmojiPicker(v => !v)}
+          showEmojiPicker={showEmojiPicker}
+          onFileUpload={handleFileUpload}
+          onImageUpload={handleImageUpload}
+          attachmentPreviews={attachmentPreviews}
+        />
+
+        {/* Attachment Preview Grid (2x2) */}
+        {attachmentPreviews.length > 0 && (
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            {attachmentPreviews.slice(0, 4).map((att, idx) => (
+              <div key={idx} className="relative group border rounded p-1 bg-gray-50 flex flex-col items-center justify-center cursor-pointer"
+                onClick={() => setPreviewModal(att)}
+              >
+                {att.type.startsWith('image/') ? (
+                  <img src={att.url} alt={att.name} className="h-24 w-full object-cover rounded" />
+                ) : (
+                  <iframe src={att.url} title={att.name} className="h-24 w-full rounded bg-white" />
+                )}
+                <div className="absolute top-1 right-1">
+                  <Button size="icon" variant="ghost" onClick={(e: React.MouseEvent) => { e.stopPropagation(); att.onRemove(); }}>
+                    ×
+                  </Button>
+                </div>
+                <div className="text-xs mt-1 truncate w-full text-center">{att.name}</div>
+              </div>
+            ))}
+            {attachmentPreviews.length > 4 && (
+              <button className="col-span-2 text-xs text-blue-600 underline mt-2" onClick={() => setShowMoreModal(true)}>
+                Show {attachmentPreviews.length - 4} more...
+              </button>
+            )}
           </div>
-          <div className="flex flex-col space-y-1">
-            <Button
-              onClick={onSendMessage}
-              disabled={!newMessage.trim() || isLoading}
-              size="icon"
-              className="h-10 w-10"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
+        )}
+
+        {/* Show More Modal */}
+        {showMoreModal && (
+          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+            <div className="bg-white rounded-lg p-4 max-w-lg w-full relative">
+              <button className="absolute top-2 right-2 text-lg" onClick={() => setShowMoreModal(false)}>×</button>
+              <div className="grid grid-cols-2 gap-2">
+                {attachmentPreviews.slice(4).map((att, idx) => (
+                  <div key={idx} className="border rounded p-1 bg-gray-50 flex flex-col items-center justify-center cursor-pointer"
+                    onClick={() => setPreviewModal(att)}
+                  >
+                    {att.type.startsWith('image/') ? (
+                      <img src={att.url} alt={att.name} className="h-24 w-full object-cover rounded" />
+                    ) : (
+                      <iframe src={att.url} title={att.name} className="h-24 w-full rounded bg-white" />
+                    )}
+                    <div className="text-xs mt-1 truncate w-full text-center">{att.name}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Individual Preview Modal */}
+        {previewModal && (
+          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+            <div className="bg-white rounded-lg p-4 max-w-lg w-full relative flex flex-col items-center">
+              <button className="absolute top-2 right-2 text-lg" onClick={() => setPreviewModal(null)}>×</button>
+              <div className="w-full flex flex-col items-center">
+                {previewModal.type.startsWith('image/') ? (
+                  <img src={previewModal.url} alt={previewModal.name} className="max-h-[60vh] w-auto object-contain rounded" />
+                ) : (
+                  <iframe src={previewModal.url} title={previewModal.name} className="h-[60vh] w-full rounded bg-white" />
+                )}
+                <div className="text-xs mt-2 truncate w-full text-center">{previewModal.name}</div>
+              </div>
+            </div>
+          </div>
+        )}
+        {showEmojiPicker && (
+          <div className="absolute bottom-14 left-0 z-50 bg-white border rounded shadow-md p-2 w-64">
+            <div className="mb-2 text-xs text-gray-500 flex items-center justify-between">
+              <span>Quick Emojis</span>
+              <button
+                className="text-blue-500 text-xs underline"
+                type="button"
+                onClick={() => setShowEmojiPicker(false)}
+              >
+                Close
+              </button>
+            </div>
+            <div className="grid grid-cols-8 gap-1 mb-2">
+              {quickEmojis.map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  className="text-lg p-1 hover:bg-gray-100 rounded"
+                  onClick={() => handleEmojiSelect(emoji)}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+            <div className="border-t my-2" />
+            <div className="text-xs text-gray-400 mb-1">All Emojis</div>      
+          </div>
+        )}
 
         {/* Status indicator */}
         {conversation?.assignee ? (
@@ -366,7 +532,7 @@ export default function GuestChatInterface({
             </p>
             <div className="flex items-center justify-center gap-1 mt-1">
               <Bot className="w-3 h-3 text-purple-600" />
-              <span className="text-xs text-purple-600">AI Assistant is helping you</span>
+              <span className="text-xs text-purple-600">Remy is helping you</span>
             </div>
           </div>
         )}
