@@ -103,16 +103,19 @@ class GuestChatController extends Controller
             $conversation = $this->createGuestConversation($guestSession);
         }
 
-        // Handle file attachments
+        // Handle file attachments (add id, url, mime_type, uploaded_at, etc.)
         $attachments = [];
         if ($request->hasFile('attachments')) {
             foreach ($request->file('attachments') as $file) {
                 $path = $file->store('chat-attachments', 'public');
                 $attachments[] = [
+                    'id' => (string) \Illuminate\Support\Str::uuid(),
                     'name' => $file->getClientOriginalName(),
-                    'path' => $path,
+                    'type' => $file->getClientOriginalExtension(),
                     'size' => $file->getSize(),
-                    'type' => $file->getMimeType(),
+                    'url' => \Illuminate\Support\Facades\Storage::url($path),
+                    'mime_type' => $file->getMimeType(),
+                    'uploaded_at' => now()->toISOString(),
                 ];
             }
         }
@@ -281,7 +284,7 @@ class GuestChatController extends Controller
             return null;
         }
 
-        // Create AI response message
+        // Create AI response message (Remy branding)
         $aiMessage = Chat::create([
             'conversation_id' => $conversation->id,
             'message' => $aiResponseData['message'],
@@ -289,9 +292,15 @@ class GuestChatController extends Controller
             'status' => 'sent',
             'chattable_type' => GuestSession::class,
             'chattable_id' => $guestSession->id,
-            'user_id' => null, // AI messages have no user_id
+            'user_id' => null, // Remy messages have no user_id
             'metadata' => [
                 'is_ai_response' => true,
+                'remy_name' => 'Remy',
+                'remy_branding' => [
+                    'display_name' => 'Remy',
+                    'full_name' => 'Remedies AI',
+                    'avatar' => null, // Optionally set a Remy avatar URL here
+                ],
                 'ai_service' => $aiResponseData['service'],
                 'ai_model' => $aiResponseData['model'],
                 'guest_session_id' => $guestSession->id,
