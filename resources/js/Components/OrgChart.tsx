@@ -1,8 +1,8 @@
 import React from "react";
-import { Linkedin, Github, Twitter, Facebook } from "lucide-react";
+import { Linkedin, Github, Twitter, Facebook, Globe } from "lucide-react";
 
 interface SocialLink {
-  platform: "linkedin" | "github" | "twitter" | "facebook";
+  platform: "linkedin" | "github" | "twitter" | "facebook" | "website";
   url: string;
 }
 
@@ -34,7 +34,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
         <img
           src={image}
           alt={name}
-          className="h-32 w-32 rounded-lg object-cover mb-4 border-2 border-secondary dark:border-secondary/60"
+          className="h-32 w-32 rounded-lg object-cover mb-4"
         />
       ) : (
         <div
@@ -77,6 +77,9 @@ const TeamCard: React.FC<TeamCardProps> = ({
               )}
               {s.platform === "facebook" && (
                 <Facebook className="w-5 h-5 text-blue-700" />
+              )}
+              {s.platform === "website" && (
+                <Globe className="w-5 h-5 text-green-700 dark:text-green-400" />
               )}
             </a>
           ))}

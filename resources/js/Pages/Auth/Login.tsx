@@ -101,7 +101,7 @@ export default function Login({ canResetPassword, status }: Props) {
 
         <div className="flex flex-col space-y-4">
           <AuthButton
-            type="submit"
+            type="primary"
             isLoading={form.processing}
             loadingText="Logging in..."
           >
@@ -110,12 +110,12 @@ export default function Login({ canResetPassword, status }: Props) {
 
           <div className="flex flex-col space-y-2 sm:flex-row sm:justify-between sm:space-y-0 text-center sm:text-left">
             {canResetPassword && (
-              <LinkButton href={route('password.request')}>
+              <LinkButton className='text-gray-800' href={route('password.request')}>
                 Forgot your password?
               </LinkButton>
             )}
 
-            <LinkButton href={route('register')}>
+            <LinkButton className='text-gray-800' href={route('register')}>
               Need an account?
             </LinkButton>
           </div>

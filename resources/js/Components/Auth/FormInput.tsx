@@ -16,7 +16,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
     return (
       <div className={cn("space-y-2", wrapperClassName)}>
         {label && (
-          <Label htmlFor={inputId} className="text-sm font-medium">
+          <Label htmlFor={inputId} className="text-sm dark:text-primary-800 font-medium">
             {label}
           </Label>
         )}

@@ -7,6 +7,10 @@ import useTypedPage from '@/Hooks/useTypedPage';
 import OrgChart from '@/Components/OrgChart';
 import PartnerSection from '@/Components/PartnerSection';
 import HeroImage from '../../../../public/hero.jpeg'
+import TechnologiesSection from '@/Components/TechnologiesSection';
+
+
+
 interface Props {
   canLogin: boolean;
   canRegister: boolean;
@@ -24,10 +28,11 @@ export default function Home({ canLogin, canRegister }: Props) {
       role: "CTO / Developer",
       bio: "Passionate about scalable systems and modern development practices.",
       color: "from-teal-500 to-cyan-600",
-      image: "https://via.placeholder.com/100",
+      image: "/assets/team/chimfwembe-kangwa-removebg-preview.png",
       socials: [
         { platform: "linkedin", url: "#" },
         { platform: "github", url: "#" },
+        { platform: "website", url: "https://chimfwembe-kangwa.vercel.app/" },
       ],
     },
     {
@@ -36,10 +41,11 @@ export default function Home({ canLogin, canRegister }: Props) {
       role: "Operations Manager / Developer",
       bio: "Focused on process optimization and reliable software delivery.",
       color: "from-emerald-500 to-green-600",
-      image: "https://via.placeholder.com/100",
+      image: "/assets/team/joseph-H-banda-removebg-preview.png",
       socials: [
         { platform: "linkedin", url: "#" },
-        { platform: "twitter", url: "#" },
+        { platform: "github", url: "#" },
+        { platform: "website", url: "https://josephbanda.com" },
       ],
     },
     {
@@ -48,10 +54,11 @@ export default function Home({ canLogin, canRegister }: Props) {
       role: "UI/UX Designer / Developer",
       bio: "Designing intuitive user experiences and modern interfaces.",
       color: "from-indigo-500 to-violet-600",
-      image: "https://via.placeholder.com/100",
+      image: "/assets/team/fackson-kangwa-removebg-preview.png",
       socials: [
         { platform: "linkedin", url: "#" },
-        { platform: "facebook", url: "#" },
+        { platform: "github", url: "https://github.com/Kangwajr" },
+        { platform: "website", url: "https://kangwafackson.vercel.app" },
       ],
     },
     {
@@ -60,10 +67,11 @@ export default function Home({ canLogin, canRegister }: Props) {
       role: "Marketing Manager / Finance",
       bio: "Blending finance knowledge with creative marketing strategies.",
       color: "from-pink-500 to-rose-600",
-      image: "https://via.placeholder.com/100",
+      image: "/assets/team/joel-B-chamana-removebg-preview.png",
       socials: [
         { platform: "linkedin", url: "#" },
-        { platform: "twitter", url: "#" },
+        { platform: "github", url: "#" },
+        { platform: "website", url: "https://joelchamanab.com" },
       ],
     },
     {
@@ -72,10 +80,11 @@ export default function Home({ canLogin, canRegister }: Props) {
       role: "Sales Representative / Finance",
       bio: "Driving growth through client relationships and financial insight.",
       color: "from-yellow-500 to-orange-600",
-      image: "https://via.placeholder.com/100",
+      image: "/assets/team/joseph-L-banda-removebg-preview.png",
       socials: [
         { platform: "linkedin", url: "#" },
-        { platform: "facebook", url: "#" },
+        { platform: "github", url: "#" },
+        { platform: "website", url: "https://josephbanda.com" },
       ],
     },
     {
@@ -84,10 +93,11 @@ export default function Home({ canLogin, canRegister }: Props) {
       role: "Project Manager",
       bio: "Ensuring projects are delivered on time with high quality.",
       color: "from-fuchsia-500 to-purple-600",
-      image: "https://via.placeholder.com/100",
+      image: "/assets/team/temwani-tembo.png",
       socials: [
         { platform: "linkedin", url: "#" },
-        { platform: "twitter", url: "#" },
+        { platform: "github", url: "#" },
+        { platform: "website", url: "https://temwanitembo.com" },
       ],
     },
     {
@@ -96,10 +106,11 @@ export default function Home({ canLogin, canRegister }: Props) {
       role: "Creative / Graphic Designer",
       bio: "Crafting unique visuals and brand identities that stand out.",
       color: "from-sky-500 to-primary",
-      image: "https://via.placeholder.com/100",
+      image: "/assets/team/savior-banda.png",
       socials: [
         { platform: "linkedin", url: "#" },
-        { platform: "instagram", url: "#" }, // you can add this if you extend icons
+        { platform: "github", url: "#" },
+        { platform: "website", url: "https://www.footprintsgraphixx.com" },
       ],
     },
   ];
@@ -446,8 +457,8 @@ export default function Home({ canLogin, canRegister }: Props) {
 
       {/* Enhanced Partners Section with Infinite Carousel */}
       <div className="bg-gray-50 dark:bg-secondary/80 py-16 overflow-hidden">
-        <PartnerSection />
-
+        {/* <PartnerSection /> */}
+        <TechnologiesSection />
       </div>
 
 
