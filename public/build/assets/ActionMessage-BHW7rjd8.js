@@ -1,1 +1,0 @@
-import{j as e}from"./app-BMIA6nir.js";import{z as i}from"./transition-Dyv_LKQb.js";function n({on:s,className:t,children:a}){return e.jsx("div",{className:t,children:e.jsx(i,{show:s,leave:"transition ease-in duration-1000","leave-from-class":"opacity-100",leaveTo:"opacity-0",children:e.jsx("div",{className:"text-sm text-gray-600",children:a})})})}export{n as A};
