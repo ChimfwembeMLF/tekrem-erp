@@ -55,8 +55,8 @@ export default function Home({ canLogin, canRegister }: Props) {
       ],
     },
     {
-      name: "Joel Chabana",
-      initials: "JC",
+      name: "Joel B. Chamana",
+      initials: "JB.C",
       role: "Marketing Manager / Finance",
       bio: "Blending finance knowledge with creative marketing strategies.",
       color: "from-pink-500 to-rose-600",
@@ -91,8 +91,8 @@ export default function Home({ canLogin, canRegister }: Props) {
       ],
     },
     {
-      name: "Savior Footprints",
-      initials: "SF",
+      name: "Sevier Banda",
+      initials: "SB",
       role: "Creative / Graphic Designer",
       bio: "Crafting unique visuals and brand identities that stand out.",
       color: "from-sky-500 to-primary",

@@ -247,7 +247,7 @@ export default function Edit({ ticket, categories, users }: Props) {
                           <SelectValue placeholder={t('support.select_category', 'Select category')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">{t('support.no_category', 'No Category')}</SelectItem>
+                          <SelectItem value="none">{t('support.no_category', 'No Category')}</SelectItem>
                           {categories.map((category) => (
                             <SelectItem key={category.id} value={category.id.toString()}>
                               <div className="flex items-center gap-2">
@@ -273,7 +273,7 @@ export default function Edit({ ticket, categories, users }: Props) {
                           <SelectValue placeholder={t('support.select_assignee', 'Select assignee')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">{t('support.unassigned', 'Unassigned')}</SelectItem>
+                          <SelectItem value="none">{t('support.unassigned', 'Unassigned')}</SelectItem>
                           {users.map((user) => (
                             <SelectItem key={user.id} value={user.id.toString()}>
                               {user.name}

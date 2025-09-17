@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
 import useRoute from '@/Hooks/useRoute';
+import { toast } from 'sonner';
 
 interface TicketData {
   id: number;
@@ -186,20 +187,46 @@ export default function Show({ ticket, users, comments }: Props) {
     });
   };
 
-  const handleStatusChange = (status: string) => {
+  const handleStatusChange = async (status: string) => {
     if (status === 'closed') {
       const reason = prompt(t('support.close_reason', 'Please provide a reason for closing this ticket:'));
       if (reason) {
-        router.post(route('support.tickets.close', ticket.id), {
-          resolution_notes: reason,
-        });
+        try {
+          await router.post(route('support.tickets.close', ticket.id), {
+            resolution_notes: reason,
+          }, {
+            onSuccess: () => {
+              toast.success(t('support.ticket_closed', 'Ticket closed successfully.'));
+              router.reload();
+            },
+            onError: (errors) => {
+              toast.error(errors?.message || t('support.close_error', 'Failed to close ticket.'));
+            },
+            preserveScroll: true,
+          });
+        } catch (e: any) {
+          toast.error(e?.message || t('support.close_error', 'Failed to close ticket.'));
+        }
       }
     } else if (status === 'reopen') {
       const reason = prompt(t('support.reopen_reason', 'Please provide a reason for reopening this ticket:'));
       if (reason) {
-        router.post(route('support.tickets.reopen', ticket.id), {
-          reason: reason,
-        });
+        try {
+          await router.post(route('support.tickets.reopen', ticket.id), {
+            reason: reason,
+          }, {
+            onSuccess: () => {
+              toast.success(t('support.ticket_reopened', 'Ticket reopened successfully.'));
+              router.reload();
+            },
+            onError: (errors) => {
+              toast.error(errors?.message || t('support.reopen_error', 'Failed to reopen ticket.'));
+            },
+            preserveScroll: true,
+          });
+        } catch (e: any) {
+          toast.error(e?.message || t('support.reopen_error', 'Failed to reopen ticket.'));
+        }
       }
     }
   };
@@ -230,7 +257,7 @@ export default function Show({ ticket, users, comments }: Props) {
   };
 
   return (
-    <AppLayout>
+    <AppLayout title=''>
       <Head title={`${t('support.ticket', 'Ticket')} #${ticket.ticket_number}`} />
 
       <div className="space-y-6">

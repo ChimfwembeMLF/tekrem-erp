@@ -365,7 +365,7 @@ class TicketController extends Controller
     /**
      * Close ticket.
      */
-    public function close(Request $request, Ticket $ticket): JsonResponse
+    public function close(Request $request, Ticket $ticket): RedirectResponse
     {
         $validated = $request->validate([
             'resolution_notes' => ['nullable', 'string'],
@@ -386,13 +386,14 @@ class TicketController extends Controller
             ]);
         }
 
-        return response()->json(['message' => 'Ticket closed successfully.']);
+         return redirect()->route('support.tickets.show', $ticket)
+        ->with('success', 'Ticket closed successfully.');
     }
 
     /**
      * Reopen ticket.
      */
-    public function reopen(Request $request, Ticket $ticket): JsonResponse
+    public function reopen(Request $request, Ticket $ticket): RedirectResponse
     {
         $validated = $request->validate([
             'reason' => ['required', 'string'],
@@ -411,7 +412,8 @@ class TicketController extends Controller
             'is_internal' => false,
         ]);
 
-        return response()->json(['message' => 'Ticket reopened successfully.']);
+         return redirect()->route('support.tickets.show', $ticket)
+        ->with('success', 'Ticket reopened successfully.');
     }
 
     /**
