@@ -486,12 +486,12 @@ export default function Sidebar({ settings }: SidebarProps) {
       icon: <Key className="h-5 w-5" />,
       active: route().current('admin.permissions.*')
     },
-    {
-      href: route('admin.settings.index'),
-      label: t('admin.settings', 'System Settings'),
-      icon: <Settings className="h-5 w-5" />,
-      active: route().current('admin.settings.*')
-    },
+    // {
+    //   href: route('admin.settings.index'),
+    //   label: t('admin.settings', 'System Settings'),
+    //   icon: <Settings className="h-5 w-5" />,
+    //   active: route().current('admin.settings.*')
+    // },
   ] : [];
 
   // Customer-only navigation
