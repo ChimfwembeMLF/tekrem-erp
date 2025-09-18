@@ -939,6 +939,14 @@ Route::middleware([
 
     // Social Media Routes
     Route::prefix('social-media')->name('social-media.')->middleware('permission:view social_media')->group(function () {
+        // WhatsApp Integration
+        Route::prefix('whatsapp')->name('whatsapp.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\SocialMedia\WhatsAppController::class, 'index'])->name('index');
+            Route::post('/sync-accounts', [\App\Http\Controllers\SocialMedia\WhatsAppController::class, 'syncAccounts'])->name('sync-accounts');
+            Route::post('/messages', [\App\Http\Controllers\SocialMedia\WhatsAppController::class, 'sendMessage'])->name('messages.send');
+            Route::get('/analytics', [\App\Http\Controllers\SocialMedia\WhatsAppController::class, 'getAnalytics'])->name('analytics');
+            Route::get('/test-connection', [\App\Http\Controllers\SocialMedia\WhatsAppController::class, 'testConnection'])->name('test-connection');
+        });
         // Unified Dashboard
         Route::get('/', [\App\Http\Controllers\SocialMedia\SocialMediaDashboardController::class, 'index'])->name('dashboard');
         Route::post('/cross-platform-post', [\App\Http\Controllers\SocialMedia\SocialMediaDashboardController::class, 'createCrossPlatformPost'])->name('cross-platform-post');
@@ -979,6 +987,16 @@ Route::middleware([
             Route::post('/posts/{post}/publish', [\App\Http\Controllers\SocialMedia\LinkedInController::class, 'publishPost'])->name('posts.publish');
             Route::get('/analytics', [\App\Http\Controllers\SocialMedia\LinkedInController::class, 'getAnalytics'])->name('analytics');
             Route::get('/test-connection', [\App\Http\Controllers\SocialMedia\LinkedInController::class, 'testConnection'])->name('test-connection');
+        });
+
+        // Twitter/X Integration
+        Route::prefix('twitter')->name('twitter.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\SocialMedia\TwitterController::class, 'index'])->name('index');
+            Route::post('/sync-accounts', [\App\Http\Controllers\SocialMedia\TwitterController::class, 'syncAccounts'])->name('sync-accounts');
+            Route::post('/tweets', [\App\Http\Controllers\SocialMedia\TwitterController::class, 'createTweet'])->name('tweets.create');
+            Route::post('/tweets/{tweet}/publish', [\App\Http\Controllers\SocialMedia\TwitterController::class, 'publishTweet'])->name('tweets.publish');
+            Route::get('/analytics', [\App\Http\Controllers\SocialMedia\TwitterController::class, 'getAnalytics'])->name('analytics');
+            Route::get('/test-connection', [\App\Http\Controllers\SocialMedia\TwitterController::class, 'testConnection'])->name('test-connection');
         });
     });
 });

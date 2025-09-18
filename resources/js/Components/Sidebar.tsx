@@ -7,7 +7,6 @@ import {
   Users,
   UserPlus,
   MessageSquare,
-  MessageCircle,
   Menu,
   ChevronDown,
   ChevronRight,
@@ -54,6 +53,8 @@ import {
   Facebook,
   Instagram,
   Linkedin,
+  Twitter,
+  MessageCircle,
 } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import useRoute from '@/Hooks/useRoute';
@@ -897,6 +898,30 @@ export default function Sidebar({ settings }: SidebarProps) {
               >
                 <Linkedin className="h-4 w-4" />
                 <span>{t('social_media.linkedin', 'LinkedIn')}</span>
+              </Link>
+              <Link
+                href={route('social-media.twitter.index')}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                  route().current('social-media.twitter.*')
+                    ? "bg-primary/10 text-primary font-semibold"
+                    : "text-foreground/70 hover:text-foreground hover:bg-accent"
+                )}
+              >
+                <Twitter className="h-4 w-4" />
+                <span>{t('social_media.twitter', 'Twitter/X')}</span>
+              </Link>
+              <Link
+                href={route('social-media.whatsapp.index')}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                  route().current('social-media.whatsapp.*')
+                    ? "bg-primary/10 text-primary font-semibold"
+                    : "text-foreground/70 hover:text-foreground hover:bg-accent"
+                )}
+              >
+                <MessageCircle className="h-4 w-4 text-[#25D366]" />
+                <span>{t('social_media.whatsapp', 'WhatsApp')}</span>
               </Link>
               
              

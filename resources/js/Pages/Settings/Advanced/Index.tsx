@@ -1224,10 +1224,160 @@ export default function AdvancedSettings({
                               </div>
                             )}
 
-                            {/* Add similar configurations for other platforms */}
-                            {(platform === 'instagram' || platform === 'linkedin' || platform === 'whatsapp') && (
-                              <div className="text-center py-4 text-gray-500">
-                                Configuration fields for {platform} will be added here...
+
+                            {platform === 'instagram' && (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor={`${platform}_app_id`}>App ID</Label>
+                                  <Input
+                                    id={`${platform}_app_id`}
+                                    value={socialPlatformForms.instagram.data.app_id || ''}
+                                    onChange={(e) => socialPlatformForms.instagram.setData('app_id', e.target.value)}
+                                    placeholder="Enter Instagram App ID"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor={`${platform}_app_secret`}>App Secret</Label>
+                                  <div className="relative">
+                                    <Input
+                                      id={`${platform}_app_secret`}
+                                      type={showApiKeys[`${platform}_app_secret`] ? 'text' : 'password'}
+                                      value={socialPlatformForms.instagram.data.app_secret || ''}
+                                      onChange={(e) => socialPlatformForms.instagram.setData('app_secret', e.target.value)}
+                                      placeholder="Enter Instagram App Secret"
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                                      onClick={() => toggleApiKeyVisibility(`${platform}_app_secret`)}
+                                    >
+                                      {showApiKeys[`${platform}_app_secret`] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </Button>
+                                  </div>
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor={`${platform}_access_token`}>Access Token</Label>
+                                  <div className="relative">
+                                    <Input
+                                      id={`${platform}_access_token`}
+                                      type={showApiKeys[`${platform}_access_token`] ? 'text' : 'password'}
+                                      value={socialPlatformForms.instagram.data.access_token || ''}
+                                      onChange={(e) => socialPlatformForms.instagram.setData('access_token', e.target.value)}
+                                      placeholder="Enter Instagram Access Token"
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                                      onClick={() => toggleApiKeyVisibility(`${platform}_access_token`)}
+                                    >
+                                      {showApiKeys[`${platform}_access_token`] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {platform === 'linkedin' && (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor={`${platform}_client_id`}>Client ID</Label>
+                                  <Input
+                                    id={`${platform}_client_id`}
+                                    value={socialPlatformForms.linkedin.data.client_id || ''}
+                                    onChange={(e) => socialPlatformForms.linkedin.setData('client_id', e.target.value)}
+                                    placeholder="Enter LinkedIn Client ID"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor={`${platform}_client_secret`}>Client Secret</Label>
+                                  <div className="relative">
+                                    <Input
+                                      id={`${platform}_client_secret`}
+                                      type={showApiKeys[`${platform}_client_secret`] ? 'text' : 'password'}
+                                      value={socialPlatformForms.linkedin.data.client_secret || ''}
+                                      onChange={(e) => socialPlatformForms.linkedin.setData('client_secret', e.target.value)}
+                                      placeholder="Enter LinkedIn Client Secret"
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                                      onClick={() => toggleApiKeyVisibility(`${platform}_client_secret`)}
+                                    >
+                                      {showApiKeys[`${platform}_client_secret`] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </Button>
+                                  </div>
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor={`${platform}_access_token`}>Access Token</Label>
+                                  <div className="relative">
+                                    <Input
+                                      id={`${platform}_access_token`}
+                                      type={showApiKeys[`${platform}_access_token`] ? 'text' : 'password'}
+                                      value={socialPlatformForms.linkedin.data.access_token || ''}
+                                      onChange={(e) => socialPlatformForms.linkedin.setData('access_token', e.target.value)}
+                                      placeholder="Enter LinkedIn Access Token"
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                                      onClick={() => toggleApiKeyVisibility(`${platform}_access_token`)}
+                                    >
+                                      {showApiKeys[`${platform}_access_token`] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {platform === 'whatsapp' && (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor={`${platform}_business_id`}>Business ID</Label>
+                                  <Input
+                                    id={`${platform}_business_id`}
+                                    value={socialPlatformForms.whatsapp.data.business_id || ''}
+                                    onChange={(e) => socialPlatformForms.whatsapp.setData('business_id', e.target.value)}
+                                    placeholder="Enter WhatsApp Business ID"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor={`${platform}_access_token`}>Access Token</Label>
+                                  <div className="relative">
+                                    <Input
+                                      id={`${platform}_access_token`}
+                                      type={showApiKeys[`${platform}_access_token`] ? 'text' : 'password'}
+                                      value={socialPlatformForms.whatsapp.data.access_token || ''}
+                                      onChange={(e) => socialPlatformForms.whatsapp.setData('access_token', e.target.value)}
+                                      placeholder="Enter WhatsApp Access Token"
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                                      onClick={() => toggleApiKeyVisibility(`${platform}_access_token`)}
+                                    >
+                                      {showApiKeys[`${platform}_access_token`] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </Button>
+                                  </div>
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor={`${platform}_phone_number_id`}>Phone Number ID</Label>
+                                  <Input
+                                    id={`${platform}_phone_number_id`}
+                                    value={socialPlatformForms.whatsapp.data.phone_number_id || ''}
+                                    onChange={(e) => socialPlatformForms.whatsapp.setData('phone_number_id', e.target.value)}
+                                    placeholder="Enter WhatsApp Phone Number ID"
+                                  />
+                                </div>
                               </div>
                             )}
 
