@@ -1008,3 +1008,13 @@ Route::get('/webhooks/instagram', [\App\Http\Controllers\SocialMedia\WebhookCont
 Route::post('/webhooks/instagram', [\App\Http\Controllers\SocialMedia\WebhookController::class, 'handleInstagramWebhook'])->name('webhooks.instagram.handle');
 Route::get('/webhooks/linkedin', [\App\Http\Controllers\SocialMedia\WebhookController::class, 'verifyLinkedInWebhook'])->name('webhooks.linkedin.verify');
 Route::post('/webhooks/linkedin', [\App\Http\Controllers\SocialMedia\WebhookController::class, 'handleLinkedInWebhook'])->name('webhooks.linkedin.handle');
+
+// WhatsApp Chat API
+Route::prefix('/whatsapp')->middleware(['auth'])->group(function () {
+    Route::get('/chats', [\App\Http\Controllers\SocialMedia\WhatsAppChatController::class, 'index']);
+    Route::get('/chats/{chat}', [\App\Http\Controllers\SocialMedia\WhatsAppChatController::class, 'show']);
+    Route::post('/chats/{chat}/send', [\App\Http\Controllers\SocialMedia\WhatsAppChatController::class, 'send']);
+    Route::post('/chats/{chat}/read', [\App\Http\Controllers\SocialMedia\WhatsAppChatController::class, 'markAsRead']);
+    Route::post('/chats/{chat}/typing', [\App\Http\Controllers\SocialMedia\WhatsAppChatController::class, 'typing']);
+    Route::post('/chats/{chat}/upload', [\App\Http\Controllers\SocialMedia\WhatsAppChatController::class, 'uploadMedia']);
+});

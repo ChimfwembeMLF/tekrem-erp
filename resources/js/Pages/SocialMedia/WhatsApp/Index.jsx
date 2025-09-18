@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/card';
+
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/Components/ui/tabs';
+import WhatsAppChat from './Chat';
+
 
 const WhatsAppDashboard = ({ accounts = [], messages = [], stats = {} }) => {
   const [messageText, setMessageText] = useState('');
@@ -33,7 +36,21 @@ const WhatsAppDashboard = ({ accounts = [], messages = [], stats = {} }) => {
           <TabsList className="mb-4">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="send-message">Send Message</TabsTrigger>
+            <TabsTrigger value="chat">Chat</TabsTrigger>
+            <TabsTrigger value="add-contact">Add Contact</TabsTrigger>
           </TabsList>
+          <TabsContent value="add-contact">
+            <Card>
+              <CardHeader>
+                <CardTitle>Add WhatsApp Contact</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <AddContactForm />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+
           <TabsContent value="dashboard">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <Card>
@@ -74,6 +91,9 @@ const WhatsAppDashboard = ({ accounts = [], messages = [], stats = {} }) => {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+          <TabsContent value="chat">
+            <WhatsAppChat userId={null} />
           </TabsContent>
           <TabsContent value="send-message">
             <Card>
@@ -116,4 +136,67 @@ const WhatsAppDashboard = ({ accounts = [], messages = [], stats = {} }) => {
   );
 };
 
+
 export default WhatsAppDashboard;
+
+// AddContactForm component (must be outside WhatsAppDashboard)
+function AddContactForm() {
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError('');
+    setSuccess(false);
+    try {
+      // TODO: Replace with your actual API endpoint
+      const res = await fetch('/api/whatsapp/contacts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, phone })
+      });
+      if (!res.ok) throw new Error('Failed to add contact');
+      setSuccess(true);
+      setName('');
+      setPhone('');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <input
+        className="w-full border rounded p-2"
+        type="text"
+        value={name}
+        onChange={e => setName(e.target.value)}
+        placeholder="Contact name"
+        required
+      />
+      <input
+        className="w-full border rounded p-2"
+        type="text"
+        value={phone}
+        onChange={e => setPhone(e.target.value)}
+        placeholder="Phone number"
+        required
+      />
+      <button
+        type="submit"
+        className="px-4 py-2 bg-green-600 text-white rounded"
+        disabled={submitting}
+      >
+        {submitting ? 'Adding...' : 'Add Contact'}
+      </button>
+      {success && <div className="text-green-600">Contact added!</div>}
+      {error && <div className="text-red-600">{error}</div>}
+    </form>
+  );
+}
