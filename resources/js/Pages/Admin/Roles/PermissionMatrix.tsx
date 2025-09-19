@@ -33,6 +33,18 @@ interface Props {
 }
 
 export default function PermissionMatrix({ matrix, groupedPermissions }: Props) {
+  // Re-group permissions by last word in permission name (module)
+  // Flatten all permissions from groupedPermissions
+  const allPermissions: Permission[] = Object.values(groupedPermissions).flat();
+  const groupedByModule = allPermissions.reduce((groups, permission) => {
+    const parts = permission.name.trim().split(' ');
+    const module = parts[parts.length - 1] || 'general';
+    if (!groups[module]) {
+      groups[module] = [];
+    }
+    groups[module].push(permission);
+    return groups;
+  }, {} as Record<string, Permission[]>);
   const { t } = useTranslate();
   const route = useRoute();
   const [selectedRole, setSelectedRole] = useState<number | null>(null);
@@ -230,31 +242,34 @@ export default function PermissionMatrix({ matrix, groupedPermissions }: Props) 
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  {Object.entries(groupedPermissions).map(([module, permissions]) => (
+                  {Object.entries(groupedByModule).map(([module, modulePermissions]) => (
                     <div key={module} className="border rounded-lg p-4">
                       <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
+                        <h3 className="font-medium text-lg capitalize">{module} Module</h3>
+                        <div className="flex items-center gap-2">
                           <Checkbox
                             checked={isModuleFullySelected(selectedRole, module)}
                             indeterminate={isModulePartiallySelected(selectedRole, module)}
-                            onCheckedChange={(checked) => handleModuleToggle(selectedRole, module, !!checked)}
+                            onCheckedChange={(checked: boolean | "indeterminate") => handleModuleToggle(selectedRole, module, !!checked)}
                           />
-                          <h3 className="font-medium text-lg capitalize">{module} Module</h3>
+                          <span className="text-xs text-gray-500">Select All</span>
                           <Badge variant="secondary">
-                            {permissions.length} permissions
+                            {modulePermissions.length} permissions
                           </Badge>
                         </div>
                       </div>
-                      
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {permissions.map((permission) => (
-                          <div key={permission.id} className="flex items-start space-x-3 p-3 border rounded">
+                        {modulePermissions.map((permission) => (
+                          <div key={permission.id} className="flex items-start space-x-2 p-2 border rounded">
                             <Checkbox
+                              id={`permission-${permission.id}`}
                               checked={rolePermissions[selectedRole]?.includes(permission.name) || false}
-                              onCheckedChange={(checked) => handlePermissionToggle(selectedRole, permission.name, !!checked)}
+                              onCheckedChange={(checked: boolean | "indeterminate") => handlePermissionToggle(selectedRole, permission.name, !!checked)}
                             />
                             <div className="flex-1">
-                              <h4 className="text-sm font-medium">{permission.name}</h4>
+                              <label htmlFor={`permission-${permission.id}`} className="text-sm">
+                                {permission.name}
+                              </label>
                               {permission.description && (
                                 <p className="text-xs text-gray-500 mt-1">
                                   {permission.description}

@@ -73,9 +73,10 @@ export default function RoleShow({ role }: Props) {
     }
   };
 
-  // Group permissions by module
+  // Group permissions by module (last part after the last dot)
   const groupedPermissions = role.permissions.reduce((groups, permission) => {
-    const module = permission.name.split('.')[0] || 'general';
+    const parts = permission.name.split('.');
+    const module = parts[parts.length - 1] || 'general';
     if (!groups[module]) {
       groups[module] = [];
     }

@@ -117,6 +117,7 @@ class SettingsController extends Controller
     {
         return Inertia::render('Settings/Notifications', [
             'settings' => $this->getNotificationSettings(),
+            'stats' => $this->getSystemStats(),
         ]);
     }
 

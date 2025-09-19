@@ -265,7 +265,7 @@ export default function SettingsIndex({ settings, stats }: SettingsIndexProps) {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm font-medium">Language:</span>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">{settings.language.toUpperCase()}</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">{settings.language ? settings.language.toUpperCase() : 'N/A'}</span>
                 </div>
               </div>
               <div className="space-y-2">
