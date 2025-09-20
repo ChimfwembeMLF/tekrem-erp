@@ -163,8 +163,33 @@ class LeaveController extends Controller
 
         $leaveTypes = LeaveType::active()->orderBy('name')->get();
 
+        // Ensure all relevant fields are sent as an array
+        $leaveData = [
+            'id' => $leave->id,
+            'employee' => $leave->employee ? [
+                'id' => $leave->employee->id,
+                'name' => $leave->employee->full_name,
+            ] : null,
+            'leave_type' => $leave->leaveType ? [
+                'id' => $leave->leaveType->id,
+                'name' => $leave->leaveType->name,
+            ] : null,
+            'start_date' => $leave->start_date?->format('Y-m-d'),
+            'end_date' => $leave->end_date?->format('Y-m-d'),
+            'days_requested' => $leave->days_requested,
+            'status' => $leave->status,
+            'reason' => $leave->reason,
+            'submitted_at' => $leave->submitted_at?->toDateTimeString(),
+            'is_half_day' => $leave->is_half_day,
+            'half_day_period' => $leave->half_day_period,
+            'attachments' => $leave->attachments,
+            'approver' => $leave->approver ? [
+                'name' => $leave->approver->name,
+            ] : null,
+        ];
+
         return Inertia::render('HR/Leave/Edit', [
-            'leave' => $leave,
+            'leave' => $leaveData,
             'leaveTypes' => $leaveTypes,
         ]);
     }

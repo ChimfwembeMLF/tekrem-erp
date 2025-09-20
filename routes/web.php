@@ -517,6 +517,8 @@ Route::middleware([
 
     // HR routes
     Route::prefix('hr')->name('hr.')->middleware('permission:view hr')->group(function () {
+    // Teams Management
+    Route::resource('teams', \App\Http\Controllers\HR\TeamController::class);
         // Dashboard
         Route::get('/', [\App\Http\Controllers\HR\DashboardController::class, 'index'])->name('dashboard');
 
@@ -561,6 +563,20 @@ Route::middleware([
             Route::get('/reports', [\App\Http\Controllers\HR\AnalyticsController::class, 'reports'])->name('reports');
             Route::post('/export', [\App\Http\Controllers\HR\AnalyticsController::class, 'export'])->name('export');
         });
+        // Skills Management
+        Route::resource('skills', \App\Http\Controllers\HR\SkillController::class);
+
+        // Document Management
+        Route::resource('documents', \App\Http\Controllers\HR\DocumentController::class);
+
+        // Org Chart
+        Route::get('orgchart', [\App\Http\Controllers\HR\OrgChartController::class, 'index'])->name('orgchart.index');
+
+        // Payroll
+        Route::resource('payroll', \App\Http\Controllers\HR\PayrollController::class);
+
+        // Onboarding
+        Route::resource('onboarding', \App\Http\Controllers\HR\OnboardingController::class);
     });
 
     // Support routes

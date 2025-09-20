@@ -395,6 +395,12 @@ export default function Sidebar({ settings }: SidebarProps) {
       active: route().current('hr.departments.*')
     },
     {
+      href: route('hr.teams.index'),
+      label: t('hr.teams', 'Teams'),
+      icon: <Users className="h-5 w-5" />,
+      active: route().current('hr.teams.*')
+    },
+    {
       href: route('hr.leave.index'),
       label: t('hr.leave', 'Leave Management'),
       icon: <Calendar className="h-5 w-5" />,
@@ -407,6 +413,18 @@ export default function Sidebar({ settings }: SidebarProps) {
       active: route().current('hr.performance.*')
     },
     {
+      href: route('hr.skills.index'),
+      label: t('hr.skills', 'Skills'),
+      icon: <CheckSquare className="h-5 w-5" />,
+      active: route().current('hr.skills.*')
+    },
+    {
+      href: route('hr.documents.index'),
+      label: t('hr.documents', 'Documents'),
+      icon: <FileText className="h-5 w-5" />,
+      active: route().current('hr.documents.*')
+    },
+    {
       href: route('hr.attendance.index'),
       label: t('hr.attendance', 'Attendance'),
       icon: <Clock className="h-5 w-5" />,
@@ -417,6 +435,24 @@ export default function Sidebar({ settings }: SidebarProps) {
       label: t('hr.training', 'Training'),
       icon: <GraduationCap className="h-5 w-5" />,
       active: route().current('hr.training.*')
+    },
+    {
+      href: route('hr.onboarding.index'),
+      label: t('hr.onboarding', 'Onboarding'),
+      icon: <UserPlus className="h-5 w-5" />,
+      active: route().current('hr.onboarding.*')
+    },
+    {
+      href: route('hr.orgchart.index'),
+      label: t('hr.orgchart', 'Org Chart'),
+      icon: <TreePine className="h-5 w-5" />,
+      active: route().current('hr.orgchart.*')
+    },
+    {
+      href: route('hr.payroll.index'),
+      label: t('hr.payroll', 'Payroll'),
+      icon: <DollarSign className="h-5 w-5" />,
+      active: route().current('hr.payroll.*')
     },
     {
       href: route('hr.analytics.dashboard'),
