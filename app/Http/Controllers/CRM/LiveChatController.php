@@ -8,7 +8,6 @@ use App\Models\Conversation;
 use App\Models\MessageComment;
 use App\Models\Client;
 use App\Models\Lead;
-use App\Models\Project;
 use App\Models\User;
 use App\Events\ChatMessageSent;
 use App\Events\UserTyping;
@@ -164,7 +163,7 @@ class LiveChatController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'title' => 'nullable|string|max:255',
-            'conversable_type' => 'nullable|string|in:App\\Models\\Client,App\\Models\\Lead,App\\Models\\Project',
+            'conversable_type' => 'nullable|string|in:App\\Models\\Client,App\\Models\\Lead',
             'conversable_id' => 'nullable|integer',
             'assigned_to' => 'nullable|integer|exists:users,id',
             'priority' => 'string|in:low,normal,high,urgent',
@@ -364,7 +363,7 @@ class LiveChatController extends Controller
     public function findOrCreateConversation(Request $request): \Illuminate\Http\RedirectResponse
     {
         $validator = Validator::make($request->all(), [
-            'chattable_type' => 'required|string|in:App\\Models\\Client,App\\Models\\Lead,App\\Models\\Project',
+            'chattable_type' => 'required|string|in:App\\Models\\Client,App\\Models\\Lead',
             'chattable_id' => 'required|integer',
         ]);
 
@@ -384,7 +383,7 @@ class LiveChatController extends Controller
 
         // If no conversation exists, create one
         if (!$conversation) {
-            // Get the entity (Lead, Client, or Project)
+            // Get the entity (Lead or Client)
             $entity = $chattableType::find($chattableId);
 
             if (!$entity) {
@@ -392,18 +391,11 @@ class LiveChatController extends Controller
             }
 
             // Determine if this should be internal based on entity type
-            $isInternal = $chattableType === Project::class;
+            $isInternal = false;
 
             // Set participants based on entity type
             $participants = [$user->id];
-            if ($chattableType === Project::class) {
-                // For projects, include all team members
-                $participants = array_unique(array_merge(
-                    [$entity->manager_id],
-                    $entity->team_members ?? [],
-                    [$user->id]
-                ));
-            }
+            // No project logic, only client/lead
 
             // Create new conversation
             $conversation = Conversation::create([
@@ -411,7 +403,7 @@ class LiveChatController extends Controller
                 'conversable_type' => $chattableType,
                 'conversable_id' => $chattableId,
                 'created_by' => $user->id,
-                'assigned_to' => $chattableType === Project::class ? $entity->manager_id : null,
+                'assigned_to' => null,
                 'priority' => 'normal',
                 'is_internal' => $isInternal,
                 'participants' => $participants,
@@ -457,60 +449,8 @@ class LiveChatController extends Controller
         $user = Auth::user();
         $message->addReaction($request->emoji, $user->id);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Reaction added successfully',
-            'reactions' => $message->fresh()->reactions
-        ]);
-    }
+    return response()->json([]);
 
-    /**
-     * Remove a reaction from a message.
-     */
-    public function removeReaction(Request $request, Chat $message): JsonResponse
-    {
-        $validator = Validator::make($request->all(), [
-            'emoji' => 'required|string|max:10',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['error' => 'Invalid emoji'], 400);
-        }
-
-        $user = Auth::user();
-        $message->removeReaction($request->emoji, $user->id);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Reaction removed successfully',
-            'reactions' => $message->fresh()->reactions
-        ]);
-    }
-
-    /**
-     * Pin a message.
-     */
-    public function pinMessage(Chat $message): JsonResponse
-    {
-        $user = Auth::user();
-
-        // Check if the conversation already has 3 pinned messages
-        $pinnedCount = Chat::where('conversation_id', $message->conversation_id)
-            ->where('is_pinned', true)
-            ->count();
-
-        if ($pinnedCount >= 3) {
-            return response()->json([
-                'error' => 'Maximum of 3 messages can be pinned per conversation. Please unpin a message first.'
-            ], 400);
-        }
-
-        $message->pin($user->id);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Message pinned successfully'
-        ]);
     }
 
     /**
@@ -711,112 +651,6 @@ class LiveChatController extends Controller
             'edit_history' => $enrichedHistory,
             'is_edited' => $message->is_edited,
             'edited_at' => $message->edited_at?->toISOString(),
-        ]);
-    }
-
-    /**
-     * Display project-specific chat interface using the existing LiveChat component.
-     */
-    public function projectChat(Request $request, Project $project): Response
-    {
-        $user = Auth::user();
-
-        // Check if user has access to this project
-        if (!$user->hasRole(['admin', 'staff']) &&
-            $project->manager_id !== $user->id &&
-            !in_array($user->id, $project->team_members ?? [])) {
-            abort(403, 'Unauthorized access to project chat.');
-        }
-
-        // Find or create a conversation for this project
-        $conversation = Conversation::where('conversable_type', Project::class)
-            ->where('conversable_id', $project->id)
-            ->where('status', '!=', 'archived')
-            ->first();
-
-        if (!$conversation) {
-            // Create new conversation for the project
-            $conversation = Conversation::create([
-                'title' => "Project Chat: {$project->name}",
-                'conversable_type' => Project::class,
-                'conversable_id' => $project->id,
-                'created_by' => $user->id,
-                'assigned_to' => $project->manager_id,
-                'priority' => 'normal',
-                'is_internal' => true, // Project chats are internal
-                'participants' => array_unique(array_merge(
-                    [$project->manager_id],
-                    $project->team_members ?? [],
-                    [$user->id]
-                )),
-                'last_message_at' => now(),
-                'status' => 'active',
-            ]);
-
-            // Create initial system message
-            Chat::create([
-                'conversation_id' => $conversation->id,
-                'message' => "Project chat started for: {$project->name}",
-                'message_type' => 'system',
-                'status' => 'sent',
-                'chattable_type' => Project::class,
-                'chattable_id' => $project->id,
-                'user_id' => $user->id,
-                'is_internal_note' => true,
-            ]);
-        } else {
-            // Add current user as participant if not already
-            if (!$conversation->hasParticipant($user->id)) {
-                $conversation->addParticipant($user->id);
-            }
-        }
-
-        // Load conversation with messages including comments and reactions
-        $conversation->load([
-            'conversable',
-            'creator',
-            'assignee',
-            'messages.user',
-            'messages.replyTo.user',
-            'messages.replies.user',
-            'messages.comments.user',
-            'messages.pinnedBy'
-        ]);
-
-        // Get pinned messages (max 3, ordered by pinned date)
-        $pinnedMessages = Chat::where('conversation_id', $conversation->id)
-            ->where('is_pinned', true)
-            ->with(['user', 'pinnedBy'])
-            ->orderBy('pinned_at', 'desc')
-            ->limit(3)
-            ->get();
-
-        // Mark messages as read for current user
-        $conversation->markAsReadFor($user);
-
-        // Get project team members for the sidebar
-        $teamMembers = User::whereIn('id', array_merge(
-            [$project->manager_id],
-            $project->team_members ?? []
-        ))->select('id', 'name', 'email')->get();
-
-        // Get available clients and leads for staff (same as regular LiveChat)
-        $clients = $user->hasRole('customer') ? [] : Client::select('id', 'name', 'email')->get();
-        $leads = $user->hasRole('customer') ? [] : Lead::select('id', 'name', 'email')->get();
-        $staff = $user->hasRole('customer') ? [] : User::role(['admin', 'staff'])->select('id', 'name', 'email')->get();
-
-        // Use the existing LiveChat Conversation component but with project context
-        return Inertia::render('CRM/LiveChat/Conversation', [
-            'conversation' => $conversation,
-            'pinnedMessages' => $pinnedMessages,
-            'clients' => $clients,
-            'leads' => $leads,
-            'staff' => $staff,
-            'userRole' => $user->getRoleNames()->first(),
-            // Add project-specific data
-            'project' => $project->load(['client', 'manager']),
-            'teamMembers' => $teamMembers,
-            'isProjectChat' => true, // Flag to customize the UI for project context
         ]);
     }
 }
