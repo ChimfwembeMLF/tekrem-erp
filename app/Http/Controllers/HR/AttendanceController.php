@@ -294,7 +294,7 @@ class AttendanceController extends Controller
             ->groupBy('hr_departments.id', 'hr_departments.name')
             ->get();
 
-        return Inertia::render('HR/Attendance/Reports', [
+        return Inertia::render('HR/Attendance/AttendanceReport', [
             'summary' => $attendanceSummary,
             'departmentStats' => $departmentStats,
             'filters' => [
