@@ -85,6 +85,16 @@ class Employee extends Model
     }
 
     /**
+     * The teams this employee belongs to.
+     */
+    public function teams(): BelongsToMany
+    {
+        return $this->belongsToMany(Team::class, 'hr_employee_team', 'employee_id', 'team_id')
+            ->withPivot('is_lead')
+            ->withTimestamps();
+    }
+
+    /**
      * Get the employees managed by this employee.
      */
     public function subordinates(): HasMany

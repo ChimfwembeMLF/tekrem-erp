@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\HR\Payroll;
+use App\Models\HR\Employee;
+use App\Services\HR\PayrollService;
 
 class PayrollController extends Controller
 {
@@ -35,14 +37,14 @@ class PayrollController extends Controller
 
     public function store(Request $request)
     {
-        // Validate and store payroll record
         $data = $request->validate([
             'employee_id' => 'required|integer',
             'period' => 'required|string',
-            'amount' => 'required|numeric',
         ]);
-        Payroll::create($data);
-        return redirect()->route('hr.payroll.index')->with('success', 'Payroll record created.');
+        $employee = Employee::findOrFail($data['employee_id']);
+        $service = new PayrollService();
+        $payroll = $service->processPayroll($employee, $data['period']);
+        return redirect()->route('hr.payroll.index')->with('success', 'Payroll processed and posted to finance.');
     }
 
     public function show(Payroll $payroll)

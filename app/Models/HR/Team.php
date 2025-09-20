@@ -15,4 +15,14 @@ class Team extends Model
     ];
 
     protected $table = 'hr_teams';
+
+        /**
+     * The employees in this team.
+     */
+    public function employees()
+    {
+        return $this->belongsToMany(Employee::class, 'hr_employee_team', 'team_id', 'employee_id')
+            ->withPivot('is_lead')
+            ->withTimestamps();
+    }
 }
