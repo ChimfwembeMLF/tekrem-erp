@@ -68,10 +68,6 @@ Route::prefix('guest')->name('guest.')->group(function () {
     Route::post('/support/ticket/status', [\App\Http\Controllers\Guest\SupportController::class, 'ticketStatus'])->name('support.ticket.status');
 
     // Portfolio
-    Route::get('/portfolio', [\App\Http\Controllers\Guest\PortfolioController::class, 'index'])->name('portfolio.index');
-    Route::get('/portfolio/{id}', [\App\Http\Controllers\Guest\PortfolioController::class, 'show'])->name('portfolio.show');
-    Route::get('/portfolio/services', [\App\Http\Controllers\Guest\PortfolioController::class, 'services'])->name('portfolio.services');
-    Route::get('/testimonials', [\App\Http\Controllers\Guest\PortfolioController::class, 'testimonials'])->name('testimonials');
 });
 
 // AI Service Test Route (for development/testing)
@@ -220,49 +216,6 @@ Route::middleware([
             Route::get('/statistics', [\App\Http\Controllers\CRM\AIConversationExportController::class, 'statistics'])->name('statistics');
             Route::post('/preview', [\App\Http\Controllers\CRM\AIConversationExportController::class, 'preview'])->name('preview');
         });
-    });
-
-    Route::prefix('projects')->name('projects.')->middleware('permission:view projects')->group(function () {
-        // Dashboard
-
-
-
-        // Milestones
-        Route::prefix('{project}/milestones')->name('milestones.')->group(function () {
-        });
-
-        // Files
-        Route::prefix('{project}/files')->name('files.')->group(function () {
-        });
-
-        // Time Logs
-        Route::prefix('{project}/time-logs')->name('time-logs.')->group(function () {
-        });
-
-        // Templates
-        Route::prefix('templates')->name('templates.')->group(function () {
-        });
-
-        // Tags
-        Route::prefix('tags')->name('tags.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\TagController::class, 'index'])->name('index');
-            Route::get('/create', [\App\Http\Controllers\TagController::class, 'create'])->name('create');
-            Route::post('/', [\App\Http\Controllers\TagController::class, 'store'])->name('store');
-            Route::get('/search', [\App\Http\Controllers\TagController::class, 'search'])->name('search');
-            Route::get('/{tag}', [\App\Http\Controllers\TagController::class, 'show'])->name('show');
-            Route::get('/{tag}/edit', [\App\Http\Controllers\TagController::class, 'edit'])->name('edit');
-            Route::put('/{tag}', [\App\Http\Controllers\TagController::class, 'update'])->name('update');
-            Route::delete('/{tag}', [\App\Http\Controllers\TagController::class, 'destroy'])->name('destroy');
-        });
-
-        // Tasks
-        Route::prefix('{project}/tasks')->name('tasks.')->group(function () {
-        });
-
-        // My Tasks (global route for current user's tasks)
-
-        // LiveChat Integration
-        Route::get('/{project}/livechat', [\App\Http\Controllers\CRM\LiveChatController::class, 'projectChat'])->name('livechat');
     });
 
     // Finance routes
@@ -910,7 +863,7 @@ Route::middleware([
             Route::get('/', [\App\Http\Controllers\SocialMedia\InstagramController::class, 'index'])->name('index');
             Route::post('/sync-accounts', [\App\Http\Controllers\SocialMedia\InstagramController::class, 'syncAccounts'])->name('sync-accounts');
             Route::post('/sync-media', [\App\Http\Controllers\SocialMedia\InstagramController::class, 'syncMedia'])->name('sync-media');
-            Route::post('/search-hashtags', [\App\Http\Controllers\SocialMedia\InstagramController::class, 'searchHashtags'])->name('search-hashtags');
+            // Route::post('/search-hashtags', ...) // Incomplete/removed due to syntax error
             Route::post('/hashtag-info', [\App\Http\Controllers\SocialMedia\InstagramController::class, 'getHashtagInfo'])->name('hashtag-info');
             Route::post('/posts', [\App\Http\Controllers\SocialMedia\InstagramController::class, 'createPost'])->name('posts.create');
             Route::post('/posts/{post}/publish', [\App\Http\Controllers\SocialMedia\InstagramController::class, 'publishPost'])->name('posts.publish');
@@ -958,4 +911,105 @@ Route::prefix('/whatsapp')->middleware(['auth'])->group(function () {
     Route::post('/chats/{chat}/read', [\App\Http\Controllers\SocialMedia\WhatsAppChatController::class, 'markAsRead']);
     Route::post('/chats/{chat}/typing', [\App\Http\Controllers\SocialMedia\WhatsAppChatController::class, 'typing']);
     Route::post('/chats/{chat}/upload', [\App\Http\Controllers\SocialMedia\WhatsAppChatController::class, 'uploadMedia']);
+});
+
+// --- Agile Project Management (Jira-style) PM Module ---
+Route::prefix('pm')->name('pm.')->middleware(['auth', 'verified'])->group(function () {
+    // PM Projects List (entry point)
+    Route::get('projects', [\App\Http\Controllers\ProjectController::class, 'pmIndex'])->name('projects.index');
+    // PM Project Create
+    Route::get('projects/create', [\App\Http\Controllers\ProjectController::class, 'create'])->name('projects.create');
+    // PM Project Store
+    Route::post('projects', [\App\Http\Controllers\ProjectController::class, 'store'])->name('projects.store');
+    // PM Project Edit
+    Route::get('projects/{project}/edit', [\App\Http\Controllers\ProjectController::class, 'edit'])->name('projects.edit');
+    // PM Project Update
+    Route::put('projects/{project}', [\App\Http\Controllers\ProjectController::class, 'update'])->name('projects.update');
+    // PM Project Show
+    Route::get('projects/{project}', [\App\Http\Controllers\ProjectController::class, 'show'])->name('projects.show');
+    // PM Boards for a Project (list)
+    Route::get('projects/{project}/boards', [\App\Http\Controllers\ProjectController::class, 'pmBoards'])->name('projects.boards');
+    // PM Board Show (nested under project)
+    Route::get('projects/{project}/boards/{board}', [\App\Http\Controllers\BoardController::class, 'show'])->name('projects.boards.show');
+    // Boards and all board-related resources (same as before, but under pm/projects/{project}/boards if you want nested)
+    Route::resource('boards', \App\Http\Controllers\BoardController::class);
+    Route::post('boards/{board}/archive', [\App\Http\Controllers\BoardController::class, 'archive'])->name('boards.archive');
+    Route::post('boards/{board}/restore', [\App\Http\Controllers\BoardController::class, 'restore'])->name('boards.restore');
+    Route::post('boards/{board}/duplicate', [\App\Http\Controllers\BoardController::class, 'duplicate'])->name('boards.duplicate');
+    Route::post('boards/{board}/invite', [\App\Http\Controllers\BoardController::class, 'invite'])->name('boards.invite');
+    Route::post('boards/{board}/reorder-columns', [\App\Http\Controllers\BoardController::class, 'reorderColumns'])->name('boards.reorder-columns');
+
+    // Board Columns
+    Route::resource('boards.columns', \App\Http\Controllers\BoardColumnController::class)->shallow();
+    Route::post('columns/{column}/archive', [\App\Http\Controllers\BoardColumnController::class, 'archive'])->name('columns.archive');
+    Route::post('columns/{column}/restore', [\App\Http\Controllers\BoardColumnController::class, 'restore'])->name('columns.restore');
+    Route::post('columns/{column}/reorder-cards', [\App\Http\Controllers\BoardColumnController::class, 'reorderCards'])->name('columns.reorder-cards');
+
+    // Board Cards (Issues/Tasks)
+    Route::resource('boards.cards', \App\Http\Controllers\BoardCardController::class)->shallow();
+    Route::post('cards/{card}/archive', [\App\Http\Controllers\BoardCardController::class, 'archive'])->name('cards.archive');
+    Route::post('cards/{card}/restore', [\App\Http\Controllers\BoardCardController::class, 'restore'])->name('cards.restore');
+    Route::post('cards/{card}/move', [\App\Http\Controllers\BoardCardController::class, 'move'])->name('cards.move');
+    Route::post('cards/{card}/duplicate', [\App\Http\Controllers\BoardCardController::class, 'duplicate'])->name('cards.duplicate');
+    Route::post('cards/{card}/subscribe', [\App\Http\Controllers\BoardCardController::class, 'subscribe'])->name('cards.subscribe');
+    Route::post('cards/{card}/unsubscribe', [\App\Http\Controllers\BoardCardController::class, 'unsubscribe'])->name('cards.unsubscribe');
+    Route::post('cards/{card}/vote', [\App\Http\Controllers\BoardCardController::class, 'vote'])->name('cards.vote');
+    Route::post('cards/{card}/unvote', [\App\Http\Controllers\BoardCardController::class, 'unvote'])->name('cards.unvote');
+    Route::post('cards/{card}/remind', [\App\Http\Controllers\BoardCardController::class, 'remind'])->name('cards.remind');
+    Route::post('cards/{card}/relate', [\App\Http\Controllers\BoardCardController::class, 'relate'])->name('cards.relate');
+    Route::post('cards/{card}/unrelate', [\App\Http\Controllers\BoardCardController::class, 'unrelate'])->name('cards.unrelate');
+
+    // Card Checklists
+    Route::resource('cards.checklists', \App\Http\Controllers\CardChecklistController::class)->shallow();
+    Route::post('checklists/{checklist}/complete', [\App\Http\Controllers\CardChecklistController::class, 'complete'])->name('checklists.complete');
+    Route::post('checklists/{checklist}/incomplete', [\App\Http\Controllers\CardChecklistController::class, 'incomplete'])->name('checklists.incomplete');
+
+    // Card Comments
+    Route::resource('cards.comments', \App\Http\Controllers\CardCommentController::class)->shallow();
+    Route::post('comments/{comment}/pin', [\App\Http\Controllers\CardCommentController::class, 'pin'])->name('comments.pin');
+    Route::post('comments/{comment}/unpin', [\App\Http\Controllers\CardCommentController::class, 'unpin'])->name('comments.unpin');
+
+    // Card Attachments
+    Route::resource('cards.attachments', \App\Http\Controllers\CardAttachmentController::class)->shallow();
+    Route::get('attachments/{attachment}/download', [\App\Http\Controllers\CardAttachmentController::class, 'download'])->name('attachments.download');
+
+    // Card Activity Logs
+    Route::get('cards/{card}/activity', [\App\Http\Controllers\CardActivityLogController::class, 'index'])->name('cards.activity.index');
+
+    // Card Relations
+    Route::resource('cards.relations', \App\Http\Controllers\CardRelationController::class)->shallow();
+
+    // Card Votes
+    Route::resource('cards.votes', \App\Http\Controllers\CardVoteController::class)->shallow();
+
+    // Card Subscribers
+    Route::resource('cards.subscribers', \App\Http\Controllers\CardSubscriberController::class)->shallow();
+
+    // Card Reminders
+    Route::resource('cards.reminders', \App\Http\Controllers\CardReminderController::class)->shallow();
+
+    // Sprints
+    Route::resource('boards.sprints', \App\Http\Controllers\SprintController::class)->shallow();
+    Route::post('sprints/{sprint}/start', [\App\Http\Controllers\SprintController::class, 'start'])->name('sprints.start');
+    Route::post('sprints/{sprint}/complete', [\App\Http\Controllers\SprintController::class, 'complete'])->name('sprints.complete');
+    Route::post('sprints/{sprint}/reopen', [\App\Http\Controllers\SprintController::class, 'reopen'])->name('sprints.reopen');
+    Route::get('sprints/{sprint}/report', [\App\Http\Controllers\SprintReportController::class, 'show'])->name('sprints.report');
+
+    // Epics
+    Route::resource('boards.epics', \App\Http\Controllers\EpicController::class)->shallow();
+    Route::post('epics/{epic}/archive', [\App\Http\Controllers\EpicController::class, 'archive'])->name('epics.archive');
+    Route::post('epics/{epic}/restore', [\App\Http\Controllers\EpicController::class, 'restore'])->name('epics.restore');
+
+    // Labels
+    Route::resource('boards.labels', \App\Http\Controllers\LabelController::class)->shallow();
+
+    // Board Members
+    Route::resource('boards.members', \App\Http\Controllers\BoardMemberController::class)->shallow();
+    Route::post('members/{member}/remove', [\App\Http\Controllers\BoardMemberController::class, 'remove'])->name('members.remove');
+    Route::post('members/{member}/resend-invite', [\App\Http\Controllers\BoardMemberController::class, 'resendInvite'])->name('members.resend-invite');
+
+    // Board Invitations
+    Route::resource('boards.invitations', \App\Http\Controllers\BoardInvitationController::class)->shallow();
+    Route::post('invitations/{invitation}/accept', [\App\Http\Controllers\BoardInvitationController::class, 'accept'])->name('invitations.accept');
+    Route::post('invitations/{invitation}/decline', [\App\Http\Controllers\BoardInvitationController::class, 'decline'])->name('invitations.decline');
 });

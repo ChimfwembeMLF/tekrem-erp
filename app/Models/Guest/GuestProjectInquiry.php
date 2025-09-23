@@ -3,7 +3,6 @@
 namespace App\Models\Guest;
 
 use App\Models\User;
-use App\Models\Project;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -110,13 +109,6 @@ class GuestProjectInquiry extends Model
         return $this->belongsTo(User::class, 'assigned_to');
     }
 
-    /**
-     * Get the related project.
-     */
-    public function project(): BelongsTo
-    {
-        return $this->belongsTo(Project::class);
-    }
 
     /**
      * Scope a query to only include inquiries of a specific project type.

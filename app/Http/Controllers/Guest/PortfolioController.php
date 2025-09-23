@@ -1,9 +1,34 @@
+    /**
+     * Static projects data (replace with real data source as needed)
+     */
+    private static array $staticProjects = [
+        [
+            'id' => 1,
+            'name' => 'ERP Implementation',
+            'status' => 'completed',
+            'category' => 'Software',
+            'client' => 'Acme Corp',
+            'budget' => 50000,
+            'start_date' => '2024-01-01',
+            'end_date' => '2024-06-01',
+        ],
+        [
+            'id' => 2,
+            'name' => 'Website Redesign',
+            'status' => 'active',
+            'category' => 'Web',
+            'client' => 'Beta Ltd',
+            'budget' => 12000,
+            'start_date' => '2025-02-15',
+            'end_date' => null,
+        ],
+        // Add more static projects as needed
+    ];
 <?php
 
 namespace App\Http\Controllers\Guest;
 
 use App\Http\Controllers\Controller;
-use App\Models\Project;
 use App\Models\CMS\Page;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,7 +41,7 @@ class PortfolioController extends Controller
      */
     public function index(Request $request): Response
     {
-        $query = Project::where('status', 'completed')
+    // $query = Project::where('status', 'completed')
             ->whereNotNull('metadata->showcase')
             ->where('metadata->showcase->public', true);
 
@@ -35,49 +60,25 @@ class PortfolioController extends Controller
             });
         }
 
-        $projects = $query->with(['client:id,name,company'])
-            ->select([
-                'id', 'name', 'description', 'category', 'start_date', 
-                'end_date', 'budget', 'client_id', 'tags', 'metadata'
-            ])
-            ->orderBy('end_date', 'desc')
-            ->paginate(12)
-            ->withQueryString();
-
-        // Transform projects for public display
-        $projects->getCollection()->transform(function ($project) {
-            $showcase = $project->metadata['showcase'] ?? [];
-            
-            return [
-                'id' => $project->id,
-                'name' => $project->name,
-                'description' => $project->description,
-                'category' => $project->category,
-                'start_date' => $project->start_date,
-                'end_date' => $project->end_date,
-                'client_name' => $showcase['client_name'] ?? ($project->client?->company ?: $project->client?->name),
-                'tags' => $project->tags,
-                'images' => $showcase['images'] ?? [],
-                'features' => $showcase['features'] ?? [],
-                'technologies' => $showcase['technologies'] ?? [],
-                'live_url' => $showcase['live_url'] ?? null,
-                'case_study_url' => $showcase['case_study_url'] ?? null,
-                'testimonial' => $showcase['testimonial'] ?? null,
-            ];
-        });
-
-        // Get available project categories for filtering
-        $categories = Project::where('status', 'completed')
-            ->whereNotNull('metadata->showcase')
-            ->where('metadata->showcase->public', true)
-            ->distinct()
-            ->pluck('category')
-            ->filter()
-            ->sort()
-            ->values();
-
+        // Use static projects for demo
+        $projects = self::$staticProjects;
+        // Optionally filter by type
+        if ($request->filled('type')) {
+            $projects = array_filter($projects, fn($p) => $p['category'] === $request->type);
+        }
+        // Optionally filter by search
+        if ($request->filled('search')) {
+            $search = strtolower($request->search);
+            $projects = array_filter($projects, function($p) use ($search) {
+                return str_contains(strtolower($p['name']), $search)
+                    || str_contains(strtolower($p['category']), $search)
+                    || str_contains(strtolower($p['client']), $search);
+            });
+        }
+        // Get unique categories
+        $categories = array_values(array_unique(array_map(fn($p) => $p['category'], self::$staticProjects)));
         return Inertia::render('Guest/Portfolio/Index', [
-            'projects' => $projects,
+            'projects' => array_values($projects),
             'categories' => $categories,
             'filters' => $request->only(['type', 'search'])
         ]);
@@ -88,7 +89,7 @@ class PortfolioController extends Controller
      */
     public function show(int $id): Response
     {
-        $project = Project::where('id', $id)
+    // $project = Project::where('id', $id)
             ->where('status', 'completed')
             ->whereNotNull('metadata->showcase')
             ->where('metadata->showcase->public', true)
@@ -121,7 +122,7 @@ class PortfolioController extends Controller
         ];
 
         // Get related projects
-        $relatedProjects = Project::where('status', 'completed')
+    // $relatedProjects = Project::where('status', 'completed')
             ->whereNotNull('metadata->showcase')
             ->where('metadata->showcase->public', true)
             ->where('category', $project->category)
@@ -162,7 +163,7 @@ class PortfolioController extends Controller
 
         $serviceProjects = [];
         foreach ($serviceCategories as $category => $title) {
-            $projects = Project::where('status', 'completed')
+            // $projects = Project::where('status', 'completed')
                 ->whereNotNull('metadata->showcase')
                 ->where('metadata->showcase->public', true)
                 ->where('category', $category)
@@ -205,7 +206,7 @@ class PortfolioController extends Controller
      */
     public function testimonials(): Response
     {
-        $testimonials = Project::where('status', 'completed')
+    // $testimonials = Project::where('status', 'completed')
             ->whereNotNull('metadata->showcase->testimonial')
             ->get()
             ->map(function ($project) {
@@ -243,11 +244,11 @@ class PortfolioController extends Controller
      */
     public function statistics(): array
     {
-        $completedProjects = Project::where('status', 'completed')->count();
-        $activeProjects = Project::where('status', 'active')->count();
-        $totalClients = Project::distinct('client_id')->whereNotNull('client_id')->count();
+    // $completedProjects = Project::where('status', 'completed')->count();
+    // $activeProjects = Project::where('status', 'active')->count();
+    // $totalClients = Project::distinct('client_id')->whereNotNull('client_id')->count();
         
-        $categories = Project::where('status', 'completed')
+    // $categories = Project::where('status', 'completed')
             ->groupBy('category')
             ->selectRaw('category, count(*) as count')
             ->pluck('count', 'category')
