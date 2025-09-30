@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
-import { Badge } from '@/Components/ui/badge.jsx';
 import { Modal } from '@/Components/ui/modal';
 import { Save, X, Calendar, Target, Flag } from 'lucide-react';
 
@@ -66,7 +65,7 @@ export function SprintForm({
       title={mode === 'create' ? 'Create New Sprint' : 'Edit Sprint'}
       size="md"
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         {/* Name */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -77,7 +76,7 @@ export function SprintForm({
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('name', e.target.value)}
             placeholder="e.g., Sprint 1, Feature Development Sprint..."
             required
-            className="w-full"
+            className="w-full h-11 sm:h-10 text-base sm:text-sm"
           />
         </div>
 
@@ -92,12 +91,12 @@ export function SprintForm({
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleChange('goal', e.target.value)}
             placeholder="What is the main objective of this sprint?"
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base sm:text-sm resize-none"
           />
         </div>
 
-        {/* Dates Row */}
-        <div className="grid grid-cols-2 gap-4">
+        {/* Dates Row - Stack on mobile */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <Calendar className="h-4 w-4 inline mr-1" />
@@ -107,7 +106,7 @@ export function SprintForm({
               type="date"
               value={formData.start_date}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('start_date', e.target.value)}
-              className="w-full"
+              className="w-full h-11 sm:h-10 text-base sm:text-sm"
             />
           </div>
           
@@ -120,7 +119,7 @@ export function SprintForm({
               type="date"
               value={formData.end_date}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('end_date', e.target.value)}
-              className="w-full"
+              className="w-full h-11 sm:h-10 text-base sm:text-sm"
             />
           </div>
         </div>
@@ -134,7 +133,7 @@ export function SprintForm({
           <select
             value={formData.status}
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleChange('status', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-11 sm:h-10 text-base sm:text-sm"
           >
             {statusOptions.map(option => (
               <option key={option.value} value={option.value}>
@@ -158,12 +157,12 @@ export function SprintForm({
           </div>
         )}
 
-        {/* Form Actions */}
-        <div className="flex justify-end gap-2 pt-4 border-t">
-          <Button type="button" variant="outline" onClick={onClose}>
+        {/* Form Actions - Stack on mobile */}
+        <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-2 pt-4 border-t">
+          <Button type="button" variant="outline" onClick={onClose} className="w-full sm:w-auto h-11 sm:h-10 order-2 sm:order-1">
             Cancel
           </Button>
-          <Button type="submit">
+          <Button type="submit" className="w-full sm:w-auto h-11 sm:h-10 order-1 sm:order-2">
             <Save className="h-4 w-4 mr-1" />
             {mode === 'create' ? 'Create Sprint' : 'Save Changes'}
           </Button>

@@ -38,6 +38,7 @@ import {
   Zap,
   FolderOpen,
   CheckSquare,
+  Kanban,
   User,
   Building,
   Calendar,
@@ -123,10 +124,22 @@ export default function Sidebar({ settings }: SidebarProps) {
   // Agile/PM navigation items - only visible to users with projects permission
   const agileItems = hasProjectsAccess() ? [
     {
+      href: route('pm.dashboard'),
+      label: t('pm.dashboard', 'Dashboard'),
+      icon: <LayoutDashboard className="h-5 w-5" />,
+      active: route().current('pm.dashboard')
+    },
+    {
       href: route('pm.projects.index'),
       label: t('pm.projects', 'Projects'),
-      icon: <FolderOpen className="h-5 w-5" />, 
+      icon: <FolderOpen className="h-5 w-5" />,
       active: route().current('pm.projects.*')
+    },
+    {
+      href: route('pm.boards.index'),
+      label: t('pm.boards', 'Boards'),
+      icon: <Kanban className="h-5 w-5" />,
+      active: route().current('pm.boards.*')
     },
   ] : [];
 

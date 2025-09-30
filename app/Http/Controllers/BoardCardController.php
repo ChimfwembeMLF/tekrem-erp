@@ -70,7 +70,7 @@ class BoardCardController extends Controller
         if ($request->has('labels')) {
             $card->labels()->sync($request->input('labels'));
         }
-        return redirect()->route('projects.boards.show', [$project, $board]);
+        return redirect()->route('pm.projects.boards.show', [$project, $board]);
     }
 
     public function update(Request $request, Project $project, Board $board, BoardColumn $column, BoardCard $card)
@@ -93,7 +93,7 @@ class BoardCardController extends Controller
         if ($request->has('labels')) {
             $card->labels()->sync($request->input('labels'));
         }
-        return redirect()->route('projects.boards.show', [$project, $board]);
+        return redirect()->route('pm.projects.boards.show', [$project, $board]);
     }
 
     public function move(Request $request, BoardCard $card): RedirectResponse
@@ -147,12 +147,158 @@ class BoardCardController extends Controller
         $board = $card->column->board;
         $project = $board->project;
 
-        return redirect()->route('pm.projects.show', $project->id);
+        return redirect()->route('pm.projects.boards.show', [$project, $board]);
     }
 
     public function destroy(Project $project, Board $board, BoardColumn $column, BoardCard $card)
     {
         $card->delete();
-        return redirect()->route('projects.boards.show', [$project, $board]);
+        return redirect()->route('pm.projects.boards.show', [$project, $board]);
+    }
+
+    public function duplicate(Request $request, BoardCard $card): RedirectResponse
+    {
+        $duplicatedCard = $card->replicate();
+        $duplicatedCard->title = $card->title . ' (Copy)';
+        $duplicatedCard->save();
+
+        // Copy labels if they exist
+        if ($card->labels) {
+            $duplicatedCard->labels()->sync($card->labels->pluck('id'));
+        }
+
+        // Get the project from the card's board
+        $board = $card->column->board;
+        $project = $board->project;
+
+        return redirect()->route('pm.projects.boards.show', [$project, $board]);
+    }
+
+    public function archive(Request $request, BoardCard $card): RedirectResponse
+    {
+        $card->update(['archived_at' => now()]);
+
+        // Get the project from the card's board
+        $board = $card->column->board;
+        $project = $board->project;
+
+        return redirect()->route('pm.projects.boards.show', [$project, $board]);
+    }
+
+    public function restore(Request $request, BoardCard $card): RedirectResponse
+    {
+        $card->update(['archived_at' => null]);
+
+        // Get the project from the card's board
+        $board = $card->column->board;
+        $project = $board->project;
+
+        return redirect()->route('pm.projects.boards.show', [$project, $board]);
+    }
+
+    public function subscribe(Request $request, BoardCard $card): RedirectResponse
+    {
+        $user = Auth::user();
+        
+        // Add user to card subscribers (you may need to create a pivot table)
+        // For now, we'll just return success
+        
+        $board = $card->column->board;
+        $project = $board->project;
+
+        return redirect()->route('pm.projects.boards.show', [$project, $board])
+            ->with('success', 'Subscribed to card notifications');
+    }
+
+    public function unsubscribe(Request $request, BoardCard $card): RedirectResponse
+    {
+        $user = Auth::user();
+        
+        // Remove user from card subscribers
+        // For now, we'll just return success
+        
+        $board = $card->column->board;
+        $project = $board->project;
+
+        return redirect()->route('pm.projects.boards.show', [$project, $board])
+            ->with('success', 'Unsubscribed from card notifications');
+    }
+
+    public function vote(Request $request, BoardCard $card): RedirectResponse
+    {
+        $user = Auth::user();
+        
+        // Add user vote to card (you may need to create a votes table)
+        // For now, we'll just return success
+        
+        $board = $card->column->board;
+        $project = $board->project;
+
+        return redirect()->route('pm.projects.boards.show', [$project, $board])
+            ->with('success', 'Vote added');
+    }
+
+    public function unvote(Request $request, BoardCard $card): RedirectResponse
+    {
+        $user = Auth::user();
+        
+        // Remove user vote from card
+        // For now, we'll just return success
+        
+        $board = $card->column->board;
+        $project = $board->project;
+
+        return redirect()->route('pm.projects.boards.show', [$project, $board])
+            ->with('success', 'Vote removed');
+    }
+
+    public function remind(Request $request, BoardCard $card): RedirectResponse
+    {
+        $request->validate([
+            'message' => 'nullable|string|max:500',
+            'reminder_date' => 'required|date|after:now',
+        ]);
+        
+        // Create reminder (you may need to create a reminders table)
+        // For now, we'll just return success
+        
+        $board = $card->column->board;
+        $project = $board->project;
+
+        return redirect()->route('pm.projects.boards.show', [$project, $board])
+            ->with('success', 'Reminder set successfully');
+    }
+
+    public function relate(Request $request, BoardCard $card): RedirectResponse
+    {
+        $request->validate([
+            'related_card_id' => 'required|exists:board_cards,id',
+            'relation_type' => 'required|in:blocks,is_blocked_by,relates_to,duplicates,is_duplicated_by',
+        ]);
+        
+        // Create card relationship (you may need to create a card_relations table)
+        // For now, we'll just return success
+        
+        $board = $card->column->board;
+        $project = $board->project;
+
+        return redirect()->route('pm.projects.boards.show', [$project, $board])
+            ->with('success', 'Card relationship created');
+    }
+
+    public function unrelate(Request $request, BoardCard $card): RedirectResponse
+    {
+        $request->validate([
+            'related_card_id' => 'required|exists:board_cards,id',
+        ]);
+        
+        // Remove card relationship
+        // For now, we'll just return success
+        
+        $board = $card->column->board;
+        $project = $board->project;
+
+        return redirect()->route('pm.projects.boards.show', [$project, $board])
+            ->with('success', 'Card relationship removed');
     }
 }

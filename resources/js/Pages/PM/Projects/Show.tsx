@@ -109,12 +109,22 @@ export default function Show({ project, boards = [], analytics = {}, employees =
   const [selectedSprintId, setSelectedSprintId] = useState<string>('');
   const [selectedAssigneeId, setSelectedAssigneeId] = useState<string>('');
   
+  // Local state for optimistic updates
+  const [localColumns, setLocalColumns] = useState<Column[] | null>(null);
+  
+  // Reset local state when board changes
+  React.useEffect(() => {
+    setLocalColumns(null);
+  }, [selectedBoardId]);
+  
   // Find the active board based on selection
   const activeBoard: Board = boards.find(b => b.id.toString() === selectedBoardId) || boards[0] || { id: 0, name: '', columns: [], epics: [], labels: [], members: [], sprints: [] };
   
   // Filter columns and cards based on selected sprint and assignee
   const filteredColumns = React.useMemo(() => {
-    let filteredCards = activeBoard.columns || [];
+    // Use local columns if available (for optimistic updates), otherwise use board columns
+    const sourceColumns = localColumns || activeBoard.columns || [];
+    let filteredCards = sourceColumns;
     
     // Filter by sprint if selected
     if (selectedSprintId && selectedSprintId !== '') {
@@ -135,7 +145,7 @@ export default function Show({ project, boards = [], analytics = {}, employees =
     }
     
     return filteredCards;
-  }, [activeBoard.columns, selectedSprintId, selectedAssigneeId]);
+  }, [localColumns, activeBoard.columns, selectedSprintId, selectedAssigneeId]);
   
   const columns: Column[] = Array.isArray(filteredColumns) ? filteredColumns : [];
   const epics: Epic[] = Array.isArray(activeBoard.epics) ? activeBoard.epics : [];
@@ -307,31 +317,86 @@ export default function Show({ project, boards = [], analytics = {}, employees =
   };
 
   const handleMoveCard = (cardId: number, fromColumnId: number, toColumnId: number, newIndex: number) => {
+    console.log('Moving card:', { cardId, fromColumnId, toColumnId, newIndex });
+    
+    // Optimistic update: Update local state immediately for smooth UX
+    const updatedColumns = columns?.map(column => {
+      if (column.id === fromColumnId) {
+        // Remove card from source column
+        return {
+          ...column,
+          cards: column.cards.filter(card => card.id !== cardId)
+        };
+      } else if (column.id === toColumnId) {
+        // Add card to target column at specific position
+        const cardToMove = columns
+          ?.find(col => col.id === fromColumnId)
+          ?.cards.find(card => card.id === cardId);
+        
+        if (cardToMove) {
+          const newCards = [...column.cards];
+          newCards.splice(newIndex, 0, cardToMove);
+          return {
+            ...column,
+            cards: newCards
+          };
+        }
+      }
+      return column;
+    });
+
+    // Update local state immediately
+    if (updatedColumns) {
+      setLocalColumns(updatedColumns);
+    }
+
+    // Then make backend call
     router.post(route('pm.cards.move', cardId), {
       column_id: toColumnId,
       position: newIndex
     }, {
       onSuccess: () => {
-        toast.success('Card moved successfully');
+        console.log('Card moved successfully on backend');
       },
       onError: (errors) => {
         console.error('Error moving card:', errors);
-        toast.error('Failed to move card. Please check your connection and try again.');
+        toast.error('Failed to move card. Refreshing...');
+        // Revert optimistic update on error
+        router.reload({ only: ['columns'] });
       }
     });
   };
 
   const handleColumnMove = (columnId: number, newIndex: number) => {
+    console.log('Moving column:', { columnId, newIndex });
+    
+    // Optimistic update: Reorder columns immediately for smooth UX
+    const currentColumns = localColumns || activeBoard.columns || [];
+    const columnIndex = currentColumns.findIndex(col => col.id === columnId);
+    
+    if (columnIndex !== -1) {
+      const updatedColumns = [...currentColumns];
+      const [movedColumn] = updatedColumns.splice(columnIndex, 1);
+      updatedColumns.splice(newIndex, 0, movedColumn);
+      
+      // Update local state immediately
+      setLocalColumns(updatedColumns);
+    }
+
+    // Then make backend call
     router.post(route('pm.boards.reorder-columns', activeBoard.id), {
       column_id: columnId,
       order: newIndex
     }, {
       onSuccess: () => {
-        toast.success('Column reordered successfully');
+        console.log('Column reordered successfully on backend');
       },
       onError: (errors) => {
         console.error('Error reordering column:', errors);
-        toast.error('Failed to reorder column. Please check your connection and try again.');
+        toast.error('Failed to reorder column. Refreshing...');
+        // Revert optimistic update on error
+        setLocalColumns(null);
+        router.reload({ only: ['boards'] });
       }
     });
   };
@@ -421,6 +486,89 @@ export default function Show({ project, boards = [], analytics = {}, employees =
     });
   };
 
+  // New action handlers for enhanced functionality
+  const handleCardArchive = (cardId: number) => {
+    router.post(route('pm.cards.archive', cardId), {}, {
+      onSuccess: () => {
+        console.log('Card archived successfully');
+      },
+      onError: (errors) => {
+        console.error('Error archiving card:', errors);
+      }
+    });
+  };
+
+  const handleCardDuplicate = (cardId: number) => {
+    router.post(route('pm.cards.duplicate', cardId), {}, {
+      onSuccess: () => {
+        console.log('Card duplicated successfully');
+      },
+      onError: (errors) => {
+        console.error('Error duplicating card:', errors);
+      }
+    });
+  };
+
+  const handleCardDelete = (cardId: number) => {
+    if (confirm('Are you sure you want to delete this card? This action cannot be undone.')) {
+      router.delete(route('pm.cards.destroy', cardId), {
+        onSuccess: () => {
+          console.log('Card deleted successfully');
+        },
+        onError: (errors) => {
+          console.error('Error deleting card:', errors);
+        }
+      });
+    }
+  };
+
+  const handleColumnArchive = (columnId: number) => {
+    router.post(route('pm.columns.archive', columnId), {}, {
+      onSuccess: () => {
+        console.log('Column archived successfully');
+      },
+      onError: (errors) => {
+        console.error('Error archiving column:', errors);
+      }
+    });
+  };
+
+  const handleBoardShare = () => {
+    // Open board sharing modal or redirect to share page
+    console.log('Board sharing functionality');
+  };
+
+  const handleBoardSettings = () => {
+    // Open board settings modal
+    console.log('Board settings functionality');
+  };
+
+  const handleBoardArchive = () => {
+    if (activeBoard && confirm('Are you sure you want to archive this board?')) {
+      router.post(route('pm.boards.archive', activeBoard.id), {}, {
+        onSuccess: () => {
+          console.log('Board archived successfully');
+        },
+        onError: (errors) => {
+          console.error('Error archiving board:', errors);
+        }
+      });
+    }
+  };
+
+  const handleBoardDuplicate = () => {
+    if (activeBoard) {
+      router.post(route('pm.boards.duplicate', activeBoard.id), {}, {
+        onSuccess: () => {
+          console.log('Board duplicated successfully');
+        },
+        onError: (errors) => {
+          console.error('Error duplicating board:', errors);
+        }
+      });
+    }
+  };
+
   const handleBoardChange = (boardId: string) => {
     setSelectedBoardId(boardId);
     setSelectedSprintId(''); // Reset sprint when board changes
@@ -457,6 +605,7 @@ export default function Show({ project, boards = [], analytics = {}, employees =
         <div className="px-6 py-4">
           {currentView === 'board' && activeBoard && (
             <JiraBoard
+              boardId={activeBoard?.id}
               columns={(columns || []).map(col => ({
                 ...col,
                 cards: (col.cards || []).map(card => ({
@@ -475,8 +624,17 @@ export default function Show({ project, boards = [], analytics = {}, employees =
               onCardCreate={handleCardCreate}
               onCardEdit={handleCardEdit2}
               onCardClick={handleCardEdit2}
+              onCardArchive={handleCardArchive}
+              onCardDuplicate={handleCardDuplicate}
+              onCardDelete={handleCardDelete}
               onColumnCreate={handleCreateColumn}
               onColumnEdit={handleColumnEdit}
+              onColumnArchive={handleColumnArchive}
+              onColumnDelete={handleColumnDelete}
+              onBoardShare={handleBoardShare}
+              onBoardSettings={handleBoardSettings}
+              onBoardArchive={handleBoardArchive}
+              onBoardDuplicate={handleBoardDuplicate}
             />
           )}
           

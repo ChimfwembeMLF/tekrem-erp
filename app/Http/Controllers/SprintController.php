@@ -53,7 +53,7 @@ class SprintController extends Controller
         ]);
         $data['board_id'] = $board->id;
         Sprint::create($data);
-        return redirect()->route('projects.boards.show', [$project, $board]);
+        return redirect()->route('pm.projects.boards.show', [$project, $board]);
     }
 
     public function update(Request $request, Project $project, Board $board, Sprint $sprint)
@@ -66,12 +66,12 @@ class SprintController extends Controller
             'status' => 'required|in:planned,active,completed,archived',
         ]);
         $sprint->update($data);
-        return redirect()->route('projects.boards.show', [$project, $board]);
+        return redirect()->route('pm.projects.boards.show', [$project, $board]);
     }
 
     public function destroy(Project $project, Board $board, Sprint $sprint)
     {
         $sprint->delete();
-        return redirect()->route('projects.boards.show', [$project, $board]);
+        return redirect()->route('pm.projects.boards.show', [$project, $board]);
     }
 }

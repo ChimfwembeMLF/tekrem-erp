@@ -914,7 +914,10 @@ Route::prefix('/whatsapp')->middleware(['auth'])->group(function () {
 });
 
 // --- Agile Project Management (Jira-style) PM Module ---
-Route::prefix('pm')->name('pm.')->middleware(['auth', 'verified'])->group(function () {
+Route::prefix('pm')->name('pm.')->middleware(['auth', 'verified', 'permission:view projects'])->group(function () {
+    // PM Dashboard
+    Route::get('/', [\App\Http\Controllers\ProjectController::class, 'dashboard'])->name('dashboard');
+
     // PM Projects List (entry point)
     Route::get('projects', [\App\Http\Controllers\ProjectController::class, 'pmIndex'])->name('projects.index');
     // PM Project Create

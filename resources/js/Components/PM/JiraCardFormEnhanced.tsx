@@ -130,29 +130,30 @@ export function JiraCardForm({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[90vh] overflow-hidden flex flex-col bg-card">
-        <DialogHeader className="flex-none border-b border-border p-6">
+      <DialogContent className="max-w-4xl max-h-[95vh] sm:h-[90vh] overflow-hidden flex flex-col bg-card m-2 sm:m-0 w-[calc(100vw-1rem)] sm:w-auto">
+        <DialogHeader className="flex-none border-b border-border p-3 sm:p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-foreground">
+            <h2 className="text-lg sm:text-xl font-semibold text-foreground">
               {mode === 'create' ? 'Create Issue' : 'Edit Issue'}
             </h2>
-            <div className="flex items-center gap-2">
-              <Button onClick={handleSave} size="sm">
-                <Save className="h-4 w-4 mr-2" />
-                {mode === 'create' ? 'Create' : 'Save'}
+            <div className="flex items-center gap-1 sm:gap-2">
+              <Button onClick={handleSave} size="sm" className="h-8 sm:h-9">
+                <Save className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">{mode === 'create' ? 'Create' : 'Save'}</span>
+                <span className="sm:hidden">{mode === 'create' ? 'Create' : 'Save'}</span>
               </Button>
-              <Button variant="ghost" size="sm" onClick={onClose}>
-                <X className="h-4 w-4" />
+              <Button variant="ghost" size="sm" onClick={onClose} className="h-8 sm:h-9 w-8 sm:w-9 p-0">
+                <X className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
             </div>
           </div>
         </DialogHeader>
 
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
           {/* Main Content */}
-          <div className="flex-1 p-6 overflow-y-auto">
+          <div className="flex-1 p-3 sm:p-6 overflow-y-auto">
             {/* Title */}
-            <div className="mb-6">
+            <div className="mb-4 sm:mb-6">
               <label htmlFor="title" className="text-sm font-medium text-foreground mb-2 block">
                 Summary *
               </label>
@@ -161,13 +162,13 @@ export function JiraCardForm({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="What needs to be done?"
-                className="text-lg font-medium"
+                className="text-base sm:text-lg font-medium h-11 sm:h-10"
                 required
               />
             </div>
 
             {/* Description with WYSIWYG */}
-            <div className="mb-6">
+            <div className="mb-4 sm:mb-6">
               <label className="text-sm font-medium text-foreground mb-2 block">
                 Description
               </label>
@@ -177,7 +178,8 @@ export function JiraCardForm({
                   onChange={(val) => setDescription(val || '')}
                   preview="edit"
                   hideToolbar={false}
-                  height={300}
+                  height={250}
+                  data-color-mode="light"
                 />
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -185,8 +187,8 @@ export function JiraCardForm({
               </p>
             </div>
 
-            {/* Acceptance Criteria */}
-            <div className="mb-6">
+            {/* Acceptance Criteria - Hidden on mobile to save space */}
+            <div className="mb-4 sm:mb-6 hidden sm:block">
               <label className="text-sm font-medium text-foreground mb-2 block">
                 Acceptance Criteria
               </label>
@@ -229,14 +231,15 @@ export function JiraCardForm({
             </div>
           </div>
 
-          {/* Sidebar */}
-          <div className="w-80 border-l border-border p-6 bg-muted/30">
-            <div className="space-y-6">
+          {/* Sidebar - Responsive layout */}
+          <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-border p-3 sm:p-6 bg-muted/30">
+            {/* Mobile: Grid layout, Desktop: Vertical stack */}
+            <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-4 lg:space-y-6 lg:block">
               {/* Status */}
-              <div>
+              <div className="lg:mb-6">
                 <label className="text-sm font-medium text-foreground mb-2 block">Status</label>
                 <Select value={status} onValueChange={setStatus}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full h-10 sm:h-9">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -250,10 +253,10 @@ export function JiraCardForm({
               </div>
 
               {/* Assignee */}
-              <div>
+              <div className="lg:mb-6">
                 <label className="text-sm font-medium text-foreground mb-2 block">Assignee</label>
                 <Select value={assignee} onValueChange={setAssignee}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full h-10 sm:h-9">
                     <User className="h-4 w-4 text-muted-foreground mr-2" />
                     <SelectValue placeholder="Unassigned" />
                   </SelectTrigger>
@@ -281,8 +284,8 @@ export function JiraCardForm({
                 </Select>
               </div>
 
-              {/* Reporter */}
-              <div>
+              {/* Reporter - Hidden on mobile to save space */}
+              <div className="hidden lg:block lg:mb-6">
                 <label className="text-sm font-medium text-foreground mb-2 block">Reporter</label>
                 <div className="flex items-center gap-2 p-2 border border-input rounded bg-background">
                   <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-xs text-primary-foreground font-medium">
@@ -293,10 +296,10 @@ export function JiraCardForm({
               </div>
 
               {/* Type */}
-              <div>
+              <div className="lg:mb-6">
                 <label className="text-sm font-medium text-foreground mb-2 block">Type</label>
                 <Select value={type} onValueChange={setType}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full h-10 sm:h-9">
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -313,10 +316,10 @@ export function JiraCardForm({
               </div>
 
               {/* Priority */}
-              <div>
+              <div className="lg:mb-6">
                 <label className="text-sm font-medium text-foreground mb-2 block">Priority</label>
                 <Select value={priority} onValueChange={setPriority}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full h-10 sm:h-9">
                     <SelectValue placeholder="Select priority" />
                   </SelectTrigger>
                   <SelectContent>
@@ -329,8 +332,8 @@ export function JiraCardForm({
                 </Select>
               </div>
 
-              {/* Labels */}
-              <div>
+              {/* Labels - Full width on mobile */}
+              <div className="col-span-2 lg:col-span-1 lg:mb-6">
                 <label className="text-sm font-medium text-foreground mb-2 block">Labels</label>
                 <div className="space-y-2">
                   <div className="flex flex-wrap gap-1">
@@ -357,13 +360,13 @@ export function JiraCardForm({
                         e.currentTarget.value = '';
                       }
                     }}
-                    className="text-xs"
+                    className="text-xs h-9"
                   />
                 </div>
               </div>
 
               {/* Story Points */}
-              <div>
+              <div className="lg:mb-6">
                 <label className="text-sm font-medium text-foreground mb-2 block">Story Points</label>
                 <Input
                   value={storyPoints}
@@ -372,35 +375,36 @@ export function JiraCardForm({
                   type="number"
                   min="1"
                   max="100"
+                  className="h-10 sm:h-9"
                 />
               </div>
 
               {/* Due Date */}
-              <div>
+              <div className="lg:mb-6">
                 <label className="text-sm font-medium text-foreground mb-2 block">Due Date</label>
-                <div className="flex items-center gap-2 p-2 border border-input rounded bg-background">
+                <div className="flex items-center gap-2 p-2 border border-input rounded bg-background h-10 sm:h-9">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <Input
                     type="date"
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
-                    className="border-none shadow-none p-0"
+                    className="border-none shadow-none p-0 h-auto"
                   />
                 </div>
               </div>
 
-              {/* Sprint */}
-              <div>
+              {/* Sprint - Hidden on mobile to save space */}
+              <div className="hidden lg:block lg:mb-6">
                 <label className="text-sm font-medium text-foreground mb-2 block">Sprint</label>
-                <div className="flex items-center gap-2 p-2 border border-input rounded bg-background">
+                <div className="flex items-center gap-2 p-2 border border-input rounded bg-background h-9">
                   <Zap className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm text-primary font-medium">CBS Sprint 1</span>
                 </div>
               </div>
 
-              {/* More Fields */}
-              <div>
-                <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground">
+              {/* More Fields - Hidden on mobile */}
+              <div className="hidden lg:block">
+                <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground h-9">
                   <Plus className="h-4 w-4 mr-2" />
                   Add more fields
                 </Button>

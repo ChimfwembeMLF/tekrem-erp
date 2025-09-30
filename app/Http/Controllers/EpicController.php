@@ -52,7 +52,7 @@ class EpicController extends Controller
         ]);
         $data['board_id'] = $board->id;
         Epic::create($data);
-        return redirect()->route('projects.boards.show', [$project, $board]);
+        return redirect()->route('pm.projects.boards.show', [$project, $board]);
     }
 
     public function update(Request $request, Project $project, Board $board, Epic $epic)
@@ -63,12 +63,12 @@ class EpicController extends Controller
             'color' => 'nullable|string',
         ]);
         $epic->update($data);
-        return redirect()->route('projects.boards.show', [$project, $board]);
+        return redirect()->route('pm.projects.boards.show', [$project, $board]);
     }
 
     public function destroy(Project $project, Board $board, Epic $epic)
     {
         $epic->delete();
-        return redirect()->route('projects.boards.show', [$project, $board]);
+        return redirect()->route('pm.projects.boards.show', [$project, $board]);
     }
 }

@@ -117,7 +117,7 @@ export function CardForm({
       title={mode === 'create' ? 'Create New Card' : 'Edit Card'}
       size="lg"
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         {/* Title */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -128,18 +128,18 @@ export function CardForm({
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, title: e.target.value }))}
             placeholder="Enter card title..."
             required
-            className="w-full"
+            className="w-full h-11 sm:h-10 text-base sm:text-sm"
           />
         </div>
 
-        {/* Type and Priority Row */}
-        <div className="grid grid-cols-2 gap-4">
+        {/* Type and Priority Row - Stack on mobile */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Issue Type *
             </label>
             <Select value={formData.type} onValueChange={(value: string) => setFormData(prev => ({ ...prev, type: value }))}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full h-11 sm:h-10 text-base sm:text-sm">
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
@@ -161,7 +161,7 @@ export function CardForm({
               Priority
             </label>
             <Select value={formData.priority} onValueChange={(value: string) => setFormData(prev => ({ ...prev, priority: value }))}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full h-11 sm:h-10 text-base sm:text-sm">
                 <SelectValue placeholder="Select priority" />
               </SelectTrigger>
               <SelectContent>
@@ -185,49 +185,50 @@ export function CardForm({
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData(prev => ({ ...prev, description: e.target.value }))}
             placeholder="Enter card description..."
             rows={4}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base sm:text-sm resize-none"
           />
         </div>
 
-        {/* Story Points */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <Target className="h-4 w-4 inline mr-1" />
-            Story Points
-          </label>
-          <Select 
-            value={formData.story_points?.toString() || ""} 
-            onValueChange={(value: string) => setFormData(prev => ({ 
-              ...prev, 
-              story_points: value ? parseInt(value) : null 
-            }))}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select story points" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">No points</SelectItem>
-              {storyPointOptions.map(points => (
-                <SelectItem key={points} value={points.toString()}>
-                  {points} points
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Story Points and Due Date Row - Stack on mobile */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <Target className="h-4 w-4 inline mr-1" />
+              Story Points
+            </label>
+            <Select 
+              value={formData.story_points?.toString() || ""} 
+              onValueChange={(value: string) => setFormData(prev => ({ 
+                ...prev, 
+                story_points: value ? parseInt(value) : null 
+              }))}
+            >
+              <SelectTrigger className="w-full h-11 sm:h-10 text-base sm:text-sm">
+                <SelectValue placeholder="Select story points" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">No points</SelectItem>
+                {storyPointOptions.map(points => (
+                  <SelectItem key={points} value={points.toString()}>
+                    {points} points
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        {/* Due Date */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <Calendar className="h-4 w-4 inline mr-1" />
-            Due Date
-          </label>
-          <Input
-            type="date"
-            value={formData.due_date}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, due_date: e.target.value }))}
-            className="w-full"
-          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <Calendar className="h-4 w-4 inline mr-1" />
+              Due Date
+            </label>
+            <Input
+              type="date"
+              value={formData.due_date}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, due_date: e.target.value }))}
+              className="w-full h-11 sm:h-10 text-base sm:text-sm"
+            />
+          </div>
         </div>
 
         {/* Tags */}
@@ -241,9 +242,9 @@ export function CardForm({
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewTag(e.target.value)}
               placeholder="Add tag..."
               onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
-              className="flex-1"
+              className="flex-1 h-10 sm:h-9 text-base sm:text-sm"
             />
-            <Button type="button" onClick={handleAddTag} size="sm">
+            <Button type="button" onClick={handleAddTag} size="sm" className="h-10 sm:h-9 px-3">
               <Plus className="h-4 w-4" />
             </Button>
           </div>
@@ -299,12 +300,12 @@ export function CardForm({
           </div>
         </div>
 
-        {/* Form Actions */}
-        <div className="flex justify-end gap-2 pt-4 border-t">
-          <Button type="button" variant="outline" onClick={onClose}>
+        {/* Form Actions - Stack on mobile */}
+        <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-2 pt-4 border-t">
+          <Button type="button" variant="outline" onClick={onClose} className="w-full sm:w-auto h-11 sm:h-10 order-2 sm:order-1">
             Cancel
           </Button>
-          <Button type="submit">
+          <Button type="submit" className="w-full sm:w-auto h-11 sm:h-10 order-1 sm:order-2">
             <Save className="h-4 w-4 mr-1" />
             {mode === 'create' ? 'Create Card' : 'Save Changes'}
           </Button>

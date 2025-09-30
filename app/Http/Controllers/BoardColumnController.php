@@ -51,7 +51,7 @@ class BoardColumnController extends Controller
         ]);
         $data['board_id'] = $board->id;
         BoardColumn::create($data);
-        return redirect()->route('pm.projects.show', $project);
+        return redirect()->route('pm.projects.boards.show', [$project, $board]);
     }
 
     public function update(Request $request, BoardColumn $column)
@@ -63,13 +63,16 @@ class BoardColumnController extends Controller
             'is_done_column' => 'boolean',
         ]);
         $column->update($data);
-        return redirect()->route('pm.projects.show', $column->board->project_id);
+        $column->load('board.project');
+        return redirect()->route('pm.projects.boards.show', [$column->board->project, $column->board]);
     }
 
     public function destroy(BoardColumn $column)
     {
-        $projectId = $column->board->project_id;
+        $column->load('board.project');
+        $project = $column->board->project;
+        $board = $column->board;
         $column->delete();
-        return redirect()->route('pm.projects.show', $projectId);
+        return redirect()->route('pm.projects.boards.show', [$project, $board]);
     }
 }

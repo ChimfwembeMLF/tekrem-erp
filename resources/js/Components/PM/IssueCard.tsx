@@ -1,6 +1,13 @@
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/Components/ui/dropdown-menu';
 import { 
   Calendar, 
   MessageSquare, 
@@ -14,7 +21,11 @@ import {
   Lightbulb,
   CheckSquare,
   User,
-  Target
+  Target,
+  Edit,
+  Archive,
+  Copy,
+  Trash2
 } from 'lucide-react';
 
 export interface IssueCardProps {
@@ -44,6 +55,9 @@ export interface IssueCardProps {
   };
   onClick?: () => void;
   onEdit?: () => void;
+  onArchive?: () => void;
+  onDuplicate?: () => void;
+  onDelete?: () => void;
   className?: string;
 }
 
@@ -74,7 +88,10 @@ const priorityColors = {
 export function IssueCard({ 
   issue, 
   onClick, 
-  onEdit, 
+  onEdit,
+  onArchive,
+  onDuplicate,
+  onDelete,
   className = '' 
 }: IssueCardProps) {
   const {
@@ -98,14 +115,47 @@ export function IssueCard({
     // Prevent click events during drag
     if (isDragging) return;
     e.preventDefault();
-    onClick?.();
+    try {
+      onClick?.();
+    } catch (error) {
+      console.error('Error handling card click:', error);
+    }
   };
 
   const handleEdit = (e: React.MouseEvent) => {
     // Prevent edit events during drag
     if (isDragging) return;
     e.stopPropagation();
-    onEdit?.();
+    try {
+      onEdit?.();
+    } catch (error) {
+      console.error('Error handling card edit:', error);
+    }
+  };
+
+  // Format due date with better logic
+  const formatDueDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffTime = date.getTime() - now.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays < 0) {
+        return { text: 'Overdue', className: 'text-red-600' };
+      } else if (diffDays === 0) {
+        return { text: 'Today', className: 'text-orange-600' };
+      } else if (diffDays === 1) {
+        return { text: 'Tomorrow', className: 'text-yellow-600' };
+      } else if (diffDays <= 7) {
+        return { text: `${diffDays} days`, className: 'text-blue-600' };
+      } else {
+        return { text: date.toLocaleDateString(), className: 'text-muted-foreground' };
+      }
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return { text: 'Invalid date', className: 'text-muted-foreground' };
+    }
   };
 
   return (
@@ -138,12 +188,79 @@ export function IssueCard({
         </div>
         <div className="flex items-center gap-1">
           {issue.priority && priorityIcons[issue.priority]}
-          <button
-            onClick={handleEdit}
-            className="opacity-0 group-hover:opacity-100 p-1 hover:bg-accent rounded"
-          >
-            <MoreHorizontal className="h-3 w-3 text-muted-foreground" />
-          </button>
+          {/* Card Actions Dropdown */}
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="p-1 hover:bg-accent rounded transition-all"
+                  title="Card options"
+                  aria-label="Card options"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MoreHorizontal className="h-3 w-3 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    try {
+                      onEdit?.();
+                    } catch (error) {
+                      console.error('Error editing card:', error);
+                    }
+                  }}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Issue
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    try {
+                      onDuplicate?.();
+                    } catch (error) {
+                      console.error('Error duplicating card:', error);
+                    }
+                  }}
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Duplicate Issue
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    try {
+                      onArchive?.();
+                    } catch (error) {
+                      console.error('Error archiving card:', error);
+                    }
+                  }}
+                >
+                  <Archive className="h-4 w-4 mr-2" />
+                  Archive Issue
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (confirm(`Are you sure you want to delete "${issue.title}"? This action cannot be undone.`)) {
+                      try {
+                        onDelete?.();
+                      } catch (error) {
+                        console.error('Error deleting card:', error);
+                      }
+                    }
+                  }}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Issue
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
 
@@ -202,11 +319,13 @@ export function IssueCard({
             </div>
           )}
 
-          {/* Due date */}
+          {/* Due date with smart formatting */}
           {issue.due_date && (
-            <div className="flex items-center gap-1 text-xs text-gray-500">
+            <div className={`flex items-center gap-1 text-xs ${formatDueDate(issue.due_date).className}`}>
               <Calendar className="h-3 w-3" />
-              <span>{new Date(issue.due_date).toLocaleDateString()}</span>
+              <span title={new Date(issue.due_date).toLocaleDateString()}>
+                {formatDueDate(issue.due_date).text}
+              </span>
             </div>
           )}
 

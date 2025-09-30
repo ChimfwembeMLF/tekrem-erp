@@ -5,7 +5,14 @@ import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { IssueCard, type IssueCardProps } from './IssueCard';
 import { Button } from '@/Components/ui/button';
-import { Plus, MoreHorizontal, Settings } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/Components/ui/dropdown-menu';
+import { Plus, MoreHorizontal, Settings, Archive, Trash2, Copy } from 'lucide-react';
 
 export interface JiraColumnType {
   id: number;
@@ -21,7 +28,12 @@ interface JiraColumnProps {
   onCardCreate?: () => void;
   onCardEdit?: (card: IssueCardProps['issue']) => void;
   onCardClick?: (card: IssueCardProps['issue']) => void;
+  onCardArchive?: (cardId: number) => void;
+  onCardDuplicate?: (cardId: number) => void;
+  onCardDelete?: (cardId: number) => void;
   onColumnEdit?: () => void;
+  onColumnArchive?: () => void;
+  onColumnDelete?: () => void;
 }
 
 export function JiraColumn({ 
@@ -29,7 +41,12 @@ export function JiraColumn({
   onCardCreate, 
   onCardEdit, 
   onCardClick,
-  onColumnEdit 
+  onCardArchive,
+  onCardDuplicate,
+  onCardDelete,
+  onColumnEdit,
+  onColumnArchive,
+  onColumnDelete
 }: JiraColumnProps) {
   const { setNodeRef } = useDroppable({
     id: `column-${column.id}`,
@@ -94,12 +111,77 @@ export function JiraColumn({
           </div>
           
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="sm" onClick={onCardCreate}>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => {
+                try {
+                  onCardCreate?.();
+                } catch (error) {
+                  console.error('Error creating card:', error);
+                }
+              }}
+              title="Create new issue"
+              aria-label="Create new issue in this column"
+            >
               <Plus className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={onColumnEdit}>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
+            
+            {/* Column Actions Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  title="Column options"
+                  aria-label="Edit column settings"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem
+                  onClick={() => {
+                    try {
+                      onColumnEdit?.();
+                    } catch (error) {
+                      console.error('Error editing column:', error);
+                    }
+                  }}
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Edit Column
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => {
+                    try {
+                      onColumnArchive?.();
+                    } catch (error) {
+                      console.error('Error archiving column:', error);
+                    }
+                  }}
+                >
+                  <Archive className="h-4 w-4 mr-2" />
+                  Archive Column
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    if (confirm(`Are you sure you want to delete the "${column.name}" column? This will also delete all cards in this column.`)) {
+                      try {
+                        onColumnDelete?.();
+                      } catch (error) {
+                        console.error('Error deleting column:', error);
+                      }
+                    }
+                  }}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Column
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
@@ -124,8 +206,15 @@ export function JiraColumn({
             <Button
               variant="ghost"
               size="sm"
-              onClick={onCardCreate}
-              className="mt-2 text-xs"
+              onClick={() => {
+                try {
+                  onCardCreate?.();
+                } catch (error) {
+                  console.error('Error creating card:', error);
+                }
+              }}
+              className="mt-2 text-xs hover:bg-accent transition-colors"
+              title="Create your first issue in this column"
             >
               <Plus className="h-3 w-3 mr-1" />
               Create issue
@@ -142,6 +231,9 @@ export function JiraColumn({
                 issue={card}
                 onClick={() => onCardClick?.(card)}
                 onEdit={() => onCardEdit?.(card)}
+                onArchive={() => onCardArchive?.(card.id)}
+                onDuplicate={() => onCardDuplicate?.(card.id)}
+                onDelete={() => onCardDelete?.(card.id)}
                 className="group"
               />
             ))}
@@ -154,8 +246,15 @@ export function JiraColumn({
         <Button
           variant="ghost"
           size="sm"
-          onClick={onCardCreate}
-          className="w-full text-left justify-start text-gray-200 hover:text-gray-400"
+          onClick={() => {
+            try {
+              onCardCreate?.();
+            } catch (error) {
+              console.error('Error creating card:', error);
+            }
+          }}
+          className="w-full text-left justify-start text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          title="Create new issue"
         >
           <Plus className="h-4 w-4 mr-2" />
           Create issue

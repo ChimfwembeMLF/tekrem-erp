@@ -6,6 +6,7 @@ use App\Models\Board;
 use App\Models\Project;
 use App\Models\BoardMember;
 use App\Models\BoardInvitation;
+use App\Models\BoardColumn;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -49,202 +50,93 @@ class BoardController extends Controller
         // Get the project from the board
         $project = $board->project;
 
-        return redirect()->route('pm.projects.show', $project->id);
+        return redirect()->route('pm.projects.boards.show', [$project, $board]);
     }
 
-public function index(Project $project)
+public function index()
 {
-    $board = $project->boards()
-        ->with([
-            'columns.cards.labels',
-            'columns.cards.assignee',
-            'columns.cards.reporter',
-            'columns.cards.checklists.items',
-            'columns.cards.attachments',
-            'columns.cards.activityLogs',
-            'columns.cards.relations.relatedCard',
-            'columns.cards.votes',
-            'columns.cards.subscribers',
-            'columns.cards.reminders',
-            'columns.cards.comments.user',
-            'sprints.cards',
-            'epics.cards',
-            'labels.cards',
-            'members.user',
-            'owner',
-            'invitations',
-        ])
-        ->first();
+    // Get all boards the user has access to across all projects
+    $user = auth()->user();
 
-    $activities = [];
-    if ($board) {
-        $activities = $board->columns->flatMap(function ($col) {
-            return $col->cards->map(function ($card) use ($col) {
-                return [
-                    'title' => $card->title,
-                    'column' => $col->name,
-                    'date' => optional($card->updated_at)->format('Y-m-d'),
-                    'type' => $card->type ?? 'Card',
-                ];
-            });
-        })->toArray();
-    }
+    // Get boards from projects the user owns OR boards where the user is a member
+    $boards = Board::where(function ($query) use ($user) {
+        // Boards from projects owned by the user
+        $query->whereHas('project', function ($projectQuery) use ($user) {
+            $projectQuery->where('owner_id', $user->id);
+        })
+        // OR boards where the user is a direct member
+        ->orWhereHas('members', function ($memberQuery) use ($user) {
+            $memberQuery->where('user_id', $user->id);
+        });
+    })
+    ->with([
+        'project',
+        'columns.cards',
+        'members.user',
+        'owner',
+    ])
+    ->get();
 
     return Inertia::render('PM/Boards/Index', [
-        'board' => $board ? [
-            'id' => $board->id,
-            'project_id' => $board->project_id,
-            'name' => $board->name,
-            'columns' => $board->columns->map(function ($col) {
-                return [
-                    'id' => $col->id,
-                    'name' => $col->name,
-                    'order' => $col->order,
-                    'color' => $col->color,
-                    'is_done_column' => $col->is_done_column,
-                    'cards' => $col->cards->map(function ($card) {
-                        return [
-                            'id' => $card->id,
-                            'title' => $card->title,
-                            'description' => $card->description,
-                            'type' => $card->type,
-                            'priority' => $card->priority,
-                            'status' => $card->status,
-                            'assignee' => $card->assignee ? [
-                                'id' => $card->assignee->id,
-                                'name' => $card->assignee->name,
-                                'email' => $card->assignee->email,
-                            ] : null,
-                            'reporter' => $card->reporter ? [
-                                'id' => $card->reporter->id,
-                                'name' => $card->reporter->name,
-                                'email' => $card->reporter->email,
-                            ] : null,
-                            'labels' => $card->labels->map(fn($label) => [
-                                'id' => $label->id,
-                                'name' => $label->name,
-                                'color' => $label->color,
-                            ]),
-                            'checklists' => $card->checklists->map(fn($cl) => [
-                                'id' => $cl->id,
-                                'title' => $cl->title,
-                                'items' => $cl->items->map(fn($item) => [
-                                    'id' => $item->id,
-                                    'title' => $item->title,
-                                    'is_completed' => $item->is_completed,
-                                ]),
-                            ]),
-                            'attachments' => $card->attachments->map(fn($a) => [
-                                'id' => $a->id,
-                                'filename' => $a->filename,
-                                'path' => $a->path,
-                                'mime_type' => $a->mime_type,
-                                'size' => $a->size,
-                            ]),
-                            'activity_logs' => $card->activityLogs->map(fn($log) => [
-                                'id' => $log->id,
-                                'action' => $log->action,
-                                'meta' => $log->meta,
-                                'user' => $log->user ? [
-                                    'id' => $log->user->id,
-                                    'name' => $log->user->name,
-                                ] : null,
-                            ]),
-                            'relations' => $card->relations->map(fn($rel) => [
-                                'id' => $rel->id,
-                                'type' => $rel->type,
-                                'related_card' => $rel->relatedCard ? [
-                                    'id' => $rel->relatedCard->id,
-                                    'title' => $rel->relatedCard->title,
-                                ] : null,
-                            ]),
-                            'votes' => $card->votes->count(),
-                            'subscribers' => $card->subscribers->count(),
-                            'reminders' => $card->reminders->map(fn($r) => [
-                                'id' => $r->id,
-                                'remind_at' => $r->remind_at,
-                                'note' => $r->note,
-                            ]),
-                            'comments' => $card->comments->map(fn($c) => [
-                                'id' => $c->id,
-                                'comment' => $c->comment,
-                                'user' => $c->user ? [
-                                    'id' => $c->user->id,
-                                    'name' => $c->user->name,
-                                ] : null,
-                            ]),
-                        ];
-                    }),
-                ];
-            }),
-            'sprints' => $board->sprints->map(fn($sprint) => [
-                'id' => $sprint->id,
-                'name' => $sprint->name,
-                'status' => $sprint->status,
-                'start_date' => optional($sprint->start_date)->format('Y-m-d'),
-                'end_date' => optional($sprint->end_date)->format('Y-m-d'),
-                'cards' => $sprint->cards->pluck('id'),
-            ]),
-            'epics' => $board->epics->map(fn($epic) => [
-                'id' => $epic->id,
-                'name' => $epic->name,
-                'description' => $epic->description,
-                'color' => $epic->color,
-                'cards' => $epic->cards->pluck('id'),
-            ]),
-            'labels' => $board->labels->map(fn($label) => [
-                'id' => $label->id,
-                'name' => $label->name,
-                'color' => $label->color,
-            ]),
-            'members' => $board->members->map(fn($member) => [
-                'id' => $member->id,
-                'role' => $member->role,
-                'user' => $member->user ? [
-                    'id' => $member->user->id,
-                    'name' => $member->user->name,
-                    'email' => $member->user->email,
+        'project' => null, // No specific project for global boards view
+        'boards' => $boards->map(function ($board) {
+            return [
+                'id' => $board->id,
+                'project_id' => $board->project_id,
+                'project_name' => $board->project->name,
+                'name' => $board->name,
+                'description' => $board->description,
+                'type' => $board->type,
+                'visibility' => $board->visibility,
+                'cards_count' => $board->columns->sum(function ($col) {
+                    return $col->cards->count();
+                }),
+                'members_count' => $board->members->count(),
+                'last_updated' => $board->updated_at,
+                'owner' => $board->owner ? [
+                    'id' => $board->owner->id,
+                    'name' => $board->owner->name,
                 ] : null,
-            ]),
-            'owner' => $board->owner ? [
-                'id' => $board->owner->id,
-                'name' => $board->owner->name,
-                'email' => $board->owner->email,
-            ] : null,
-            'invitations' => $board->invitations->map(fn($inv) => [
-                'id' => $inv->id,
-                'email' => $inv->email,
-                'status' => $inv->status,
-                'token' => $inv->token,
-            ]),
-            'activities' => $activities,
-        ] : null,
+            ];
+        }),
     ]);
 }
 
-    public function create(Project $project)
+    public function create(Request $request)
     {
+        $projectId = $request->get('project_id');
+        $project = $projectId ? Project::findOrFail($projectId) : null;
+
         return Inertia::render('PM/Boards/Create', [
             'project' => $project,
         ]);
     }
 
-    public function store(Request $request, Project $project): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'type' => 'required|in:kanban,scrum',
+            'visibility' => 'required|in:private,public',
+            'project_id' => 'required|exists:projects,id',
         ]);
-        $data['project_id'] = $project->id;
+
         $data['owner_id'] = Auth::id();
         $board = Board::create($data);
+
+        // Add the creator as an admin member
         BoardMember::create([
             'board_id' => $board->id,
             'user_id' => Auth::id(),
             'role' => 'admin',
         ]);
-        return redirect()->route('projects.boards.show', [$project, $board]);
+
+        // Create default columns for the board
+        $this->createDefaultColumns($board);
+
+        $project = Project::find($data['project_id']);
+        return redirect()->route('pm.projects.boards', $project)->with('success', 'Board created successfully!');
     }
 
     public function show(Project $project, Board $board)
@@ -256,15 +148,16 @@ public function index(Project $project)
         ]);
     }
 
-    public function edit(Project $project, Board $board)
+    public function edit(Board $board)
     {
+        $board->load('project');
         return Inertia::render('PM/Boards/Edit', [
-            'project' => $project,
+            'project' => $board->project,
             'board' => $board,
         ]);
     }
 
-    public function update(Request $request, Project $project, Board $board): RedirectResponse
+    public function update(Request $request, Board $board): RedirectResponse
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
@@ -272,13 +165,16 @@ public function index(Project $project)
             'type' => 'required|in:kanban,scrum',
         ]);
         $board->update($data);
-        return redirect()->route('projects.boards.show', [$project, $board]);
+        $board->load('project');
+        return redirect()->route('pm.projects.boards.show', [$board->project, $board]);
     }
 
-    public function destroy(Project $project, Board $board): RedirectResponse
+    public function destroy(Board $board): RedirectResponse
     {
+        $board->load('project');
+        $project = $board->project;
         $board->delete();
-        return redirect()->route('projects.boards.index', $project);
+        return redirect()->route('pm.projects.boards', $project);
     }
 
     public function invite(Request $request, Project $project, Board $board): RedirectResponse
@@ -294,5 +190,80 @@ public function index(Project $project)
         ]);
         // Send invitation email logic here
         return back()->with('success', 'Invitation sent!');
+    }
+
+    public function duplicate(Request $request, Board $board): RedirectResponse
+    {
+        $duplicatedBoard = $board->replicate();
+        $duplicatedBoard->name = $board->name . ' (Copy)';
+        $duplicatedBoard->save();
+
+        // Copy board members
+        foreach ($board->members as $member) {
+            BoardMember::create([
+                'board_id' => $duplicatedBoard->id,
+                'user_id' => $member->user_id,
+                'role' => $member->role,
+            ]);
+        }
+
+        // Copy columns
+        foreach ($board->columns as $column) {
+            $duplicatedColumn = $column->replicate();
+            $duplicatedColumn->board_id = $duplicatedBoard->id;
+            $duplicatedColumn->save();
+
+            // Copy cards in this column
+            foreach ($column->cards as $card) {
+                $duplicatedCard = $card->replicate();
+                $duplicatedCard->column_id = $duplicatedColumn->id;
+                $duplicatedCard->save();
+
+                // Copy card labels if they exist
+                if ($card->labels) {
+                    $duplicatedCard->labels()->sync($card->labels->pluck('id'));
+                }
+            }
+        }
+
+        $project = $board->project;
+        return redirect()->route('pm.projects.boards.show', [$project, $duplicatedBoard])
+            ->with('success', 'Board duplicated successfully!');
+    }
+
+    public function archive(Request $request, Board $board): RedirectResponse
+    {
+        $board->update(['archived_at' => now()]);
+
+        $project = $board->project;
+        return redirect()->route('pm.projects.boards', $project)
+            ->with('success', 'Board archived successfully!');
+    }
+
+    public function restore(Request $request, Board $board): RedirectResponse
+    {
+        $board->update(['archived_at' => null]);
+
+        $project = $board->project;
+        return redirect()->route('pm.projects.boards.show', [$project, $board])
+            ->with('success', 'Board restored successfully!');
+    }
+
+    /**
+     * Create default columns for a new board
+     */
+    private function createDefaultColumns(Board $board)
+    {
+        $defaultColumns = [
+            ['name' => 'To Do', 'order' => 1, 'color' => '#6b7280'],
+            ['name' => 'In Progress', 'order' => 2, 'color' => '#3b82f6'],
+            ['name' => 'Review', 'order' => 3, 'color' => '#f59e0b'],
+            ['name' => 'Done', 'order' => 4, 'color' => '#10b981', 'is_done_column' => true],
+        ];
+
+        foreach ($defaultColumns as $column) {
+            $column['board_id'] = $board->id;
+            BoardColumn::create($column);
+        }
     }
 }

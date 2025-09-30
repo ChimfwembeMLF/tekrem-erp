@@ -70,18 +70,27 @@ class ProjectController extends Controller
     // PM module: List all boards for a project
     public function pmBoards(Project $project)
     {
-        $project->load('boards');
-        // Pass the correct route for each board for frontend navigation
+        $project->load(['boards.owner', 'boards.members', 'boards.cards', 'boards.columns']);
+
+        // Transform boards with additional data for the frontend
         $boards = $project->boards->map(function ($board) use ($project) {
             return [
                 'id' => $board->id,
                 'name' => $board->name,
                 'type' => $board->type,
                 'description' => $board->description,
+                'visibility' => $board->visibility,
+                'created_at' => $board->created_at,
+                'updated_at' => $board->updated_at,
+                'owner' => $board->owner,
+                'members_count' => $board->members->count(),
+                'cards_count' => $board->cards->count(),
+                'columns_count' => $board->columns->count(),
                 'show_url' => route('pm.projects.boards.show', ['project' => $project->id, 'board' => $board->id]),
             ];
         });
-        return Inertia::render('PM/Projects/Boards', [
+
+        return Inertia::render('PM/Boards/Index', [
             'project' => $project,
             'boards' => $boards,
         ]);
@@ -89,7 +98,7 @@ class ProjectController extends Controller
 
     public function create()
     {
-        return Inertia::render('Projects/Create');
+        return Inertia::render('PM/Projects/Create');
     }
 
     public function store(Request $request): RedirectResponse
@@ -218,7 +227,7 @@ class ProjectController extends Controller
 
     public function edit(Project $project)
     {
-        return Inertia::render('Projects/Edit', [
+        return Inertia::render('PM/Projects/Edit', [
             'project' => $project,
         ]);
     }
