@@ -4,14 +4,13 @@ import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
-import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
-import { 
-  ArrowLeft, 
-  Calendar, 
-  Target, 
-  Clock, 
+import {
+  ArrowLeft,
+  Calendar,
+  Target,
+  Clock,
   Trash2,
   Archive,
   AlertTriangle
@@ -30,6 +29,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/Components/ui/alert-dialog';
+import { Label } from '@/Components/ui/label';
+
 
 interface Sprint {
   id: number;
@@ -266,7 +267,7 @@ export default function Edit({ project, board, sprint }: Props) {
                         Archive Sprint
                       </Button>
                     )}
-                    
+
                     <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
                       <AlertDialogTrigger asChild>
                         <Button type="button" variant="destructive" size="sm">
