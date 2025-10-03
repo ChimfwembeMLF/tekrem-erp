@@ -100,16 +100,16 @@ export function KanbanColumn({
   };
 
   return (
-    <div className="bg-muted rounded-lg min-w-[320px] w-60 flex flex-col">
-      <div className="flex items-center justify-between px-4 py-3 border-b">
+  <div className="bg-muted dark:bg-gray-900 rounded-lg min-w-[320px] w-60 flex flex-col">
+  <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-2">
           {column.color && (
             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: column.color }} />
           )}
-          <span className="font-semibold text-gray-700">{column.name}</span>
+          <span className="font-semibold text-gray-700 dark:text-gray-100">{column.name}</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-400 font-mono bg-gray-100 px-2 py-1 rounded">
+          <span className="text-xs text-gray-400 dark:text-gray-300 font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
             {column.cards.length}
           </span>
         </div>
@@ -117,7 +117,7 @@ export function KanbanColumn({
       <div ref={setNodeRef} className="flex-1 px-2 py-2 space-y-3 min-h-[200px]">
         <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
           {column.cards.length === 0 && (
-            <div className="text-center text-xs text-gray-400 py-8 border-2 border-dashed border-gray-200 rounded-lg">
+            <div className="text-center text-xs text-gray-400 dark:text-gray-300 py-8 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
               No cards
               {/* Placement indicator for empty column */}
               {overCardId === null && overCardPosition && (
@@ -157,9 +157,9 @@ export function KanbanColumn({
         {/* Jira-like Add Card UX at bottom */}
         <div className="mt-2">
           {addingCard ? (
-            <div className="bg-white rounded-lg border border-gray-300 shadow-sm p-3">
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-700 shadow-sm p-3">
               <input
-                className="w-full rounded border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200 placeholder-gray-400"
+                className="w-full rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100"
                 placeholder="What needs to be done?"
                 value={newCardTitle}
                 disabled={loading}
@@ -174,7 +174,7 @@ export function KanbanColumn({
               {/* Icon row below input */}
               <div className="flex items-center gap-2 mt-2 relative">
                 {/* Checkbox icon */}
-                <button type="button" className={`p-1 rounded border ${done ? 'bg-primary-50 border-primary' : 'hover:bg-gray-100 border-gray-200'}`} onClick={() => setDone(v => !v)} aria-label="Mark as done">
+                <button type="button" className={`p-1 rounded border ${done ? 'bg-primary-50 border-primary dark:bg-primary-900 dark:border-primary-700' : 'hover:bg-gray-100 dark:hover:bg-gray-800 border-gray-200 dark:border-gray-700'}`} onClick={() => setDone(v => !v)} aria-label="Mark as done">
                   {done ? (
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="4" y="4" width="16" height="16" rx="3" fill="#fff" stroke="#3b82f6" strokeWidth="2"/><path d="M7 12l3 3 7-7" stroke="#3b82f6" strokeWidth="2" fill="none"/></svg>
                   ) : (
@@ -183,47 +183,47 @@ export function KanbanColumn({
                 </button>
                 {/* Dropdown icon for priority */}
                 <div className="relative">
-                  <button type="button" className="p-1 rounded hover:bg-gray-100 border border-gray-200" onClick={() => setShowPriority(v => !v)} aria-label="Set priority">
+                  <button type="button" className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700" onClick={() => setShowPriority(v => !v)} aria-label="Set priority">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M7 10l5 5 5-5" stroke="#888" strokeWidth="2" fill="none"/></svg>
                   </button>
                   {showPriority && (
-                    <div className="absolute z-10 left-0 mt-2 bg-white border rounded shadow p-1 w-28">
+                    <div className="absolute z-10 left-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow p-1 w-28">
                       {priorities.map(p => (
-                        <button key={p} className={`block w-full text-left px-2 py-1 text-sm rounded ${priority === p ? 'bg-primary-100 text-primary-700' : 'hover:bg-gray-100'}`} onClick={() => { setPriority(p); setShowPriority(false); }}>{p}</button>
+                        <button key={p} className={`block w-full text-left px-2 py-1 text-sm rounded ${priority === p ? 'bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-200' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`} onClick={() => { setPriority(p); setShowPriority(false); }}>{p}</button>
                       ))}
                     </div>
                   )}
                 </div>
                 {/* Calendar icon for due date */}
                 <div className="relative">
-                  <button type="button" className="p-1 rounded hover:bg-gray-100 border border-gray-200" onClick={() => setShowDate(v => !v)} aria-label="Set due date">
+                  <button type="button" className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700" onClick={() => setShowDate(v => !v)} aria-label="Set due date">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="3" y="5" width="18" height="16" rx="2" fill="#fff" stroke="#bbb" strokeWidth="2"/><path d="M8 3v4M16 3v4" stroke="#bbb" strokeWidth="2"/><rect x="7" y="10" width="2" height="2" fill="#bbb"/><rect x="11" y="10" width="2" height="2" fill="#bbb"/><rect x="15" y="10" width="2" height="2" fill="#bbb"/></svg>
                   </button>
                   {showDate && (
-                    <div className="absolute z-10 left-0 mt-2 bg-white border rounded shadow p-2">
-                      <input type="date" className="text-sm border rounded px-2 py-1" value={dueDate || ''} onChange={e => { setDueDate(e.target.value); setShowDate(false); }} />
+                    <div className="absolute z-10 left-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow p-2">
+                      <input type="date" className="text-sm border rounded px-2 py-1 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100" value={dueDate || ''} onChange={e => { setDueDate(e.target.value); setShowDate(false); }} />
                     </div>
                   )}
                 </div>
                 {/* User icon for assignee */}
                 <div className="relative">
-                  <button type="button" className="p-1 rounded hover:bg-gray-100 border border-gray-200" onClick={() => setShowAssignee(v => !v)} aria-label="Set assignee">
+                  <button type="button" className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700" onClick={() => setShowAssignee(v => !v)} aria-label="Set assignee">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="8" r="4" stroke="#bbb" strokeWidth="2" fill="#fff"/><path d="M4 20c0-2.5 3.5-4 8-4s8 1.5 8 4" stroke="#bbb" strokeWidth="2" fill="none"/></svg>
                   </button>
                   {showAssignee && (
-                    <div className="absolute z-10 left-0 mt-2 bg-white border rounded shadow p-1 w-32">
+                    <div className="absolute z-10 left-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow p-1 w-32">
                       {employees.map((emp) => (
-                        <button key={emp.id} className={`block w-full text-left px-2 py-1 text-sm rounded ${assigneeId === emp.id ? 'bg-primary-100 text-primary-700' : 'hover:bg-gray-100'}`} onClick={() => { setAssigneeId(emp.id); setShowAssignee(false); }}>{emp.name}</button>
+                        <button key={emp.id} className={`block w-full text-left px-2 py-1 text-sm rounded ${assigneeId === emp.id ? 'bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-200' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`} onClick={() => { setAssigneeId(emp.id); setShowAssignee(false); }}>{emp.name}</button>
                       ))}
                     </div>
                   )}
                 </div>
                 {/* Send icon (submit) */}
-                <button type="button" className="ml-auto p-1 rounded hover:bg-primary-100 border border-gray-200" disabled={loading || !newCardTitle.trim()} onClick={handleSubmit} aria-label="Add">
+                <button type="button" className="ml-auto p-1 rounded hover:bg-primary-100 dark:hover:bg-primary-900 border border-gray-200 dark:border-gray-700" disabled={loading || !newCardTitle.trim()} onClick={handleSubmit} aria-label="Add">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M5 12h14M12 5l7 7-7 7" stroke="#3b82f6" strokeWidth="2" fill="none"/></svg>
                 </button>
                 {/* Cancel icon */}
-                <button type="button" className="p-1 rounded hover:bg-gray-100 border border-gray-200" onClick={onAddCardCancel} aria-label="Cancel">
+                <button type="button" className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700" onClick={onAddCardCancel} aria-label="Cancel">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
@@ -232,7 +232,7 @@ export function KanbanColumn({
             <Button
               variant="ghost"
               size="sm"
-              className="w-full justify-start text-gray-500 hover:bg-gray-200"
+              className="w-full justify-start text-gray-500 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800"
               onClick={onAddCardClick}
             >
               <Plus className="h-4 w-4 mr-1" /> Add card

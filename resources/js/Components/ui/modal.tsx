@@ -29,22 +29,22 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
       />
       
       {/* Modal */}
-      <div className={`relative bg-white rounded-lg shadow-xl w-full mx-4 ${sizeClasses[size]} max-h-[90vh] overflow-hidden`}>
+      <div className={`relative bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full mx-4 ${sizeClasses[size]} max-h-[90vh] overflow-hidden`}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{title}</h2>
           <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
             className="h-8 w-8 p-0"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4 text-gray-500 dark:text-gray-300" />
           </Button>
         </div>
         
         {/* Content */}
-        <div className="p-4 overflow-y-auto max-h-[calc(90vh-8rem)]">
+        <div className="p-4 overflow-y-auto max-h-[calc(90vh-8rem)] text-gray-700 dark:text-gray-100">
           {children}
         </div>
       </div>

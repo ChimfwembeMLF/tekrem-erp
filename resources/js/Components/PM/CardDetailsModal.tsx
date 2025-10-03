@@ -18,16 +18,16 @@ export function CardDetailsModal({ card, isOpen, onClose }: CardDetailsModalProp
   if (!card) return null;
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={card.title} size="xl">
-      <div className="space-y-4">
+  <div className="space-y-4 text-gray-700 dark:text-gray-100">
         <div className="flex items-center gap-2">
           <Badge variant="secondary">{card.status}</Badge>
           {card.priority && <Badge variant="secondary">{card.priority}</Badge>}
           {card.story_points && <Badge variant="secondary">{card.story_points} pts</Badge>}
         </div>
-        <div className="text-gray-700 text-sm whitespace-pre-line">
-          {card.description || <span className="italic text-gray-400">No description</span>}
+  <div className="text-gray-700 dark:text-gray-200 text-sm whitespace-pre-line">
+          {card.description || <span className="italic text-gray-400 dark:text-gray-500">No description</span>}
         </div>
-        <div className="flex items-center gap-4 text-xs text-gray-500">
+  <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-300">
           {card.due_date && (
             <span className="flex items-center gap-1"><Calendar className="h-4 w-4" /> {new Date(card.due_date).toLocaleDateString()}</span>
           )}
@@ -35,7 +35,7 @@ export function CardDetailsModal({ card, isOpen, onClose }: CardDetailsModalProp
             <span className="flex items-center gap-1"><User className="h-4 w-4" /> {card.assignees.join(', ')}</span>
           )}
         </div>
-        <div className="flex items-center gap-4 mt-2">
+  <div className="flex items-center gap-4 mt-2 text-gray-500 dark:text-gray-300">
           <span className="flex items-center gap-1"><MessageSquare className="h-4 w-4" /> {card.comments_count || 0} Comments</span>
           <span className="flex items-center gap-1"><Paperclip className="h-4 w-4" /> {card.attachments_count || 0} Attachments</span>
         </div>

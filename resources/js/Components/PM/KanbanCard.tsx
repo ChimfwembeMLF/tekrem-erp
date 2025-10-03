@@ -72,27 +72,27 @@ export function KanbanCard({ card, onEdit, isDragging = false }: KanbanCardProps
       {...attributes}
       {...listeners}
       className={`
-        bg-white rounded-lg shadow-sm p-3 border cursor-pointer
+        bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 border border-gray-200 dark:border-gray-700 cursor-pointer
         hover:shadow-md transition-shadow
         ${isDragging ? 'opacity-50' : ''}
-        ${isOver ? 'ring-2 ring-blue-200' : ''}
+        ${isOver ? 'ring-2 ring-blue-200 dark:ring-blue-900' : ''}
       `}
       onClick={onEdit}
     >
       <div className="flex flex-col gap-2">
         {/* Header with title and key */}
         <div className="flex items-start justify-between gap-2">
-          <h4 className="font-medium text-sm text-gray-900 line-clamp-2 flex-1">
+          <h4 className="font-medium text-sm text-gray-900 dark:text-gray-100 line-clamp-2 flex-1">
             {card.title}
           </h4>
-          <span className="text-xs text-gray-400 font-mono whitespace-nowrap">
+          <span className="text-xs text-gray-400 dark:text-gray-300 font-mono whitespace-nowrap">
             {card.key}
           </span>
         </div>
 
         {/* Description if available */}
         {card.description && (
-          <p className="text-xs text-gray-600 line-clamp-2">
+          <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">
             {card.description}
           </p>
         )}
@@ -113,17 +113,17 @@ export function KanbanCard({ card, onEdit, isDragging = false }: KanbanCardProps
         )}
 
         {/* Footer with metadata */}
-        <div className="flex items-center justify-between text-xs text-gray-500">
+  <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-300">
           {/* Left side - Priority and Story Points */}
           <div className="flex items-center gap-2">
             {card.priority && (
-              <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-xs border ${priorityColors[card.priority] || ''}`}>
+              <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-xs border ${priorityColors[card.priority] || ''} dark:bg-gray-900 dark:border-gray-700`}>
                 {getPriorityIcon(card.priority)}
                 <span>{card.priority}</span>
               </div>
             )}
             {card.story_points && (
-              <div className="flex items-center gap-1 px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-xs">
+              <div className="flex items-center gap-1 px-1.5 py-0.5 bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300 rounded text-xs">
                 <span>{card.story_points} pts</span>
               </div>
             )}
@@ -145,7 +145,7 @@ export function KanbanCard({ card, onEdit, isDragging = false }: KanbanCardProps
           {/* Right side - Due date and assignees */}
           <div className="flex items-center gap-2">
             {card.due_date && (
-              <div className="flex items-center gap-1 text-gray-500">
+              <div className="flex items-center gap-1 text-gray-500 dark:text-gray-300">
                 <Calendar className="h-3 w-3" />
                 <span>{new Date(card.due_date).toLocaleDateString()}</span>
               </div>
@@ -156,7 +156,7 @@ export function KanbanCard({ card, onEdit, isDragging = false }: KanbanCardProps
         {/* Assignees */}
         {card.assignees && card.assignees.length > 0 && (
           <div className="flex items-center gap-1 mt-1">
-            <User className="h-3 w-3 text-gray-400" />
+            <User className="h-3 w-3 text-gray-400 dark:text-gray-300" />
             <div className="flex gap-1">
               {card.assignees.slice(0, 3).map((assignee, index) => (
                 <span
@@ -170,7 +170,7 @@ export function KanbanCard({ card, onEdit, isDragging = false }: KanbanCardProps
                 </span>
               ))}
               {card.assignees.length > 3 && (
-                <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs bg-gray-200 text-gray-600 border-2 border-white shadow">
+                <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-200 border-2 border-white shadow">
                   +{card.assignees.length - 3}
                 </span>
               )}
