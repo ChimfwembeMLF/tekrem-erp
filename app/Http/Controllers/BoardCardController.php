@@ -48,7 +48,7 @@ class BoardCardController extends Controller
             'card' => $card,
         ]);
     }
-    public function store(Request $request, Project $project, Board $board, BoardColumn $column)
+    public function store(Request $request, Project $project, Board $board)
     {
         $data = $request->validate([
             'title' => 'required|string|max:255',
@@ -62,15 +62,19 @@ class BoardCardController extends Controller
             'story_points' => 'nullable|integer',
             'due_date' => 'nullable|date',
             'order' => 'nullable|integer',
+            'column_id' => 'required|exists:board_columns,id',
         ]);
         $data['board_id'] = $board->id;
-        $data['column_id'] = $column->id;
         $card = BoardCard::create($data);
         // Attach labels if provided
         if ($request->has('labels')) {
             $card->labels()->sync($request->input('labels'));
         }
-        return redirect()->route('pm.projects.boards.show', [$project, $board]);
+        // Ensure $project is loaded (Board may not have project loaded if shallow route)
+        if (!$project || !$project->id) {
+            $project = $board->project;
+        }
+        return redirect()->route('pm.projects.show', $project->id);
     }
 
     public function update(Request $request, Project $project, Board $board, BoardColumn $column, BoardCard $card)

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Head } from '@inertiajs/react';
+import { KanbanBoard, ColumnType, CardType } from '@/Components/PM/KanbanBoard';
+import { CardDetailsModal } from '@/Components/PM/CardDetailsModal';
+import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
@@ -27,6 +29,7 @@ import {
 } from '@/Components/ui/dropdown-menu';
 import useTranslate from '@/Hooks/useTranslate';
 import useRoute from '@/Hooks/useRoute';
+
 
 interface User {
   id: number;
@@ -80,278 +83,199 @@ interface Project {
   status: string;
 }
 
+
+
 interface BoardShowProps {
   project: Project;
   board: Board;
+  analytics?: any;
+  employees?: any[];
 }
 
-export default function BoardShow({ project, board }: BoardShowProps) {
-  const { t } = useTranslate();
-  const route = useRoute();
-  const [selectedCard, setSelectedCard] = useState<BoardCard | null>(null);
+export default function BoardShow({ project, board, analytics, employees }: BoardShowProps) {
+  const [selectedCard, setSelectedCard] = useState<CardType | null>(null);
+  const [cardModalOpen, setCardModalOpen] = useState(false);
+  // Convert backend data to KanbanBoard format
+  const [columns, setColumns] = useState<ColumnType[]>(
+    board.columns.map((col: any) => ({
+      id: col.id,
+      name: col.name,
+      order: col.order,
+      color: col.color,
+      is_done_column: col.is_done_column,
+      cards: col.cards.map((card: any) => ({
+        id: card.id,
+        title: card.title,
+        description: card.description,
+        key: card.id,
+        status: col.name,
+        assignees: card.assignee ? [card.assignee.name] : [],
+        tags: card.labels,
+        priority: card.priority,
+        story_points: card.story_points,
+        due_date: card.due_date,
+        epic_id: card.epic_id,
+        sprint_id: card.sprint_id,
+      })),
+    }))
+  );
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority.toLowerCase()) {
-      case 'highest':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
-      case 'high':
-        return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
-      case 'low':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      case 'lowest':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
-    }
+  // Inline add state
+  const [addingCardColumnId, setAddingCardColumnId] = useState<number | null>(null);
+  const [newCardTitle, setNewCardTitle] = useState('');
+  const [addingColumn, setAddingColumn] = useState(false);
+  const [newColumnName, setNewColumnName] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // Card move handler
+  const handleCardMove = (cardId: number, fromColumnId: number, toColumnId: number, newIndex: number) => {
+    router.post(`/pm/cards/${cardId}/move`, {
+      column_id: toColumnId,
+      position: newIndex,
+    }, {
+      preserveScroll: true,
+    });
   };
 
-  const getTypeIcon = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'story':
-        return '📖';
-      case 'task':
-        return '✅';
-      case 'bug':
-        return '🐛';
-      case 'epic':
-        return '🎯';
-      default:
-        return '📝';
-    }
+  // Column move handler (fix: use correct route and payload)
+  const handleColumnMove = (_columnId: number, newIndex: number) => {
+    // Reorder columns array locally
+    setColumns(prevCols => {
+      const newCols = [...prevCols];
+      const [removed] = newCols.splice(_columnId, 1);
+      newCols.splice(newIndex, 0, removed);
+      // Send new order to backend
+      router.post(`/pm/boards/${board.id}/reorder-columns`, {
+        column_ids: newCols.map(col => col.id),
+      }, {
+        preserveScroll: true,
+      });
+      return newCols;
+    });
   };
+
+  // Inline add card handler
+  const handleCardCreate = (columnId: number) => {
+    setAddingCardColumnId(columnId);
+    setTimeout(() => {
+      const input = document.getElementById('new-card-input');
+      if (input) (input as HTMLInputElement).focus();
+    }, 100);
+  };
+
+  const submitNewCard = async (columnId: number) => {
+    if (!newCardTitle.trim()) return;
+    setLoading(true);
+    router.post(
+      `/pm/cards`,
+      { column_id: columnId, title: newCardTitle },
+      {
+        preserveScroll: true,
+        onSuccess: () => {
+          setNewCardTitle('');
+          setAddingCardColumnId(null);
+          setLoading(false);
+        },
+        onError: () => setLoading(false),
+      }
+    );
+  };
+
+  // Inline add column handler
+  const handleColumnCreate = () => {
+    setAddingColumn(true);
+    setTimeout(() => {
+      const input = document.getElementById('new-column-input');
+      if (input) (input as HTMLInputElement).focus();
+    }, 100);
+  };
+
+  const submitNewColumn = async () => {
+    if (!newColumnName.trim()) return;
+    setLoading(true);
+    router.post(
+      `/pm/columns`,
+      { board_id: board.id, name: newColumnName },
+      {
+        preserveScroll: true,
+        onSuccess: () => {
+          setNewColumnName('');
+          setAddingColumn(false);
+          setLoading(false);
+        },
+        onError: () => setLoading(false),
+      }
+    );
+  };
+
+  // Render prop for KanbanBoard to inject inline add UI
+  const renderCardAdd = (columnId: number) =>
+    addingCardColumnId === columnId ? (
+      <div className="px-2 pb-2">
+        <input
+          id="new-card-input"
+          className="w-full rounded border px-2 py-1 text-sm"
+          placeholder="Enter card title..."
+          value={newCardTitle}
+          disabled={loading}
+          onChange={e => setNewCardTitle(e.target.value)}
+          onBlur={() => { setAddingCardColumnId(null); setNewCardTitle(''); }}
+          onKeyDown={e => {
+            if (e.key === 'Enter') submitNewCard(columnId);
+            if (e.key === 'Escape') { setAddingCardColumnId(null); setNewCardTitle(''); }
+          }}
+        />
+      </div>
+    ) : null;
+
+  const renderColumnAdd = () =>
+    addingColumn ? (
+      <div className="min-w-[320px] w-80">
+        <input
+          id="new-column-input"
+          className="w-full rounded border px-2 py-2 text-sm"
+          placeholder="Enter column name..."
+          value={newColumnName}
+          disabled={loading}
+          onChange={e => setNewColumnName(e.target.value)}
+          onBlur={() => { setAddingColumn(false); setNewColumnName(''); }}
+          onKeyDown={e => {
+            if (e.key === 'Enter') submitNewColumn();
+            if (e.key === 'Escape') { setAddingColumn(false); setNewColumnName(''); }
+          }}
+        />
+      </div>
+    ) : null;
 
   return (
-    <AppLayout
-      title={board.name}
-      renderHeader={() => (
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => window.history.back()}
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              {t('common.back', 'Back')}
-            </Button>
-            <div>
-              <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                {board.name}
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
-                {project.name} • {board.type.charAt(0).toUpperCase() + board.type.slice(1)} Board
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm">
-              <Filter className="h-4 w-4 mr-2" />
-              {t('pm.filter', 'Filter')}
-            </Button>
-            <Button variant="outline" size="sm">
-              <Search className="h-4 w-4 mr-2" />
-              {t('pm.search', 'Search')}
-            </Button>
-            <Button variant="outline" size="sm">
-              <Users className="h-4 w-4 mr-2" />
-              {board.members.length}
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Settings className="h-4 w-4 mr-2" />
-                  {t('pm.board_settings', 'Settings')}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem>
-                  <Settings className="h-4 w-4 mr-2" />
-                  {t('pm.board_settings', 'Board Settings')}
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Users className="h-4 w-4 mr-2" />
-                  {t('pm.manage_members', 'Manage Members')}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <Calendar className="h-4 w-4 mr-2" />
-                  {t('pm.view_timeline', 'View Timeline')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      )}
-    >
+    <AppLayout title={board.name}>
       <Head title={`${board.name} - ${project.name}`} />
-
-      <div className="py-6">
-        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-          
-          {/* Board Description */}
-          {board.description && (
-            <Card className="mb-6">
-              <CardContent className="pt-6">
-                <p className="text-gray-600 dark:text-gray-400">{board.description}</p>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Kanban Board */}
-          <div className="flex space-x-6 overflow-x-auto pb-6">
-            {board.columns.map((column) => (
-              <div key={column.id} className="flex-shrink-0 w-80">
-                <Card className="h-full">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        {column.color && (
-                          <div 
-                            className="w-3 h-3 rounded-full" 
-                            style={{ backgroundColor: column.color }}
-                          />
-                        )}
-                        <CardTitle className="text-sm font-medium">
-                          {column.name}
-                        </CardTitle>
-                        <Badge variant="secondary" className="text-xs">
-                          {column.cards.length}
-                        </Badge>
-                      </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
-                            <Plus className="h-4 w-4 mr-2" />
-                            {t('pm.add_card', 'Add Card')}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem>
-                            <Settings className="h-4 w-4 mr-2" />
-                            {t('pm.column_settings', 'Column Settings')}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto">
-                    {column.cards.map((card) => (
-                      <Card 
-                        key={card.id} 
-                        className="cursor-pointer hover:shadow-md transition-shadow"
-                        onClick={() => setSelectedCard(card)}
-                      >
-                        <CardContent className="p-3">
-                          <div className="space-y-2">
-                            {/* Card Header */}
-                            <div className="flex items-start justify-between">
-                              <div className="flex items-center space-x-2">
-                                <span className="text-sm">{getTypeIcon(card.type)}</span>
-                                <Badge className={getPriorityColor(card.priority)} variant="secondary">
-                                  {card.priority}
-                                </Badge>
-                              </div>
-                              {card.story_points && (
-                                <Badge variant="outline" className="text-xs">
-                                  {card.story_points}
-                                </Badge>
-                              )}
-                            </div>
-
-                            {/* Card Title */}
-                            <h4 className="text-sm font-medium leading-tight">
-                              {card.title}
-                            </h4>
-
-                            {/* Card Description */}
-                            {card.description && (
-                              <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
-                                {card.description}
-                              </p>
-                            )}
-
-                            {/* Card Labels */}
-                            {card.labels.length > 0 && (
-                              <div className="flex flex-wrap gap-1">
-                                {card.labels.slice(0, 3).map((label, index) => (
-                                  <Badge key={index} variant="outline" className="text-xs">
-                                    {label}
-                                  </Badge>
-                                ))}
-                                {card.labels.length > 3 && (
-                                  <Badge variant="outline" className="text-xs">
-                                    +{card.labels.length - 3}
-                                  </Badge>
-                                )}
-                              </div>
-                            )}
-
-                            {/* Card Footer */}
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-2">
-                                {card.comments_count > 0 && (
-                                  <div className="flex items-center text-xs text-gray-500">
-                                    <MessageSquare className="h-3 w-3 mr-1" />
-                                    {card.comments_count}
-                                  </div>
-                                )}
-                                {card.attachments_count > 0 && (
-                                  <div className="flex items-center text-xs text-gray-500">
-                                    <Paperclip className="h-3 w-3 mr-1" />
-                                    {card.attachments_count}
-                                  </div>
-                                )}
-                                {card.due_date && (
-                                  <div className="flex items-center text-xs text-gray-500">
-                                    <Calendar className="h-3 w-3 mr-1" />
-                                    {new Date(card.due_date).toLocaleDateString()}
-                                  </div>
-                                )}
-                              </div>
-                              {card.assignee && (
-                                <Avatar className="h-6 w-6">
-                                  <AvatarImage src={card.assignee.avatar} />
-                                  <AvatarFallback className="text-xs">
-                                    {card.assignee.name.charAt(0).toUpperCase()}
-                                  </AvatarFallback>
-                                </Avatar>
-                              )}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                    
-                    {/* Add Card Button */}
-                    <Button 
-                      variant="ghost" 
-                      className="w-full justify-start text-gray-500 hover:text-gray-700"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      {t('pm.add_card', 'Add a card')}
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
-            ))}
-
-            {/* Add Column Button */}
-            <div className="flex-shrink-0 w-80">
-              <Button 
-                variant="outline" 
-                className="w-full h-20 border-dashed"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                {t('pm.add_column', 'Add Column')}
-              </Button>
-            </div>
-          </div>
+      {/* Board Description and Analytics can be added here as needed */}
+      <div className="py-6 w-full">
+        <div className="max-w-full mx-auto flex gap-4 overflow-x-auto pb-4 w-full">
+          <KanbanBoard
+            columns={columns}
+            onCardMove={handleCardMove}
+            onColumnMove={handleColumnMove}
+            employees={employees}
+            onCardCreate={async (columnId, data, done) => {
+              // ...existing code...
+            }}
+            onColumnCreate={(name, done) => {
+              // ...existing code...
+            }}
+            onCardEdit={card => {
+              setSelectedCard(card);
+              setCardModalOpen(true);
+            }}
+            // className="min-h-[60vh]"
+          />
+          <CardDetailsModal
+            card={selectedCard}
+            isOpen={cardModalOpen}
+            onClose={() => setCardModalOpen(false)}
+          />
+          {/* Removed extra add card/column input rendering. All add UX is now inside Kanban columns. */}
         </div>
       </div>
     </AppLayout>

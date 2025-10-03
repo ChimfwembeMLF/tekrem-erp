@@ -2,9 +2,11 @@ import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Badge } from '@/Components/ui/badge.jsx';
-import { Calendar, User, AlertCircle, Clock } from 'lucide-react';
+import { Calendar, User, AlertCircle, Clock, MessageSquare, Paperclip } from 'lucide-react';
 
 export type CardType = {
+  comments_count?: number;
+  attachments_count?: number;
   id: number;
   title: string;
   description?: string;
@@ -124,6 +126,19 @@ export function KanbanCard({ card, onEdit, isDragging = false }: KanbanCardProps
               <div className="flex items-center gap-1 px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-xs">
                 <span>{card.story_points} pts</span>
               </div>
+            )}
+            {/* Comments and Attachments */}
+            {typeof card.comments_count === 'number' && card.comments_count > 0 && (
+              <span className="flex items-center gap-1 text-gray-400 ml-2">
+                <MessageSquare className="h-3 w-3" />
+                {card.comments_count}
+              </span>
+            )}
+            {typeof card.attachments_count === 'number' && card.attachments_count > 0 && (
+              <span className="flex items-center gap-1 text-gray-400 ml-2">
+                <Paperclip className="h-3 w-3" />
+                {card.attachments_count}
+              </span>
             )}
           </div>
 

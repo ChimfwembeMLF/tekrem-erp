@@ -10,6 +10,45 @@ use Illuminate\Http\RedirectResponse;
 
 class ProjectController extends Controller
 {
+    /**
+     * Show the default Kanban board for a project as the main project page.
+     * This replaces the default project view with the Kanban UI, but keeps all project data accessible.
+     */
+    public function showKanban(Project $project)
+    {
+        // Eager load all necessary relationships for project and boards
+        $project->load([
+            'owner',
+            'boards.columns.cards.labels',
+            'boards.columns.cards.assignee',
+            'boards.columns.cards.reporter',
+            'boards.epics.cards',
+            'boards.members.user',
+            'boards.owner',
+            'boards.sprints.reports',
+        ]);
+
+        // Find the default Kanban board (first Kanban type board)
+        $defaultBoard = $project->boards->where('type', 'kanban')->first();
+        if (!$defaultBoard) {
+            // Fallback: just use the first board if no kanban found
+            $defaultBoard = $project->boards->first();
+        }
+        if (!$defaultBoard) {
+            // No boards at all, fallback to original project view
+            return $this->show($project);
+        }
+
+        // Get all users for assignee dropdown
+        $employees = \App\Models\User::select('id', 'name', 'email')->get();
+
+        // Option 1: Render the Kanban board view/component directly, but pass all project data
+        return Inertia::render('PM/Boards/Show', [
+            'project' => $project,
+            'board' => $defaultBoard,
+            'employees' => $employees,
+        ]);
+    }
     public function dashboard()
     {
         // Real analytics queries

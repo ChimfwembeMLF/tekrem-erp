@@ -928,8 +928,8 @@ Route::prefix('pm')->name('pm.')->middleware(['auth', 'verified', 'permission:vi
     Route::get('projects/{project}/edit', [\App\Http\Controllers\ProjectController::class, 'edit'])->name('projects.edit');
     // PM Project Update
     Route::put('projects/{project}', [\App\Http\Controllers\ProjectController::class, 'update'])->name('projects.update');
-    // PM Project Show
-    Route::get('projects/{project}', [\App\Http\Controllers\ProjectController::class, 'show'])->name('projects.show');
+    // PM Project Show (redirect to default board view)
+    Route::get('projects/{project}', [\App\Http\Controllers\ProjectController::class, 'showKanban'])->name('projects.show');
     // PM Boards for a Project (list)
     Route::get('projects/{project}/boards', [\App\Http\Controllers\ProjectController::class, 'pmBoards'])->name('projects.boards');
     // PM Board Show (nested under project)
