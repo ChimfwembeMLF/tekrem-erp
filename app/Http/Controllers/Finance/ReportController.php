@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
+use App\Models\Finance\Report;
 use App\Models\Finance\Account;
 use App\Models\Finance\Transaction;
 use App\Models\Finance\Expense;
@@ -22,164 +23,51 @@ class ReportController extends Controller
      */
     public function index(Request $request)
     {
-        $user = auth()->user();
-
-        // For now, return a simple list of available reports
-        // In a real implementation, you might store generated reports in the database
-        $reports = collect([
-            [
-                'id' => 1,
-                'name' => 'Income Statement',
-                'description' => 'Profit and loss statement for the selected period',
-                'type' => 'income_statement',
-                'status' => 'available',
-                'generated_at' => now()->subDays(1),
-                'file_size' => 1024 * 150, // 150KB
-                'created_by' => ['id' => $user->id, 'name' => $user->name],
-                'created_at' => now()->subDays(7),
-                'updated_at' => now()->subDays(1),
-            ],
-            [
-                'id' => 2,
-                'name' => 'Cash Flow Statement',
-                'description' => 'Cash inflows and outflows for the selected period',
-                'type' => 'cash_flow',
-                'status' => 'available',
-                'generated_at' => now()->subDays(2),
-                'file_size' => 1024 * 200, // 200KB
-                'created_by' => ['id' => $user->id, 'name' => $user->name],
-                'created_at' => now()->subDays(10),
-                'updated_at' => now()->subDays(2),
-            ],
-            [
-                'id' => 3,
-                'name' => 'Balance Sheet',
-                'description' => 'Assets, liabilities, and equity at a specific point in time',
-                'type' => 'balance_sheet',
-                'status' => 'available',
-                'generated_at' => now()->subDays(3),
-                'file_size' => 1024 * 180, // 180KB
-                'created_by' => ['id' => $user->id, 'name' => $user->name],
-                'created_at' => now()->subDays(15),
-                'updated_at' => now()->subDays(3),
-            ],
-            [
-                'id' => 4,
-                'name' => 'Expense Report',
-                'description' => 'Detailed breakdown of expenses by category',
-                'type' => 'expense_report',
-                'status' => 'processing',
-                'generated_at' => null,
-                'file_size' => null,
-                'created_by' => ['id' => $user->id, 'name' => $user->name],
-                'created_at' => now()->subHours(2),
-                'updated_at' => now()->subHours(1),
-            ],
-            [
-                'id' => 5,
-                'name' => 'Chart of Accounts',
-                'description' => 'Complete listing of all accounts with balances and hierarchy',
-                'type' => 'chart_of_accounts',
-                'status' => 'available',
-                'generated_at' => now()->subDays(1),
-                'file_size' => 1024 * 120, // 120KB
-                'created_by' => ['id' => $user->id, 'name' => $user->name],
-                'created_at' => now()->subDays(5),
-                'updated_at' => now()->subDays(1),
-            ],
-            [
-                'id' => 6,
-                'name' => 'Trial Balance',
-                'description' => 'Trial balance showing all account balances for verification',
-                'type' => 'trial_balance',
-                'status' => 'available',
-                'generated_at' => now()->subDays(2),
-                'file_size' => 1024 * 95, // 95KB
-                'created_by' => ['id' => $user->id, 'name' => $user->name],
-                'created_at' => now()->subDays(8),
-                'updated_at' => now()->subDays(2),
-            ],
-            [
-                'id' => 7,
-                'name' => 'Bank Reconciliation Summary',
-                'description' => 'Summary of all bank reconciliations with status indicators',
-                'type' => 'reconciliation_summary',
-                'status' => 'available',
-                'generated_at' => now()->subDays(1),
-                'file_size' => 1024 * 85, // 85KB
-                'created_by' => ['id' => $user->id, 'name' => $user->name],
-                'created_at' => now()->subDays(3),
-                'updated_at' => now()->subDays(1),
-            ],
-            [
-                'id' => 8,
-                'name' => 'Unreconciled Transactions',
-                'description' => 'List of transactions that require reconciliation attention',
-                'type' => 'unreconciled_transactions',
-                'status' => 'processing',
-                'generated_at' => null,
-                'file_size' => null,
-                'created_by' => ['id' => $user->id, 'name' => $user->name],
-                'created_at' => now()->subHours(1),
-                'updated_at' => now()->subMinutes(30),
-            ],
-        ]);
+        $query = Report::with('createdBy');
 
         // Apply filters
         if ($request->filled('search')) {
-            $reports = $reports->filter(function ($report) use ($request) {
-                return stripos($report['name'], $request->search) !== false ||
-                       stripos($report['description'], $request->search) !== false;
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('description', 'like', '%' . $request->search . '%');
             });
         }
 
         if ($request->filled('type') && $request->type !== 'all') {
-            $reports = $reports->where('type', $request->type);
+            $query->where('type', $request->type);
         }
 
         if ($request->filled('status') && $request->status !== 'all') {
-            $reports = $reports->where('status', $request->status);
+            $query->where('status', $request->status);
         }
 
-        // Convert to paginated format
-        $reportsData = [
-            'data' => $reports->values()->all(),
-            'links' => [],
-            'meta' => [
-                'total' => $reports->count(),
-                'from' => 1,
-                'to' => $reports->count(),
-                'last_page' => 1,
-                'current_page' => 1,
-            ]
-        ];
+        $reports = $query->orderBy('created_at', 'desc')->paginate(15);
 
-        $types = [
-            'income_statement' => 'Income Statement',
-            'cash_flow' => 'Cash Flow',
-            'balance_sheet' => 'Balance Sheet',
-            'expense_report' => 'Expense Report',
-            'budget_analysis' => 'Budget Analysis',
-            'tax_report' => 'Tax Report',
-            'chart_of_accounts' => 'Chart of Accounts',
-            'trial_balance' => 'Trial Balance',
-            'account_activity' => 'Account Activity Report',
-            'bank_reconciliation' => 'Bank Reconciliation Report',
-            'reconciliation_summary' => 'Reconciliation Summary',
-            'unreconciled_transactions' => 'Unreconciled Transactions',
-        ];
-
-        $statuses = [
-            'available' => 'Available',
-            'processing' => 'Processing',
-            'failed' => 'Failed',
-            'pending' => 'Pending',
-        ];
+        // Transform the data to match the expected format
+        $reports->getCollection()->transform(function ($report) {
+            return [
+                'id' => $report->id,
+                'name' => $report->name,
+                'description' => $report->description,
+                'type' => $report->type,
+                'status' => $report->status,
+                'parameters' => $report->parameters,
+                'generated_at' => $report->generated_at?->toISOString(),
+                'file_path' => $report->file_path,
+                'file_size' => $report->file_size,
+                'created_by' => $report->createdBy ? [
+                    'id' => $report->createdBy->id,
+                    'name' => $report->createdBy->name,
+                ] : null,
+                'created_at' => $report->created_at->toISOString(),
+                'updated_at' => $report->updated_at->toISOString(),
+            ];
+        });
 
         return Inertia::render('Finance/Reports/Index', [
-            'reports' => $reportsData,
-            'types' => $types,
-            'statuses' => $statuses,
+            'reports' => $reports,
+            'types' => Report::TYPES,
+            'statuses' => Report::STATUSES,
             'filters' => $request->only(['search', 'type', 'status']),
         ]);
     }
@@ -189,23 +77,8 @@ class ReportController extends Controller
      */
     public function create()
     {
-        $types = [
-            'income_statement' => 'Income Statement',
-            'cash_flow' => 'Cash Flow',
-            'balance_sheet' => 'Balance Sheet',
-            'expense_report' => 'Expense Report',
-            'budget_analysis' => 'Budget Analysis',
-            'tax_report' => 'Tax Report',
-            'chart_of_accounts' => 'Chart of Accounts',
-            'trial_balance' => 'Trial Balance',
-            'account_activity' => 'Account Activity Report',
-            'bank_reconciliation' => 'Bank Reconciliation Report',
-            'reconciliation_summary' => 'Reconciliation Summary',
-            'unreconciled_transactions' => 'Unreconciled Transactions',
-        ];
-
         return Inertia::render('Finance/Reports/Create', [
-            'types' => $types,
+            'types' => Report::TYPES,
         ]);
     }
 
@@ -216,14 +89,26 @@ class ReportController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'type' => 'required|string',
+            'type' => 'required|string|in:' . implode(',', array_keys(Report::TYPES)),
             'description' => 'nullable|string|max:1000',
             'date_from' => 'required|date',
             'date_to' => 'required|date|after_or_equal:date_from',
         ]);
 
-        // In a real implementation, you would queue a job to generate the report
-        // For now, just redirect back with success message
+        $report = Report::create([
+            'name' => $request->name,
+            'description' => $request->description,
+            'type' => $request->type,
+            'status' => 'pending',
+            'parameters' => [
+                'date_from' => $request->date_from,
+                'date_to' => $request->date_to,
+            ],
+            'created_by' => auth()->id(),
+        ]);
+
+        // Queue the report generation job
+        \App\Jobs\GenerateReportJob::dispatch($report);
 
         return redirect()->route('finance.reports.index')
             ->with('success', 'Report generation has been queued. You will be notified when it\'s ready.');
@@ -232,70 +117,63 @@ class ReportController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($id)
+    public function show(Report $report)
     {
-        // In a real implementation, you would fetch the report from the database
-        $report = [
-            'id' => $id,
-            'name' => 'Sample Report',
-            'description' => 'This is a sample report',
-            'type' => 'income_statement',
-            'status' => 'available',
-            'generated_at' => now()->subDays(1),
-            'file_size' => 1024 * 150,
-            'created_by' => ['id' => auth()->id(), 'name' => auth()->user()->name],
-            'created_at' => now()->subDays(7),
-            'updated_at' => now()->subDays(1),
-        ];
+        $report->load('createdBy');
 
         return Inertia::render('Finance/Reports/Show', [
-            'report' => $report,
+            'report' => [
+                'id' => $report->id,
+                'name' => $report->name,
+                'description' => $report->description,
+                'type' => $report->type,
+                'status' => $report->status,
+                'parameters' => $report->parameters,
+                'generated_at' => $report->generated_at?->toISOString(),
+                'file_path' => $report->file_path,
+                'file_size' => $report->file_size,
+                'created_by' => $report->createdBy ? [
+                    'id' => $report->createdBy->id,
+                    'name' => $report->createdBy->name,
+                ] : null,
+                'created_at' => $report->created_at->toISOString(),
+                'updated_at' => $report->updated_at->toISOString(),
+            ],
         ]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit($id)
+    public function edit(Report $report)
     {
-        $report = [
-            'id' => $id,
-            'name' => 'Sample Report',
-            'description' => 'This is a sample report',
-            'type' => 'income_statement',
-            'status' => 'available',
-        ];
-
-        $types = [
-            'income_statement' => 'Income Statement',
-            'cash_flow' => 'Cash Flow',
-            'balance_sheet' => 'Balance Sheet',
-            'expense_report' => 'Expense Report',
-            'budget_analysis' => 'Budget Analysis',
-            'tax_report' => 'Tax Report',
-            'chart_of_accounts' => 'Chart of Accounts',
-            'trial_balance' => 'Trial Balance',
-            'account_activity' => 'Account Activity Report',
-            'bank_reconciliation' => 'Bank Reconciliation Report',
-            'reconciliation_summary' => 'Reconciliation Summary',
-            'unreconciled_transactions' => 'Unreconciled Transactions',
-        ];
-
         return Inertia::render('Finance/Reports/Edit', [
-            'report' => $report,
-            'types' => $types,
+            'report' => [
+                'id' => $report->id,
+                'name' => $report->name,
+                'description' => $report->description,
+                'type' => $report->type,
+                'status' => $report->status,
+            ],
+            'types' => Report::TYPES,
         ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Report $report)
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'type' => 'required|string',
+            'type' => 'required|string|in:' . implode(',', array_keys(Report::TYPES)),
             'description' => 'nullable|string|max:1000',
+        ]);
+
+        $report->update([
+            'name' => $request->name,
+            'type' => $request->type,
+            'description' => $request->description,
         ]);
 
         return redirect()->route('finance.reports.index')
@@ -305,9 +183,15 @@ class ReportController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy(Report $report)
     {
-        // In a real implementation, you would delete the report from the database
+        // Delete the file if it exists
+        if ($report->file_path && file_exists(storage_path('app/' . $report->file_path))) {
+            unlink(storage_path('app/' . $report->file_path));
+        }
+
+        $report->delete();
+
         return redirect()->route('finance.reports.index')
             ->with('success', 'Report deleted successfully.');
     }
@@ -315,11 +199,30 @@ class ReportController extends Controller
     /**
      * Download the specified report.
      */
-    public function download($id)
+    public function download(Report $report)
     {
-        // In a real implementation, you would return the actual file
-        return response()->json(['message' => 'Download functionality not implemented yet.']);
+        if (!$report->isAvailable()) {
+            return redirect()->back()->with('error', 'Report is not available for download.');
+        }
+
+        if (empty($report->file_path)) {
+            return redirect()->back()->with('error', 'Report file not ready yet. Please wait for generation to complete.');
+        }
+        
+        $filePath = storage_path('app/' . $report->file_path);
+        
+        if (!file_exists($filePath)) {
+            return redirect()->back()->with('error', 'Report file not found. It may have been deleted or not generated yet.');
+        }
+
+        // Determine file extension from the report type or file path
+        $extension = pathinfo($report->file_path, PATHINFO_EXTENSION) ?: 'pdf';
+        $filename = $report->name . '.' . $extension;
+
+        return response()->download($filePath, $filename);
     }
+
+
 
     /**
      * Generate Chart of Accounts report.

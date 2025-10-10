@@ -31,6 +31,71 @@ class MomoController extends Controller
     }
 
     /**
+     * Display MoMo dashboard with overview statistics.
+     */
+    public function dashboard(Request $request)
+    {
+        $today = Carbon::today();
+        $thisWeek = Carbon::now()->startOfWeek();
+        $thisMonth = Carbon::now()->startOfMonth();
+
+        // Get basic statistics
+        $stats = [
+            'today' => [
+                'transactions' => MomoTransaction::whereDate('created_at', $today)->count(),
+                'amount' => MomoTransaction::whereDate('created_at', $today)->sum('amount'),
+                'successful' => MomoTransaction::whereDate('created_at', $today)->where('status', 'completed')->count(),
+            ],
+            'this_week' => [
+                'transactions' => MomoTransaction::where('created_at', '>=', $thisWeek)->count(),
+                'amount' => MomoTransaction::where('created_at', '>=', $thisWeek)->sum('amount'),
+                'successful' => MomoTransaction::where('created_at', '>=', $thisWeek)->where('status', 'completed')->count(),
+            ],
+            'this_month' => [
+                'transactions' => MomoTransaction::where('created_at', '>=', $thisMonth)->count(),
+                'amount' => MomoTransaction::where('created_at', '>=', $thisMonth)->sum('amount'),
+                'successful' => MomoTransaction::where('created_at', '>=', $thisMonth)->where('status', 'completed')->count(),
+            ],
+        ];
+
+        // Get recent transactions
+        $recentTransactions = MomoTransaction::with(['provider', 'user'])
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        // Get provider statistics
+        $providerStats = MomoTransaction::with('provider')
+            ->where('created_at', '>=', $thisMonth)
+            ->get()
+            ->groupBy('provider.code')
+            ->map(function ($group) {
+                return [
+                    'name' => $group->first()->provider->display_name,
+                    'count' => $group->count(),
+                    'amount' => $group->sum('amount'),
+                    'success_rate' => $group->count() > 0 
+                        ? round(($group->where('status', 'completed')->count() / $group->count()) * 100, 2)
+                        : 0,
+                ];
+            });
+
+        // Get pending transactions that need attention
+        $pendingTransactions = MomoTransaction::with(['provider', 'user'])
+            ->whereIn('status', ['pending', 'processing'])
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+
+        return Inertia::render('Finance/MoMo/Dashboard', [
+            'stats' => $stats,
+            'recentTransactions' => $recentTransactions,
+            'providerStats' => $providerStats,
+            'pendingTransactions' => $pendingTransactions,
+        ]);
+    }
+
+    /**
      * Display MoMo transactions index.
      */
     public function index(Request $request)

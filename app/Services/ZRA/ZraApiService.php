@@ -542,6 +542,16 @@ class ZraApiService
     {
         try {
             $this->initializeConfig();
+            
+            // If config initialization failed, return appropriate error
+            if ($this->config === null) {
+                return [
+                    'success' => false,
+                    'status' => 'error',
+                    'error' => 'ZRA configuration not initialized',
+                ];
+            }
+            
             $startTime = microtime(true);
 
             $response = Http::withHeaders($this->headers)
@@ -551,15 +561,17 @@ class ZraApiService
             $responseTime = round((microtime(true) - $startTime) * 1000);
 
             if ($response->successful()) {
-                $this->config->update([
-                    'last_health_check' => now(),
-                    'health_status' => 'healthy',
-                    'health_details' => [
-                        'response_time_ms' => $responseTime,
-                        'status_code' => $response->status(),
-                        'last_check' => now()->toISOString(),
-                    ],
-                ]);
+                if ($this->config !== null) {
+                    $this->config->update([
+                        'last_health_check' => now(),
+                        'health_status' => 'healthy',
+                        'health_details' => [
+                            'response_time_ms' => $responseTime,
+                            'status_code' => $response->status(),
+                            'last_check' => now()->toISOString(),
+                        ],
+                    ]);
+                }
 
                 return [
                     'success' => true,
@@ -568,16 +580,18 @@ class ZraApiService
                 ];
             }
 
-            $this->config->update([
-                'last_health_check' => now(),
-                'health_status' => 'unhealthy',
-                'health_details' => [
-                    'response_time_ms' => $responseTime,
-                    'status_code' => $response->status(),
-                    'error' => $response->body(),
-                    'last_check' => now()->toISOString(),
-                ],
-            ]);
+            if ($this->config !== null) {
+                $this->config->update([
+                    'last_health_check' => now(),
+                    'health_status' => 'unhealthy',
+                    'health_details' => [
+                        'response_time_ms' => $responseTime,
+                        'status_code' => $response->status(),
+                        'error' => $response->body(),
+                        'last_check' => now()->toISOString(),
+                    ],
+                ]);
+            }
 
             return [
                 'success' => false,
@@ -587,13 +601,21 @@ class ZraApiService
             ];
 
         } catch (\Exception $e) {
-            $this->config->update([
-                'last_health_check' => now(),
-                'health_status' => 'error',
-                'health_details' => [
-                    'error' => $e->getMessage(),
-                    'last_check' => now()->toISOString(),
-                ],
+            // Only update config if it exists (initializeConfig succeeded)
+            if ($this->config !== null) {
+                $this->config->update([
+                    'last_health_check' => now(),
+                    'health_status' => 'error',
+                    'health_details' => [
+                        'error' => $e->getMessage(),
+                        'last_check' => now()->toISOString(),
+                    ],
+                ]);
+            }
+
+            Log::error('ZRA health check failed', [
+                'error' => $e->getMessage(),
+                'config_loaded' => $this->config !== null,
             ]);
 
             return [
