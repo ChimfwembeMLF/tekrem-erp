@@ -28,7 +28,7 @@ export default function Home({ canLogin, canRegister }: Props) {
       role: "CTO / Developer",
       bio: "Passionate about scalable systems and modern development practices.",
       color: "from-teal-500 to-cyan-600",
-      image: "/assets/team/chimfwembe-kangwa-removebg-preview.png",
+      image: "/assets/team/chimfwembe-kangwa.png",
       socials: [
         { platform: "linkedin", url: "#" },
         { platform: "github", url: "#" },
@@ -41,7 +41,7 @@ export default function Home({ canLogin, canRegister }: Props) {
       role: "Operations Manager / Developer",
       bio: "Focused on process optimization and reliable software delivery.",
       color: "from-emerald-500 to-green-600",
-      image: "/assets/team/joseph-H-banda-removebg-preview.png",
+      image: "/assets/team/joseph-H-banda.png",
       socials: [
         { platform: "linkedin", url: "#" },
         { platform: "github", url: "#" },
@@ -54,7 +54,7 @@ export default function Home({ canLogin, canRegister }: Props) {
       role: "UI/UX Designer / Developer",
       bio: "Designing intuitive user experiences and modern interfaces.",
       color: "from-indigo-500 to-violet-600",
-      image: "/assets/team/fackson-kangwa-removebg-preview.png",
+      image: "/assets/team/fackson-kangwa.png",
       socials: [
         { platform: "linkedin", url: "#" },
         { platform: "github", url: "https://github.com/Kangwajr" },
@@ -67,7 +67,7 @@ export default function Home({ canLogin, canRegister }: Props) {
       role: "Marketing Manager / Finance",
       bio: "Blending finance knowledge with creative marketing strategies.",
       color: "from-pink-500 to-rose-600",
-      image: "/assets/team/joel-B-chamana-removebg-preview.png",
+      image: "/assets/team/joel-B-chamana.png",
       socials: [
         { platform: "linkedin", url: "#" },
         { platform: "github", url: "#" },
@@ -80,7 +80,7 @@ export default function Home({ canLogin, canRegister }: Props) {
       role: "Sales Representative / Finance",
       bio: "Driving growth through client relationships and financial insight.",
       color: "from-yellow-500 to-orange-600",
-      image: "/assets/team/joseph-L-banda-removebg-preview.png",
+      image: "/assets/team/joseph-L-banda.png",
       socials: [
         { platform: "linkedin", url: "#" },
         { platform: "github", url: "#" },

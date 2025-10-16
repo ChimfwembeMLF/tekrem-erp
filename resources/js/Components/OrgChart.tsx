@@ -34,7 +34,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
         <img
           src={image}
           alt={name}
-          className="h-32 w-32 rounded-lg object-cover mb-4"
+          className="h-42 w-42 rounded-lg object-cover mb-4"
         />
       ) : (
         <div

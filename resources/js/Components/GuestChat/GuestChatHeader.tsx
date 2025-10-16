@@ -4,7 +4,7 @@ import { Button } from '@/Components/ui/button';
 import { CardHeader } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
 import { Avatar, AvatarFallback } from '@/Components/ui/avatar';
-import Logo from '../../../../public/fav.svg'
+import Logo from '../../../../public/favicon.svg'
 
 interface GuestSession {
   id: number;
