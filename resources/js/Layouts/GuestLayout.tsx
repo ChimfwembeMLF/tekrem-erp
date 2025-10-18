@@ -5,7 +5,7 @@ import useTypedPage from '@/Hooks/useTypedPage';
 import ApplicationMark from '@/Components/ApplicationMark';
 import AppProvider from '@/Providers/AppProvider';
 import { useTheme, ThemeToggle } from '@/Components/ThemeProvider';
-import { Button } from '@/Components/ui/button';
+import { Button } from '@/Components/ui/button.jsx';
 import MobileNav from '@/Components/MobileNav';
 import MainNav from '@/Components/MainNav';
 import GuestChatWidget from '@/Components/GuestChat/GuestChatWidget';
@@ -39,42 +39,50 @@ export default function GuestLayout({
       <div className={`min-h-screen ${settings.font_family || 'font-sans'}`}>
         <Head title={title} />
 
-        {/* Header */}
+        {/* Modern Header */}
         {showHeader && (
-          <header className="sticky top-0 z-40 w-full bg-secondary backdrop-blur supports-[backdrop-filter]:bg-secondary/60">
-            <div className="border-b border-primary flex justify-between px-6 p-4">
-              <div className="flex gap-2">
-                <Link className="hover:scale-110 transition-transform border-l border-primary/30 first:border-none first:pl-0" href="#">
-                  <Facebook className='w-4 text-gray-200' />
-                </Link>
-                <div className="border-l border-primary/30" />
-
-                <Link className="hover:scale-110 transition-transform" href="#">
-                  <Twitter className='w-4 text-gray-200' />
-                </Link>
-                <div className="border-l border-primary/30" />
-                <Link className="hover:scale-110 transition-transform" href="#">
-                  <Instagram className='w-4 text-gray-200' />
-                </Link>
-                <div className="border-l border-primary/30" />
-                <Link className="hover:scale-110 transition-transform" href="#">
-                  <Linkedin className='w-4 text-gray-200' />
-                </Link>
+          <header className="sticky top-0 z-50 w-full bg-white/95 dark:bg-gray-900/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-gray-900/60 border-b border-gray-200/50 dark:border-gray-800/50">
+            {/* Top Bar */}
+            <div className="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+              <div className="container mx-auto px-4">
+                <div className="flex justify-between items-center py-2 text-sm">
+                  <div className="flex items-center gap-4 text-gray-600 dark:text-gray-400">
+                    <span className="hidden md:inline">📧 {settings.company_email || 'hello@tekrem.com'}</span>
+                    <span className="hidden md:inline">📞 {settings.company_phone || '+260 976607840'}</span>
+                  </div>
+                  <div className="flex gap-3">
+                    <Link className="hover:text-blue-600 transition-colors duration-200" href="#">
+                      <Facebook className='w-4 h-4' />
+                    </Link>
+                    <Link className="hover:text-blue-400 transition-colors duration-200" href="#">
+                      <Twitter className='w-4 h-4' />
+                    </Link>
+                    <Link className="hover:text-pink-500 transition-colors duration-200" href="#">
+                      <Instagram className='w-4 h-4' />
+                    </Link>
+                    <Link className="hover:text-blue-700 transition-colors duration-200" href="#">
+                      <Linkedin className='w-4 h-4' />
+                    </Link>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="container mx-auto flex h-16 items-center">
-              <div className="flex justify-around w-full">
 
+            {/* Main Navigation */}
+            <div className="container mx-auto px-4">
+              <div className="flex h-16 items-center justify-between">
                 {/* Logo */}
-                <div className="w-full flex justify-between gap-2">
+                <div className="flex items-center gap-4">
                   <MobileNav settings={settings} />
-
-                  <Link href={route('home')} className='pr-4'>
+                  <Link href={route('home')} className="flex-shrink-0">
                     <ApplicationMark />
                   </Link>
                 </div>
+
                 {/* Desktop Navigation */}
-                <MainNav settings={settings} />
+                <div className="hidden md:flex items-center">
+                  <MainNav settings={settings} />
+                </div>
 
                 {/* Right side items */}
                 <div className="flex items-center gap-4">
@@ -84,23 +92,23 @@ export default function GuestLayout({
                   </div>
 
                   {/* Auth Links */}
-                  <div className="hidden md:flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     {page.props.auth.user ? (
-                      <Button asChild>
+                      <Button asChild className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
                         <Link href={route('dashboard')}>
                           Dashboard
                         </Link>
                       </Button>
                     ) : (
                       <>
-                        <Button variant="ghost" asChild>
+                        <Button variant="ghost" asChild className="hidden md:flex">
                           <Link href={route('login')}>
                             Login
                           </Link>
                         </Button>
-                        <Button asChild>
+                        <Button asChild className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
                           <Link href={route('register')}>
-                            Register
+                            Get Started
                           </Link>
                         </Button>
                       </>
@@ -115,64 +123,96 @@ export default function GuestLayout({
         {/* Main Content */}
         <main>{children}</main>
 
-        {/* Footer */}
-        <footer className="bg-secondary backdrop-blur supports-[backdrop-filter]:bg-secondary/60">
-          <div className="container mx-auto py-12">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-              <div>
-                <h3 className="text-sm font-semibold text-muted-foreground tracking-wider uppercase">About</h3>
-                <p className="mt-4 text-base text-foreground/80">
-                  {settings.company_name || 'Technology Remedies Innovations'} provides innovative technology solutions for businesses in Zambia and beyond.
+        {/* Modern Footer */}
+        <footer className="bg-gray-900 dark:bg-gray-950">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            {/* Main Footer Content */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+              {/* Company Info */}
+              <div className="lg:col-span-2">
+                <Link href={route('home')} className="inline-flex items-center mb-6">
+                  <ApplicationMark />
+                </Link>
+                <p className="text-gray-400 text-lg leading-relaxed mb-6 max-w-md">
+                  {settings.company_name || 'Technology Remedies Innovations'} - Empowering businesses across Africa with cutting-edge technology solutions and unparalleled security.
                 </p>
+                <div className="flex space-x-4">
+                  <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:text-white transition-all duration-300">
+                    <Facebook className="w-5 h-5" />
+                  </a>
+                  <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 hover:bg-blue-400 hover:text-white transition-all duration-300">
+                    <Twitter className="w-5 h-5" />
+                  </a>
+                  <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 hover:bg-blue-700 hover:text-white transition-all duration-300">
+                    <Linkedin className="w-5 h-5" />
+                  </a>
+                  <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 hover:bg-pink-600 hover:text-white transition-all duration-300">
+                    <Instagram className="w-5 h-5" />
+                  </a>
+                </div>
               </div>
+
+              {/* Solutions */}
               <div>
-                <h3 className="text-sm font-semibold text-muted-foreground tracking-wider uppercase">Services</h3>
-                <ul className="mt-4 space-y-4">
-                  <li><a href="#" className="text-base text-foreground/80 hover:text-foreground">Web Development</a></li>
-                  <li><a href="#" className="text-base text-foreground/80 hover:text-foreground">Mobile Apps</a></li>
-                  <li><a href="#" className="text-base text-foreground/80 hover:text-foreground">Desktop Software</a></li>
-                  <li><a href="#" className="text-base text-foreground/80 hover:text-foreground">AI Solutions</a></li>
+                <h3 className="text-white font-semibold text-lg mb-6">Solutions</h3>
+                <ul className="space-y-4">
+                  <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Network Security</a></li>
+                  <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Cloud Infrastructure</a></li>
+                  <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Web Development</a></li>
+                  <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Mobile Applications</a></li>
+                  <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">AI & Analytics</a></li>
                 </ul>
               </div>
+
+              {/* Resources */}
               <div>
-                <h3 className="text-sm font-semibold text-muted-foreground tracking-wider uppercase">Contact</h3>
-                <ul className="mt-4 space-y-4">
-                  <li className="text-base text-foreground/80">{settings.company_address || 'Lusaka, Zambia'}</li>
-                  <li className="text-base text-foreground/80">{settings.company_phone || '+260 976607840'}</li>
-                  <li className="text-base text-foreground/80">{settings.company_email || 'tekremsolutions@gmail.com'}</li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-muted-foreground tracking-wider uppercase">Legal</h3>
-                <ul className="mt-4 space-y-4">
-                  <li><a href="#" className="text-base text-foreground/80 hover:text-foreground">Privacy Policy</a></li>
-                  <li><a href="#" className="text-base text-foreground/80 hover:text-foreground">Terms of Service</a></li>
+                <h3 className="text-white font-semibold text-lg mb-6">Resources</h3>
+                <ul className="space-y-4">
+                  <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Documentation</a></li>
+                  <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Case Studies</a></li>
+                  <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Security Center</a></li>
+                  <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Support Portal</a></li>
+                  <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Blog</a></li>
                 </ul>
               </div>
             </div>
-            <div className="mt-8 border-t border-primary pt-8 flex flex-col md:flex-row justify-between">
-              <p className="text-base text-muted-foreground">
-                &copy; {new Date().getFullYear()} {settings.company_name || 'Technology Remedies Innovations'}. All rights reserved.
-              </p>
-              <div className="mt-4 md:mt-0 flex space-x-6">
-                <a href="#" className="text-muted-foreground hover:text-foreground">
-                  <span className="sr-only">Facebook</span>
-                  <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" />
-                  </svg>
-                </a>
-                <a href="#" className="text-muted-foreground hover:text-foreground">
-                  <span className="sr-only">Twitter</span>
-                  <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
-                  </svg>
-                </a>
-                <a href="#" className="text-muted-foreground hover:text-foreground">
-                  <span className="sr-only">LinkedIn</span>
-                  <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fillRule="evenodd" d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" clipRule="evenodd" />
-                  </svg>
-                </a>
+
+            {/* Newsletter Signup */}
+            <div className="border-t border-gray-800 pt-12 mb-12">
+              <div className="max-w-md">
+                <h3 className="text-white font-semibold text-lg mb-4">Stay Updated</h3>
+                <p className="text-gray-400 mb-6">Get the latest news and insights delivered to your inbox.</p>
+                <div className="flex gap-3">
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
+                    className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  />
+                  <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300">
+                    Subscribe
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Section */}
+            <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
+              <div className="flex flex-col md:flex-row items-center gap-4 mb-4 md:mb-0">
+                <p className="text-gray-400 text-sm">
+                  &copy; {new Date().getFullYear()} {settings.company_name || 'Technology Remedies Innovations'}. All rights reserved.
+                </p>
+                <div className="flex gap-6 text-sm">
+                  <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Privacy Policy</a>
+                  <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Terms of Service</a>
+                  <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Cookie Policy</a>
+                </div>
+              </div>
+              
+              {/* Contact Info */}
+              <div className="flex items-center gap-6 text-sm text-gray-400">
+                <span>{settings.company_address || 'Lusaka, Zambia'}</span>
+                <span>{settings.company_phone || '+260 976607840'}</span>
+                <span>{settings.company_email || 'hello@tekrem.com'}</span>
               </div>
             </div>
           </div>
