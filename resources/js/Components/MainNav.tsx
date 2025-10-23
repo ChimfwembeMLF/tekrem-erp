@@ -96,10 +96,10 @@ export default function MainNav({ settings }: MainNavProps) {
           </NavigationMenuContent>
         </NavigationMenuItem>
 
-        <NavigationMenuItem>
+        {/* <NavigationMenuItem>
           <NavigationMenuTrigger
             className={cn(
-              isActive('/guest/portfolio') ? 'bg-primary/60 hover:bg-primary font-medium' : 'bg-transperent hover:bg-primary duration-300 ease-in transition-all hover:text-secondary'
+              isActive('/portfolio') ? 'bg-primary/60 hover:bg-primary font-medium' : 'bg-transperent hover:bg-primary duration-300 ease-in transition-all hover:text-secondary'
             )}
           >
             Portfolio
@@ -110,7 +110,7 @@ export default function MainNav({ settings }: MainNavProps) {
                 <NavigationMenuLink asChild>
                   <a
                     className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-purple-500/50 to-purple-600 p-6 no-underline outline-none focus:shadow-md"
-                    href="/guest/portfolio"
+                    href="/portfolio"
                   >
                     <div className="mt-4 mb-2 text-lg font-medium text-white">
                       Our Portfolio
@@ -132,7 +132,7 @@ export default function MainNav({ settings }: MainNavProps) {
               </ListItem>
             </ul>
           </NavigationMenuContent>
-        </NavigationMenuItem>
+        </NavigationMenuItem> */}
 
         <NavigationMenuItem>
           <NavigationMenuTrigger
@@ -179,6 +179,20 @@ export default function MainNav({ settings }: MainNavProps) {
         </NavigationMenuItem>
 
         <NavigationMenuItem>
+          <NavigationMenuLink asChild>
+            <Link
+              href={route('portfolio')}
+              className={cn(
+                navigationMenuTriggerStyle(),
+                isActive(route('contact')) ? 'bg-accent text-accent-foreground font-medium' : 'bg-transperent hover:bg-primary duration-300 ease-in transition-all hover:text-secondary'
+              )}
+            >
+              Portifolio
+            </Link>
+          </NavigationMenuLink>
+        </NavigationMenuItem>
+
+         <NavigationMenuItem>
           <NavigationMenuLink asChild>
             <Link
               href={route('contact')}

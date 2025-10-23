@@ -71,12 +71,6 @@ Route::prefix('guest')->name('guest.')->group(function () {
     Route::post('/support/ticket', [\App\Http\Controllers\Guest\SupportController::class, 'storeTicket'])->name('support.ticket.store');
     Route::get('/support/ticket/status', [\App\Http\Controllers\Guest\SupportController::class, 'ticketStatusForm'])->name('support.ticket.status-form');
     Route::post('/support/ticket/status', [\App\Http\Controllers\Guest\SupportController::class, 'ticketStatus'])->name('support.ticket.status');
-
-    // Portfolio
-    Route::get('/portfolio', [\App\Http\Controllers\Guest\PortfolioController::class, 'index'])->name('portfolio.index');
-    Route::get('/portfolio/{id}', [\App\Http\Controllers\Guest\PortfolioController::class, 'show'])->name('portfolio.show');
-    Route::get('/portfolio/services', [\App\Http\Controllers\Guest\PortfolioController::class, 'services'])->name('portfolio.services');
-    Route::get('/testimonials', [\App\Http\Controllers\Guest\PortfolioController::class, 'testimonials'])->name('testimonials');
 });
 
 // AI Service Test Route (for development/testing)

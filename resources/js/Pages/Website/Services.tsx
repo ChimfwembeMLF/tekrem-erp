@@ -8,7 +8,7 @@ import { getAllServices } from '@/Data/servicesData';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { ArrowRight, CheckCircle } from 'lucide-react';
-
+import servicesIllustration from '../../../../public/assets/illustrations/services-illustration.png';
 export default function Services() {
   const route = useRoute();
   const page = useTypedPage();
@@ -96,9 +96,12 @@ export default function Services() {
                 <div className="absolute -top-4 -left-4 w-24 h-24 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full opacity-20 animate-pulse"></div>
                 <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full opacity-20 animate-pulse delay-500"></div>
                 <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-2xl flex flex-col items-center justify-center">
-                  <svg className="w-20 h-20 text-blue-600 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {/* <svg className="w-20 h-20 text-blue-600 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12H8m8 0a4 4 0 01-8 0m8 0a4 4 0 01-8 0m8 0a4 4 0 01-8 0" />
-                  </svg>
+                  </svg> */}
+                  <div className="w-full h-96 flex items-center justify-center mx-auto mb-6">
+                    <img src={servicesIllustration} alt="Services Illustration" />
+                  </div>
                   <blockquote className="text-xl font-medium text-gray-900 dark:text-white mb-4 text-center">
                     "Empowering your business with innovative technology solutions."
                   </blockquote>

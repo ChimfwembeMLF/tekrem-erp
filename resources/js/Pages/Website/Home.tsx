@@ -847,139 +847,132 @@ export default function Home({ canLogin, canRegister }: Props) {
         </div>
       </div>
 
-      {/* Team Section - Like Reference Image */}
-      <section className="relative h-screen min-h-[600px] bg-gray-100 dark:bg-gray-900 overflow-hidden">
-        {/* Large Background Image with Blur */}
-        <div className="absolute inset-0">
-          {orgData[currentTeamMember]?.image ? (
-            <img
-              src={orgData[currentTeamMember].image}
-              alt={orgData[currentTeamMember].name}
-              className="w-full h-full object-cover object-center"
-              style={{ 
-                filter: 'grayscale(100%) blur(8px) brightness(0.3)',
-                transform: 'scale(1.1)' 
-              }}
-            />
-          ) : (
-            <div className={`w-full h-full bg-gradient-to-br ${orgData[currentTeamMember]?.color} opacity-20 blur-sm`}></div>
-          )}
-          
-          {/* Overlay */}
-          <div className="absolute inset-0 bg-black/20"></div>
+        {/* Team Section - Styled Like Reference Layout */}
+      <section className="relative h-screen bg-gray-100 dark:bg-gray-900 overflow-hidden flex flex-col justify-end">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 0 }}>
+          <h1 className="text-[12rem] md:text-[16rem] lg:text-[20rem] font-bold text-gray-300/20 dark:text-gray-700/20 uppercase tracking-wider select-none">
+            {orgData[currentTeamMember]?.name.split(" ")[0]}
+          </h1>
         </div>
 
-        {/* Content Container */}
-        <div className="relative h-full flex items-center justify-center">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-            
-            {/* Top Left - Team Members Label */}
-            <div className="absolute top-8 left-8">
-              <h2 className="text-gray-600 dark:text-gray-300 text-lg font-medium">
-                Team members
-              </h2>
+        {/* Large faded background image behind card and thumbnails */}
+        <div className="absolute inset-0 flex items-center justify-center ">
+          {orgData[currentTeamMember]?.image ? (
+            <div className="relative w-full h-full flex items-center justify-center">
+              <img
+                src={orgData[currentTeamMember].image || "/placeholder.svg"}
+                alt={orgData[currentTeamMember].name}
+                className="w-auto h-5/6 mx-auto object-cover object-center opacity-90 grayscale select-none pointer-events-none"
+                style={{ zIndex: 1 }}
+              />
+              {/* Gradient overlay */}
+              <div
+                className="absolute inset-0 w-full h-full pointer-events-none"
+                style={{ zIndex: 2 }}
+              ></div>
             </div>
+          ) : (
+            <div
+              className={`w-full h-full bg-gradient-to-br ${orgData[currentTeamMember]?.color} opacity-20 blur-sm`}
+            ></div>
+          )}
+        </div>
 
-            {/* Center - Main Team Member Card */}
-            <div className="flex items-center justify-center">
-              <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-2xl max-w-lg w-full mx-4 relative">
-                {/* Team Member Photo */}
-                <div className="flex justify-center mb-6">
-                  <div className="relative">
-                    {orgData[currentTeamMember]?.image ? (
-                      <img
-                        src={orgData[currentTeamMember].image}
-                        alt={orgData[currentTeamMember].name}
-                        className="w-24 h-24 rounded-2xl object-cover shadow-lg"
-                      />
-                    ) : (
-                      <div className={`w-24 h-24 rounded-2xl bg-gradient-to-br ${orgData[currentTeamMember]?.color} flex items-center justify-center shadow-lg`}>
-                        <span className="text-white font-bold text-2xl">
-                          {orgData[currentTeamMember]?.initials}
-                        </span>
-                      </div>
-                    )}
-                  </div>
+        {/* Content Container - Card above horizontal thumbnails */}
+        <div className="relative w-full flex flex-col items-center justify-end h-full pb-46 z-10">
+         
+          {/* Thumbnails row with fixed card at center */}
+          <div className="relative flex flex-col items-center justify-center w-2/4 mt-8" style={{ minHeight: "7rem" }}>
+            {/* Centered card overlays center thumbnail */}
+            <div className="absolute left-1/2 top-0 -translate-x-1/2 z-30" style={{ minWidth: '340px' }}>
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border border-blue-100 dark:border-gray-700 w-full mx-auto pointer-events-auto flex flex-col items-center">
+                {/* Member photo in circle above card */}
+                <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 rounded-full border-4 border-blue-400 bg-white flex items-center justify-center shadow-lg">
+                  {orgData[currentTeamMember]?.image ? (
+                    <img
+                      src={orgData[currentTeamMember].image || "/placeholder.svg"}
+                      alt={orgData[currentTeamMember].name}
+                      className="w-24 h-24 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className={`w-full h-full bg-gradient-to-br ${orgData[currentTeamMember]?.color} flex items-center justify-center`}>
+                      <span className="text-white font-bold text-xl">{orgData[currentTeamMember]?.initials}</span>
+                    </div>
+                  )}
                 </div>
-
-                {/* Team Member Info */}
-                <div className="text-center">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                    {orgData[currentTeamMember]?.name}
-                  </h3>
-                  <p className="text-blue-600 dark:text-blue-400 font-semibold mb-2">
-                    {orgData[currentTeamMember]?.role}
-                  </p>
-                  
-                  {/* Star Rating */}
-                  <div className="flex justify-center items-center space-x-1 mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <svg key={i} className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
-                      </svg>
+                <div className="pt-16 text-center w-full">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">{orgData[currentTeamMember]?.name}</h3>
+                  <p className="text-blue-600 dark:text-blue-400 font-semibold mb-1">{orgData[currentTeamMember]?.role}</p>
+                  {/* Dots indicator */}
+                  <div className="flex justify-center gap-2 mb-2 mt-2">
+                    {orgData.map((_, idx) => (
+                      <span key={idx} className={`w-3 h-3 rounded-full ${idx === currentTeamMember ? 'bg-blue-400' : 'bg-gray-300'} inline-block`}></span>
                     ))}
                   </div>
-
-                  {/* Bio Description */}
-                  <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-6">
-                    {orgData[currentTeamMember]?.bio} Our team member brings exceptional skills and 
-                    dedication to every project, ensuring high-quality results and innovative solutions.
-                  </p>
-
-                  {/* Connect Button */}
-                  <button className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors duration-200">
-                    Connect
-                  </button>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-4">{orgData[currentTeamMember]?.bio}</p>
+                  <div className="flex gap-3 justify-center mt-6">
+                    <button className="flex items-center gap-2 px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full transition-colors shadow-md" onClick={() => setCurrentTeamMember((currentTeamMember - 1 + orgData.length) % orgData.length)}>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                      <span className="text-sm font-medium">Previous</span>
+                    </button>
+                    <button className="flex items-center gap-2 px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full transition-colors shadow-md" onClick={() => setCurrentTeamMember((currentTeamMember + 1) % orgData.length)}>
+                      <span className="text-sm font-medium">Next</span>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-
-            {/* Circular Team Member Thumbnails - Positioned Around */}
-            <div className="absolute inset-0 pointer-events-none">
-              {orgData.map((member, index) => {
-                if (index === currentTeamMember) return null;
-                
-                // Position thumbnails around the screen
-                const positions = [
-                  { top: '15%', left: '8%' },    // Top-left
-                  { top: '15%', right: '8%' },   // Top-right  
-                  { top: '45%', left: '2%' },    // Middle-left
-                  { top: '45%', right: '2%' },   // Middle-right
-                  { bottom: '15%', left: '8%' }, // Bottom-left
-                  { bottom: '15%', right: '8%' }, // Bottom-right
-                ];
-                
-                const position = positions[index > currentTeamMember ? index - 1 : index];
-                
+            {/* Thumbnails row, always visible, wrap-around */}
+            <div className="flex items-center justify-center w-full gap-8 relative mt-32">
+              {orgData.map((member, i) => {
+                let displayIndex = (i - currentTeamMember + orgData.length) % orgData.length;
                 return (
                   <button
-                    key={index}
-                    onClick={() => setCurrentTeamMember(index)}
-                    className="absolute pointer-events-auto group"
-                    style={position}
+                    key={i}
+                    onClick={() => setCurrentTeamMember(i)}
+                    className={`group w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden shadow-lg border-2 transition-all duration-300 hover:scale-110 focus:outline-none ${i === currentTeamMember ? 'opacity-100 border-blue-400' : 'opacity-70 border-gray-200'}`}
+                    style={{ order: displayIndex }}
                   >
-                    <div className={`relative w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 ${
-                      index === currentTeamMember ? 'ring-4 ring-blue-400' : ''
-                    }`}>
-                      {member.image ? (
-                        <img
-                          src={member.image}
-                          alt={member.name}
-                          className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-300"
-                        />
-                      ) : (
-                        <div className={`w-full h-full bg-gradient-to-br ${member.color} flex items-center justify-center`}>
-                          <span className="text-white font-bold text-lg">
-                            {member.initials}
-                          </span>
-                        </div>
-                      )}
-                    </div>
+                    {member.image ? (
+                      <img
+                        src={member.image || "/placeholder.svg"}
+                        alt={member.name}
+                        className={`w-full h-full object-cover ${i === currentTeamMember ? '' : 'grayscale opacity-70'}`}
+                      />
+                    ) : (
+                      <div className={`w-full h-full bg-gradient-to-br ${member.color} flex items-center justify-center ${i === currentTeamMember ? '' : 'grayscale opacity-70'}`}>
+                        <span className="text-white font-bold text-lg">{member.initials}</span>
+                      </div>
+                    )}
                   </button>
                 );
               })}
             </div>
-
+            {/* Left Arrow */}
+            <button
+              onClick={() => setCurrentTeamMember((currentTeamMember - 1 + orgData.length) % orgData.length)}
+              className="absolute left-0 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-blue-50 dark:bg-gray-800 border border-blue-200 dark:border-gray-700 text-blue-600 dark:text-blue-300 shadow hover:bg-blue-100 dark:hover:bg-gray-700 transition"
+              style={{ top: "50%", transform: "translateY(-50%)" }}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            {/* Right Arrow */}
+            <button
+              onClick={() => setCurrentTeamMember((currentTeamMember + 1) % orgData.length)}
+              className="absolute right-0 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-blue-50 dark:bg-gray-800 border border-blue-200 dark:border-gray-700 text-blue-600 dark:text-blue-300 shadow hover:bg-blue-100 dark:hover:bg-gray-700 transition"
+              style={{ top: "50%", transform: "translateY(-50%)" }}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
           </div>
         </div>
       </section>

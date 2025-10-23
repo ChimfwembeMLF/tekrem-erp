@@ -8,10 +8,13 @@ import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
 import { CheckCircle, ArrowRight, Star } from 'lucide-react';
-
+import webServiceIllustration from '../../../../../public/assets/illustrations/web-services-illustration.png'
+import useTypedPage from '@/Hooks/useTypedPage';
 export default function WebDevelopment() {
   const route = useRoute();
   const service = getServiceBySlug('web-development');
+  const page = useTypedPage();
+  const settings: any = page.props.settings || {};
 
   if (!service) {
     return <div>Service not found</div>;
@@ -91,14 +94,12 @@ export default function WebDevelopment() {
                 <div className="absolute -top-4 -left-4 w-24 h-24 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full opacity-20 animate-pulse"></div>
                 <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full opacity-20 animate-pulse delay-500"></div>
                 <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-2xl flex flex-col items-center justify-center">
-                  <svg className="w-20 h-20 text-blue-600 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12H8m8 0a4 4 0 01-8 0m8 0a4 4 0 01-8 0m8 0a4 4 0 01-8 0" />
-                  </svg>
+                  <img src={webServiceIllustration} alt="" />
                   <blockquote className="text-xl font-medium text-gray-900 dark:text-white mb-4 text-center">
                     "We build scalable, modern web solutions for your business."
                   </blockquote>
                   <cite className="text-blue-600 font-semibold">
-                    TekRem
+                    {settings.company_name || 'TekRem'}
                   </cite>
                 </div>
               </div>
@@ -118,7 +119,7 @@ export default function WebDevelopment() {
               Our web development services include everything you need to succeed online
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {service.features.map((feature, index) => (
               <Card key={index} className="text-center">
@@ -142,7 +143,7 @@ export default function WebDevelopment() {
               Why Choose Our Web Development Services?
             </h2>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-8">
             {service.benefits.map((benefit, index) => (
               <div key={index} className="flex items-start space-x-4">
@@ -170,7 +171,7 @@ export default function WebDevelopment() {
               Flexible pricing options to fit your budget and requirements
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-8">
             {service.packages.map((pkg, index) => (
               <Card key={index} className={`relative ${pkg.popular ? 'border-blue-500 shadow-lg' : ''}`}>
@@ -220,7 +221,7 @@ export default function WebDevelopment() {
               We work with the latest and most reliable technologies
             </p>
           </div>
-          
+
           <div className="flex flex-wrap justify-center gap-4">
             {service.technologies.map((tech, index) => (
               <Badge key={index} variant="secondary" className="px-4 py-2 text-sm">
@@ -242,7 +243,7 @@ export default function WebDevelopment() {
               A proven methodology that delivers results
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-5 gap-8">
             {service.processSteps.map((step, index) => (
               <div key={index} className="text-center">
@@ -266,7 +267,7 @@ export default function WebDevelopment() {
               Frequently Asked Questions
             </h2>
           </div>
-          
+
           <div className="space-y-6">
             {service.faq.map((item, index) => (
               <Card key={index}>

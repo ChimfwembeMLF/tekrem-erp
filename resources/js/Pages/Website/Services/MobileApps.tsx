@@ -8,11 +8,13 @@ import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
 import { CheckCircle, ArrowRight, Star, Smartphone } from 'lucide-react';
+import useTypedPage from '@/Hooks/useTypedPage';
 
 export default function MobileApps() {
   const route = useRoute();
   const service = getServiceBySlug('mobile-apps');
-
+  const page = useTypedPage();
+  const settings: any = page.props.settings || {};
   if (!service) {
     return <div>Service not found</div>;
   }
@@ -98,7 +100,7 @@ export default function MobileApps() {
                     "We build mobile apps users love."
                   </blockquote>
                   <cite className="text-blue-600 font-semibold">
-                    TekRem
+                    {settings.company_name || 'TekRem'}
                   </cite>
                 </div>
               </div>
@@ -118,7 +120,7 @@ export default function MobileApps() {
               We build feature-rich mobile applications that users love
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {service.features.map((feature, index) => (
               <Card key={index} className="text-center">
@@ -142,7 +144,7 @@ export default function MobileApps() {
               Why Invest in Mobile Apps?
             </h2>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-8">
             {service.benefits.map((benefit, index) => (
               <div key={index} className="flex items-start space-x-4">
@@ -170,7 +172,7 @@ export default function MobileApps() {
               From simple apps to complex enterprise solutions
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-8">
             {service.packages.map((pkg, index) => (
               <Card key={index} className={`relative ${pkg.popular ? 'border-purple-500 shadow-lg' : ''}`}>
@@ -220,7 +222,7 @@ export default function MobileApps() {
               Cutting-edge mobile development frameworks and tools
             </p>
           </div>
-          
+
           <div className="flex flex-wrap justify-center gap-4">
             {service.technologies.map((tech, index) => (
               <Badge key={index} variant="secondary" className="px-4 py-2 text-sm">
@@ -242,7 +244,7 @@ export default function MobileApps() {
               From concept to app store success
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-5 gap-8">
             {service.processSteps.map((step, index) => (
               <div key={index} className="text-center">
@@ -266,7 +268,7 @@ export default function MobileApps() {
               Mobile App Development FAQ
             </h2>
           </div>
-          
+
           <div className="space-y-6">
             {service.faq.map((item, index) => (
               <Card key={index}>

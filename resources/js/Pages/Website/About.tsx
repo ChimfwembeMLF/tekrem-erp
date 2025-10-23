@@ -4,7 +4,7 @@ import GuestLayout from '@/Layouts/GuestLayout';
 import useTypedPage from '@/Hooks/useTypedPage';
 import { Link } from '@inertiajs/react';
 import useRoute from '@/Hooks/useRoute';
-
+import aboutUsIllustration from '../../../../public/assets/illustrations/about-us.png';
 export default function About() {
   const page = useTypedPage();
   const route = useRoute();
@@ -212,10 +212,11 @@ export default function About() {
                 
                 <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-2xl">
                   <div className="text-center">
-                    <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                      <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-full h-96 flex items-center justify-center mx-auto mb-6">
+                      {/* <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
+                      </svg> */}
+                      <img src={aboutUsIllustration} alt="About us illustration" />
                     </div>
                     <blockquote className="text-xl font-medium text-gray-900 dark:text-white mb-4">
                       "Our mission is to empower businesses with innovative technology solutions that drive growth and success."

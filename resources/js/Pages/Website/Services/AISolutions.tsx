@@ -8,10 +8,13 @@ import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
 import { CheckCircle, ArrowRight, Star, Brain, Zap } from 'lucide-react';
+import useTypedPage from '@/Hooks/useTypedPage';
 
 export default function AISolutions() {
   const route = useRoute();
   const service = getServiceBySlug('ai-solutions');
+  const page = useTypedPage();
+  const settings: any = page.props.settings || {};
 
   if (!service) {
     return <div>Service not found</div>;
@@ -98,7 +101,7 @@ export default function AISolutions() {
                     "Harness the power of AI for your business."
                   </blockquote>
                   <cite className="text-blue-600 font-semibold">
-                    TekRem
+                    {settings.company_name || 'TekRem'}
                   </cite>
                 </div>
               </div>
@@ -118,7 +121,7 @@ export default function AISolutions() {
               Harness the power of artificial intelligence to transform your business
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {service.features.map((feature, index) => (
               <Card key={index} className="text-center">
@@ -142,7 +145,7 @@ export default function AISolutions() {
               Transform Your Business with AI
             </h2>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-8">
             {service.benefits.map((benefit, index) => (
               <div key={index} className="flex items-start space-x-4">
@@ -170,7 +173,7 @@ export default function AISolutions() {
               From basic automation to advanced AI transformation
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-8">
             {service.packages.map((pkg, index) => (
               <Card key={index} className={`relative ${pkg.popular ? 'border-indigo-500 shadow-lg' : ''}`}>
@@ -220,7 +223,7 @@ export default function AISolutions() {
               We work with leading AI platforms and frameworks
             </p>
           </div>
-          
+
           <div className="flex flex-wrap justify-center gap-4">
             {service.technologies.map((tech, index) => (
               <Badge key={index} variant="secondary" className="px-4 py-2 text-sm">
@@ -242,7 +245,7 @@ export default function AISolutions() {
               A systematic approach to AI transformation
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-5 gap-8">
             {service.processSteps.map((step, index) => (
               <div key={index} className="text-center">
@@ -266,7 +269,7 @@ export default function AISolutions() {
               AI Solutions FAQ
             </h2>
           </div>
-          
+
           <div className="space-y-6">
             {service.faq.map((item, index) => (
               <Card key={index}>

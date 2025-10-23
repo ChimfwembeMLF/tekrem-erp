@@ -8,11 +8,13 @@ import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
 import { CheckCircle, ArrowRight, Star, Cloud, Server } from 'lucide-react';
-
+import cloudServiceIllustration from '../../../../../public/assets/illustrations/cloud-services-illustration.png'
+import useTypedPage from '@/Hooks/useTypedPage';
 export default function CloudServices() {
   const route = useRoute();
   const service = getServiceBySlug('cloud-services');
-
+  const page = useTypedPage();
+  const settings: any = page.props.settings || {};
   if (!service) {
     return <div>Service not found</div>;
   }
@@ -91,14 +93,14 @@ export default function CloudServices() {
                 <div className="absolute -top-4 -left-4 w-24 h-24 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full opacity-20 animate-pulse"></div>
                 <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full opacity-20 animate-pulse delay-500"></div>
                 <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-2xl flex flex-col items-center justify-center">
-                  <svg className="w-20 h-20 text-blue-600 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12H8m8 0a4 4 0 01-8 0m8 0a4 4 0 01-8 0m8 0a4 4 0 01-8 0" />
-                  </svg>
+                  <div className="h-96 w-full">
+                    <img src={cloudServiceIllustration} alt="Cloud Services Illustration" />
+                  </div>
                   <blockquote className="text-xl font-medium text-gray-900 dark:text-white mb-4 text-center">
                     "Move to the cloud with confidence."
                   </blockquote>
                   <cite className="text-blue-600 font-semibold">
-                    TekRem
+                    {settings.company_name || 'TekRem'}
                   </cite>
                 </div>
               </div>
@@ -118,7 +120,7 @@ export default function CloudServices() {
               Modern cloud solutions designed for scalability, security, and performance
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {service.features.map((feature, index) => (
               <Card key={index} className="text-center">
@@ -142,7 +144,7 @@ export default function CloudServices() {
               Why Move to the Cloud?
             </h2>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-8">
             {service.benefits.map((benefit, index) => (
               <div key={index} className="flex items-start space-x-4">
@@ -170,7 +172,7 @@ export default function CloudServices() {
               Flexible cloud solutions for businesses of all sizes
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-8">
             {service.packages.map((pkg, index) => (
               <Card key={index} className={`relative ${pkg.popular ? 'border-green-500 shadow-lg' : ''}`}>
@@ -220,7 +222,7 @@ export default function CloudServices() {
               We work with leading cloud providers and modern DevOps tools
             </p>
           </div>
-          
+
           <div className="flex flex-wrap justify-center gap-4">
             {service.technologies.map((tech, index) => (
               <Badge key={index} variant="secondary" className="px-4 py-2 text-sm">
@@ -242,7 +244,7 @@ export default function CloudServices() {
               A proven methodology for successful cloud adoption
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-5 gap-8">
             {service.processSteps.map((step, index) => (
               <div key={index} className="text-center">
@@ -266,7 +268,7 @@ export default function CloudServices() {
               Cloud Services FAQ
             </h2>
           </div>
-          
+
           <div className="space-y-6">
             {service.faq.map((item, index) => (
               <Card key={index}>
