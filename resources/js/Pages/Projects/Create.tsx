@@ -128,7 +128,7 @@ export default function ProjectCreate({ auth, clients, users, templates, tags }:
                           <SelectValue placeholder="Choose a template to pre-fill project data" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">No template</SelectItem>
+                          <SelectItem value="none">No template</SelectItem>
                           {templates.map((template) => (
                             <SelectItem key={template.id} value={template.id.toString()}>
                               {template.name} - {template.category}
@@ -277,7 +277,7 @@ export default function ProjectCreate({ auth, clients, users, templates, tags }:
                           <SelectValue placeholder="Select a client" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">No client</SelectItem>
+                          <SelectItem value="none">No client</SelectItem>
                           {clients.map((client) => (
                             <SelectItem key={client.id} value={client.id.toString()}>
                               {client.name} - {client.company}

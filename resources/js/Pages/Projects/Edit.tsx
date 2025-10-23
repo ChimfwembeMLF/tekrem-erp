@@ -235,7 +235,7 @@ export default function ProjectEdit({ auth, project, clients, users, tags, selec
                           <SelectValue placeholder="Select a client" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">No client</SelectItem>
+                          <SelectItem value="none">No client</SelectItem>
                           {clients.map((client) => (
                             <SelectItem key={client.id} value={client.id.toString()}>
                               {client.name} - {client.company}
