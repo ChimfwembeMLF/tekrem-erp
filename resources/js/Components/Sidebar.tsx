@@ -121,28 +121,6 @@ export default function Sidebar({ settings }: SidebarProps) {
     },
   ];
 
-  // Agile/PM navigation items - only visible to users with projects permission
-  const agileItems = hasProjectsAccess() ? [
-    {
-      href: route('pm.dashboard'),
-      label: t('pm.dashboard', 'Dashboard'),
-      icon: <LayoutDashboard className="h-5 w-5" />,
-      active: route().current('pm.dashboard')
-    },
-    {
-      href: route('pm.projects.index'),
-      label: t('pm.projects', 'Projects'),
-      icon: <FolderOpen className="h-5 w-5" />,
-      active: route().current('pm.projects.*')
-    },
-    {
-      href: route('pm.boards.index'),
-      label: t('pm.boards', 'Boards'),
-      icon: <Kanban className="h-5 w-5" />,
-      active: route().current('pm.boards.*')
-    },
-  ] : [];
-
   // CRM navigation items - only visible to admin and staff
   const crmItems = hasCrmAccess() ? [
     {
@@ -689,18 +667,18 @@ export default function Sidebar({ settings }: SidebarProps) {
           <Collapsible className="mt-2">
             <CollapsibleTrigger className={cn(
               "w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors",
-              route().current('pm.projects.*')
+              route().current('projects.*')
                 ? "bg-primary/10 text-primary font-semibold"
                 : "text-foreground/70 hover:text-foreground hover:bg-accent"
             )}>
               <div className="flex items-center gap-3">
                 <FolderOpen className="h-5 w-5" />
-                <span>{t('pm.title', 'Projects')}</span>
+                <span>{t('projects.title', 'Projects')}</span>
               </div>
               <ChevronRight className="h-4 w-4 transition-transform data-[state=open]:rotate-90" />
             </CollapsibleTrigger>
             <CollapsibleContent className="pl-4 mt-1 space-y-1">
-              {agileItems.map((item) => (
+              {projectsItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
