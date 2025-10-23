@@ -223,6 +223,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'manage training programs',
 
             // ========== PROJECTS MODULE ==========
+            // Projects
             'view projects',
             'create projects',
             'edit projects',
@@ -231,12 +232,14 @@ class RolesAndPermissionsSeeder extends Seeder
             'manage project members',
             'view project analytics',
 
+            // Project Milestones
             'view milestones',
             'create milestones',
             'edit milestones',
             'delete milestones',
             'manage project milestones',
 
+            // Project Tasks
             'view tasks',
             'create tasks',
             'edit tasks',
@@ -244,6 +247,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'assign tasks',
             'view all tasks',
 
+            // Project Files
             'view project files',
             'upload project files',
             'edit project files',
@@ -258,6 +262,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'approve time logs',
             'view all time logs',
 
+            // Project Templates
             'view project templates',
             'create project templates',
             'edit project templates',
@@ -482,6 +487,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view attendance', 'create attendance', 'edit attendance', 'view all attendance', 'manage attendance reports',
             'view training', 'create training', 'edit training', 'enroll training', 'manage training programs',
 
+            // Projects Module (full access)
             'view projects', 'create projects', 'edit projects', 'delete projects',
             'view all projects', 'manage project members', 'view project analytics',
             'view milestones', 'create milestones', 'edit milestones', 'delete milestones', 'manage project milestones',
@@ -556,6 +562,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view attendance', 'create attendance', 'edit attendance',
             'view training', 'enroll training',
 
+            // Projects Module (good access)
             'view projects', 'create projects', 'edit projects', 'view project analytics',
             'view milestones', 'create milestones', 'edit milestones',
             'view tasks', 'create tasks', 'edit tasks', 'assign tasks',
@@ -602,6 +609,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'create own tickets',
             'edit own tickets',
 
+            // Own Projects (view only)
             'view own projects',
 
             // Own Financial Data (view only)
