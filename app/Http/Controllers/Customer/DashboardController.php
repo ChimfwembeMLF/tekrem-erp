@@ -8,7 +8,6 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Support\Ticket;
-use App\Models\Project;
 use App\Models\Finance\Invoice;
 use App\Models\Client;
 
@@ -36,18 +35,8 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        // Get customer's projects (if they have any)
-        $projects = Project::whereJsonContains('team_members', $user->id)
-            ->orWhere('client_id', function ($query) use ($user) {
-                $query->select('id')
-                    ->from('clients')
-                    ->where('email', $user->email)
-                    ->limit(1);
-            })
-            ->with(['client', 'manager'])
-            ->orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get();
+        // Projects feature removed
+        $projects = collect([]); // or use a static array if needed
 
         // Get customer's invoices
         $invoices = Invoice::whereHasMorph(
@@ -91,11 +80,7 @@ class DashboardController extends Controller
                     ->whereIn('status', ['resolved', 'closed'])
                     ->count(),
             ],
-            'projects' => [
-                'total' => $projects->count(),
-                'active' => $projects->where('status', 'active')->count(),
-                'completed' => $projects->where('status', 'completed')->count(),
-            ],
+            // 'projects' => [ ... ] removed
             'invoices' => [
                 'total' => $invoices->count(),
                 'paid' => $invoices->where('status', 'paid')->count(),
@@ -106,7 +91,7 @@ class DashboardController extends Controller
 
         return Inertia::render('Customer/Dashboard', [
             'tickets' => $tickets,
-            'projects' => $projects,
+            // 'projects' => $projects, // removed
             'invoices' => $invoices,
             'payments' => $payments,
             'stats' => $stats,

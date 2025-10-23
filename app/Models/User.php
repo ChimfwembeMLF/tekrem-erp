@@ -199,23 +199,6 @@ class User extends Authenticatable
         return $this->hasMany(\App\Models\Support\Ticket::class, 'assigned_to');
     }
 
-    /**
-     * Get the projects managed by this user.
-     */
-    public function managedProjects()
-    {
-        return $this->hasMany(\App\Models\Project::class, 'manager_id');
-    }
-
-    /**
-     * Get the projects where this user is a team member.
-     */
-    public function teamProjects()
-    {
-        return $this->belongsToMany(\App\Models\Project::class, 'project_team_members', 'user_id', 'project_id')
-                    ->withPivot('role', 'joined_at')
-                    ->withTimestamps();
-    }
 
     /**
      * Get the project time logs for this user.

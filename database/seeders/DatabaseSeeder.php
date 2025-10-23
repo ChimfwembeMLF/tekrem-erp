@@ -53,9 +53,10 @@ class DatabaseSeeder extends Seeder
         $this->command->info('👨‍💼 Seeding HR data...');
         $this->call(HRSeeder::class);
 
-        // 7. Projects (needs users and clients)
-        $this->command->info('📊 Seeding projects...');
-        $this->call(ProjectSeeder::class);
+        
+        // 7b. Advanced Project Management (Agile/Boards)
+        $this->command->info('🛠️ Seeding advanced project management (Agile/Boards)...');
+        $this->call(ProjectManagementSeeder::class);
 
         // 8. Support module (needs users and clients)
         $this->command->info('🎫 Seeding support module...');
