@@ -35,6 +35,12 @@ class DatabaseSeeder extends Seeder
         $this->command->info('📊 Seeding chart of accounts...');
         $this->call(ChartOfAccountsSeeder::class);
 
+        $this->command->info('🏛️ Seeding ZRA configuration...');
+        $this->call(ZraConfigurationSeeder::class);
+
+        $this->command->info('📊 Seeding finance reports...');
+        $this->call(ReportSeeder::class);
+
         // 4. Seeders that need admin user
         $this->command->info('🏷️ Seeding tags...');
         $this->call(TagSeeder::class);

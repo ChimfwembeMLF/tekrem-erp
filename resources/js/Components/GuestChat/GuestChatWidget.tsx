@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback } from '@/Components/ui/avatar';
 import { toast } from 'sonner';
 import GuestChatHeader from './GuestChatHeader';
 import GuestChatInterface from './GuestChatInterface';
-import Logo from '../../../../public/fav.svg'
+import Logo from '../../../../public/favicon.svg'
 interface Message {
   id: number;
   message: string;

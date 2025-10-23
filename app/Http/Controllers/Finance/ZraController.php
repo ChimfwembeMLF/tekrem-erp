@@ -25,6 +25,51 @@ class ZraController extends Controller
     }
 
     /**
+     * Display ZRA dashboard with overview statistics.
+     */
+    public function dashboard(Request $request)
+    {
+        // Get recent ZRA invoices
+        $recentInvoices = ZraSmartInvoice::with(['invoice', 'submittedBy'])
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+
+        // Get comprehensive statistics
+        $stats = [
+            'total' => ZraSmartInvoice::count(),
+            'pending' => ZraSmartInvoice::pending()->count(),
+            'submitted' => ZraSmartInvoice::submitted()->count(),
+            'approved' => ZraSmartInvoice::approved()->count(),
+            'rejected' => ZraSmartInvoice::rejected()->count(),
+            'submitted_today' => ZraSmartInvoice::whereDate('submitted_at', today())->count(),
+            'approved_this_month' => ZraSmartInvoice::approved()
+                ->whereMonth('approved_at', now()->month)
+                ->count(),
+            'rejection_rate' => $this->calculateRejectionRate(),
+            'avg_processing_time' => $this->calculateAverageProcessingTime(),
+        ];
+
+        // Get monthly submission trends
+        $monthlyTrends = ZraSmartInvoice::selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, COUNT(*) as count')
+            ->groupBy('month')
+            ->orderBy('month', 'desc')
+            ->limit(6)
+            ->get();
+
+        // Check ZRA API health
+        $apiHealth = $this->apiService->healthCheck();
+
+        return Inertia::render('Finance/ZRA/Dashboard', [
+            'stats' => $stats,
+            'recentInvoices' => $recentInvoices,
+            'monthlyTrends' => $monthlyTrends,
+            'apiHealth' => $apiHealth,
+            'configuration' => ZraConfiguration::active()->first(),
+        ]);
+    }
+
+    /**
      * Display ZRA Smart Invoice dashboard.
      */
     public function index(Request $request)

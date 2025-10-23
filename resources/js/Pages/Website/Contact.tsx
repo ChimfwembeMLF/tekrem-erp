@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 
 export default function Contact() {
   const page = useTypedPage();
-  const settings = page.props.settings || {};
+  const settings: any = page.props.settings || {};
   
   const { data, setData, post, processing, errors, reset } = useForm({
     name: '',
@@ -32,17 +32,88 @@ export default function Contact() {
     <GuestLayout title="Contact Us">
       <Head title="Contact Us" />
 
-      {/* Hero Section */}
-      <div className="bg-blue-600">
-        <div className="max-w-7xl mx-auto py-16 px-4 sm:py-24 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-base font-semibold text-blue-200 tracking-wide uppercase">Get in Touch</h1>
-            <p className="mt-1 text-4xl font-extrabold text-white sm:text-5xl sm:tracking-tight">
-              Contact Us
-            </p>
-            <p className="max-w-xl mt-5 mx-auto text-xl text-blue-200">
-              Have a question or want to discuss a project? We'd love to hear from you. Fill out the form below or use our contact information.
-            </p>
+      {/* Modern Hero Section with Gradient Background */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-32 w-96 h-96 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-32 w-96 h-96 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
+          <div className="lg:grid lg:grid-cols-12 lg:gap-8 lg:items-center">
+            <div className="lg:col-span-6">
+              {/* Badge */}
+              <div className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-blue-100 to-purple-100 dark:from-gray-800 dark:to-gray-700 text-sm font-medium text-blue-800 dark:text-blue-300 mb-8">
+                <span className="mr-2">✉️</span>
+                Get in Touch
+              </div>
+
+              {/* Main heading */}
+              <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl">
+                <span className="block">Contact</span>
+                <span className="block bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  {settings.company_name || 'Technology Remedies Innovations'}
+                </span>
+              </h1>
+
+              {/* Description */}
+              <p className="mt-6 text-lg text-gray-600 dark:text-gray-300 max-w-2xl">
+                Have a question or want to discuss a project? We'd love to hear from you. Fill out the form below or use our contact information.
+              </p>
+
+              {/* CTA Buttons */}
+              <div className="mt-10 flex flex-col sm:flex-row gap-4">
+                <a
+                  href="mailto:info@tekrem.com"
+                  className="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
+                >
+                  Email Us
+                  <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </a>
+                <a
+                  href="tel:+260211123456"
+                  className="inline-flex items-center justify-center px-8 py-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 shadow-lg hover:shadow-xl"
+                >
+                  <svg className="mr-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  Call Us
+                </a>
+              </div>
+
+              {/* Trust indicators */}
+              <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Trusted by leading companies</p>
+                <div className="flex items-center space-x-6 opacity-60">
+                  <div className="bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded text-sm font-medium">Zambia Bank</div>
+                  <div className="bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded text-sm font-medium">MTN Zambia</div>
+                  <div className="bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded text-sm font-medium">Airtel</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Hero Image or Icon */}
+            <div className="lg:col-span-6 mt-12 lg:mt-0">
+              <div className="relative">
+                {/* Decorative elements */}
+                <div className="absolute -top-4 -left-4 w-24 h-24 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full opacity-20 animate-pulse"></div>
+                <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full opacity-20 animate-pulse delay-500"></div>
+                <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-2xl flex flex-col items-center justify-center">
+                  <svg className="w-20 h-20 text-blue-600 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12H8m8 0a4 4 0 01-8 0m8 0a4 4 0 01-8 0m8 0a4 4 0 01-8 0" />
+                  </svg>
+                  <blockquote className="text-xl font-medium text-gray-900 dark:text-white mb-4 text-center">
+                    "We're here to help you with your technology needs. Reach out and let's build something great together!"
+                  </blockquote>
+                  <cite className="text-blue-600 font-semibold">
+                    {settings.company_name || 'TekRem'}
+                  </cite>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

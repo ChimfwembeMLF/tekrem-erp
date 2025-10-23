@@ -140,6 +140,10 @@ export default function FinanceSettings({ momoProviders, zraConfiguration, syste
                 <Smartphone className="h-4 w-4 mr-2" />
                 Mobile Money
               </TabsTrigger>
+              <TabsTrigger value="momo-providers">
+                <Building className="h-4 w-4 mr-2" />
+                Mobile Money Providers
+              </TabsTrigger>
               <TabsTrigger value="zra">
                 <Shield className="h-4 w-4 mr-2" />
                 ZRA Smart Invoice
@@ -378,6 +382,165 @@ export default function FinanceSettings({ momoProviders, zraConfiguration, syste
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* Mobile Money Providers Tab */}
+            <TabsContent value="momo-providers">
+              <div className="space-y-6">
+                {/* Provider Management Card */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Building className="h-5 w-5" />
+                        Mobile Money Providers
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => router.visit(route('finance.momo.providers'))}
+                      >
+                        Manage Providers
+                      </Button>
+                    </CardTitle>
+                    <CardDescription>
+                      Configure and manage mobile money service providers
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {momoProviders.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                          <Building className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                          <p className="text-lg font-medium mb-2">No providers configured</p>
+                          <p className="text-sm mb-4">Add your first mobile money provider to start processing payments</p>
+                          <Button
+                            onClick={() => router.visit(route('finance.momo.providers'))}
+                          >
+                            <Building className="h-4 w-4 mr-2" />
+                            Add Provider
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {momoProviders.map((provider) => (
+                            <Card key={provider.id} className="relative">
+                              <CardHeader className="pb-3">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
+                                      <Smartphone className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                    </div>
+                                    <div>
+                                      <CardTitle className="text-base">{provider.display_name}</CardTitle>
+                                      <p className="text-sm text-muted-foreground">{provider.provider_code}</p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    {getStatusIcon(provider.health_status)}
+                                    {provider.is_active ? (
+                                      <Badge variant="outline" className="text-green-600 border-green-600">
+                                        Active
+                                      </Badge>
+                                    ) : (
+                                      <Badge variant="outline" className="text-gray-600 border-gray-600">
+                                        Inactive
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+                              </CardHeader>
+                              <CardContent>
+                                <div className="space-y-3">
+                                  <div>
+                                    <p className="text-sm font-medium text-muted-foreground">Supported Currencies</p>
+                                    <div className="flex gap-1 mt-1">
+                                      {provider.supported_currencies.map((currency) => (
+                                        <Badge key={currency} variant="secondary" className="text-xs">
+                                          {currency}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  </div>
+                                  
+                                  <div>
+                                    <p className="text-sm font-medium text-muted-foreground">Fee Structure</p>
+                                    <div className="text-sm mt-1">
+                                      {provider.fee_structure.percentage_fee && (
+                                        <span>{provider.fee_structure.percentage_fee}% + </span>
+                                      )}
+                                      {provider.fee_structure.fixed_fee && (
+                                        <span>{provider.fee_structure.fixed_fee} fixed</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  
+                                  {provider.last_health_check && (
+                                    <div>
+                                      <p className="text-sm font-medium text-muted-foreground">Last Health Check</p>
+                                      <p className="text-xs text-muted-foreground mt-1">
+                                        {new Date(provider.last_health_check).toLocaleString()}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Quick Actions */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <Button
+                    variant="outline"
+                    className="h-20 flex flex-col items-center justify-center gap-2"
+                    onClick={() => router.visit(route('finance.momo.providers'))}
+                  >
+                    <Building className="h-6 w-6" />
+                    <span className="text-sm">Add New Provider</span>
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    className="h-20 flex flex-col items-center justify-center gap-2"
+                    onClick={() => router.visit(route('settings.finance.momo.api'))}
+                  >
+                    <Server className="h-6 w-6" />
+                    <span className="text-sm">API Settings</span>
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    className="h-20 flex flex-col items-center justify-center gap-2"
+                    onClick={() => router.visit(route('finance.momo.index'))}
+                  >
+                    <Activity className="h-6 w-6" />
+                    <span className="text-sm">View Transactions</span>
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    className="h-20 flex flex-col items-center justify-center gap-2"
+                    onClick={() => {
+                      // Test all provider connections
+                      toast.promise(
+                        fetch('/api/finance/momo/test-all-connections', { method: 'POST' }),
+                        {
+                          loading: 'Testing provider connections...',
+                          success: 'All provider connections tested successfully',
+                          error: 'Failed to test provider connections'
+                        }
+                      );
+                    }}
+                  >
+                    <CheckCircle className="h-6 w-6" />
+                    <span className="text-sm">Test All Providers</span>
+                  </Button>
+                </div>
+              </div>
             </TabsContent>
 
             {/* ZRA Tab */}

@@ -14,7 +14,7 @@ export default function Login({ canResetPassword, status }: Props) {
   const route = useRoute();
   const page = useTypedPage();
   const [recaptchaToken, setRecaptchaToken] = useState<string>('');
-  const recaptcha = page.props.recaptcha;
+  const recaptcha: any = page.props.recaptcha;
   const form = useForm({
     email: '',
     password: '',

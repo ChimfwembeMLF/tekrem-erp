@@ -1429,7 +1429,9 @@ export default function ConversationView({
   );
 
   return isCustomerView ? (
-    <LayoutComponent>
+    <LayoutComponent
+      title={`Chat - ${conversation.display_title}`}      
+    >
       {!isFullScreen && headerContent}
       {chatContent}
     </LayoutComponent>
