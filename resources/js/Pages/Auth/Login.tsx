@@ -75,7 +75,7 @@ export default function Login({ canResetPassword, status }: Props) {
           value={form.data.password}
           onChange={e => form.setData('password', e.currentTarget.value)}
           error={form.errors.password}
-          required
+          required        
           autoComplete="current-password"
         />
 

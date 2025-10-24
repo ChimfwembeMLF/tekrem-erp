@@ -17,10 +17,11 @@ export default {
     theme: {
     	extend: {
     		fontFamily: {
-    			sans: [
-    				'Figtree',
-                    ...defaultTheme.fontFamily.sans
-                ]
+					sans: [
+						'Gilmer', // Custom brand font
+						'Figtree',
+	                    ...defaultTheme.fontFamily.sans
+	                ]
     		},
     		borderRadius: {
     			lg: 'var(--radius)',
@@ -52,10 +53,10 @@ export default {
                 'collapsible-up': 'collapsible-up 0.2s ease-out',
             },
     		colors: {
-				primary: 'hsl(var(--primary))',
-               'primary-foreground': 'hsl(var(--primary-foreground))',
-			    secondary: 'hsl(var(--secondary))',
-               'secondary-foreground': 'hsl(var(--secondary-foreground))',
+				primary: '#0D3A69', // Egyptian Blue
+				'primary-foreground': '#fff',
+				secondary: '#E394AF', // Mauveulous
+				'secondary-foreground': '#fff',
     			background: 'hsl(var(--background))',
     			foreground: 'hsl(var(--foreground))',
     			card: {
@@ -74,20 +75,20 @@ export default {
     				DEFAULT: 'hsl(var(--accent))',
     				foreground: 'hsl(var(--accent-foreground))'
     			},
-    			destructive: {
-    				DEFAULT: 'hsl(var(--destructive))',
-    				foreground: 'hsl(var(--destructive-foreground))'
-    			},
+				destructive: {
+					DEFAULT: 'hsl(var(--destructive))',
+					foreground: 'hsl(var(--destructive-foreground))'
+				},
     			border: 'hsl(var(--border))',
-    			input: 'hsl(var(--input))',
-    			ring: 'hsl(var(--ring))',
-    			chart: {
-    				'1': 'hsl(var(--chart-1))',
-    				'2': 'hsl(var(--chart-2))',
-    				'3': 'hsl(var(--chart-3))',
-    				'4': 'hsl(var(--chart-4))',
-    				'5': 'hsl(var(--chart-5))'
-    			}
+				brandBlue: '#0D3A69', // Egyptian Blue
+				brandMauve: '#E394AF', // Mauveulous
+				chart: {
+					'1': 'hsl(var(--chart-1))',
+					'2': 'hsl(var(--chart-2))',
+					'3': 'hsl(var(--chart-3))',
+					'4': 'hsl(var(--chart-4))',
+					'5': 'hsl(var(--chart-5))'
+				}    		
     		}
     	}
     },

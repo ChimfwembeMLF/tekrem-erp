@@ -8,6 +8,9 @@ import OrgChart from '@/Components/OrgChart';
 import PartnerSection from '@/Components/PartnerSection';
 import HeroImage from '../../../../public/hero-illustration.png'
 import TechnologiesSection from '@/Components/TechnologiesSection';
+import TeamCarousel from '@/Components/TeamCarousel';
+import TechnologyStack from '@/Components/TechnologyStack';
+import FAQ from '@/Components/FAQ';
 
 
 
@@ -23,7 +26,7 @@ export default function Home({ canLogin, canRegister }: Props) {
 
   // Testimonials Carousel State
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
-  
+
   // Team Carousel State
   const [currentTeamMember, setCurrentTeamMember] = useState(0);
   const testimonials = [
@@ -431,7 +434,7 @@ export default function Home({ canLogin, canRegister }: Props) {
                 {/* Decorative elements */}
                 <div className="absolute -top-4 -left-4 w-24 h-24 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full opacity-20 animate-pulse"></div>
                 <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full opacity-20 animate-pulse delay-500"></div>
-                
+
                 <div className="relative">
                   <img
                     src={HeroImage}
@@ -452,7 +455,7 @@ export default function Home({ canLogin, canRegister }: Props) {
         <div className="absolute inset-0 opacity-40">
           <div className="absolute inset-0 bg-gray-800/20 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[length:20px_20px]"></div>
         </div>
-        
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-base text-blue-300 font-semibold tracking-wide uppercase mb-4">Our Impact</h2>
@@ -463,7 +466,7 @@ export default function Home({ canLogin, canRegister }: Props) {
               Trusted by organizations across Africa to transform their digital landscape
             </p>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
             <div className="text-center group">
               <div className="relative">
@@ -475,7 +478,7 @@ export default function Home({ canLogin, canRegister }: Props) {
               <div className="text-lg font-semibold text-white mb-2">Clients Served</div>
               <div className="text-sm text-gray-300">Across 15+ countries</div>
             </div>
-            
+
             <div className="text-center group">
               <div className="relative">
                 <div className="text-5xl md:text-6xl font-bold text-transparent bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text mb-2">
@@ -486,7 +489,7 @@ export default function Home({ canLogin, canRegister }: Props) {
               <div className="text-lg font-semibold text-white mb-2">Projects Completed</div>
               <div className="text-sm text-gray-300">With 100% success rate</div>
             </div>
-            
+
             <div className="text-center group">
               <div className="relative">
                 <div className="text-5xl md:text-6xl font-bold text-transparent bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text mb-2">
@@ -497,7 +500,7 @@ export default function Home({ canLogin, canRegister }: Props) {
               <div className="text-lg font-semibold text-white mb-2">Years Experience</div>
               <div className="text-sm text-gray-300">Industry expertise</div>
             </div>
-            
+
             <div className="text-center group">
               <div className="relative">
                 <div className="text-5xl md:text-6xl font-bold text-transparent bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text mb-2">
@@ -662,7 +665,7 @@ export default function Home({ canLogin, canRegister }: Props) {
       </div>
 
       {/* Features Section */}
-      <div className="py-12 bg-gray-50 dark:bg-secondary/80">
+      <div className="py-12 bg-gray-50 dark:bg-primary/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:text-center">
             <h2 className="text-base text-primary font-semibold tracking-wide uppercase">Features</h2>
@@ -745,7 +748,7 @@ export default function Home({ canLogin, canRegister }: Props) {
         {/* Background decorations */}
         <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-xl animate-pulse"></div>
         <div className="absolute bottom-20 right-10 w-40 h-40 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-xl animate-pulse delay-1000"></div>
-        
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase mb-4">Why Choose Us</h2>
@@ -847,161 +850,10 @@ export default function Home({ canLogin, canRegister }: Props) {
         </div>
       </div>
 
-        {/* Team Section - Styled Like Reference Layout */}
-      <section className="relative h-screen bg-gray-100 dark:bg-gray-900 overflow-hidden flex flex-col justify-end">
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 0 }}>
-          <h1 className="text-[12rem] md:text-[16rem] lg:text-[20rem] font-bold text-gray-300/20 dark:text-gray-700/20 uppercase tracking-wider select-none">
-            {orgData[currentTeamMember]?.name.split(" ")[0]}
-          </h1>
-        </div>
-
-        {/* Large faded background image behind card and thumbnails */}
-        <div className="absolute inset-0 flex items-center justify-center ">
-          {orgData[currentTeamMember]?.image ? (
-            <div className="relative w-full h-full flex items-center justify-center">
-              <img
-                src={orgData[currentTeamMember].image || "/placeholder.svg"}
-                alt={orgData[currentTeamMember].name}
-                className="w-auto h-5/6 mx-auto object-cover object-center opacity-90 grayscale select-none pointer-events-none"
-                style={{ zIndex: 1 }}
-              />
-              {/* Gradient overlay */}
-              <div
-                className="absolute inset-0 w-full h-full pointer-events-none"
-                style={{ zIndex: 2 }}
-              ></div>
-            </div>
-          ) : (
-            <div
-              className={`w-full h-full bg-gradient-to-br ${orgData[currentTeamMember]?.color} opacity-20 blur-sm`}
-            ></div>
-          )}
-        </div>
-
-        {/* Content Container - Card above horizontal thumbnails */}
-        <div className="relative w-full flex flex-col items-center justify-end h-full pb-46 z-10">
-         
-          {/* Thumbnails row with fixed card at center */}
-          <div className="relative flex flex-col items-center justify-center w-2/4 mt-8" style={{ minHeight: "7rem" }}>
-            {/* Centered card overlays center thumbnail */}
-            <div className="absolute left-1/2 top-0 -translate-x-1/2 z-30" style={{ minWidth: '340px' }}>
-              <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border border-blue-100 dark:border-gray-700 w-full mx-auto pointer-events-auto flex flex-col items-center">
-                {/* Member photo in circle above card */}
-                <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 rounded-full border-4 border-blue-400 bg-white flex items-center justify-center shadow-lg">
-                  {orgData[currentTeamMember]?.image ? (
-                    <img
-                      src={orgData[currentTeamMember].image || "/placeholder.svg"}
-                      alt={orgData[currentTeamMember].name}
-                      className="w-24 h-24 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className={`w-full h-full bg-gradient-to-br ${orgData[currentTeamMember]?.color} flex items-center justify-center`}>
-                      <span className="text-white font-bold text-xl">{orgData[currentTeamMember]?.initials}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="pt-16 text-center w-full">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">{orgData[currentTeamMember]?.name}</h3>
-                  <p className="text-blue-600 dark:text-blue-400 font-semibold mb-1">{orgData[currentTeamMember]?.role}</p>
-                  {/* Dots indicator */}
-                  <div className="flex justify-center gap-2 mb-2 mt-2">
-                    {orgData.map((_, idx) => (
-                      <span key={idx} className={`w-3 h-3 rounded-full ${idx === currentTeamMember ? 'bg-blue-400' : 'bg-gray-300'} inline-block`}></span>
-                    ))}
-                  </div>
-                  <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-4">{orgData[currentTeamMember]?.bio}</p>
-                  <div className="flex gap-3 justify-center mt-6">
-                    <button className="flex items-center gap-2 px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full transition-colors shadow-md" onClick={() => setCurrentTeamMember((currentTeamMember - 1 + orgData.length) % orgData.length)}>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                      </svg>
-                      <span className="text-sm font-medium">Previous</span>
-                    </button>
-                    <button className="flex items-center gap-2 px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full transition-colors shadow-md" onClick={() => setCurrentTeamMember((currentTeamMember + 1) % orgData.length)}>
-                      <span className="text-sm font-medium">Next</span>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            {/* Thumbnails row, always visible, wrap-around */}
-            <div className="flex items-center justify-center w-full gap-8 relative mt-32">
-              {orgData.map((member, i) => {
-                let displayIndex = (i - currentTeamMember + orgData.length) % orgData.length;
-                return (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentTeamMember(i)}
-                    className={`group w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden shadow-lg border-2 transition-all duration-300 hover:scale-110 focus:outline-none ${i === currentTeamMember ? 'opacity-100 border-blue-400' : 'opacity-70 border-gray-200'}`}
-                    style={{ order: displayIndex }}
-                  >
-                    {member.image ? (
-                      <img
-                        src={member.image || "/placeholder.svg"}
-                        alt={member.name}
-                        className={`w-full h-full object-cover ${i === currentTeamMember ? '' : 'grayscale opacity-70'}`}
-                      />
-                    ) : (
-                      <div className={`w-full h-full bg-gradient-to-br ${member.color} flex items-center justify-center ${i === currentTeamMember ? '' : 'grayscale opacity-70'}`}>
-                        <span className="text-white font-bold text-lg">{member.initials}</span>
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-            {/* Left Arrow */}
-            <button
-              onClick={() => setCurrentTeamMember((currentTeamMember - 1 + orgData.length) % orgData.length)}
-              className="absolute left-0 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-blue-50 dark:bg-gray-800 border border-blue-200 dark:border-gray-700 text-blue-600 dark:text-blue-300 shadow hover:bg-blue-100 dark:hover:bg-gray-700 transition"
-              style={{ top: "50%", transform: "translateY(-50%)" }}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            {/* Right Arrow */}
-            <button
-              onClick={() => setCurrentTeamMember((currentTeamMember + 1) % orgData.length)}
-              className="absolute right-0 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-blue-50 dark:bg-gray-800 border border-blue-200 dark:border-gray-700 text-blue-600 dark:text-blue-300 shadow hover:bg-blue-100 dark:hover:bg-gray-700 transition"
-              style={{ top: "50%", transform: "translateY(-50%)" }}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Modern Testimonials Carousel Section */}
-          {/* Call to Action */}
-          <div className="text-center mt-16">
-            <div className="inline-flex flex-col sm:flex-row items-center gap-4">
-              <Link
-                href="/about"
-                className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300"
-              >
-                Learn More About Us
-                <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </Link>
-              <Link
-                href="/contact"
-                className="inline-flex items-center px-8 py-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold rounded-2xl shadow-lg hover:shadow-2xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 transform hover:-translate-y-1 transition-all duration-300"
-              >
-                Join Our Team
-                <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-              </Link>
-            </div>
-          </div>
      
+<TeamCarousel orgData={orgData} />
+
+
       {/* Modern Testimonials Carousel Section */}
       <div className="relative bg-gradient-to-br from-white via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-20 overflow-hidden">
         {/* Background Decorations */}
@@ -1021,7 +873,7 @@ export default function Home({ canLogin, canRegister }: Props) {
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               Don't just take our word for it - hear from our satisfied clients about their transformational journey with us
             </p>
-            
+
             {/* Carousel Controls */}
             <div className="flex items-center justify-center mt-8 space-x-4">
               <button
@@ -1032,21 +884,20 @@ export default function Home({ canLogin, canRegister }: Props) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              
+
               <div className="flex space-x-2">
                 {testimonials.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentTestimonial(index)}
-                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                      index === currentTestimonial
-                        ? 'bg-blue-600 w-8'
-                        : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
-                    }`}
+                    className={`w-3 h-3 rounded-full transition-all duration-300 ${index === currentTestimonial
+                      ? 'bg-blue-600 w-8'
+                      : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
+                      }`}
                   />
                 ))}
               </div>
-              
+
               <button
                 onClick={nextTestimonial}
                 className="p-3 rounded-full bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-all duration-300 group border border-gray-200 dark:border-gray-700"
@@ -1061,7 +912,7 @@ export default function Home({ canLogin, canRegister }: Props) {
           {/* Testimonials Carousel */}
           <div className="relative">
             <div className="overflow-hidden">
-              <div 
+              <div
                 className="flex transition-transform duration-700 ease-in-out"
                 style={{ transform: `translateX(-${currentTestimonial * 100}%)` }}
               >
@@ -1069,12 +920,12 @@ export default function Home({ canLogin, canRegister }: Props) {
                   <div key={testimonial.id} className="w-full flex-shrink-0">
                     <div className="group relative bg-white dark:bg-gray-800 rounded-3xl p-10 mx-4 shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200/50 dark:border-gray-700/50">
                       <div className={`absolute inset-0 bg-gradient-to-br from-${testimonial.color}-600/5 to-${testimonial.color}-600/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
-                      
+
                       {/* Quote Icon */}
                       <div className="relative mb-8">
                         <div className={`w-16 h-16 bg-gradient-to-br ${testimonial.gradient} rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                           <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h4v10h-10z"/>
+                            <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h4v10h-10z" />
                           </svg>
                         </div>
                       </div>
@@ -1152,7 +1003,7 @@ export default function Home({ canLogin, canRegister }: Props) {
                 </div>
               </div>
             </div>
-            
+
             <Link
               href={route('contact')}
               className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
@@ -1167,279 +1018,11 @@ export default function Home({ canLogin, canRegister }: Props) {
       </div>
 
       {/* Creative Technology Stack Section */}
-      <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-black py-20 overflow-hidden">
-        {/* Background Elements */}
-        <div className="absolute inset-0 bg-black/40"></div>
-        <div className="absolute top-20 left-20 w-40 h-40 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-20 w-32 h-32 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-blue-900/50 to-purple-900/50 text-sm font-medium text-blue-300 mb-6 backdrop-blur border border-blue-500/20">
-              <span className="mr-2">⚡</span>
-              Powered by Industry Leaders
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Our Technology Stack
-            </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              We leverage cutting-edge technologies to build robust, scalable, and secure solutions
-            </p>
-          </div>
-
-          {/* Technology Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 mb-16">
-            {/* React */}
-            <div className="group flex flex-col items-center">
-              <div className="relative w-20 h-20 mb-4">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-2xl transform rotate-45 group-hover:rotate-12 transition-transform duration-500"></div>
-                <div className="relative w-full h-full bg-gray-900 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <svg className="w-10 h-10 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 10.11c1.03 0 1.87.84 1.87 1.89 0 1-.84 1.85-1.87 1.85S10.13 13 10.13 12c0-1.05.84-1.89 1.87-1.89M7.37 20c.63.38 2.01-.2 3.6-1.7-.52-.59-1.03-1.23-1.51-1.9a22.7 22.7 0 0 1-2.4-.36c-.51 2.14-.32 3.61.31 3.96m.71-5.74l-.29-.51c-.11.29-.22.58-.29.86.27.06.57.11.88.16l-.3-.51m6.54-.76l.81-1.5-.81-1.5c-.3-.53-.62-1-.95-1.44C13.17 9 12.6 9 12 9s-1.17 0-1.67.06c-.33.44-.65.91-.95 1.44l-.81 1.5.81 1.5c.3.53.62 1 .95 1.44.5.06 1.07.06 1.67.06s1.17 0 1.67-.06c.33-.44.65-.91.95-1.44M16.63 4c-.63-.38-2.01.2-3.6 1.7.52.59 1.03 1.23 1.51 1.9.82.08 1.63.2 2.4.36.51-2.14.32-3.61-.31-3.96m-.7 5.74l.29.51c.11-.29.22-.58.29-.86-.27-.06-.57-.11-.88-.16l.3.51m1.45-7.05c1.47.84 1.63 3.05 1.01 5.63 2.54.75 4.37 1.99 4.37 3.68s-1.83 2.93-4.37 3.68c.62 2.58.46 4.79-1.01 5.63-1.46.84-3.45-.12-5.37-1.95-1.92 1.83-3.91 2.79-5.37 1.95-1.47-.84-1.63-3.05-1.01-5.63C2.17 14.93.34 13.69.34 12s1.83-2.93 4.37-3.68C4.09 5.74 4.25 3.53 5.72 2.69 7.18 1.85 9.17 2.81 11.09 4.64c1.92-1.83 3.91-2.79 5.37-1.95"/>
-                  </svg>
-                </div>
-              </div>
-              <h3 className="text-white font-semibold text-center">React</h3>
-              <p className="text-gray-400 text-xs text-center mt-1">Frontend Framework</p>
-            </div>
-
-            {/* Laravel */}
-            <div className="group flex flex-col items-center">
-              <div className="relative w-20 h-20 mb-4">
-                <div className="absolute inset-0 bg-gradient-to-br from-red-500 to-orange-500 rounded-2xl transform rotate-45 group-hover:rotate-12 transition-transform duration-500"></div>
-                <div className="relative w-full h-full bg-gray-900 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <svg className="w-10 h-10 text-red-400" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M23.642 5.43a.364.364 0 01.014.1v5.149c0 .135-.073.26-.189.326l-4.323 2.49v4.934a.378.378 0 01-.188.326L9.93 23.949a.316.316 0 01-.066.027c-.008.002-.016.008-.024.01a.348.348 0 01-.192 0c-.011-.002-.02-.008-.03-.012-.02-.008-.042-.014-.062-.025L.533 18.755a.376.376 0 01-.189-.326V2.974c0-.033.005-.066.014-.098.003-.012.01-.02.014-.032a.369.369 0 01.023-.058c.004-.013.015-.022.023-.033l.033-.045c.012-.01.025-.018.037-.027.014-.012.027-.024.041-.034H.53L5.043.05a.375.375 0 01.375 0L9.93 2.647h.002c.015.01.027.021.04.033.012.009.025.018.036.027.014.011.026.023.037.036.05.047.082.108.095.175.003.013.01.025.013.039.005.030.01.061.01.093v9.652l3.618-2.09V4.465c0-.033.004-.066.013-.097.003-.013.01-.025.015-.036.006-.02.014-.04.023-.058.007-.013.015-.021.025-.033.007-.013.018-.025.025-.036.013-.014.024-.027.038-.039.013-.01.026-.02.041-.03h.001l4.513-2.598a.375.375 0 01.375 0l4.513 2.598c.016.01.031.021.044.032.012.009.023.019.034.03.01.011.021.024.028.036.010.014.019.027.027.041.006.015.014.029.018.045.007.017.01.035.013.054.002.014.006.027.006.041z"/>
-                  </svg>
-                </div>
-              </div>
-              <h3 className="text-white font-semibold text-center">Laravel</h3>
-              <p className="text-gray-400 text-xs text-center mt-1">Backend Framework</p>
-            </div>
-
-            {/* Node.js */}
-            <div className="group flex flex-col items-center">
-              <div className="relative w-20 h-20 mb-4">
-                <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl transform rotate-45 group-hover:rotate-12 transition-transform duration-500"></div>
-                <div className="relative w-full h-full bg-gray-900 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <svg className="w-10 h-10 text-green-400" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M11.998,24c-0.321,0-0.641-0.084-0.922-0.247l-2.936-1.737c-0.438-0.245-0.224-0.332-0.080-0.383 c0.585-0.203,0.703-0.250,1.328-0.604c0.065-0.037,0.151-0.023,0.218,0.017l2.256,1.339c0.082,0.045,0.197,0.045,0.272,0l8.795-5.076 c0.082-0.047,0.134-0.141,0.134-0.238V6.921c0-0.099-0.053-0.192-0.137-0.242l-8.791-5.072c-0.081-0.047-0.189-0.047-0.271,0 L3.075,6.68C2.990,6.729,2.936,6.825,2.936,6.921v10.15c0,0.097,0.054,0.189,0.139,0.235l2.409,1.392 c1.307,0.654,2.108-0.116,2.108-0.89V7.787c0-0.142,0.114-0.511,0.256-0.511h1.116c0.139,0,0.255,0.112,0.255,0.256v10.021 c0,1.745-0.95,2.745-2.604,2.745c-0.508,0-0.909,0-2.026-0.551L2.28,18.675c-0.57-0.329-0.922-0.945-0.922-1.604V6.921 c0-0.659,0.353-1.275,0.922-1.603l8.795-5.082c0.557-0.315,1.296-0.315,1.848,0l8.794,5.082c0.570,0.329,0.924,0.944,0.924,1.603 v10.15c0,0.659-0.354,1.conjugated-0.924,1.604l-8.794,5.078C12.643,23.916,12.324,24,11.998,24z M19.099,13.993 c0-1.9-1.284-2.406-3.987-2.763c-2.731-0.361-3.009-0.548-3.009-1.187c0-0.528,0.235-1.233,2.258-1.233 c1.807,0,2.473,0.389,2.747,1.607c0.024,0.115,0.129,0.199,0.247,0.199h1.141c0.071,0,0.138-0.031,0.186-0.081 c0.048-0.054,0.074-0.123,0.067-0.196c-0.177-2.098-1.571-3.076-4.388-3.076c-2.508,0-4.004,1.058-4.004,2.833 c0,1.925,1.488,2.457,3.895,2.695c2.88,0.282,3.103,0.703,3.103,1.269c0,0.983-0.789,1.402-2.642,1.402 c-2.327,0-2.839-0.584-3.011-1.742c-0.02-0.124-0.126-0.215-0.253-0.215h-1.137c-0.141,0-0.254,0.112-0.254,0.256 c0,1.482,0.806,3.248,4.655,3.248C17.501,17.007,19.099,15.91,19.099,13.993z"/>
-                  </svg>
-                </div>
-              </div>
-              <h3 className="text-white font-semibold text-center">Node.js</h3>
-              <p className="text-gray-400 text-xs text-center mt-1">Runtime Environment</p>
-            </div>
-
-            {/* AWS */}
-            <div className="group flex flex-col items-center">
-              <div className="relative w-20 h-20 mb-4">
-                <div className="absolute inset-0 bg-gradient-to-br from-orange-500 to-yellow-500 rounded-2xl transform rotate-45 group-hover:rotate-12 transition-transform duration-500"></div>
-                <div className="relative w-full h-full bg-gray-900 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <svg className="w-10 h-10 text-orange-400" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M6.763 10.036c0 .296.032.535.088.719.064.184.144.336.256.456.112.12.248.2.408.256.16.048.336.080.528.080.8 0 1.415-.624 1.415-1.511v-.447c0-.832-.615-1.455-1.415-1.455-.192 0-.368.024-.528.072-.16.056-.296.128-.408.24-.112.112-.192.256-.256.432-.056.184-.088.416-.088.704v.454zm4.618 3.271c-.319.128-.703.224-1.135.288-.432.064-.896.104-1.391.104-.279 0-.551-.024-.815-.064-.272-.048-.512-.12-.735-.224-.224-.112-.416-.248-.576-.415-.16-.160-.279-.352-.367-.576-.088-.224-.128-.464-.128-.735 0-.231.032-.44.104-.615.064-.184.16-.336.279-.471.12-.136.256-.248.415-.336.16-.096.336-.168.527-.224.192-.048.391-.080.608-.104.216-.016.434-.024.646-.024v-.735c0-.256-.064-.44-.207-.559-.136-.12-.328-.184-.568-.184-.2 0-.383.032-.551.104-.168.064-.26.168-.26.284 0 .048.016.088.056.12.032.04.072.056.12.056.056 0 .104-.016.151-.056.040-.032.08-.080.12-.12.04-.048.088-.08.151-.112.056-.024.127-.040.207-.040.12 0 .215.024.295.08.072.048.111.128.111.240v.22c-.215.016-.415.040-.607.08-.184.032-.359.080-.524.151-.168.064-.31.16-.431.279-.12.12-.215.271-.279.440-.072.184-.104.407-.104.671 0 .56.183.984.543 1.279.368.296.896.440 1.583.440.279 0 .528-.016.735-.056.215-.032.4-.080.559-.151.127-.056.191-.12.191-.2 0-.047-.015-.111-.047-.175-.04-.056-.08-.104-.12-.151-.047-.040-.087-.080-.127-.104-.048-.016-.080-.016-.111-.016-.040 0-.080.016-.112.032-.04.024-.087.048-.135.080zm12.455-3.271c0 .296.040.535.104.719.056.184.144.336.248.456.112.12.248.2.415.256.16.048.328.080.52.080.807 0 1.423-.624 1.423-1.511v-.447c0-.832-.616-1.455-1.423-1.455-.192 0-.36.024-.52.072-.167.056-.303.128-.415.24-.104.112-.192.256-.248.432-.064.184-.104.416-.104.704v.454zm4.618 3.271c-.319.128-.711.224-1.143.288-.432.064-.904.104-1.399.104-.271 0-.543-.024-.807-.064-.272-.048-.52-.12-.743-.224-.224-.112-.416-.248-.576-.415-.159-.16-.271-.352-.359-.576-.096-.224-.136-.464-.136-.735 0-.231.032-.44.104-.615.072-.184.168-.336.287-.471.112-.136.248-.248.407-.336.167-.096.344-.168.535-.224.192-.048.391-.080.607-.104.216-.016.432-.024.647-.024v-.735c0-.256-.063-.44-.199-.559-.144-.12-.336-.184-.575-.184-.2 0-.384.032-.552.104-.167.064-.247.168-.247.284 0 .048.007.088.047.12.04.04.08.056.128.056.048 0 .104-.016.144-.056.047-.032.087-.080.127-.12.04-.048.088-.08.144-.112.063-.024.135-.040.207-.040.127 0 .215.024.295.08.08.048.119.128.119.240v.22c-.215.016-.423.040-.615.08-.184.032-.36.080-.524.151-.159.064-.303.16-.423.279-.127.12-.215.271-.287.440-.064.184-.096.407-.096.671 0 .56.183.984.551 1.279.359.296.888.440 1.575.440.287 0 .536-.016.743-.056.207-.032.392-.080.551-.151.135-.056.199-.12.199-.2 0-.047-.023-.111-.055-.175-.04-.056-.088-.104-.128-.151-.04-.040-.079-.080-.119-.104-.048-.016-.088-.016-.119-.016-.032 0-.072.016-.104.032-.04.024-.087.048-.143.080z"/>
-                  </svg>
-                </div>
-              </div>
-              <h3 className="text-white font-semibold text-center">AWS</h3>
-              <p className="text-gray-400 text-xs text-center mt-1">Cloud Platform</p>
-            </div>
-
-            {/* Docker */}
-            <div className="group flex flex-col items-center">
-              <div className="relative w-20 h-20 mb-4">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-sky-500 rounded-2xl transform rotate-45 group-hover:rotate-12 transition-transform duration-500"></div>
-                <div className="relative w-full h-full bg-gray-900 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <svg className="w-10 h-10 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M13.983 11.078h2.119c.186 0 .336-.054.451-.16.114-.106.171-.243.171-.411 0-.168-.057-.305-.171-.411-.115-.106-.265-.16-.451-.16h-2.119V8.142c0-.168-.057-.305-.172-.411-.114-.106-.264-.16-.45-.16-.186 0-.336.054-.45.16-.115.106-.173.243-.173.411v1.794H10.89c-.186 0-.335.054-.45.16-.114.106-.171.243-.171.411 0 .168.057.305.171.411.115.106.264.16.45.16h2.119v1.794c0 .168.058.305.173.411.114.106.264.16.45.16.186 0 .336-.054.45-.16.115-.106.172-.243.172-.411V11.078zm5.435.911c0 .186-.054.336-.16.45-.106.115-.243.173-.411.173H16.78c-.168 0-.305-.058-.411-.173-.106-.114-.16-.264-.16-.45V9.869c0-.186.054-.335.16-.45.106-.114.243-.171.411-.171h2.067c.168 0 .305.057.411.171.106.115.16.264.16.45v2.12zm-5.435-2.12c0-.186-.057-.335-.172-.45-.114-.114-.264-.171-.45-.171-.186 0-.336.057-.45.171-.115.115-.173.264-.173.45v2.12c0 .186.058.336.173.45.114.115.264.173.45.173.186 0 .336-.058.45-.173.115-.114.172-.264.172-.45V9.869zm-2.564 0c0-.186-.054-.335-.16-.45-.106-.114-.243-.171-.411-.171H8.78c-.168 0-.305.057-.411.171-.106.115-.16.264-.16.45v2.12c0 .186.054.336.16.45.106.115.243.173.411.173h2.068c.168 0 .305-.058.411-.173.106-.114.16-.264.16-.45V9.869zm-2.564 0c0-.186-.054-.335-.16-.45-.106-.114-.243-.171-.411-.171H6.216c-.168 0-.304.057-.41.171-.107.115-.161.264-.161.45v2.12c0 .186.054.336.16.45.107.115.243.173.411.173h2.068c.168 0 .305-.058.411-.173.106-.114.16-.264.16-.45V9.869z"/>
-                  </svg>
-                </div>
-              </div>
-              <h3 className="text-white font-semibold text-center">Docker</h3>
-              <p className="text-gray-400 text-xs text-center mt-1">Containerization</p>
-            </div>
-
-            {/* TypeScript */}
-            <div className="group flex flex-col items-center">
-              <div className="relative w-20 h-20 mb-4">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl transform rotate-45 group-hover:rotate-12 transition-transform duration-500"></div>
-                <div className="relative w-full h-full bg-gray-900 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <svg className="w-10 h-10 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M1.125 0C.502 0 0 .502 0 1.125v21.75C0 23.498.502 24 1.125 24h21.75c.623 0 1.125-.502 1.125-1.125V1.125C24 .502 23.498 0 22.875 0zm17.363 9.75c.612 0 1.154.037 1.627.111a6.38 6.38 0 0 1 1.306.34v2.458a3.95 3.95 0 0 0-.643-.361 5.093 5.093 0 0 0-.717-.26 5.453 5.453 0 0 0-1.426-.2c-.3 0-.573.028-.819.086a2.1 2.1 0 0 0-.623.242c-.17.104-.3.229-.393.374a.888.888 0 0 0-.14.49c0 .196.053.373.156.529.104.156.252.304.443.444s.423.276.696.41c.273.135.582.274.926.416.47.197.892.407 1.266.628.374.222.695.473.963.753.268.279.472.598.614.957.142.359.214.776.214 1.253 0 .657-.125 1.21-.373 1.656a3.033 3.033 0 0 1-1.012 1.085 4.38 4.38 0 0 1-1.487.596c-.566.12-1.163.18-1.79.18a9.916 9.916 0 0 1-1.84-.164 5.544 5.544 0 0 1-1.512-.493v-2.63a5.033 5.033 0 0 0 3.237 1.2c.333 0 .624-.03.872-.09.249-.06.456-.144.623-.25.166-.108.29-.234.373-.38a1.023 1.023 0 0 0-.074-1.089 2.12 2.12 0 0 0-.537-.5 5.597 5.597 0 0 0-.807-.444 27.72 27.72 0 0 0-1.007-.436c-.918-.383-1.602-.852-2.053-1.405-.45-.553-.676-1.222-.676-2.005 0-.614.123-1.141.369-1.582.246-.441.58-.804 1.004-1.089a4.494 4.494 0 0 1 1.47-.629 7.536 7.536 0 0 1 1.77-.201zm-15.113.188h9.563v2.166H9.506v9.646H6.789v-9.646H3.375z"/>
-                  </svg>
-                </div>
-              </div>
-              <h3 className="text-white font-semibold text-center">TypeScript</h3>
-              <p className="text-gray-400 text-xs text-center mt-1">Programming Language</p>
-            </div>
-          </div>
-
-          {/* Additional Technologies Row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-6">
-            {/* MySQL */}
-            <div className="group flex flex-col items-center">
-              <div className="relative w-16 h-16 mb-3">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-orange-500 rounded-xl transform rotate-45 group-hover:rotate-12 transition-transform duration-500 opacity-20"></div>
-                <div className="relative w-full h-full bg-gray-800 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 border border-gray-700">
-                  <span className="text-orange-400 font-bold text-xs">MySQL</span>
-                </div>
-              </div>
-              <p className="text-gray-400 text-xs text-center">Database</p>
-            </div>
-
-            {/* MongoDB */}
-            <div className="group flex flex-col items-center">
-              <div className="relative w-16 h-16 mb-3">
-                <div className="absolute inset-0 bg-gradient-to-br from-green-600 to-green-400 rounded-xl transform rotate-45 group-hover:rotate-12 transition-transform duration-500 opacity-20"></div>
-                <div className="relative w-full h-full bg-gray-800 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 border border-gray-700">
-                  <span className="text-green-400 font-bold text-xs">Mongo</span>
-                </div>
-              </div>
-              <p className="text-gray-400 text-xs text-center">NoSQL DB</p>
-            </div>
-
-            {/* Redis */}
-            <div className="group flex flex-col items-center">
-              <div className="relative w-16 h-16 mb-3">
-                <div className="absolute inset-0 bg-gradient-to-br from-red-600 to-red-400 rounded-xl transform rotate-45 group-hover:rotate-12 transition-transform duration-500 opacity-20"></div>
-                <div className="relative w-full h-full bg-gray-800 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 border border-gray-700">
-                  <span className="text-red-400 font-bold text-xs">Redis</span>
-                </div>
-              </div>
-              <p className="text-gray-400 text-xs text-center">Cache</p>
-            </div>
-
-            {/* Git */}
-            <div className="group flex flex-col items-center">
-              <div className="relative w-16 h-16 mb-3">
-                <div className="absolute inset-0 bg-gradient-to-br from-orange-600 to-red-500 rounded-xl transform rotate-45 group-hover:rotate-12 transition-transform duration-500 opacity-20"></div>
-                <div className="relative w-full h-full bg-gray-800 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 border border-gray-700">
-                  <span className="text-orange-400 font-bold text-xs">Git</span>
-                </div>
-              </div>
-              <p className="text-gray-400 text-xs text-center">Version Control</p>
-            </div>
-
-            {/* Nginx */}
-            <div className="group flex flex-col items-center">
-              <div className="relative w-16 h-16 mb-3">
-                <div className="absolute inset-0 bg-gradient-to-br from-green-600 to-green-400 rounded-xl transform rotate-45 group-hover:rotate-12 transition-transform duration-500 opacity-20"></div>
-                <div className="relative w-full h-full bg-gray-800 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 border border-gray-700">
-                  <span className="text-green-400 font-bold text-xs">Nginx</span>
-                </div>
-              </div>
-              <p className="text-gray-400 text-xs text-center">Web Server</p>
-            </div>
-
-            {/* Tailwind */}
-            <div className="group flex flex-col items-center">
-              <div className="relative w-16 h-16 mb-3">
-                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl transform rotate-45 group-hover:rotate-12 transition-transform duration-500 opacity-20"></div>
-                <div className="relative w-full h-full bg-gray-800 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 border border-gray-700">
-                  <span className="text-cyan-400 font-bold text-xs">Tailwind</span>
-                </div>
-              </div>
-              <p className="text-gray-400 text-xs text-center">CSS Framework</p>
-            </div>
-
-            {/* Figma */}
-            <div className="group flex flex-col items-center">
-              <div className="relative w-16 h-16 mb-3">
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl transform rotate-45 group-hover:rotate-12 transition-transform duration-500 opacity-20"></div>
-                <div className="relative w-full h-full bg-gray-800 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 border border-gray-700">
-                  <span className="text-purple-400 font-bold text-xs">Figma</span>
-                </div>
-              </div>
-              <p className="text-gray-400 text-xs text-center">Design Tool</p>
-            </div>
-
-            {/* Postman */}
-            <div className="group flex flex-col items-center">
-              <div className="relative w-16 h-16 mb-3">
-                <div className="absolute inset-0 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl transform rotate-45 group-hover:rotate-12 transition-transform duration-500 opacity-20"></div>
-                <div className="relative w-full h-full bg-gray-800 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 border border-gray-700">
-                  <span className="text-orange-400 font-bold text-xs">Postman</span>
-                </div>
-              </div>
-              <p className="text-gray-400 text-xs text-center">API Testing</p>
-            </div>
-          </div>
-
-          {/* Stats */}
-          <div className="mt-16 text-center">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              <div>
-                <div className="text-3xl font-bold text-white mb-2">15+</div>
-                <div className="text-gray-400 text-sm">Technologies Mastered</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-white mb-2">5+</div>
-                <div className="text-gray-400 text-sm">Years Experience</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-white mb-2">100%</div>
-                <div className="text-gray-400 text-sm">Modern Stack</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-white mb-2">24/7</div>
-                <div className="text-gray-400 text-sm">Performance Monitoring</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <TechnologyStack />
 
 
       {/* FAQ Section */}
-      <div className="bg-white dark:bg-gray-900 py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase mb-4">FAQ</h2>
-            <p className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
-              Frequently Asked Questions
-            </p>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Get answers to common questions about our services and processes
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="space-y-6">
-              <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">How long does a typical project take?</h3>
-                <p className="text-gray-600 dark:text-gray-300">Project timelines vary based on complexity and scope. Simple websites typically take 2-4 weeks, while complex applications can take 3-6 months. We provide detailed timelines during our initial consultation.</p>
-              </div>
-              
-              <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Do you provide ongoing support?</h3>
-                <p className="text-gray-600 dark:text-gray-300">Yes! We offer comprehensive support and maintenance packages to ensure your systems run smoothly. This includes updates, security patches, backups, and 24/7 monitoring.</p>
-              </div>
-              
-              <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">What technologies do you work with?</h3>
-                <p className="text-gray-600 dark:text-gray-300">We work with modern technologies including React, Laravel, Node.js, Python, AWS, Azure, and many more. We choose the best technology stack for each project's specific requirements.</p>
-              </div>
-            </div>
-            
-            <div className="space-y-6">
-              <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">How do you ensure project success?</h3>
-                <p className="text-gray-600 dark:text-gray-300">We follow agile development methodologies with regular client communication, milestone reviews, and iterative development. This ensures transparency and allows for adjustments throughout the project.</p>
-              </div>
-              
-              <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">What are your pricing models?</h3>
-                <p className="text-gray-600 dark:text-gray-300">We offer flexible pricing models including fixed-price projects, hourly rates, and retainer agreements. Pricing depends on project scope, complexity, and timeline requirements.</p>
-              </div>
-              
-              <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Do you work with international clients?</h3>
-                <p className="text-gray-600 dark:text-gray-300">Absolutely! While based in Zambia, we serve clients across Africa and internationally. We're experienced in working across different time zones and cultural contexts.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <FAQ />
 
       {/* Enhanced CTA Section */}
       <div className="relative bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 py-20 overflow-hidden">
@@ -1447,7 +1030,7 @@ export default function Home({ canLogin, canRegister }: Props) {
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="absolute top-10 left-10 w-32 h-32 bg-gradient-to-br from-blue-400/30 to-purple-400/30 rounded-full blur-xl animate-pulse"></div>
         <div className="absolute bottom-10 right-10 w-40 h-40 bg-gradient-to-br from-purple-400/30 to-pink-400/30 rounded-full blur-xl animate-pulse delay-1000"></div>
-        
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="max-w-3xl mx-auto">
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
@@ -1456,7 +1039,7 @@ export default function Home({ canLogin, canRegister }: Props) {
             <p className="text-xl text-gray-300 mb-12">
               Join hundreds of satisfied clients who have transformed their operations with our technology solutions. Get started with a free consultation today.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Link
                 href={route('contact')}
@@ -1467,7 +1050,7 @@ export default function Home({ canLogin, canRegister }: Props) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
               </Link>
-              
+
               <Link
                 href={route('services')}
                 className="inline-flex items-center justify-center px-10 py-4 bg-white/10 backdrop-blur text-white font-semibold rounded-xl border border-white/20 hover:bg-white/20 transition-all duration-300"
@@ -1478,7 +1061,7 @@ export default function Home({ canLogin, canRegister }: Props) {
                 Watch Demo
               </Link>
             </div>
-            
+
             {/* Trust Indicators */}
             <div className="mt-12 pt-8 border-t border-white/20">
               <p className="text-sm text-gray-300 mb-4">Trusted by leading organizations</p>
@@ -1510,7 +1093,7 @@ export default function Home({ canLogin, canRegister }: Props) {
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               Discover the latest trends, insights, and best practices in technology from our expert team
             </p>
-            
+
             {/* Blog Carousel Controls */}
             <div className="flex items-center justify-center mt-8 space-x-4">
               <button
@@ -1521,21 +1104,20 @@ export default function Home({ canLogin, canRegister }: Props) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              
+
               <div className="flex space-x-2">
                 {blogPosts.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentBlog(index)}
-                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                      index === currentBlog
-                        ? 'bg-purple-600 w-8'
-                        : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
-                    }`}
+                    className={`w-3 h-3 rounded-full transition-all duration-300 ${index === currentBlog
+                      ? 'bg-purple-600 w-8'
+                      : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
+                      }`}
                   />
                 ))}
               </div>
-              
+
               <button
                 onClick={nextBlog}
                 className="p-3 rounded-full bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-all duration-300 group border border-gray-200 dark:border-gray-700"
@@ -1550,7 +1132,7 @@ export default function Home({ canLogin, canRegister }: Props) {
           {/* Blog Posts Carousel */}
           <div className="relative">
             <div className="overflow-hidden">
-              <div 
+              <div
                 className="flex transition-transform duration-700 ease-in-out"
                 style={{ transform: `translateX(-${currentBlog * 100}%)` }}
               >
@@ -1672,11 +1254,10 @@ export default function Home({ canLogin, canRegister }: Props) {
                 <button
                   key={index}
                   onClick={() => setCurrentBlog(index)}
-                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                    currentBlog === index
-                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg'
-                      : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
-                  }`}
+                  className={`w-3 h-3 rounded-full transition-all duration-300 ${currentBlog === index
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg'
+                    : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
+                    }`}
                 />
               ))}
             </div>
@@ -1693,8 +1274,8 @@ export default function Home({ canLogin, canRegister }: Props) {
           </div>
 
           <div className="text-center mt-16">
-            <Link 
-              href="#" 
+            <Link
+              href="#"
               className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
             >
               View All Articles
