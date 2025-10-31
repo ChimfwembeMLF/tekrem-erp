@@ -27,6 +27,9 @@ import {
 } from 'lucide-react';
 import NotificationComponent from '@/Components/NotificationComponent';
 import useRoute from '@/Hooks/useRoute';
+import { ThemeToggle } from '@/Components/ThemeProvider';
+import useTypedPage from '@/Hooks/useTypedPage';
+import ApplicationLogo from '@/Components/ApplicationLogo';
 
 interface User {
     id: number;
@@ -92,20 +95,22 @@ export default function CustomerLayout({ children }: Props) {
     const user = auth.user as User;
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const route = useRoute();
-    
+    const page = useTypedPage();
+    const settings: any = page.props.settings;
+
     const isActive = (routeName: string) => {
         return route().current()?.startsWith(routeName.replace('.index', '').replace('.show', ''));
     };
-
+    
     const SidebarContent = () => (
         <div className="flex h-full flex-col">
             {/* Logo */}
             <div className="flex h-16 shrink-0 items-center px-6 border-b">
                 <Link href={route('customer.dashboard')} className="flex items-center space-x-2">
-                    <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
-                        <span className="text-primary-foreground font-bold text-sm">T</span>
+                    <div className="h-12 w-12 flex items-center justify-center">
+                         <ApplicationLogo />
                     </div>
-                    <span className="font-bold text-lg">TekRem</span>
+                    <span className="font-bold text-lg">{settings?.site_name ? settings?.site_name : 'TekRem'} </span>
                 </Link>
             </div>
 
@@ -114,7 +119,7 @@ export default function CustomerLayout({ children }: Props) {
                 {navigation.map((item) => {
                     const Icon = item.icon;
                     const active = isActive(item.href);
-                    
+
                     return (
                         <Link
                             key={item.name}
@@ -196,7 +201,8 @@ export default function CustomerLayout({ children }: Props) {
                         <div className="flex items-center gap-x-4 lg:gap-x-6">
                             {/* Notifications */}
                             <NotificationComponent />
-
+                            {/* Theme Toggle */}
+                            <ThemeToggle />
                             {/* Separator */}
                             <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-border" />
 

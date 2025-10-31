@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
 import useRoute from '@/Hooks/useRoute';
+import CustomerLayout from '@/Layouts/CustomerLayout';
 
 interface TicketData {
   id: number;
@@ -102,7 +103,7 @@ export default function Dashboard({ tickets, popularArticles, featuredFAQs, tick
   };
 
   return (
-    <AppLayout title='Customer Support'>
+    <CustomerLayout title='Customer Support'>
       <Head title={t('support.support_portal', 'Support Portal')} />
 
       <div className="space-y-6">
@@ -340,6 +341,6 @@ export default function Dashboard({ tickets, popularArticles, featuredFAQs, tick
           </div>
         </div>
       </div>
-    </AppLayout>
+    </CustomerLayout>
   );
 }

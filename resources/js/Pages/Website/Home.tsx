@@ -1018,7 +1018,7 @@ export default function Home({ canLogin, canRegister }: Props) {
       </div>
 
       {/* Creative Technology Stack Section */}
-      <TechnologyStack />
+      {/* <TechnologyStack /> */}
 
 
       {/* FAQ Section */}

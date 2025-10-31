@@ -79,11 +79,11 @@ interface Props {
 }
 
 export default function Index({ tickets, stats, filters }: Props) {
+    const route = useRoute();
     const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
         const search = formData.get('search') as string;
-        const route = useRoute();
 
         router.get(route('customer.support.index'), {
             ...filters,
