@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { User, Bot, Sparkles } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/Components/ui/avatar';
@@ -69,6 +69,9 @@ interface GuestChatInterfaceProps {
   onCloseGuestForm: () => void;
   onKeyPress: (e: React.KeyboardEvent) => void;
   messagesEndRef: React.RefObject<HTMLDivElement>;
+  isTyping?: boolean; // New: typing indicator
+  connectionStatus?: 'connecting' | 'connected' | 'disconnected'; // New: connection status
+  onChatInit?: () => void; // New: chat initialization callback
 }
 
 export default function GuestChatInterface({
@@ -88,7 +91,25 @@ export default function GuestChatInterface({
   onCloseGuestForm,
   onKeyPress,
   messagesEndRef,
+  isTyping = false,
+  connectionStatus = 'connected',
+  onChatInit,
 }: GuestChatInterfaceProps) {
+  // Chat entrance animation
+  const [showChat, setShowChat] = useState(false);
+  useEffect(() => {
+    setShowChat(true);
+    if (onChatInit) onChatInit();
+  }, [onChatInit]);
+
+  // Smooth scroll to latest message
+  useEffect(() => {
+    if (messagesEndRef?.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, messagesEndRef]);
+  // Emoji animation state
+  const [emojiAnim, setEmojiAnim] = useState<string | null>(null);
   // Attachment preview state for new ChatInput (derived from attachments)
   const [attachmentPreviews, setAttachmentPreviews] = useState<Array<{ url: string; name: string; type: string; onRemove: () => void }>>([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -126,7 +147,9 @@ export default function GuestChatInterface({
 
   // Handle emoji select
   const handleEmojiSelect = (emoji: string) => {
-  setNewMessage((prev: string) => prev + emoji);
+    setNewMessage((prev: string) => prev + emoji);
+    setEmojiAnim(emoji);
+    setTimeout(() => setEmojiAnim(null), 400);
     setShowEmojiPicker(false);
   };
   const formatTime = (dateString: string) => {
@@ -270,10 +293,11 @@ export default function GuestChatInterface({
     );
   }
 
+  // Chat window entrance animation class
   return (
-    <div className="h-full flex flex-col">
+    <div className={`h-full flex flex-col transition-all duration-500 ${showChat ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
       {/* Messages Area */}
-      <div className="flex-1 p-4 overflow-y-auto">
+  <div className="flex-1 p-4 overflow-y-auto">
         <div className="space-y-4">
           {/* Welcome Message */}
           {messages.length === 0 && (
@@ -406,6 +430,29 @@ export default function GuestChatInterface({
           ))}
 
           <div ref={messagesEndRef} />
+          {/* Typing indicator animation */}
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="flex items-end space-x-2 max-w-[80%]">
+                <Avatar className="w-6 h-6 flex-shrink-0">
+                  <AvatarFallback className="text-xs bg-purple-100 text-purple-600">
+                    <Bot className="w-3 h-3" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="rounded-lg px-3 py-2 bg-purple-50 border border-purple-200">
+                  <div className="flex items-center gap-1 mb-1">
+                    <Sparkles className="w-3 h-3 text-purple-600" />
+                    <span className="text-xs font-medium text-purple-600">Remy is typing</span>
+                  </div>
+                  <div className="flex gap-1 mt-1">
+                    <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce [animation-delay:0ms]"></span>
+                    <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce [animation-delay:150ms]"></span>
+                    <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce [animation-delay:300ms]"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -508,7 +555,7 @@ export default function GuestChatInterface({
                 <button
                   key={emoji}
                   type="button"
-                  className="text-lg p-1 hover:bg-gray-100 rounded"
+                  className={`text-lg p-1 hover:bg-gray-100 rounded transition-transform duration-200 ${emojiAnim === emoji ? 'scale-125 animate-bounce' : ''}`}
                   onClick={() => handleEmojiSelect(emoji)}
                 >
                   {emoji}
@@ -521,21 +568,38 @@ export default function GuestChatInterface({
         )}
 
         {/* Status indicator */}
-        {conversation?.assignee ? (
-          <p className="text-xs text-muted-foreground mt-2 text-center">
-            You're chatting with {conversation.assignee.name}
-          </p>
-        ) : (
-          <div className="my-2 text-center">
-            <p className="text-xs text-muted-foreground">
-              Waiting for an agent to join...
-            </p>
-            <div className="flex items-center justify-center gap-1 mt-1">
-              <Bot className="w-3 h-3 text-purple-600" />
-              <span className="text-xs text-purple-600">Remy is helping you</span>
+        {/* Connection status animation */}
+        <div className="my-2 text-center">
+          {connectionStatus === 'connecting' && (
+            <div className="flex flex-col items-center justify-center animate-pulse">
+              <span className="text-xs text-muted-foreground">Connecting to chat...</span>
+              <div className="flex gap-1 mt-1">
+                <span className="w-2 h-2 bg-green-400 rounded-full animate-bounce [animation-delay:0ms]"></span>
+                <span className="w-2 h-2 bg-green-400 rounded-full animate-bounce [animation-delay:150ms]"></span>
+                <span className="w-2 h-2 bg-green-400 rounded-full animate-bounce [animation-delay:300ms]"></span>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+          {connectionStatus === 'connected' && conversation?.assignee && (
+            <p className="text-xs text-muted-foreground mt-2 text-center animate-fade-in">
+              You're chatting with {conversation.assignee.name}
+            </p>
+          )}
+          {connectionStatus === 'connected' && !conversation?.assignee && (
+            <div className="my-2 text-center animate-fade-in">
+              <p className="text-xs text-muted-foreground">
+                Waiting for an agent to join...
+              </p>
+              <div className="flex items-center justify-center gap-1 mt-1">
+                <Bot className="w-3 h-3 text-purple-600" />
+                <span className="text-xs text-purple-600">Remy is helping you</span>
+              </div>
+            </div>
+          )}
+          {connectionStatus === 'disconnected' && (
+            <span className="text-xs text-red-500 animate-pulse">Disconnected. Please try again.</span>
+          )}
+        </div>
       </div>
     </div>
   );

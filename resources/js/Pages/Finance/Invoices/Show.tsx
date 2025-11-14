@@ -71,7 +71,7 @@ interface ZraSmartInvoice {
   rejected_at?: string;
   cancelled_at?: string;
   validation_errors?: string[];
-  retry_count: number;
+  submission_attempts: number;
   last_submission_attempt?: string;
   is_test_mode: boolean;
   notes?: string;
@@ -79,7 +79,7 @@ interface ZraSmartInvoice {
     id: number;
     name: string;
   };
-  audit_logs?: Array<{
+  audit_trail?: Array<{
     id: number;
     action: string;
     description: string;
@@ -225,7 +225,7 @@ export default function Show({ invoice }: Props) {
     return (
       <Badge variant={config.variant} className="flex items-center gap-1">
         <Icon className="h-3 w-3" />
-        {t(`finance.zra.status.${status}`, status.replace('_', ' '))}
+        {t(`finance.zra.status.${status}`, status?.replace('_', ' '))}
       </Badge>
     );
   };

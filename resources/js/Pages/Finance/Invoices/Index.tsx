@@ -190,7 +190,7 @@ export default function Index({ invoices, filters, statuses, billables }: Props)
     return (
       <Badge variant={config.variant} className="flex items-center gap-1">
         <Icon className="h-3 w-3" />
-        {t(`finance.zra.status.${status}`, status.replace('_', ' '))}
+        {t(`finance.zra.status.${status}`, status?.replace('_', ' '))}
       </Badge>
     );
   };

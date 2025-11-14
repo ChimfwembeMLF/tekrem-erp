@@ -56,6 +56,7 @@ import {
   Linkedin,
   Twitter,
   MessageCircle,
+  Package,
 } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import useRoute from '@/Hooks/useRoute';
@@ -523,12 +524,12 @@ export default function Sidebar({ settings }: SidebarProps) {
       icon: <Key className="h-5 w-5" />,
       active: route().current('admin.permissions.*')
     },
-    // {
-    //   href: route('admin.settings.index'),
-    //   label: t('admin.settings', 'System Settings'),
-    //   icon: <Settings className="h-5 w-5" />,
-    //   active: route().current('admin.settings.*')
-    // },
+    {
+      href: route('admin.modules.index'),
+      label: t('admin.modules', 'Module Management'),
+      icon: <Package className="h-5 w-5" />,
+      active: route().current('admin.modules.*')
+    },
   ] : [];
 
   // Customer-only navigation

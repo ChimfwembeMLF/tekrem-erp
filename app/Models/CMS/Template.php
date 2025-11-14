@@ -116,9 +116,13 @@ class Template extends Model
         $fieldsWithDefaults = [];
 
         foreach ($fields as $field) {
+            if (!isset($field['name'])) {
+                // Skip fields without a name to avoid errors
+                continue;
+            }
             $fieldsWithDefaults[$field['name']] = [
-                'type' => $field['type'],
-                'label' => $field['label'],
+                'type' => $field['type'] ?? 'text',
+                'label' => $field['label'] ?? $field['name'],
                 'default' => $field['default'] ?? null,
                 'required' => $field['required'] ?? false,
                 'options' => $field['options'] ?? null,

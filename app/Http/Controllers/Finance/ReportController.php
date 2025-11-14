@@ -201,24 +201,21 @@ class ReportController extends Controller
      */
     public function download(Report $report)
     {
-        if (!$report->isAvailable()) {
-            return redirect()->back()->with('error', 'Report is not available for download.');
+        if (!$report->isAvailable() || empty($report->file_path) || !file_exists(storage_path('app/' . $report->file_path))) {
+            // If not available or file missing, queue generation and notify user
+            if ($report->status !== 'processing' && $report->status !== 'pending') {
+                $report->markAsProcessing();
+                // Queue the report generation job
+                \App\Jobs\GenerateReportJob::dispatch($report);
+            }
+            // Optionally, you can use a notification system here
+            // For now, just inform the user via session flash
+            return redirect()->back()->with('info', 'Report is being generated. You will be notified once it is ready for download.');
         }
 
-        if (empty($report->file_path)) {
-            return redirect()->back()->with('error', 'Report file not ready yet. Please wait for generation to complete.');
-        }
-        
         $filePath = storage_path('app/' . $report->file_path);
-        
-        if (!file_exists($filePath)) {
-            return redirect()->back()->with('error', 'Report file not found. It may have been deleted or not generated yet.');
-        }
-
-        // Determine file extension from the report type or file path
         $extension = pathinfo($report->file_path, PATHINFO_EXTENSION) ?: 'pdf';
         $filename = $report->name . '.' . $extension;
-
         return response()->download($filePath, $filename);
     }
 

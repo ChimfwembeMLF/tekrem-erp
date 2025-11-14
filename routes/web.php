@@ -111,6 +111,8 @@ Route::middleware([
 
     // Admin routes
     Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {
+            // Modules Management
+            Route::get('modules', [\App\Http\Controllers\Admin\ModuleController::class, 'index'])->name('modules.index');
         // Settings routes
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
@@ -229,6 +231,9 @@ Route::middleware([
         Route::get('/', [\App\Http\Controllers\ProjectController::class, 'dashboard'])->name('dashboard');
         Route::get('/analytics', [\App\Http\Controllers\ProjectController::class, 'analytics'])->name('analytics');
 
+        // My Tasks (global route for current user's tasks)
+        Route::get('/my-tasks', [\App\Http\Controllers\ProjectTaskController::class, 'myTasks'])->name('my-tasks');
+
         // Projects CRUD
         Route::get('/list', [\App\Http\Controllers\ProjectController::class, 'index'])->name('index');
         Route::get('/create', [\App\Http\Controllers\ProjectController::class, 'create'])->name('create');
@@ -241,6 +246,7 @@ Route::middleware([
         // Kanban Board
         Route::get('/{project}/kanban', [\App\Http\Controllers\ProjectController::class, 'kanban'])->name('kanban');
 
+        
         // Milestones
         Route::prefix('{project}/milestones')->name('milestones.')->group(function () {
             Route::get('/', [\App\Http\Controllers\ProjectMilestoneController::class, 'index'])->name('index');
@@ -313,9 +319,7 @@ Route::middleware([
             Route::patch('/{task}/status', [\App\Http\Controllers\ProjectTaskController::class, 'updateStatus'])->name('update-status');
         });
 
-        // My Tasks (global route for current user's tasks)
-        Route::get('/my-tasks', [\App\Http\Controllers\ProjectTaskController::class, 'myTasks'])->name('my-tasks');
-
+      
         // LiveChat Integration
         Route::get('/{project}/livechat', [\App\Http\Controllers\CRM\LiveChatController::class, 'projectChat'])->name('livechat');
     });
@@ -373,7 +377,7 @@ Route::middleware([
 
         // Transactions
         Route::resource('transactions', \App\Http\Controllers\Finance\TransactionController::class);
-        Route::post('transactions/ai-suggestions', [\App\Http\Controllers\Finance\TransactionController::class, 'aiSuggestions'])->name('transactions.ai-suggestions');
+        Route::post('transactions/ai-suggestions', [\AppHttp\Controllers\Finance\TransactionController::class, 'aiSuggestions'])->name('transactions.ai-suggestions');
 
         // Invoices
         Route::resource('invoices', \App\Http\Controllers\Finance\InvoiceController::class);
@@ -444,7 +448,7 @@ Route::middleware([
         Route::prefix('reports')->name('reports.')->group(function () {
             Route::get('chart-of-accounts', [\App\Http\Controllers\Finance\ReportController::class, 'chartOfAccounts'])->name('chart-of-accounts');
             Route::get('trial-balance', [\App\Http\Controllers\Finance\ReportController::class, 'trialBalance'])->name('trial-balance');
-            Route::get('reconciliation-summary', [\App\Http\Controllers\Finance\ReportController::class, 'reconciliationSummary'])->name('reconciliation-summary');
+            Route::get('reconciliation-summary', [\AppHttp\Controllers\Finance\ReportController::class, 'reconciliationSummary'])->name('reconciliation-summary');
         });
 
         // Bank Reconciliation
@@ -734,7 +738,7 @@ Route::middleware([
         Route::get('media/{media}/download', [\App\Http\Controllers\CMS\MediaController::class, 'download'])->name('media.download');
         Route::put('media/{media}', [\App\Http\Controllers\CMS\MediaController::class, 'update'])->name('media.update');
         Route::delete('media/{media}', [\App\Http\Controllers\CMS\MediaController::class, 'destroy'])->name('media.destroy');
-        Route::post('media/bulk-action', [\App\Http\Controllers\CMS\MediaController::class, 'bulkAction'])->name('media.bulk-action');
+        Route::post('media/bulk-action', [\AppHttp\Controllers\CMS\MediaController::class, 'bulkAction'])->name('media.bulk-action');
         Route::post('media/{media}/variants', [\App\Http\Controllers\CMS\MediaController::class, 'generateVariants'])->name('media.variants');
         Route::post('media/cleanup', [\App\Http\Controllers\CMS\MediaController::class, 'cleanup'])->name('media.cleanup');
 
@@ -747,6 +751,7 @@ Route::middleware([
         Route::resource('templates', \App\Http\Controllers\CMS\TemplateController::class);
         Route::post('templates/{template}/set-default', [\App\Http\Controllers\CMS\TemplateController::class, 'setDefault'])->name('templates.set-default');
         Route::post('templates/{template}/duplicate', [\App\Http\Controllers\CMS\TemplateController::class, 'duplicate'])->name('templates.duplicate');
+        Route::get('templates/{template}/preview', [\App\Http\Controllers\CMS\TemplateController::class, 'preview'])->name('templates.preview');
 
         // Menus Management
         Route::resource('menus', \App\Http\Controllers\CMS\MenuController::class);
@@ -760,10 +765,10 @@ Route::middleware([
         Route::get('redirects/statistics', [\App\Http\Controllers\CMS\RedirectController::class, 'statistics'])->name('redirects.statistics');
 
         // CMS Dashboard
-        Route::get('dashboard', [\App\Http\Controllers\CMS\DashboardController::class, 'index'])->name('dashboard');
-        Route::get('analytics', [\App\Http\Controllers\CMS\AnalyticsController::class, 'index'])->name('analytics');
-        Route::get('sitemap', [\App\Http\Controllers\CMS\SitemapController::class, 'index'])->name('sitemap');
-        Route::post('sitemap/generate', [\App\Http\Controllers\CMS\SitemapController::class, 'generate'])->name('sitemap.generate');
+        Route::get('dashboard', [\AppHttp\Controllers\CMS\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('analytics', [\AppHttp\Controllers\CMS\AnalyticsController::class, 'index'])->name('analytics');
+        Route::get('sitemap', [\AppHttp\Controllers\CMS\SitemapController::class, 'index'])->name('sitemap');
+        Route::post('sitemap/generate', [\AppHttp\Controllers\CMS\SitemapController::class, 'generate'])->name('sitemap.generate');
     });
 
     // Customer Portal Routes
@@ -1034,7 +1039,7 @@ Route::prefix('/whatsapp')->middleware(['auth'])->group(function () {
 Route::prefix('projects')->name('projects.')->middleware('permission:view projects')->group(function () {
         // Dashboard
         Route::get('/', [\App\Http\Controllers\ProjectController::class, 'dashboard'])->name('dashboard');
-        Route::get('/analytics', [\App\Http\Controllers\ProjectController::class, 'analytics'])->name('analytics');
+        Route::get('/analytics', [\AppHttp\Controllers\ProjectController::class, 'analytics'])->name('analytics');
 
         // My Tasks (global route for current user's tasks)
         Route::get('/my-tasks', [\App\Http\Controllers\ProjectTaskController::class, 'myTasks'])->name('my-tasks');
@@ -1043,13 +1048,13 @@ Route::prefix('projects')->name('projects.')->middleware('permission:view projec
         Route::get('/list', [\App\Http\Controllers\ProjectController::class, 'index'])->name('index');
         Route::get('/create', [\App\Http\Controllers\ProjectController::class, 'create'])->name('create');
         Route::post('/', [\App\Http\Controllers\ProjectController::class, 'store'])->name('store');
-        Route::get('/{project}', [\App\Http\Controllers\ProjectController::class, 'show'])->name('show');
-        Route::get('/{project}/edit', [\App\Http\Controllers\ProjectController::class, 'edit'])->name('edit');
-        Route::put('/{project}', [\App\Http\Controllers\ProjectController::class, 'update'])->name('update');
-        Route::delete('/{project}', [\App\Http\Controllers\ProjectController::class, 'destroy'])->name('destroy');
+        Route::get('/{project}', [\AppHttp\Controllers\ProjectController::class, 'show'])->name('show');
+        Route::get('/{project}/edit', [\AppHttp\Controllers\ProjectController::class, 'edit'])->name('edit');
+        Route::put('/{project}', [\AppHttp\Controllers\ProjectController::class, 'update'])->name('update');
+        Route::delete('/{project}', [\AppHttp\Controllers\ProjectController::class, 'destroy'])->name('destroy');
 
         // Kanban Board
-        Route::get('/{project}/kanban', [\App\Http\Controllers\ProjectController::class, 'kanban'])->name('kanban');
+        Route::get('/{project}/kanban', [\AppHttp\Controllers\ProjectController::class, 'kanban'])->name('kanban');
 
         
         // Milestones
@@ -1067,61 +1072,61 @@ Route::prefix('projects')->name('projects.')->middleware('permission:view projec
         // Files
         Route::prefix('{project}/files')->name('files.')->group(function () {
             Route::get('/', [\App\Http\Controllers\ProjectFileController::class, 'index'])->name('index');
-            Route::get('/create', [\App\Http\Controllers\ProjectFileController::class, 'create'])->name('create');
-            Route::post('/', [\App\Http\Controllers\ProjectFileController::class, 'store'])->name('store');
-            Route::get('/{file}', [\App\Http\Controllers\ProjectFileController::class, 'show'])->name('show');
-            Route::get('/{file}/download', [\App\Http\Controllers\ProjectFileController::class, 'download'])->name('download');
-            Route::delete('/{file}', [\App\Http\Controllers\ProjectFileController::class, 'destroy'])->name('destroy');
-            Route::post('/{file}/new-version', [\App\Http\Controllers\ProjectFileController::class, 'newVersion'])->name('new-version');
+            Route::get('/create', [\AppHttp\Controllers\ProjectFileController::class, 'create'])->name('create');
+            Route::post('/', [\AppHttp\Controllers\ProjectFileController::class, 'store'])->name('store');
+            Route::get('/{file}', [\AppHttp\Controllers\ProjectFileController::class, 'show'])->name('show');
+            Route::get('/{file}/download', [\AppHttp\Controllers\ProjectFileController::class, 'download'])->name('download');
+            Route::delete('/{file}', [\AppHttp\Controllers\ProjectFileController::class, 'destroy'])->name('destroy');
+            Route::post('/{file}/new-version', [\AppHttp\Controllers\ProjectFileController::class, 'newVersion'])->name('new-version');
         });
 
         // Time Logs
         Route::prefix('{project}/time-logs')->name('time-logs.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\ProjectTimeLogController::class, 'index'])->name('index');
-            Route::get('/create', [\App\Http\Controllers\ProjectTimeLogController::class, 'create'])->name('create');
-            Route::post('/', [\App\Http\Controllers\ProjectTimeLogController::class, 'store'])->name('store');
-            Route::get('/{timeLog}', [\App\Http\Controllers\ProjectTimeLogController::class, 'show'])->name('show');
-            Route::get('/{timeLog}/edit', [\App\Http\Controllers\ProjectTimeLogController::class, 'edit'])->name('edit');
-            Route::put('/{timeLog}', [\App\Http\Controllers\ProjectTimeLogController::class, 'update'])->name('update');
-            Route::delete('/{timeLog}', [\App\Http\Controllers\ProjectTimeLogController::class, 'destroy'])->name('destroy');
-            Route::patch('/{timeLog}/submit', [\App\Http\Controllers\ProjectTimeLogController::class, 'submit'])->name('submit');
-            Route::patch('/{timeLog}/approve', [\App\Http\Controllers\ProjectTimeLogController::class, 'approve'])->name('approve');
+            Route::get('/', [\AppHttp\Controllers\ProjectTimeLogController::class, 'index'])->name('index');
+            Route::get('/create', [\AppHttp\Controllers\ProjectTimeLogController::class, 'create'])->name('create');
+            Route::post('/', [\AppHttp\Controllers\ProjectTimeLogController::class, 'store'])->name('store');
+            Route::get('/{timeLog}', [\AppHttp\Controllers\ProjectTimeLogController::class, 'show'])->name('show');
+            Route::get('/{timeLog}/edit', [\AppHttp\Controllers\ProjectTimeLogController::class, 'edit'])->name('edit');
+            Route::put('/{timeLog}', [\AppHttp\Controllers\ProjectTimeLogController::class, 'update'])->name('update');
+            Route::delete('/{timeLog}', [\AppHttp\Controllers\ProjectTimeLogController::class, 'destroy'])->name('destroy');
+            Route::patch('/{timeLog}/submit', [\AppHttp\Controllers\ProjectTimeLogController::class, 'submit'])->name('submit');
+            Route::patch('/{timeLog}/approve', [\AppHttp\Controllers\ProjectTimeLogController::class, 'approve'])->name('approve');
         });
 
         // Templates
         Route::prefix('templates')->name('templates.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\ProjectTemplateController::class, 'index'])->name('index');
-            Route::get('/create', [\App\Http\Controllers\ProjectTemplateController::class, 'create'])->name('create');
-            Route::post('/', [\App\Http\Controllers\ProjectTemplateController::class, 'store'])->name('store');
-            Route::get('/{template}', [\App\Http\Controllers\ProjectTemplateController::class, 'show'])->name('show');
-            Route::get('/{template}/edit', [\App\Http\Controllers\ProjectTemplateController::class, 'edit'])->name('edit');
-            Route::put('/{template}', [\App\Http\Controllers\ProjectTemplateController::class, 'update'])->name('update');
-            Route::delete('/{template}', [\App\Http\Controllers\ProjectTemplateController::class, 'destroy'])->name('destroy');
-            Route::post('/{template}/duplicate', [\App\Http\Controllers\ProjectTemplateController::class, 'duplicate'])->name('duplicate');
+            Route::get('/', [\AppHttp\Controllers\ProjectTemplateController::class, 'index'])->name('index');
+            Route::get('/create', [\AppHttp\Controllers\ProjectTemplateController::class, 'create'])->name('create');
+            Route::post('/', [\AppHttp\Controllers\ProjectTemplateController::class, 'store'])->name('store');
+            Route::get('/{template}', [\AppHttp\Controllers\ProjectTemplateController::class, 'show'])->name('show');
+            Route::get('/{template}/edit', [\AppHttp\Controllers\ProjectTemplateController::class, 'edit'])->name('edit');
+            Route::put('/{template}', [\AppHttp\Controllers\ProjectTemplateController::class, 'update'])->name('update');
+            Route::delete('/{template}', [\AppHttp\Controllers\ProjectTemplateController::class, 'destroy'])->name('destroy');
+            Route::post('/{template}/duplicate', [\AppHttp\Controllers\ProjectTemplateController::class, 'duplicate'])->name('duplicate');
         });
 
         // Tags
         Route::prefix('tags')->name('tags.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\TagController::class, 'index'])->name('index');
-            Route::get('/create', [\App\Http\Controllers\TagController::class, 'create'])->name('create');
-            Route::post('/', [\App\Http\Controllers\TagController::class, 'store'])->name('store');
-            Route::get('/search', [\App\Http\Controllers\TagController::class, 'search'])->name('search');
-            Route::get('/{tag}', [\App\Http\Controllers\TagController::class, 'show'])->name('show');
-            Route::get('/{tag}/edit', [\App\Http\Controllers\TagController::class, 'edit'])->name('edit');
-            Route::put('/{tag}', [\App\Http\Controllers\TagController::class, 'update'])->name('update');
-            Route::delete('/{tag}', [\App\Http\Controllers\TagController::class, 'destroy'])->name('destroy');
+            Route::get('/', [\AppHttp\Controllers\TagController::class, 'index'])->name('index');
+            Route::get('/create', [\AppHttp\Controllers\TagController::class, 'create'])->name('create');
+            Route::post('/', [\AppHttp\Controllers\TagController::class, 'store'])->name('store');
+            Route::get('/search', [\AppHttp\Controllers\TagController::class, 'search'])->name('search');
+            Route::get('/{tag}', [\AppHttp\Controllers\TagController::class, 'show'])->name('show');
+            Route::get('/{tag}/edit', [\AppHttp\Controllers\TagController::class, 'edit'])->name('edit');
+            Route::put('/{tag}', [\AppHttp\Controllers\TagController::class, 'update'])->name('update');
+            Route::delete('/{tag}', [\AppHttp\Controllers\TagController::class, 'destroy'])->name('destroy');
         });
 
         // Tasks
         Route::prefix('{project}/tasks')->name('tasks.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\ProjectTaskController::class, 'index'])->name('index');
-            Route::get('/create', [\App\Http\Controllers\ProjectTaskController::class, 'create'])->name('create');
-            Route::post('/', [\App\Http\Controllers\ProjectTaskController::class, 'store'])->name('store');
-            Route::get('/{task}', [\App\Http\Controllers\ProjectTaskController::class, 'show'])->name('show');
-            Route::get('/{task}/edit', [\App\Http\Controllers\ProjectTaskController::class, 'edit'])->name('edit');
-            Route::put('/{task}', [\App\Http\Controllers\ProjectTaskController::class, 'update'])->name('update');
-            Route::delete('/{task}', [\App\Http\Controllers\ProjectTaskController::class, 'destroy'])->name('destroy');
-            Route::patch('/{task}/status', [\App\Http\Controllers\ProjectTaskController::class, 'updateStatus'])->name('update-status');
+            Route::get('/', [\AppHttp\Controllers\ProjectTaskController::class, 'index'])->name('index');
+            Route::get('/create', [\AppHttp\Controllers\ProjectTaskController::class, 'create'])->name('create');
+            Route::post('/', [\AppHttp\Controllers\ProjectTaskController::class, 'store'])->name('store');
+            Route::get('/{task}', [\AppHttp\Controllers\ProjectTaskController::class, 'show'])->name('show');
+            Route::get('/{task}/edit', [\AppHttp\Controllers\ProjectTaskController::class, 'edit'])->name('edit');
+            Route::put('/{task}', [\AppHttp\Controllers\ProjectTaskController::class, 'update'])->name('update');
+            Route::delete('/{task}', [\AppHttp\Controllers\ProjectTaskController::class, 'destroy'])->name('destroy');
+            Route::patch('/{task}/status', [\AppHttp\Controllers\ProjectTaskController::class, 'updateStatus'])->name('update-status');
         });
 
       

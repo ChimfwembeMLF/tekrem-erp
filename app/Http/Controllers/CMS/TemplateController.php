@@ -222,28 +222,28 @@ class TemplateController extends Controller
 
         // Add sample data for custom fields
         if ($template->fields) {
-            foreach ($template->fields as $field) {
-                switch ($field['type']) {
-                    case 'text':
-                        $sampleData[$field['name']] = 'Sample text';
-                        break;
-                    case 'textarea':
-                        $sampleData[$field['name']] = 'Sample textarea content';
-                        break;
-                    case 'image':
-                        $sampleData[$field['name']] = '/images/sample-image.jpg';
-                        break;
-                    case 'url':
-                        $sampleData[$field['name']] = 'https://example.com';
-                        break;
-                    case 'select':
-                        $options = $field['options'] ?? [];
-                        $sampleData[$field['name']] = !empty($options) ? array_keys($options)[0] : 'option1';
-                        break;
-                    default:
-                        $sampleData[$field['name']] = 'Sample value';
-                }
-            }
+           foreach ($template->getFieldsWithDefaults() as $fieldName => $field) {
+    switch ($field['type']) {
+        case 'text':
+            $sampleData[$fieldName] = 'Sample text';
+            break;
+        case 'textarea':
+            $sampleData[$fieldName] = 'Sample textarea content';
+            break;
+        case 'image':
+            $sampleData[$fieldName] = '/images/sample-image.jpg';
+            break;
+        case 'url':
+            $sampleData[$fieldName] = 'https://example.com';
+            break;
+        case 'select':
+            $options = $field['options'] ?? [];
+            $sampleData[$fieldName] = !empty($options) ? array_keys($options)[0] : 'option1';
+            break;
+        default:
+            $sampleData[$fieldName] = 'Sample value';
+    }
+}
         }
 
         $renderedContent = $template->render($sampleData);

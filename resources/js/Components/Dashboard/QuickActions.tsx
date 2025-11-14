@@ -14,6 +14,7 @@ import {
 import { Link } from '@inertiajs/react';
 import { cn } from '@/lib/utils';
 import useTranslate from '@/Hooks/useTranslate';
+import useRoute from '@/Hooks/useRoute';
 
 interface QuickAction {
   title: string;
@@ -29,7 +30,7 @@ interface QuickActionsProps {
 
 export default function QuickActions({ actions }: QuickActionsProps) {
   const { t } = useTranslate();
-
+  const route = useRoute()
   const getActionIcon = (iconName: string) => {
     switch (iconName) {
       case 'user-plus':
@@ -84,8 +85,8 @@ export default function QuickActions({ actions }: QuickActionsProps) {
       <CardContent>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {actions.map((action, index) => (
-            <Link key={index} href={action.route}>
-              <div className="group flex items-center gap-3 p-3 rounded-lg border hover:bg-accent transition-all duration-200 cursor-pointer hover:shadow-sm">
+            <Link key={index} href={route(action.route)}>
+              <div className="group flex items-center gap-3 p-3 rounded-lg border hover:bg-accent transition-all duration-200 cursor-pointer hover:shadow-sm">                
                 <div className={cn(
                   "p-2 rounded-md transition-colors",
                   getActionColorClasses(action.color)

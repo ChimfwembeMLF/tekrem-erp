@@ -200,7 +200,7 @@ export default function PagePreview({
           )}
 
           {/* Page Preview */}
-          <Card className="bg-white shadow-lg">
+          <Card className="bg-gray-200 shadow-lg">
             <CardContent className="p-0">
               {/* Page Header */}
               <div className="border-b p-6">

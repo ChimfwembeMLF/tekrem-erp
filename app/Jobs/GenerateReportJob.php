@@ -34,11 +34,13 @@ class GenerateReportJob implements ShouldQueue
     {
         try {
             Log::info('Starting report generation', ['report_id' => $this->report->id]);
-            
             $success = $reportGenerator->generateReport($this->report);
-            
             if ($success) {
                 Log::info('Report generation completed successfully', ['report_id' => $this->report->id]);
+                // Notify the report creator if available
+                if ($this->report->created_by && $user = \App\Models\User::find($this->report->created_by)) {
+                    $user->notify(new \App\Notifications\Finance\ReportReadyNotification($this->report));
+                }
             } else {
                 Log::error('Report generation failed', ['report_id' => $this->report->id]);
                 $this->fail();
@@ -49,7 +51,6 @@ class GenerateReportJob implements ShouldQueue
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
             $this->report->markAsFailed();
             throw $e;
         }

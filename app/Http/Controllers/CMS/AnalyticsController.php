@@ -278,12 +278,11 @@ class AnalyticsController extends Controller
     private function getTrafficAnalytics(array $dateRange): array
     {
         // Redirect analytics
-        $redirectStats = [
+       $redirectStats = [
             'total_redirects' => Redirect::count(),
             'active_redirects' => Redirect::active()->count(),
             'total_hits' => Redirect::sum('hit_count'),
-            'top_redirects' => Redirect::withHits()
-                ->orderBy('hit_count', 'desc')
+            'top_redirects' => Redirect::orderBy('hit_count', 'desc')
                 ->limit(10)
                 ->get(['from_url', 'to_url', 'hit_count'])
                 ->toArray(),

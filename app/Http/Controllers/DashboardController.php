@@ -393,14 +393,14 @@ class DashboardController extends Controller
             [
                 'title' => 'View Reports',
                 'description' => 'Access system reports and analytics',
-                'route' => 'reports.index',
+                'route' => 'finance.reports.index',
                 'icon' => 'bar-chart',
                 'color' => 'purple',
             ],
             [
                 'title' => 'Backup System',
                 'description' => 'Create system backup',
-                'route' => 'admin.backup.create',
+                'route' => 'settings.maintenance.backup',
                 'icon' => 'download',
                 'color' => 'orange',
             ],

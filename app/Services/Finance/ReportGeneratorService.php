@@ -21,13 +21,21 @@ class ReportGeneratorService
     {
         try {
             $report->markAsProcessing();
-
             $data = $this->getReportData($report);
-            $content = $this->generateReportContent($report, $data);
-            $filePath = $this->saveReportFile($report, $content);
+            $format = $report->format ?? 'pdf';
+            $filePath = null;
+            $fileSize = null;
 
-            $report->markAsCompleted($filePath, strlen($content));
+            if ($format === 'pdf') {
+                $filePath = $this->generatePdfReport($report, $data);
+                $fileSize = \Storage::size($filePath);
+            } else {
+                $content = $this->generateReportContent($report, $data);
+                $filePath = $this->saveReportFile($report, $content, $format);
+                $fileSize = strlen($content);
+            }
 
+            $report->markAsCompleted($filePath, $fileSize);
             return true;
         } catch (\Exception $e) {
             $report->markAsFailed();
@@ -38,6 +46,34 @@ class ReportGeneratorService
             ]);
             return false;
         }
+    }
+    /**
+     * Generate a PDF report with logo and advanced formatting.
+     */
+    private function generatePdfReport(Report $report, array $data): string
+    {
+        $dompdf = new \Barryvdh\DomPDF\Facade();
+        $logoPath = public_path('tekrem-logo.png');
+        $logoBase64 = '';
+        if (file_exists($logoPath)) {
+            $logoData = file_get_contents($logoPath);
+            $logoBase64 = 'data:image/png;base64,' . base64_encode($logoData);
+        }
+
+        $html = view('reports.templates.default', [
+            'report' => $report,
+            'data' => $data,
+            'logoBase64' => $logoBase64,
+        ])->render();
+
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        $output = $dompdf->output();
+        $filename = 'reports/' . $report->type . '_' . $report->id . '_' . now()->format('Y_m_d_H_i_s') . '.pdf';
+        \Storage::put($filename, $output);
+        return $filename;
     }
 
     /**
@@ -501,12 +537,11 @@ class ReportGeneratorService
     /**
      * Save report content to file.
      */
-    private function saveReportFile(Report $report, string $content): string
+    private function saveReportFile(Report $report, string $content, string $format = 'txt'): string
     {
-        $filename = 'reports/' . $report->type . '_' . $report->id . '_' . now()->format('Y_m_d_H_i_s') . '.txt';
-        
-        Storage::put($filename, $content);
-        
+        $ext = $format === 'txt' ? 'txt' : $format;
+        $filename = 'reports/' . $report->type . '_' . $report->id . '_' . now()->format('Y_m_d_H_i_s') . '.' . $ext;
+        \Storage::put($filename, $content);
         return $filename;
     }
 }

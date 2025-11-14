@@ -362,7 +362,12 @@ class Media extends Model
                 'error' => $e->getMessage(),
             ]);
             return false;
-        }
+        }      
+    }
+
+    public function pages()
+    {
+        return $this->belongsToMany(Page::class, 'media_page', 'media_id', 'page_id');
     }
 
     /**
