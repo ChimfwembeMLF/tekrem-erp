@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
 import { toast } from 'sonner';
+import { useRoute } from 'ziggy-js';
 
 interface Budget {
   id: number;
@@ -65,6 +66,7 @@ interface Props {
 
 export default function Show({ budget, statuses, periodTypes }: Props) {
   const { t } = useTranslate();
+  const route = useRoute();
 
   const handleDelete = () => {
     if (confirm(t('common.confirm_delete', 'Are you sure you want to delete this item?'))) {

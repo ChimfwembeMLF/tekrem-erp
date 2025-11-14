@@ -45,9 +45,14 @@ class DatabaseSeeder extends Seeder
         $this->command->info('🏷️ Seeding tags...');
         $this->call(TagSeeder::class);
 
+
         // 5. Core business modules (CRM first as it creates clients/leads)
         $this->command->info('🤝 Seeding CRM data (clients, leads, communications)...');
         $this->call(CrmSeeder::class);
+
+        // 5b. System Modules
+        $this->command->info('🧩 Seeding system modules...');
+        $this->call(ModuleSeeder::class);
 
         // 6. HR module (needs users)
         $this->command->info('👨‍💼 Seeding HR data...');

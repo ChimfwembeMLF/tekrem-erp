@@ -111,8 +111,8 @@ Route::middleware([
 
     // Admin routes
     Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {
-            // Modules Management
-            Route::get('modules', [\App\Http\Controllers\Admin\ModuleController::class, 'index'])->name('modules.index');
+        // Modules Management
+        Route::resource('modules', \App\Http\Controllers\Admin\ModuleController::class);
         // Settings routes
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
