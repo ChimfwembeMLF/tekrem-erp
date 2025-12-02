@@ -30,7 +30,7 @@ export default function MilestoneEdit({ auth, project, milestone, users, availab
     due_date: milestone.due_date || '',
     priority: milestone.priority || 'medium',
     assigned_to: milestone.assigned_to?.toString() || 'empty',
-    dependencies: milestone.dependencies?.map(d => d.id) || [],
+    dependencies: milestone.dependencies?.map(d => d.id).filter(Boolean) || [],
     progress: milestone.progress || 0,
   });
 

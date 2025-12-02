@@ -8,6 +8,8 @@ use App\Models\AI\AIModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use App\Services\AIService;
+use App\Services\AIContextService;
 
 class ConversationController extends Controller
 {
@@ -60,8 +62,9 @@ class ConversationController extends Controller
      */
     public function create()
     {
+        $contextService = new AIContextService();
         $models = AIModel::with('service')->enabled()->orderBy('name')->get();
-        $contextTypes = ['crm', 'finance', 'support', 'general'];
+        $contextTypes = $contextService->getAvailableContextTypes();
 
         return Inertia::render('AI/Conversations/Create', [
             'models' => $models,
@@ -69,42 +72,36 @@ class ConversationController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created conversation.
-     */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'ai_model_id' => ['required', 'exists:ai_models,id'],
-            'context_type' => ['nullable', 'string', 'in:crm,finance,support,general'],
-            'context_id' => ['nullable', 'integer'],
-            'initial_message' => ['nullable', 'string'],
-            'metadata' => ['array'],
-        ]);
+  public function store(Request $request)
+{
+    $validated = $request->validate([
+        'title' => ['required', 'string', 'max:255'],
+        'ai_model_id' => ['required', 'exists:ai_models,id'],
+        'context_type' => ['nullable', 'string', 'in:crm,finance,projects,hr,support,general'],
+        'context_id' => ['nullable', 'integer'],
+        'initial_message' => ['nullable', 'string'],
+        'metadata' => ['array'],
+    ]);
 
-        $conversation = Conversation::create([
-            'user_id' => auth()->id(),
-            'ai_model_id' => $validated['ai_model_id'],
-            'title' => $validated['title'],
-            'context_type' => $validated['context_type'] ?? null,
-            'context_id' => $validated['context_id'] ?? null,
-            'metadata' => $validated['metadata'] ?? [],
-            'messages' => [],
-            'message_count' => 0,
-            'total_tokens' => 0,
-            'total_cost' => 0,
-            'last_message_at' => now(),
-        ]);
+    $conversation = Conversation::create([
+        'user_id' => auth()->id(),
+        'ai_model_id' => $validated['ai_model_id'],
+        'title' => $validated['title'],
+        'context_type' => $validated['context_type'] ?? null,
+        'context_id' => $validated['context_id'] ?? null,
+        'metadata' => $validated['metadata'] ?? [],
+        'messages' => [],
+        'message_count' => 0,
+        'total_tokens' => 0,
+        'total_cost' => 0,
+        'last_message_at' => now(),
+    ]);
 
-        // Add initial message if provided
-        if (!empty($validated['initial_message'])) {
-            $conversation->addMessage('user', $validated['initial_message']);
-        }
+  
+    return redirect()->route('ai.conversations.show', $conversation)
+        ->with('success', 'Conversation created and AI responded successfully.');
+}
 
-        return redirect()->route('ai.conversations.show', $conversation)
-            ->with('success', 'Conversation created successfully.');
-    }
 
     /**
      * Display the specified conversation.
@@ -188,24 +185,149 @@ class ConversationController extends Controller
      */
     public function addMessage(Request $request, Conversation $conversation)
     {
+        // Check authorization - user must own the conversation or be admin
+        if ($conversation->user_id !== auth()->id() && !auth()->user()->hasRole('admin')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized to add messages to this conversation.'
+            ], 403);
+        }
+
         $validated = $request->validate([
             'role' => ['required', 'string', 'in:user,assistant,system'],
             'content' => ['required', 'string'],
             'metadata' => ['array'],
         ]);
 
-        $message = $conversation->addMessage(
-            $validated['role'],
-            $validated['content'],
-            $validated['metadata'] ?? []
-        );
+        try {
+            // Add the user message
+            $userMessage = $conversation->addMessage(
+                $validated['role'],
+                $validated['content'],
+                $validated['metadata'] ?? []
+            );
 
-        return response()->json([
-            'success' => true,
-            'message' => $message,
-            'conversation' => $conversation->fresh()
-        ]);
+            // Get AI response only for user messages
+            $aiMessage = null;
+            if ($validated['role'] === 'user') {
+                try {
+                    // Load the AI model and service relationships
+                    $conversation->load(['aiModel.service']);
+                    $aiModel = $conversation->aiModel;
+                    $aiService = $aiModel->service;
+                    
+                    // Check Settings for API key and model configuration
+                    $settingsApiKey = \App\Models\Setting::get("integration.{$aiService->provider}.api_key", null);
+                    $settingsModel = \App\Models\Setting::get("integration.{$aiService->provider}.model", null);
+                    
+                    $apiKey = $settingsApiKey ?: $aiService->api_key;
+                    $modelIdentifier = $settingsModel ?: $aiModel->model_identifier;
+                    
+                    \Log::info('AI Service Check', [
+                        'service_id' => $aiService->id,
+                        'service_name' => $aiService->name,
+                        'is_enabled' => $aiService->is_enabled,
+                        'has_db_api_key' => !empty($aiService->api_key),
+                        'has_settings_api_key' => !empty($settingsApiKey),
+                        'using_settings' => !empty($settingsApiKey),
+                        'api_url' => $aiService->api_url,
+                        'provider' => $aiService->provider,
+                        'db_model' => $aiModel->model_identifier,
+                        'settings_model' => $settingsModel,
+                        'using_model' => $modelIdentifier,
+                    ]);
+                    
+                    if (!$aiService->is_enabled) {
+                        \Log::warning('AI service is not enabled', [
+                            'service_id' => $aiService->id,
+                            'service_name' => $aiService->name,
+                        ]);
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'AI service is not enabled.',
+                        ], 500);
+                    }
+                    
+                    if (!$apiKey) {
+                        \Log::warning('AI service missing API key', [
+                            'service_id' => $aiService->id,
+                            'service_name' => $aiService->name,
+                        ]);
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'AI service API key is not configured.',
+                        ], 500);
+                    }
+                    
+                    $contextService = new AIContextService();
+                    
+                    // Build contextual prompt with real system data
+                    $contextualPrompt = $contextService->buildContextualPrompt(
+                        $validated['content'],
+                        $conversation->context_type ?? 'general',
+                        $conversation->context_id
+                    );
+                    
+                    \Log::info('Calling AI Provider', [
+                        'provider' => $aiService->provider,
+                        'model' => $modelIdentifier,
+                        'prompt_length' => strlen($contextualPrompt),
+                    ]);
+                    
+                    // Call AI API directly based on provider, passing the resolved API key and model
+                    $aiResponse = $this->callAIProvider(
+                        $aiService,
+                        $modelIdentifier,
+                        $contextualPrompt,
+                        $apiKey,
+                        (int) $aiModel->max_tokens,
+                        (float) $aiModel->temperature
+                    );
+
+                    if ($aiResponse) {
+                        \Log::info('AI response received', [
+                            'response_length' => strlen($aiResponse),
+                        ]);
+                        $aiMessage = $conversation->addMessage('assistant', $aiResponse);
+                    } else {
+                        \Log::warning('AI service returned null response', [
+                            'conversation_id' => $conversation->id,
+                            'service' => $aiService->provider,
+                            'model' => $aiModel->model_identifier,
+                        ]);
+                    }
+                } catch (\Exception $aiError) {
+                    \Log::error('AI service error: ' . $aiError->getMessage(), [
+                        'conversation_id' => $conversation->id,
+                        'trace' => $aiError->getTraceAsString()
+                    ]);
+                    // Continue without AI response
+                }
+            }
+
+            // Reload conversation with fresh data
+            $conversation = $conversation->fresh(['user', 'aiModel.service']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Message added successfully.',
+                'data' => [
+                    'user_message' => $userMessage,
+                    'ai_message' => $aiMessage,
+                    'conversation' => $conversation
+                ]
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error adding message to conversation: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to add message to conversation.',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
     }
+
 
     /**
      * Get conversation statistics.
@@ -331,6 +453,117 @@ class ConversationController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Get context options for a specific context type.
+     */
+    public function getContextOptions(Request $request)
+    {
+        $contextType = $request->get('context_type');
+        
+        if (!$contextType) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Context type is required',
+            ], 400);
+        }
+
+        $contextService = new AIContextService();
+        $options = $contextService->getContextOptions($contextType);
+
+        return response()->json([
+            'success' => true,
+            'options' => $options,
+        ]);
+    }
+
+    /**
+     * Call AI provider API directly.
+     */
+    private function callAIProvider($service, string $modelIdentifier, string $prompt, string $apiKey, int $maxTokens, float $temperature): ?string
+    {
+        try {
+            $response = null;
+            
+            switch ($service->provider) {
+                case 'mistral':
+                    $response = \Http::withHeaders([
+                        'Authorization' => 'Bearer ' . $apiKey,
+                        'Content-Type' => 'application/json',
+                    ])->timeout(60)->post($service->api_url . '/chat/completions', [
+                        'model' => $modelIdentifier,
+                        'messages' => [
+                            ['role' => 'user', 'content' => $prompt]
+                        ],
+                        'max_tokens' => $maxTokens,
+                        'temperature' => $temperature,
+                    ]);
+                    break;
+                    
+                case 'openai':
+                    $response = \Http::withHeaders([
+                        'Authorization' => 'Bearer ' . $apiKey,
+                        'Content-Type' => 'application/json',
+                    ])->timeout(60)->post($service->api_url . '/chat/completions', [
+                        'model' => $modelIdentifier,
+                        'messages' => [
+                            ['role' => 'user', 'content' => $prompt]
+                        ],
+                        'max_tokens' => $maxTokens,
+                        'temperature' => $temperature,
+                    ]);
+                    break;
+                    
+                case 'anthropic':
+                    $response = \Http::withHeaders([
+                        'x-api-key' => $apiKey,
+                        'Content-Type' => 'application/json',
+                        'anthropic-version' => '2023-06-01',
+                    ])->timeout(60)->post($service->api_url . '/messages', [
+                        'model' => $modelIdentifier,
+                        'messages' => [
+                            ['role' => 'user', 'content' => $prompt]
+                        ],
+                        'max_tokens' => $maxTokens,
+                        'temperature' => $temperature,
+                    ]);
+                    break;
+                    
+                default:
+                    \Log::error('Unsupported AI provider: ' . $service->provider);
+                    return null;
+            }
+            
+            if ($response && $response->successful()) {
+                $data = $response->json();
+                
+                // Extract content based on provider response format
+                if ($service->provider === 'anthropic') {
+                    return $data['content'][0]['text'] ?? null;
+                } else {
+                    return $data['choices'][0]['message']['content'] ?? null;
+                }
+            }
+            
+            if ($response) {
+                \Log::error('AI API error', [
+                    'provider' => $service->provider,
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+            }
+            
+            return null;
+            
+        } catch (\Exception $e) {
+            \Log::error('AI provider call failed: ' . $e->getMessage(), [
+                'provider' => $service->provider,
+                'model' => $model->model_identifier,
+                'trace' => $e->getTraceAsString()
+            ]);
+            return null;
+        }
     }
 
     /**

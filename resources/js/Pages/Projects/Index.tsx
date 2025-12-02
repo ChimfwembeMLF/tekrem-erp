@@ -133,7 +133,7 @@ export default function ProjectsIndex({ auth, projects, filters }: ProjectsIndex
       <Head title="Projects" />
 
       <div className="py-12">
-        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div className="w-full mx-auto sm:px-6 lg:px-8">
           <Card>
             <CardHeader className="flex flex-col sm:flex-row justify-between sm:items-center space-y-2 sm:space-y-0">
               <div>

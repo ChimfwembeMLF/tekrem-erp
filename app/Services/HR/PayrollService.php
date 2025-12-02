@@ -18,6 +18,7 @@ use App\Models\HR\Performance;
 use App\Models\HR\Payroll;
 use App\Models\Finance\Transaction;
 use Illuminate\Support\Facades\DB;
+use App\Models\Finance\Account;
 
 class PayrollService
 {
@@ -105,6 +106,8 @@ class PayrollService
             'amount' => $net,
         ]);
 
+        $cashAccount = Account::where('name', 'Cash & Cash Equivalents')->firstOrFail();
+
         // 10. Post to finance
         Transaction::create([
             'type' => 'payroll',
@@ -112,6 +115,7 @@ class PayrollService
             'description' => "Payroll for {$employee->user->name} ({$period})",
             'transaction_date' => now(),
             'user_id' => $employee->user_id,
+            'account_id' => $cashAccount->id,   
             'debit_account_code' => '6000', // Payroll expense
             'credit_account_code' => '1000', // Bank/cash
         ]);

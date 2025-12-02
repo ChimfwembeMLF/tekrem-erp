@@ -156,7 +156,7 @@ export default function Index({ leaves, leaveTypes, employees, filters }: LeaveI
       <Head title={t('hr.leave_management', 'Leave Management')} />
 
       <div className="py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">

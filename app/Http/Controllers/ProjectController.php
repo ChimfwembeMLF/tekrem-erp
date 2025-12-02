@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\ProjectTemplate;
 use App\Models\ProjectTimeLog;
 use App\Models\Tag;
+use App\Services\MistralAI;
 use App\Services\ProjectPlanningAIService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -81,6 +82,85 @@ class ProjectController extends Controller
             'overdueProjects' => $overdueProjects,
             'upcomingDeadlines' => $upcomingDeadlines,
         ]);
+    }
+  /**
+     * Generate AI milestones for a project via API.
+     */
+    public function generateAIMilestonesApi(Project $project, AIService $aiService, Request $request): JsonResponse
+    {
+        $promptData = [
+            'name' => $project->name,
+            'description' => $project->description,
+            'category' => $project->category,
+            'deadline' => $project->deadline,
+            'budget' => $project->budget,
+        ];
+
+        $aiResponse = $aiService->makeRequest("Generate project milestones based on: " . json_encode($promptData));
+
+        if (!$aiResponse || empty($aiResponse['choices'][0]['message']['content'] ?? null)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate AI milestones.',
+            ], 500);
+        }
+
+        $milestonesData = json_decode($aiResponse['choices'][0]['message']['content'], true);
+
+        if (!$milestonesData || !is_array($milestonesData)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid AI response format.',
+            ], 500);
+        }
+
+        // Optionally persist milestones
+        foreach ($milestonesData as $m) {
+            $project->milestones()->create([
+                'name' => $m['name'] ?? 'Unnamed milestone',
+                'description' => $m['description'] ?? null,
+                'priority' => $m['priority'] ?? 'medium',
+                'order' => $m['order'] ?? 0,
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'milestones' => $milestonesData,
+        ]);
+    }
+
+    public function generateCustomAIMilestonesApi(Request $request)
+    {
+        $validated = $request->validate([
+            'project' => 'required|array',
+            'query' => 'required|string'
+        ]);
+
+        $project = $validated['project'];
+        $query = $validated['query'];
+
+        // Send to your Mistral service
+        $response = app(MistralAI::class)->ask("
+            Project Data: " . json_encode($project) . "
+            User Query: {$query}
+            
+            Return insights as JSON in format:
+            [
+              {
+                \"type\": \"info|warning|danger\",
+                \"title\": \"...\",
+                \"description\": \"...\",
+                \"recommendation\": \"...\",
+                \"confidence\": 0-100
+              }
+            ]
+        ");
+
+        // Decode AI response
+        $insights = json_decode($response, true);
+
+        return response()->json($insights);
     }
 
     /**

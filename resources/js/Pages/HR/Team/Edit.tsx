@@ -40,7 +40,7 @@ export default function Edit({ team, employees }) {
 
     return (
         <AppLayout title="Edit Team">
-            <Card className="max-w-2xl mx-auto mt-8">
+            <Card className="w-full mx-auto mt-8">
                 <CardHeader>
                     <CardTitle>Edit Team</CardTitle>
                 </CardHeader>

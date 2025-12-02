@@ -16,6 +16,7 @@ import {
     Loader2
 } from 'lucide-react';
 import { useTranslate } from '@/Hooks/useTranslate';
+import useRoute from '@/Hooks/useRoute';
 
 interface AIModel {
     id: number;
@@ -30,7 +31,12 @@ interface AIModel {
 
 interface Props {
     models: AIModel[];
-    contextTypes: string[];
+    contextTypes: Record<string, {
+        label: string;
+        description: string;
+        icon: string;
+        color: string;
+    }>;
 }
 
 interface FormData {
@@ -44,7 +50,11 @@ interface FormData {
 
 export default function Create({ models, contextTypes }: Props) {
     const { t } = useTranslate();
+    const route = useRoute();
+    
     const [selectedModel, setSelectedModel] = useState<AIModel | null>(null);
+    const [contextOptions, setContextOptions] = useState<Array<{value: number, label: string}>>([]);
+    const [loadingOptions, setLoadingOptions] = useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm<FormData>({
         title: '',
@@ -66,14 +76,44 @@ export default function Create({ models, contextTypes }: Props) {
         setSelectedModel(model || null);
     };
 
-    const getContextTypeColor = (contextType: string) => {
-        const colors = {
-            crm: 'bg-blue-100 text-blue-800',
-            finance: 'bg-green-100 text-green-800',
-            support: 'bg-orange-100 text-orange-800',
-            general: 'bg-gray-100 text-gray-800',
+    const handleContextTypeChange = async (contextType: string) => {
+        setData('context_type', contextType);
+        setData('context_id', ''); // Reset context_id when type changes
+        setContextOptions([]);
+        
+        if (contextType && contextType !== 'none' && contextType !== 'general') {
+            setLoadingOptions(true);
+            try {
+                const response = await (window as any).axios.get(
+                    route('ai.conversations.context-options'),
+                    { params: { context_type: contextType } }
+                );
+                
+                if (response.data.success) {
+                    setContextOptions(response.data.options);
+                }
+            } catch (error) {
+                console.error('Failed to load context options:', error);
+            } finally {
+                setLoadingOptions(false);
+            }
+        }
+    };
+
+    const getContextTypeColor = (contextKey: string) => {
+        const context = contextTypes[contextKey];
+        if (!context) return 'bg-gray-100 text-gray-800';
+        
+        const colorMap: Record<string, string> = {
+            blue: 'bg-blue-100 text-blue-800',
+            green: 'bg-green-100 text-green-800',
+            purple: 'bg-purple-100 text-purple-800',
+            orange: 'bg-orange-100 text-orange-800',
+            red: 'bg-red-100 text-red-800',
+            gray: 'bg-gray-100 text-gray-800',
         };
-        return colors[contextType as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+        
+        return colorMap[context.color] || 'bg-gray-100 text-gray-800';
     };
 
     return (
@@ -182,43 +222,72 @@ export default function Create({ models, contextTypes }: Props) {
                                 {/* Context Type */}
                                 <div className="space-y-2">
                                     <Label htmlFor="context_type">{t('Context Type')}</Label>
-                                    <Select value={data.context_type} onValueChange={(value) => setData('context_type', value)}>
+                                    <p className="text-sm text-gray-600">
+                                        {t('Link this conversation to a specific module for context-aware responses')}
+                                    </p>
+                                    <Select value={data.context_type} onValueChange={handleContextTypeChange}>
                                         <SelectTrigger>
                                             <SelectValue placeholder={t('Select context type (optional)')} />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="none">{t('No Context')}</SelectItem>
-                                            {contextTypes.map((type) => (
-                                                <SelectItem key={type} value={type}>
-                                                    <div className="flex items-center space-x-2">
-                                                        <span className={`px-2 py-1 rounded text-xs ${getContextTypeColor(type)}`}>
-                                                            {type.toUpperCase()}
-                                                        </span>
-                                                        <span className="capitalize">{type}</span>
+                                            <SelectItem value="none">{t('No Context - General Assistance')}</SelectItem>
+                                            {Object.entries(contextTypes).map(([key, context]) => (
+                                                <SelectItem key={key} value={key}>
+                                                    <div className="flex flex-col">
+                                                        <div className="flex items-center space-x-2">
+                                                            <span className={`px-2 py-1 rounded text-xs ${getContextTypeColor(key)}`}>
+                                                                {key.toUpperCase()}
+                                                            </span>
+                                                            <span className="font-medium">{context.label}</span>
+                                                        </div>
+                                                        <span className="text-xs text-gray-500 mt-1">{context.description}</span>
                                                     </div>
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
-                                    <p className="text-sm text-gray-600">
-                                        {t('Context helps the AI understand the domain of your conversation')}
-                                    </p>
+                                    {errors.context_type && (
+                                        <p className="text-sm text-red-600">{errors.context_type}</p>
+                                    )}
                                 </div>
 
-                                {/* Context ID */}
-                                {data.context_type && data.context_type !== 'none' && (
+                                {/* Context ID (specific record) */}
+                                {data.context_type && data.context_type !== 'none' && data.context_type !== 'general' && (
                                     <div className="space-y-2">
-                                        <Label htmlFor="context_id">{t('Context ID')}</Label>
-                                        <Input
-                                            id="context_id"
-                                            type="number"
-                                            value={data.context_id}
-                                            onChange={(e) => setData('context_id', e.target.value)}
-                                            placeholder={t('Enter related record ID (optional)')}
-                                        />
+                                        <Label htmlFor="context_id">{t('Specific Record (Optional)')}</Label>
                                         <p className="text-sm text-gray-600">
-                                            {t('Link this conversation to a specific record in the selected context')}
+                                            {t('Select a specific record to provide focused context')}
                                         </p>
+                                        {loadingOptions ? (
+                                            <div className="flex items-center justify-center p-4 border rounded">
+                                                <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                                                <span className="text-sm text-gray-600">{t('Loading options...')}</span>
+                                            </div>
+                                        ) : contextOptions.length > 0 ? (
+                                            <Select value={data.context_id} onValueChange={(value) => setData('context_id', value)}>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder={t('Select a specific record')} />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="">{t('No specific record (module-wide context)')}</SelectItem>
+                                                    {contextOptions.map((option) => (
+                                                        <SelectItem key={option.value} value={option.value.toString()}>
+                                                            {option.label}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        ) : (
+                                            <Alert>
+                                                <AlertCircle className="h-4 w-4" />
+                                                <AlertDescription>
+                                                    {t('No records available for this context type')}
+                                                </AlertDescription>
+                                            </Alert>
+                                        )}
+                                        {errors.context_id && (
+                                            <p className="text-sm text-red-600">{errors.context_id}</p>
+                                        )}
                                     </div>
                                 )}
 

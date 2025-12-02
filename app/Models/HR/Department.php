@@ -10,6 +10,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Department extends Model
 {
+    /**
+     * The users that belong to the department.
+     */
+    public function users(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(\App\Models\User::class, 'department_user', 'department_id', 'user_id');
+    }
     use HasFactory;
 
     protected $table = 'hr_departments';

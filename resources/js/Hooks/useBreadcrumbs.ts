@@ -6,6 +6,7 @@ export interface BreadcrumbItem {
   label: string;
   href?: string;
   isActive?: boolean;
+  icon?: React.ElementType;
 }
 
 export default function useBreadcrumbs(): BreadcrumbItem[] {

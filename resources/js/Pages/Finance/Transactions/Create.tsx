@@ -19,6 +19,7 @@ import useFinanceAI from '@/Hooks/useFinanceAI';
 import AISuggestions from '@/Components/Finance/AISuggestions';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/Components/ui/alert';
+import useRoute from '@/Hooks/useRoute';
 
 interface Account {
   id: number;
@@ -52,6 +53,7 @@ export default function Create({
   const { getTransactionSuggestions, suggestions, loading: aiLoading, clearSuggestions } = useFinanceAI();
   const [filteredCategories, setFilteredCategories] = useState<Category[]>(categories);
   const [showAISuggestions, setShowAISuggestions] = useState(false);
+  const route = useRoute();
 
   const { data, setData, post, processing, errors, reset } = useForm({
     type: '',
@@ -59,7 +61,7 @@ export default function Create({
     description: '',
     transaction_date: new Date().toISOString().split('T')[0],
     account_id: selectedAccount?.id.toString() || '',
-    category_id: 'none',
+    category_id: null,
     transfer_to_account_id: '',
     reference_number: '',
     status: 'completed',
@@ -74,8 +76,8 @@ export default function Create({
       setFilteredCategories(filtered);
 
       // Reset category if current selection is not valid for the new type
-      if (data.category_id && data.category_id !== 'none' && !filtered.find(cat => cat.id.toString() === data.category_id)) {
-        setData('category_id', 'none');
+      if (data.category_id && data.category_id !== null && !filtered.find(cat => cat.id.toString() === data.category_id)) {
+        setData('category_id', null);
       }
     } else {
       setFilteredCategories(categories);
@@ -105,7 +107,7 @@ export default function Create({
     setData(prevData => ({
       ...prevData,
       type,
-      category_id: 'none', // Reset category when type changes
+      category_id: null, // Reset category when type changes
       transfer_to_account_id: type === 'transfer' ? prevData.transfer_to_account_id : '', // Reset transfer account if not transfer
     }));
   };
@@ -132,7 +134,7 @@ export default function Create({
           cat.name.toLowerCase() === value.toLowerCase()
         );
         if (category) {
-          setData('category_id', category.id.toString());
+          setData('category_id', category?.id);
           toast.success('Category applied successfully');
         } else {
           toast.info(`Category "${value}" not found in your categories`);

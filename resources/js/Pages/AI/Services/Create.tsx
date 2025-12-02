@@ -128,25 +128,16 @@ export default function CreateService() {
 
     setIsTestingConnection(true);
     try {
-      const response = await fetch(route('ai.dashboard.test-connection'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-        },
-        body: JSON.stringify({
-          provider: data.provider,
-          api_key: data.api_key,
-          api_url: data.api_url
-        })
+      const response = await (window as any).axios.post(route('ai.dashboard.test-connection'), {
+        provider: data.provider,
+        api_key: data.api_key,
+        api_url: data.api_url
       });
 
-      const result = await response.json();
-
-      if (result.success) {
+      if (response.data.success) {
         toast.success(t('ai.connection_successful', 'Connection successful'));
       } else {
-        toast.error(t('ai.connection_failed', 'Connection failed') + ': ' + result.message);
+        toast.error(t('ai.connection_failed', 'Connection failed') + ': ' + response.data.message);
       }
     } catch (error) {
       toast.error(t('ai.connection_failed', 'Connection failed'));

@@ -116,21 +116,14 @@ export default function Dashboard({ stats, services = [], analytics, quick_stats
     const testConnection = async (serviceId: number) => {
         setLoading(true);
         try {
-            const response = await fetch(route('ai.dashboard.test-connection'), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-                body: JSON.stringify({ service_id: serviceId }),
+            const response = await (window as any).axios.post(route('ai.dashboard.test-connection'), {
+                service_id: serviceId
             });
 
-            const data = await response.json();
-
-            if (data.success) {
-                toast.success(data.message);
+            if (response.data.success) {
+                toast.success(response.data.message);
             } else {
-                toast.error(data.message);
+                toast.error(response.data.message);
             }
         } catch (error) {
             toast.error('Failed to test connection');

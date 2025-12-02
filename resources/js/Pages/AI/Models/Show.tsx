@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useTranslate } from '@/Hooks/useTranslate';
 import { toast } from 'sonner';
+import useRoute from '@/Hooks/useRoute';
 
 interface AIModel {
     id: number;
@@ -63,24 +64,17 @@ interface Props {
 
 export default function Show({ model }: Props) {
     const { t } = useTranslate();
+    const route = useRoute();
 
     const toggleModelStatus = async () => {
         try {
-            const response = await fetch(route('ai.models.toggle-status', model.id), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-            });
+            const response = await (window as any).axios.post(route('ai.models.toggle-status', model.id));
 
-            const data = await response.json();
-
-            if (data.success) {
-                toast.success(data.message);
+            if (response.data.success) {
+                toast.success(response.data.message);
                 router.reload();
             } else {
-                toast.error(data.message);
+                toast.error(response.data.message);
             }
         } catch (error) {
             toast.error('Failed to toggle model status');
@@ -89,21 +83,13 @@ export default function Show({ model }: Props) {
 
     const setAsDefault = async () => {
         try {
-            const response = await fetch(route('ai.models.set-default', model.id), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-            });
+            const response = await (window as any).axios.post(route('ai.models.set-default', model.id));
 
-            const data = await response.json();
-
-            if (data.success) {
-                toast.success(data.message);
+            if (response.data.success) {
+                toast.success(response.data.message);
                 router.reload();
             } else {
-                toast.error(data.message);
+                toast.error(response.data.message);
             }
         } catch (error) {
             toast.error('Failed to set as default');
@@ -260,7 +246,7 @@ export default function Show({ model }: Props) {
 
                                     <div className="space-y-2">
                                         <div className="text-sm font-medium text-gray-600">{t('Model Identifier')}</div>
-                                        <div className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+                                        <div className="font-mono text-sm bg-primary/20 px-2 py-1 rounded">
                                             {model.model_identifier}
                                         </div>
                                     </div>
@@ -427,7 +413,7 @@ export default function Show({ model }: Props) {
                             <CardContent>
                                 <div className="flex flex-wrap gap-2">
                                     {model.capabilities.map((capability, index) => (
-                                        <Badge key={index} variant="secondary" className="text-sm">
+                                        <Badge key={index} variant="default" className="text-sm">
                                             <Zap className="h-3 w-3 mr-1" />
                                             {capability}
                                         </Badge>
@@ -438,7 +424,7 @@ export default function Show({ model }: Props) {
                     )}
 
                     {/* Configuration JSON */}
-                    {Object.keys(model.configuration).length > 0 && (
+                    {model.configuration && Object.keys(model.configuration).length > 0 && (
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center">
@@ -451,11 +437,12 @@ export default function Show({ model }: Props) {
                             </CardHeader>
                             <CardContent>
                                 <pre className="bg-gray-50 p-4 rounded-md text-sm overflow-x-auto">
-                                    {JSON.stringify(model.configuration, null, 2)}
+                                    {JSON.stringify(model.configuration ?? {}, null, 2)}
                                 </pre>
                             </CardContent>
                         </Card>
                     )}
+
                 </div>
             </div>
         </AppLayout>

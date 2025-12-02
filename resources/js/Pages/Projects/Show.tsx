@@ -96,10 +96,10 @@ export default function ProjectShow({ auth, project }: ProjectShowProps) {
               {project.name}
             </h2>
             <div className="flex items-center gap-2 mt-2">
-              <Badge variant="outline" className={getStatusBadgeColor(project.status)}>
+              <Badge variant="outline" className={getStatusBadgeColor(project?.status)}>
                 {project.status}
               </Badge>
-              <Badge variant="outline" className={getPriorityBadgeColor(project.priority)}>
+              <Badge variant="outline" className={getPriorityBadgeColor(project?.priority)}>
                 {project.priority}
               </Badge>
               {project.category && (

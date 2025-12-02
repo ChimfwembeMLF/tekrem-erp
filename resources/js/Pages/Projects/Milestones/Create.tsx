@@ -66,7 +66,7 @@ export default function MilestoneCreate({ auth, project, users, availableDepende
       <Head title={`Create Milestone - ${project.name}`} />
 
       <div className="py-12">
-        <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
+        <div className="w-full mx-auto sm:px-6 lg:px-8">
           <form onSubmit={handleSubmit}>
             <div className="space-y-6">
               {/* Basic Information */}
@@ -151,7 +151,7 @@ export default function MilestoneCreate({ auth, project, users, availableDepende
               </Card>
 
               {/* Dependencies */}
-              {availableDependencies.length > 0 && (
+              {availableDependencies?.length > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Dependencies</CardTitle>

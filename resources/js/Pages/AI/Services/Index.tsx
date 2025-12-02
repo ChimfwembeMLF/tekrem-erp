@@ -117,21 +117,13 @@ export default function ServicesIndex({ services, providers, filters }: Props) {
 
   const handleToggleStatus = async (service: Service) => {
     try {
-      const response = await fetch(route('ai.services.toggle-status', service.id), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-        }
-      });
+      const response = await (window as any).axios.post(route('ai.services.toggle-status', service.id));
 
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success(data.message);
+      if (response.data.success) {
+        toast.success(response.data.message);
         router.reload({ only: ['services'] });
       } else {
-        toast.error(data.message);
+        toast.error(response.data.message);
       }
     } catch (error) {
       toast.error('Failed to update service status');
@@ -140,21 +132,13 @@ export default function ServicesIndex({ services, providers, filters }: Props) {
 
   const handleSetDefault = async (service: Service) => {
     try {
-      const response = await fetch(route('ai.services.set-default', service.id), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-        }
-      });
+      const response = await (window as any).axios.post(route('ai.services.set-default', service.id));
 
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success(data.message);
+      if (response.data.success) {
+        toast.success(response.data.message);
         router.reload({ only: ['services'] });
       } else {
-        toast.error(data.message);
+        toast.error(response.data.message);
       }
     } catch (error) {
       toast.error('Failed to set default service');

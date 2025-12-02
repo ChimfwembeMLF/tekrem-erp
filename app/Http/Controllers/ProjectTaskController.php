@@ -255,8 +255,9 @@ class ProjectTaskController extends Controller
      */
     public function myTasks(Request $request)
     {
+        $user = Auth::user();        
         $query = ProjectTask::with(['project', 'milestone', 'tags'])
-            ->where('assigned_to', Auth::id());
+            ->where('assigned_to', $user->id);
 
         // Apply filters
         if ($request->filled('status')) {
@@ -268,6 +269,7 @@ class ProjectTaskController extends Controller
         }
 
         $tasks = $query->orderBy('due_date')->paginate(15);
+        // dd($tasks);
 
         return Inertia::render('Projects/Tasks/MyTasks', [
             'tasks' => $tasks,

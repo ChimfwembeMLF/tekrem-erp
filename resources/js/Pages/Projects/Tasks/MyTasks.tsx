@@ -37,6 +37,7 @@ interface MyTasksProps {
 }
 
 export default function MyTasks({ auth, tasks, filters }: MyTasksProps) {
+  console.log('tasks',tasks);
   const route = useRoute();
   const [status, setStatus] = useState(filters.status || 'all');
   const [priority, setPriority] = useState(filters.priority || 'all');

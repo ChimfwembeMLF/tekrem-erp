@@ -50,6 +50,10 @@ class DatabaseSeeder extends Seeder
         $this->command->info('🤝 Seeding CRM data (clients, leads, communications)...');
         $this->call(CrmSeeder::class);
 
+
+        $this->command->info('📊 Seeding projects...');
+        $this->call(ProjectSeeder::class);
+
         // 5b. System Modules
         $this->command->info('🧩 Seeding system modules...');
         $this->call(ModuleSeeder::class);
@@ -84,6 +88,9 @@ class DatabaseSeeder extends Seeder
         // 11. AI module (needs admin user)
         $this->command->info('🤖 Seeding AI module...');
         $this->call(AIModuleSeeder::class);
+        
+        $this->command->info('🤖 Seeding AI system prompts...');
+        $this->call(AISystemPromptSeeder::class);
 
         // 12. CMS (needs admin user, should be last as it's content-focused)
         $this->command->info('📝 Seeding CMS data...');

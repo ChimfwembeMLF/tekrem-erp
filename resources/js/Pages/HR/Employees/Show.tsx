@@ -3,14 +3,10 @@ import { Head, Link } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
-import { Input } from '@/Components/ui/input';
-import { Label } from '@/Components/ui/label';
-import { Textarea } from '@/Components/ui/textarea';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { Edit } from 'lucide-react';
 import useRoute from '@/Hooks/useRoute';
-
 
 interface Department { id: number; name: string; }
 interface Employee {
@@ -49,28 +45,26 @@ interface Employee {
   metadata?: Record<string, any>;
   notes?: string;
 }
+
 interface ShowEmployeeProps { employee: Employee; }
 
 export default function ShowEmployee({ employee }: ShowEmployeeProps) {
   const route = useRoute();
-  // Helper to render array fields
+
   const renderArray = (arr?: any[], emptyMsg = 'N/A') =>
     arr && arr.length > 0 ? (
       <ul className="list-disc ml-5 text-sm text-gray-700">
-        {arr.map((item, i) => (
-          <li key={i}>{typeof item === 'string' ? item : JSON.stringify(item)}</li>
-        ))}
+        {arr.map((item, i) => <li key={i}>{typeof item === 'string' ? item : JSON.stringify(item)}</li>)}
       </ul>
     ) : <span className="text-gray-400">{emptyMsg}</span>;
 
-  // Previous documents (if any)
   const previousDocs = employee.documents?.filter(doc => doc.previous) || [];
   const currentDocs = employee.documents?.filter(doc => !doc.previous) || [];
 
   return (
     <AppLayout title="Employee Details">
       <Head title="Employee Details" />
-      <div className="max-w-3xl mx-auto py-8">
+      <div className="w-full mx-auto py-8">
         <Card>
           <CardHeader>
             <CardTitle>Employee Details</CardTitle>
@@ -86,82 +80,121 @@ export default function ShowEmployee({ employee }: ShowEmployeeProps) {
                 <TabsTrigger value="documents">Documents/Skills</TabsTrigger>
                 <TabsTrigger value="metadata">Other</TabsTrigger>
               </TabsList>
+
+              {/* Personal Info */}
               <TabsContent value="personal">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div><b>Name:</b> {employee.name}</div>
-                  <div><b>Date of Birth:</b> {employee.date_of_birth || <span className="text-gray-400">N/A</span>}</div>
-                  <div><b>Gender:</b> {employee.gender || <span className="text-gray-400">N/A</span>}</div>
-                  <div><b>Marital Status:</b> {employee.marital_status || <span className="text-gray-400">N/A</span>}</div>
-                  <div><b>National ID:</b> {employee.national_id || <span className="text-gray-400">N/A</span>}</div>
-                  <div><b>Passport Number:</b> {employee.passport_number || <span className="text-gray-400">N/A</span>}</div>
-                  <div className="md:col-span-2"><b>Address:</b> {employee.address || <span className="text-gray-400">N/A</span>}</div>
-                </div>
+                <Table>
+                  <TableBody>
+                    <TableRow><TableCell className="font-medium">Name</TableCell><TableCell>{employee.name}</TableCell></TableRow>
+                    <TableRow><TableCell className="font-medium">Date of Birth</TableCell><TableCell>{employee.date_of_birth || <span className="text-gray-400">N/A</span>}</TableCell></TableRow>
+                    <TableRow><TableCell className="font-medium">Gender</TableCell><TableCell>{employee.gender || <span className="text-gray-400">N/A</span>}</TableCell></TableRow>
+                    <TableRow><TableCell className="font-medium">Marital Status</TableCell><TableCell>{employee.marital_status || <span className="text-gray-400">N/A</span>}</TableCell></TableRow>
+                    <TableRow><TableCell className="font-medium">National ID</TableCell><TableCell>{employee.national_id || <span className="text-gray-400">N/A</span>}</TableCell></TableRow>
+                    <TableRow><TableCell className="font-medium">Passport Number</TableCell><TableCell>{employee.passport_number || <span className="text-gray-400">N/A</span>}</TableCell></TableRow>
+                    <TableRow><TableCell className="font-medium">Address</TableCell><TableCell>{employee.address || <span className="text-gray-400">N/A</span>}</TableCell></TableRow>
+                  </TableBody>
+                </Table>
               </TabsContent>
+
+              {/* Job Info */}
               <TabsContent value="job">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div><b>User ID:</b> {employee.user_id || <span className="text-gray-400">N/A</span>}</div>
-                  <div><b>Employee ID:</b> {employee.employee_id}</div>
-                  <div><b>Job Title:</b> {employee.job_title}</div>
-                  <div><b>Department:</b> {employee.department?.name || 'N/A'}</div>
-                  <div><b>Employment Type:</b> {employee.employment_type?.replace('_', ' ')}</div>
-                  <div><b>Employment Status:</b> {employee.employment_status?.replace('_', ' ')}</div>
-                  <div><b>Hire Date:</b> {employee.hire_date}</div>
-                  <div><b>Probation End Date:</b> {employee.probation_end_date || <span className="text-gray-400">N/A</span>}</div>
-                  <div><b>Termination Date:</b> {employee.termination_date || <span className="text-gray-400">N/A</span>}</div>
-                  <div className="md:col-span-2"><b>Termination Reason:</b> {employee.termination_reason || <span className="text-gray-400">N/A</span>}</div>
-                  <div><b>Salary:</b> {employee.salary || <span className="text-gray-400">N/A</span>}</div>
-                  <div><b>Salary Currency:</b> {employee.salary_currency || <span className="text-gray-400">N/A</span>}</div>
-                  <div><b>Pay Frequency:</b> {employee.pay_frequency || <span className="text-gray-400">N/A</span>}</div>
-                  <div><b>Manager ID:</b> {employee.manager_id || <span className="text-gray-400">N/A</span>}</div>
-                  <div><b>Work Location:</b> {employee.work_location || <span className="text-gray-400">N/A</span>}</div>
-                </div>
+                <Table>
+                  <TableBody>
+                    <TableRow><TableCell className="font-medium">User ID</TableCell><TableCell>{employee.user_id || <span className="text-gray-400">N/A</span>}</TableCell></TableRow>
+                    <TableRow><TableCell className="font-medium">Employee ID</TableCell><TableCell>{employee.employee_id}</TableCell></TableRow>
+                    <TableRow><TableCell className="font-medium">Job Title</TableCell><TableCell>{employee.job_title}</TableCell></TableRow>
+                    <TableRow><TableCell className="font-medium">Department</TableCell><TableCell>{employee.department?.name || 'N/A'}</TableCell></TableRow>
+                    <TableRow><TableCell className="font-medium">Employment Type</TableCell><TableCell>{employee.employment_type?.replace('_', ' ')}</TableCell></TableRow>
+                    <TableRow><TableCell className="font-medium">Employment Status</TableCell><TableCell>{employee.employment_status?.replace('_', ' ')}</TableCell></TableRow>
+                    <TableRow><TableCell className="font-medium">Hire Date</TableCell><TableCell>{employee.hire_date}</TableCell></TableRow>
+                    <TableRow><TableCell className="font-medium">Probation End Date</TableCell><TableCell>{employee.probation_end_date || <span className="text-gray-400">N/A</span>}</TableCell></TableRow>
+                    <TableRow><TableCell className="font-medium">Termination Date</TableCell><TableCell>{employee.termination_date || <span className="text-gray-400">N/A</span>}</TableCell></TableRow>
+                    <TableRow><TableCell className="font-medium">Termination Reason</TableCell><TableCell>{employee.termination_reason || <span className="text-gray-400">N/A</span>}</TableCell></TableRow>
+                    <TableRow><TableCell className="font-medium">Salary</TableCell><TableCell>{employee.salary || <span className="text-gray-400">N/A</span>}</TableCell></TableRow>
+                    <TableRow><TableCell className="font-medium">Salary Currency</TableCell><TableCell>{employee.salary_currency || <span className="text-gray-400">N/A</span>}</TableCell></TableRow>
+                    <TableRow><TableCell className="font-medium">Pay Frequency</TableCell><TableCell>{employee.pay_frequency || <span className="text-gray-400">N/A</span>}</TableCell></TableRow>
+                    <TableRow><TableCell className="font-medium">Manager ID</TableCell><TableCell>{employee.manager_id || <span className="text-gray-400">N/A</span>}</TableCell></TableRow>
+                    <TableRow><TableCell className="font-medium">Work Location</TableCell><TableCell>{employee.work_location || <span className="text-gray-400">N/A</span>}</TableCell></TableRow>
+                  </TableBody>
+                </Table>
               </TabsContent>
+
+              {/* Contact Info */}
               <TabsContent value="contact">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div><b>Phone:</b> {employee.phone || <span className="text-gray-400">N/A</span>}</div>
-                  <div><b>Email:</b> {employee.email}</div>
-                </div>
+                <Table>
+                  <TableBody>
+                    <TableRow><TableCell className="font-medium">Phone</TableCell><TableCell>{employee.phone || <span className="text-gray-400">N/A</span>}</TableCell></TableRow>
+                    <TableRow><TableCell className="font-medium">Email</TableCell><TableCell>{employee.email}</TableCell></TableRow>
+                  </TableBody>
+                </Table>
               </TabsContent>
+
+              {/* Emergency */}
               <TabsContent value="emergency">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div><b>Contact Name:</b> {employee.emergency_contact_name || <span className="text-gray-400">N/A</span>}</div>
-                  <div><b>Contact Phone:</b> {employee.emergency_contact_phone || <span className="text-gray-400">N/A</span>}</div>
-                  <div className="md:col-span-2"><b>Relationship:</b> {employee.emergency_contact_relationship || <span className="text-gray-400">N/A</span>}</div>
-                </div>
+                <Table>
+                  <TableBody>
+                    <TableRow><TableCell className="font-medium">Contact Name</TableCell><TableCell>{employee.emergency_contact_name || <span className="text-gray-400">N/A</span>}</TableCell></TableRow>
+                    <TableRow><TableCell className="font-medium">Contact Phone</TableCell><TableCell>{employee.emergency_contact_phone || <span className="text-gray-400">N/A</span>}</TableCell></TableRow>
+                    <TableRow><TableCell className="font-medium">Relationship</TableCell><TableCell>{employee.emergency_contact_relationship || <span className="text-gray-400">N/A</span>}</TableCell></TableRow>
+                  </TableBody>
+                </Table>
               </TabsContent>
+
+              {/* Previous Documents */}
               <TabsContent value="previous_docs">
-                <h3 className="font-semibold text-base mb-2">Previous Documents</h3>
+                <h3 className="font-semibold mb-2">Previous Documents</h3>
                 {previousDocs.length > 0 ? (
                   <ul className="list-disc ml-5 text-sm text-gray-700">
                     {previousDocs.map((doc, i) => (
                       <li key={i}>
-                        {doc.url ? <a href={doc.url} className="text-blue-600 underline" target="_blank" rel="noopener noreferrer">{doc.name}</a> : doc.name}
+                        {doc.url ? <a href={doc.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{doc.name}</a> : doc.name}
                       </li>
                     ))}
                   </ul>
                 ) : <span className="text-gray-400">None</span>}
               </TabsContent>
+
+              {/* Documents / Skills */}
               <TabsContent value="documents">
-                <h3 className="font-semibold text-base mb-2">Documents/Skills</h3>
-                <div><b>Skills:</b> {renderArray(employee.skills)}</div>
-                <div><b>Certifications:</b> {renderArray(employee.certifications)}</div>
-                <div><b>Documents:</b> {currentDocs.length > 0 ? (
-                  <ul className="list-disc ml-5 text-sm text-gray-700">
-                    {currentDocs.map((doc, i) => (
-                      <li key={i}>
-                        {doc.url ? <a href={doc.url} className="text-blue-600 underline" target="_blank" rel="noopener noreferrer">{doc.name}</a> : doc.name}
-                      </li>
-                    ))}
-                  </ul>
-                ) : <span className="text-gray-400">None</span>}</div>
+                <h3 className="font-semibold mb-2">Skills / Certifications / Documents</h3>
+                <Table>
+                  <TableBody>
+                    <TableRow><TableCell className="font-medium">Skills</TableCell><TableCell>{renderArray(employee.skills)}</TableCell></TableRow>
+                    <TableRow><TableCell className="font-medium">Certifications</TableCell><TableCell>{renderArray(employee.certifications)}</TableCell></TableRow>
+                    <TableRow><TableCell className="font-medium">Documents</TableCell>
+                      <TableCell>
+                        {currentDocs.length > 0 ? (
+                          <ul className="list-disc ml-5 text-sm text-gray-700">
+                            {currentDocs.map((doc, i) => (
+                              <li key={i}>
+                                {doc.url ? <a href={doc.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{doc.name}</a> : doc.name}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : <span className="text-gray-400">None</span>}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
               </TabsContent>
+
+              {/* Metadata / Other */}
               <TabsContent value="metadata">
-                <h3 className="font-semibold text-base mb-2">Other</h3>
-                <div><b>Tax ID:</b> {employee.tax_id || <span className="text-gray-400">N/A</span>}</div>
-                <div><b>Metadata:</b> {employee.metadata ? <pre className="bg-gray-100 rounded p-2 text-xs overflow-x-auto">{JSON.stringify(employee.metadata, null, 2)}</pre> : <span className="text-gray-400">N/A</span>}</div>
-                <div><b>Notes:</b> {employee.notes || <span className="text-gray-400">N/A</span>}</div>
+                <Table>
+                  <TableBody>
+                    <TableRow><TableCell className="font-medium">Tax ID</TableCell><TableCell>{employee.tax_id || <span className="text-gray-400">N/A</span>}</TableCell></TableRow>
+                    <TableRow><TableCell className="font-medium">Metadata</TableCell>
+                      <TableCell>
+                        {employee.metadata ? <pre className="bg-gray-100 rounded p-2 text-xs overflow-x-auto">{JSON.stringify(employee.metadata, null, 2)}</pre> : <span className="text-gray-400">N/A</span>}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow><TableCell className="font-medium">Notes</TableCell><TableCell>{employee.notes || <span className="text-gray-400">N/A</span>}</TableCell></TableRow>
+                  </TableBody>
+                </Table>
               </TabsContent>
+
             </Tabs>
+
             <div className="flex justify-end mt-8">
               <Link href={route('hr.employees.edit', employee.id)}>
                 <Button variant="outline"><Edit className="h-4 w-4 mr-2" />Edit</Button>

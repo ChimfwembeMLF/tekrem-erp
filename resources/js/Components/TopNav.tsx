@@ -27,6 +27,7 @@ import useTypedPage from '@/Hooks/useTypedPage';
 import { ThemeToggle } from '@/Components/ThemeProvider';
 import { Team } from '@/types';
 import NotificationComponent from '@/Components/NotificationComponent';
+import ApplicationLogo from './ApplicationLogo';
 
 interface TopNavProps {
   settings: Record<string, any>;
@@ -57,10 +58,10 @@ export default function TopNav({ settings }: TopNavProps) {
 
   
   return (
-    <div className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 md:pl-[calc(256px+24px)]">
+    <div className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 md:pl-[calc(256px+24px)]">  
       {/* Page Title */}
       <div className="flex-1">
-        <h1 className="text-lg font-semibold">{settings.site_name || 'TekRem ERP'}</h1>
+        {/* <h1 className="text-lg font-semibold">{settings.site_name || 'TekRem ERP'}</h1> */}
       </div>
 
       {/* Right side items */}

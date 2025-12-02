@@ -61,14 +61,30 @@ export default function CreatePayroll({ employees = [] }: CreatePayrollProps) {
               </div>
               <div>
                 <Label htmlFor="period">Period</Label>
-                <Input id="period" type="text" value={data.period} onChange={e => setData('period', e.target.value)} />
+                <Input
+                  id="period"
+                  type="date"
+                  value={data.period}
+                  onChange={e => setData('period', e.target.value)}
+                />
                 {errors.period && <div className="text-red-500 text-xs mt-1">{errors.period}</div>}
               </div>
-              <div>
+
+              <div className="space-y-2">
                 <Label htmlFor="amount">Amount</Label>
-                <Input id="amount" type="number" value={data.amount} onChange={e => setData('amount', e.target.value)} />
+                <Input
+                  id="amount"
+                  type="text"
+                  value={data.amount ? Number(data.amount).toLocaleString('en-ZM', { style: 'currency', currency: 'ZMW' }) : ''}
+                  onChange={e => {
+                    // remove non-numeric characters except dot
+                    const numeric = e.target.value.replace(/[^0-9.]/g, '');
+                    setData('amount', numeric);
+                  }}
+                />
                 {errors.amount && <div className="text-red-500 text-xs mt-1">{errors.amount}</div>}
               </div>
+
               <Button type="submit" disabled={processing}>Save Payroll</Button>
             </form>
           </CardContent>

@@ -14,6 +14,7 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
+  
     use HasApiTokens;
 
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -68,6 +69,13 @@ class User extends Authenticatable
     ];
 
 
+    /**
+     * The departments that the user belongs to.
+     */
+    public function departments(): BelongsToMany
+    {
+        return $this->belongsToMany(Department::class, 'department_user', 'user_id', 'department_id');
+    }
 
     /**
      * Get the clients for the user.

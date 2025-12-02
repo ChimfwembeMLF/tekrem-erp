@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { useTranslate } from '@/Hooks/useTranslate';
 import { toast } from 'sonner';
+import useRoute from '@/Hooks/useRoute';
 
 interface Conversation {
     id: number;
@@ -101,7 +102,8 @@ export default function Index({ conversations, models, filters }: Props) {
     const [selectedModel, setSelectedModel] = useState(filters.model_id || 'all');
     const [selectedContext, setSelectedContext] = useState(filters.context_type || 'all');
     const [archivedFilter, setArchivedFilter] = useState(filters.is_archived || 'all');
-
+    const route = useRoute();
+    
     const handleSearch = () => {
         router.get(route('ai.conversations.index'), {
             search,
@@ -126,21 +128,13 @@ export default function Index({ conversations, models, filters }: Props) {
         const endpoint = isArchived ? 'ai.conversations.unarchive' : 'ai.conversations.archive';
 
         try {
-            const response = await fetch(route(endpoint, conversationId), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-            });
+            const response = await (window as any).axios.post(route(endpoint, conversationId));
 
-            const data = await response.json();
-
-            if (data.success) {
-                toast.success(data.message);
+            if (response.data.success) {
+                toast.success(response.data.message);
                 router.reload();
             } else {
-                toast.error(data.message);
+                toast.error(response.data.message);
             }
         } catch (error) {
             toast.error('Failed to update conversation');

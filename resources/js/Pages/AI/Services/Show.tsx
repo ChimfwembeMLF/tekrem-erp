@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useTranslate } from '@/Hooks/useTranslate';
 import { toast } from 'sonner';
+import useRoute from '@/Hooks/useRoute';
 
 interface Service {
     id: number;
@@ -60,24 +61,17 @@ interface Props {
 
 export default function Show({ service }: Props) {
     const { t } = useTranslate();
+    const route = useRoute();
 
     const toggleServiceStatus = async () => {
         try {
-            const response = await fetch(route('ai.services.toggle-status', service.id), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-            });
+            const response = await (window as any).axios.post(route('ai.services.toggle-status', service.id));
 
-            const data = await response.json();
-
-            if (data.success) {
-                toast.success(data.message);
+            if (response.data.success) {
+                toast.success(response.data.message);
                 router.reload();
             } else {
-                toast.error(data.message);
+                toast.error(response.data.message);
             }
         } catch (error) {
             toast.error('Failed to toggle service status');
@@ -86,21 +80,13 @@ export default function Show({ service }: Props) {
 
     const setAsDefault = async () => {
         try {
-            const response = await fetch(route('ai.services.set-default', service.id), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-            });
+            const response = await (window as any).axios.post(route('ai.services.set-default', service.id));
 
-            const data = await response.json();
-
-            if (data.success) {
-                toast.success(data.message);
+            if (response.data.success) {
+                toast.success(response.data.message);
                 router.reload();
             } else {
-                toast.error(data.message);
+                toast.error(response.data.message);
             }
         } catch (error) {
             toast.error('Failed to set as default');
@@ -303,7 +289,7 @@ export default function Show({ service }: Props) {
                                 {service.api_url && (
                                     <div className="space-y-2">
                                         <div className="text-sm font-medium text-gray-600">{t('API URL')}</div>
-                                        <div className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+                                        <div className="font-mono text-sm bg-primary/20 px-2 py-1 rounded">
                                             {service.api_url}
                                         </div>
                                     </div>
@@ -425,7 +411,7 @@ export default function Show({ service }: Props) {
                                 {service.supported_features && service.supported_features.length > 0 ? (
                                     <div className="flex flex-wrap gap-2">
                                         {service.supported_features.map((feature, index) => (
-                                            <Badge key={index} variant="secondary" className="text-sm">
+                                            <Badge key={index} variant="default" className="text-sm">
                                                 <Zap className="h-3 w-3 mr-1" />
                                                 {feature}
                                             </Badge>
@@ -453,7 +439,7 @@ export default function Show({ service }: Props) {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <pre className="bg-gray-50 p-4 rounded-md text-sm overflow-x-auto">
+                                <pre className="bg-primary/20 p-4 rounded-md text-sm overflow-x-auto">
                                     {JSON.stringify(service.configuration, null, 2)}
                                 </pre>
                             </CardContent>

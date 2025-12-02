@@ -92,14 +92,26 @@ export default function EditEmployee({ employee, departments = [], users = [] }:
   });
 
   const prevErrors = useRef(errors);
+  
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    put(route('hr.employees.update', employee.id), {
-      onError: (errs) => {
-        showFormErrors(errs);
-      },
-    });
-  };
+  e.preventDefault();
+  const formData = new FormData();
+  Object.entries(data).forEach(([key, value]) => {
+    if (value !== null && value !== undefined) {
+      if (key === 'documents' && Array.isArray(value)) {
+        value.forEach((file: File) => formData.append('documents[]', file));
+      } else {
+        formData.append(key, value);
+      }
+    }
+  });
+
+  put(route('hr.employees.update', employee.id), {
+    data: formData,
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};
+
 
   // Show errors if they exist on first render (e.g., after redirect)
   useEffect(() => {
@@ -114,7 +126,7 @@ export default function EditEmployee({ employee, departments = [], users = [] }:
     <AppLayout title="Edit Employee">
       <Head title="Edit Employee" />
       <div className="py-6">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <Card>
               <CardHeader>
@@ -357,8 +369,15 @@ export default function EditEmployee({ employee, departments = [], users = [] }:
                       {errors.certifications && <p className="text-sm text-red-500">{errors.certifications}</p>}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="documents">Documents (comma separated or upload)</Label>
-                      <Input id="documents" value={data.documents} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData('documents', e.target.value)} />
+                      <Label htmlFor="documents">Documents (upload files)</Label>
+                      <Input
+                        id="documents"
+                        type="file"
+                        multiple
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          if (e.target.files) setData('documents', Array.from(e.target.files));
+                        }}
+                      />
                       {errors.documents && <p className="text-sm text-red-500">{errors.documents}</p>}
                     </div>
                   </TabsContent>

@@ -10,13 +10,23 @@ use App\Models\HR\Employee;
 
 class TeamController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $teams = Team::with(['employees.user'])->get();
-        $teamsData = $teams->map(function ($team) {
-            $lead = $team->employees->first(function ($e) use ($team) {
-                return $e->pivot->is_lead;
-            });
+        $query = Team::with('employees.user');
+
+        // Optional search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where('name', 'like', "%{$search}%")
+                ->orWhere('description', 'like', "%{$search}%");
+        }
+
+        // Pagination
+        $teams = $query->paginate(10)->withQueryString();
+
+        // Transform data for Inertia
+        $teamsData = $teams->through(function ($team) {
+            $lead = $team->employees->first(fn($e) => $e->pivot->is_lead);
             return [
                 'id' => $team->id,
                 'name' => $team->name,
@@ -28,8 +38,10 @@ class TeamController extends Controller
                 'lead' => $lead ? ['id' => $lead->id, 'name' => $lead->user->name ?? ''] : null,
             ];
         });
+
         return Inertia::render('HR/Team/Index', [
             'teams' => $teamsData,
+            'filters' => $request->only('search'),
         ]);
     }
 

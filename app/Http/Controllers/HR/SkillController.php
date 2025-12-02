@@ -9,13 +9,43 @@ use App\Models\HR\Skill;
 
 class SkillController extends Controller
 {
-    public function index()
-    {
-        $skills = Skill::all();
-        return Inertia::render('HR/Skills/Index', [
-            'skills' => $skills,
-        ]);
+  public function index(Request $request)
+{
+    $query = Skill::query();
+
+    // Filter by name
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where('name', 'like', "%{$search}%")
+              ->orWhere('description', 'like', "%{$search}%");
     }
+
+    // Filter by category
+    if ($request->filled('category')) {
+        $query->where('category', $request->category);
+    }
+
+    // Filter by type
+    if ($request->filled('type')) {
+        $query->where('type', $request->type);
+    }
+
+    // Optionally include active/inactive filter
+    if ($request->filled('status')) {
+        $query->where('is_active', $request->status === 'active');
+    }
+
+    // Pagination
+    $skills = $query->orderBy('name')->paginate(10)->withQueryString();
+    $categories = Skill::select('category')->distinct()->pluck('category');
+
+    return Inertia::render('HR/Skills/Index', [
+        'skills' => $skills,
+        'filters' => $request->only(['search', 'category', 'type', 'status']),
+        'categories' => $categories,
+    ]);
+}
+
 
     public function create()
     {

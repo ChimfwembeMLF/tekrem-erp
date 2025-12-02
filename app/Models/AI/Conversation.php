@@ -107,11 +107,19 @@ class Conversation extends Model
 
         $messages[] = $message;
 
-        $this->update([
+        $updated = $this->update([
             'messages' => $messages,
             'message_count' => count($messages),
             'last_message_at' => now()
         ]);
+
+        // Log for debugging
+        if (!$updated) {
+            \Log::warning('Failed to update conversation messages', [
+                'conversation_id' => $this->id,
+                'message_count' => count($messages)
+            ]);
+        }
 
         return $message;
     }

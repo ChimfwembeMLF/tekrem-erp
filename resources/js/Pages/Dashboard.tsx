@@ -207,7 +207,7 @@ export default function Dashboard({
       <Head title={t('dashboard.title', 'Admin Dashboard')} />
 
       <div className="py-6">
-        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+        <div className="w-full mx-auto sm:px-6 lg:px-8 space-y-6">
           {/* System Notifications */}
           {notifications && notifications.length > 0 && (
             <div className="space-y-2">

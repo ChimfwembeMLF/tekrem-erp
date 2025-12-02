@@ -96,3 +96,80 @@ export interface TeamInvitation {
   created_at: DateTime;
   updated_at: DateTime;
 }
+
+export interface Project {
+  id: number;
+  name: string;
+  description?: string;
+  status?: string;
+  priority?: 'low' | 'medium' | 'high' | 'critical';
+  category?: string;
+  start_date?: string; // ISO date string
+  end_date?: string;   // ISO date string
+  deadline?: string;   // ISO date string
+  budget?: number;
+  spent_amount?: number;
+  progress?: number;   // 0-100
+  client_id?: number;
+  manager_id?: number;
+  team_members?: number[]; // user IDs
+  tags?: string[];
+  metadata?: Record<string, any>;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ProjectFile {
+  id: number;
+  project_id: number;
+  milestone_id?: number;
+  name: string;
+  original_name?: string;
+  file_path?: string;
+  file_url?: string;
+  mime_type?: string;
+  file_size?: number;
+  category?: string;
+  description?: string;
+  version?: number;
+  is_latest_version?: boolean;
+  uploaded_by?: number; // user ID
+  access_level?: 'private' | 'team' | 'public';
+  metadata?: Record<string, any>;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ProjectMilestone {
+  id: number;
+  project_id: number;
+  name: string;
+  description?: string;
+  due_date?: string;        // ISO date
+  completion_date?: string; // ISO date
+  progress?: number;        // 0-100
+  status?: string;
+  priority?: 'low' | 'medium' | 'high' | 'critical';
+  assigned_to?: number;     // user ID
+  dependencies?: number[];  // milestone IDs
+  order?: number;
+  metadata?: Record<string, any>;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ProjectTimeLog {
+  id: number;
+  project_id: number;
+  milestone_id?: number;
+  user_id: number;
+  description?: string;
+  hours: number;
+  log_date?: string;       // ISO date
+  is_billable?: boolean;
+  hourly_rate?: number;
+  status?: string;
+  metadata?: Record<string, any>;
+  created_at?: string;
+  updated_at?: string;
+}

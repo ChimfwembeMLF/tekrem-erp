@@ -11,9 +11,19 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Policies\DepartmentAccessPolicy;
+use Illuminate\Routing\Controllers\HasMiddleware;
 
 class EmployeeController extends Controller
-{
+{  
+    public DepartmentAccessPolicy $policy;
+
+//   public function __construct()
+// {
+//     $this->middleware('department.access')->only(['show', 'edit', 'update', 'destroy']);
+// }
+
+
     /**
      * Display a listing of employees.
      */
@@ -202,7 +212,7 @@ class EmployeeController extends Controller
             'manager_id' => [
                 'nullable',
                 'exists:hr_employees,id',
-                Rule::notIn([$employee->id]), // Prevent self-management
+                Rule::notIn([$employee->id]),
             ],
             'work_location' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:20',
@@ -216,13 +226,24 @@ class EmployeeController extends Controller
             'national_id' => 'nullable|string|max:50',
             'passport_number' => 'nullable|string|max:50',
             'tax_id' => 'nullable|string|max:50',
+            'documents.*' => 'file|mimes:pdf,jpg,png,doc,docx|max:5120',
         ]);
+
+        // Handle file uploads
+        if ($request->hasFile('documents')) {
+            $paths = [];
+            foreach ($request->file('documents') as $file) {
+                $paths[] = $file->store('employees/documents', 'public');
+            }
+            $validated['documents'] = json_encode($paths);
+        }
 
         $employee->update($validated);
 
         return redirect()->route('hr.employees.show', $employee)
             ->with('success', 'Employee updated successfully.');
     }
+
 
     /**
      * Remove the specified employee.

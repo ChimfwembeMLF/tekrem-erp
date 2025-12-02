@@ -104,21 +104,13 @@ export default function Index({ templates, filters }: Props) {
 
     const duplicateTemplate = async (templateId: number) => {
         try {
-            const response = await fetch(route('ai.prompt-templates.duplicate', templateId), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-            });
+            const response = await (window as any).axios.post(route('ai.prompt-templates.duplicate', templateId));
 
-            const data = await response.json();
-
-            if (data.success) {
-                toast.success(data.message);
+            if (response.data.success) {
+                toast.success(response.data.message);
                 router.reload();
             } else {
-                toast.error(data.message);
+                toast.error(response.data.message);
             }
         } catch (error) {
             toast.error('Failed to duplicate template');

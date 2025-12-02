@@ -115,9 +115,8 @@ export default function Dashboard({
 
   useEffect(() => {
     // Fetch quick stats for today vs yesterday comparison
-    fetch(route('ai.dashboard.quick-stats'))
-      .then(response => response.json())
-      .then(data => setQuickStats(data))
+    (window as any).axios.get(route('ai.dashboard.quick-stats'))
+      .then((response: any) => setQuickStats(response.data))
       .catch(console.error);
   }, []);
 

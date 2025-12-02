@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { useTranslate } from '@/Hooks/useTranslate';
 import { toast } from 'sonner';
+import { useRoute } from 'ziggy-js';
 
 interface AIModel {
     id: number;
@@ -88,7 +89,8 @@ export default function Index({ models, services, filters }: Props) {
     const [selectedService, setSelectedService] = useState(filters.service_id || 'all');
     const [selectedType, setSelectedType] = useState(filters.type || 'all');
     const [enabledFilter, setEnabledFilter] = useState(filters.is_enabled || 'all');
-
+    const route = useRoute();
+    
     const handleSearch = () => {
         router.get(route('ai.models.index'), {
             search,
@@ -111,21 +113,13 @@ export default function Index({ models, services, filters }: Props) {
 
     const toggleModelStatus = async (modelId: number) => {
         try {
-            const response = await fetch(route('ai.models.toggle-status', modelId), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-            });
+            const response = await (window as any).axios.post(route('ai.models.toggle-status', modelId));
 
-            const data = await response.json();
-
-            if (data.success) {
-                toast.success(data.message);
+            if (response.data.success) {
+                toast.success(response.data.message);
                 router.reload();
             } else {
-                toast.error(data.message);
+                toast.error(response.data.message);
             }
         } catch (error) {
             toast.error('Failed to toggle model status');
@@ -134,21 +128,13 @@ export default function Index({ models, services, filters }: Props) {
 
     const setAsDefault = async (modelId: number) => {
         try {
-            const response = await fetch(route('ai.models.set-default', modelId), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-            });
+            const response = await (window as any).axios.post(route('ai.models.set-default', modelId));
 
-            const data = await response.json();
-
-            if (data.success) {
-                toast.success(data.message);
+            if (response.data.success) {
+                toast.success(response.data.message);
                 router.reload();
             } else {
-                toast.error(data.message);
+                toast.error(response.data.message);
             }
         } catch (error) {
             toast.error('Failed to set as default');

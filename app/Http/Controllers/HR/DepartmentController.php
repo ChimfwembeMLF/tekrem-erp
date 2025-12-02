@@ -10,9 +10,16 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Policies\DepartmentAccessPolicy;
 
 class DepartmentController extends Controller
 {
+
+    // public function __construct()
+    // {
+    //     $this->middleware('department.access')->only(['show', 'edit', 'update', 'destroy']);
+    // }
+
     /**
      * Display a listing of departments.
      */
@@ -271,4 +278,5 @@ class DepartmentController extends Controller
 
         return $chart;
     }
+
 }

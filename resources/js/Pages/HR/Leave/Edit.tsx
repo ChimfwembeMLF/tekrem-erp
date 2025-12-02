@@ -86,7 +86,7 @@ export default function EditLeave({ leave, leaveTypes = [], employees = [] }: Ed
     <AppLayout title="Edit Leave Request">
       <Head title="Edit Leave Request" />
       <div className="py-6">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <Card>
               <CardHeader>

@@ -40,7 +40,7 @@ export default function ShowLeave({ leave }: ShowLeaveProps) {
   return (
     <AppLayout title="Leave Request Details">
       <Head title="Leave Request Details" />
-      <div className="max-w-xl mx-auto py-8">
+      <div className="w-full mx-auto py-8">
         <Card>
           <CardHeader>
             <CardTitle>Leave Request Details</CardTitle>

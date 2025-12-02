@@ -8,6 +8,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Avatar, AvatarFallback } from '@/Components/ui/avatar';
 import { Alert, AlertDescription } from '@/Components/ui/alert';
 import AppLayout from '@/Layouts/AppLayout';
+import ReactMarkdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import {
     MessageSquare,
     Bot,
@@ -30,6 +33,7 @@ import {
 } from 'lucide-react';
 import { useTranslate } from '@/Hooks/useTranslate';
 import { toast } from 'sonner';
+import useRoute from '@/Hooks/useRoute';
 
 interface Message {
     role: string;
@@ -73,6 +77,7 @@ interface Props {
 
 export default function Show({ conversation }: Props) {
     const { t } = useTranslate();
+    const route = useRoute();
     const [newMessage, setNewMessage] = useState('');
     const [sending, setSending] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -90,29 +95,26 @@ export default function Show({ conversation }: Props) {
 
         setSending(true);
         try {
-            const response = await fetch(route('ai.conversations.messages.store', conversation.id), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-                body: JSON.stringify({
+            const response = await (window as any).axios.post(
+                route('ai.conversations.messages.store', conversation.id),
+                {
                     role: 'user',
                     content: newMessage,
-                }),
-            });
+                }
+            );
 
-            const data = await response.json();
-
-            if (data.success) {
+            if (response.data.success) {
                 setNewMessage('');
+                // Reload the conversation to show new messages
                 router.reload({ only: ['conversation'] });
-                toast.success(t('Message sent successfully'));
+                toast.success(response.data.message || t('Message sent successfully'));
             } else {
-                toast.error(data.message || t('Failed to send message'));
+                toast.error(response.data.message || t('Failed to send message'));
             }
-        } catch (error) {
-            toast.error(t('Failed to send message'));
+        } catch (error: any) {
+            console.error('Send message error:', error);
+            const errorMessage = error.response?.data?.message || error.message || t('Failed to send message');
+            toast.error(errorMessage);
         } finally {
             setSending(false);
         }
@@ -122,21 +124,13 @@ export default function Show({ conversation }: Props) {
         const endpoint = conversation.is_archived ? 'ai.conversations.unarchive' : 'ai.conversations.archive';
 
         try {
-            const response = await fetch(route(endpoint, conversation.id), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-            });
+            const response = await (window as any).axios.post(route(endpoint, conversation.id));
 
-            const data = await response.json();
-
-            if (data.success) {
-                toast.success(data.message);
+            if (response.data.success) {
+                toast.success(response.data.message);
                 router.reload();
             } else {
-                toast.error(data.message);
+                toast.error(response.data.message);
             }
         } catch (error) {
             toast.error('Failed to update conversation');
@@ -155,6 +149,15 @@ export default function Show({ conversation }: Props) {
     const copyMessage = (content: string) => {
         navigator.clipboard.writeText(content);
         toast.success(t('Message copied to clipboard'));
+    };
+
+    const retryMessage = async (content: string) => {
+        setNewMessage(content);
+        // Focus on textarea
+        setTimeout(() => {
+            const textarea = document.querySelector('textarea');
+            textarea?.focus();
+        }, 100);
     };
 
     const formatDate = (dateString: string) => {
@@ -201,13 +204,13 @@ export default function Show({ conversation }: Props) {
     const getRoleColor = (role: string) => {
         switch (role) {
             case 'user':
-                return 'bg-blue-50 border-blue-200';
+                return 'rounded-lg border inline-block bg-primary/20 border-primary/50';
             case 'assistant':
-                return 'bg-green-50 border-green-200';
+                return 'inline-block';
             case 'system':
-                return 'bg-orange-50 border-orange-200';
+                return 'bg-orange-50 border-orange-200 inline-block';
             default:
-                return 'bg-gray-50 border-gray-200';
+                return 'bg-gray-50 border-gray-200 inline-block';
         }
     };
 
@@ -344,7 +347,7 @@ export default function Show({ conversation }: Props) {
                     </div>
 
                     {/* Messages */}
-                    <Card>
+                    <div>
                         <CardHeader>
                             <CardTitle className="flex items-center">
                                 <MessageSquare className="h-5 w-5 mr-2" />
@@ -363,25 +366,78 @@ export default function Show({ conversation }: Props) {
                                     </div>
                                 ) : (
                                     conversation.messages.map((message, index) => (
-                                        <div key={index} className={`p-4 rounded-lg border ${getRoleColor(message.role)}`}>
-                                            <div className="flex items-start justify-between mb-2">
-                                                <div className="flex items-center space-x-2">
-                                                    {getRoleIcon(message.role)}
-                                                    <span className="font-medium capitalize">{message.role}</span>
+                                        <div 
+                                            key={index} 
+                                            className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'}`}
+                                        >
+                                            <div 
+                                                className={`p-4 ${getRoleColor(message.role)}`}
+                                                style={{ maxWidth: '85%' }}
+                                            >
+                                                <div className="flex items-center space-x-2 mb-2">
+                                                    {/* {getRoleIcon(message.role)} */}
+                                                    {/* <span className="font-medium capitalize">{message.role}</span> */}
                                                     <span className="text-xs text-gray-500">
                                                         {formatDate(message.timestamp)}
                                                     </span>
                                                 </div>
+                                                <div className="prose prose-sm max-w-none dark:prose-invert">
+                                                    <ReactMarkdown
+                                                        components={{
+                                                            p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                                                            ul: ({ children }) => <ul className="list-disc pl-5 mb-2 space-y-1">{children}</ul>,
+                                                            ol: ({ children }) => <ol className="list-decimal pl-5 mb-2 space-y-1">{children}</ol>,
+                                                            li: ({ children }) => <li className="mb-1">{children}</li>,
+                                                            code: ({ inline, className, children, ...props }: any) => {
+                                                                const match = /language-(\w+)/.exec(className || '');
+                                                                return !inline && match ? (
+                                                                    <SyntaxHighlighter
+                                                                        style={oneDark}
+                                                                        language={match[1]}
+                                                                        PreTag="div"
+                                                                        className="rounded-lg mb-2"
+                                                                        {...props}
+                                                                    >
+                                                                        {String(children).replace(/\n$/, '')}
+                                                                    </SyntaxHighlighter>
+                                                                ) : (
+                                                                    <code className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-sm font-mono" {...props}>
+                                                                        {children}
+                                                                    </code>
+                                                                );
+                                                            },
+                                                            pre: ({ children }) => <div className="mb-2">{children}</div>,
+                                                            h1: ({ children }) => <h1 className="text-xl font-bold mb-2">{children}</h1>,
+                                                            h2: ({ children }) => <h2 className="text-lg font-bold mb-2">{children}</h2>,
+                                                            h3: ({ children }) => <h3 className="text-base font-bold mb-2">{children}</h3>,
+                                                            strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                                                            em: ({ children }) => <em className="italic">{children}</em>,
+                                                            blockquote: ({ children }) => <blockquote className="border-l-4 border-gray-300 pl-4 italic my-2">{children}</blockquote>,
+                                                        }}
+                                                    >
+                                                        {message.content}
+                                                    </ReactMarkdown>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2 mt-1 ml-2">
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => copyMessage(message.content)}
+                                                    className="h-7 text-xs text-gray-500 hover:text-gray-700"
                                                 >
-                                                    <Copy className="h-3 w-3" />
+                                                    {t('Copy')}
                                                 </Button>
-                                            </div>
-                                            <div className="prose prose-sm max-w-none">
-                                                <p className="whitespace-pre-wrap">{message.content}</p>
+                                                {message.role === 'user' && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => retryMessage(message.content)}
+                                                        className="h-7 text-xs text-gray-500 hover:text-gray-700"
+                                                    >
+                                                        {t('Retry')}
+                                                    </Button>
+                                                )}
                                             </div>
                                         </div>
                                     ))
@@ -389,53 +445,52 @@ export default function Show({ conversation }: Props) {
                                 <div ref={messagesEndRef} />
                             </div>
                         </CardContent>
-                    </Card>
+                    </div>
 
                     {/* Message Input */}
                     {!conversation.is_archived && (
-                        <Card>
+                        <div className="rounded-none">
                             <CardContent className="p-4">
-                                <div className="flex space-x-4">
-                                    <Avatar className="h-8 w-8">
-                                        <AvatarFallback>
-                                            {conversation.user.name.charAt(0).toUpperCase()}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <div className="flex-1 space-y-2">
-                                        <Textarea
-                                            value={newMessage}
-                                            onChange={(e) => setNewMessage(e.target.value)}
-                                            placeholder={t('Type your message...')}
-                                            rows={3}
-                                            className="resize-none"
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' && !e.shiftKey) {
-                                                    e.preventDefault();
-                                                    sendMessage();
-                                                }
-                                            }}
-                                        />
-                                        <div className="flex justify-between items-center">
-                                            <p className="text-xs text-gray-500">
-                                                {t('Press Enter to send, Shift+Enter for new line')}
-                                            </p>
-                                            <Button
-                                                onClick={sendMessage}
-                                                disabled={!newMessage.trim() || sending}
-                                                size="sm"
-                                            >
-                                                {sending ? (
-                                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                                ) : (
-                                                    <Send className="h-4 w-4 mr-2" />
-                                                )}
-                                                {t('Send')}
-                                            </Button>
-                                        </div>
-                                    </div>
+                                <div className="relative">
+                                    <Textarea
+                                        value={newMessage}
+                                        onChange={(e) => setNewMessage(e.target.value)}
+                                        placeholder={t('Ask me anything...')}
+                                        rows={1}
+                                        className="resize-none pr-12 min-h-[52px] max-h-[200px] border-2 focus:border-primary rounded-xl"
+                                        style={{
+                                            height: 'auto',
+                                            overflowY: newMessage.split('\n').length > 3 ? 'auto' : 'hidden'
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                                e.preventDefault();
+                                                sendMessage();
+                                            }
+                                        }}
+                                        onInput={(e: any) => {
+                                            e.target.style.height = 'auto';
+                                            e.target.style.height = Math.min(e.target.scrollHeight, 200) + 'px';
+                                        }}
+                                    />
+                                    <Button
+                                        onClick={sendMessage}
+                                        disabled={!newMessage.trim() || sending}
+                                        size="icon"
+                                        className="absolute right-2 bottom-2 h-8 w-8 rounded-lg"
+                                    >
+                                        {sending ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <Send className="h-4 w-4" />
+                                        )}
+                                    </Button>
                                 </div>
+                                <p className="text-xs text-gray-500 mt-2 text-center">
+                                    {t('Press Enter to send, Shift+Enter for new line')}
+                                </p>
                             </CardContent>
-                        </Card>
+                        </div>
                     )}
 
                     {conversation.is_archived && (
