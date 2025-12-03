@@ -151,8 +151,17 @@ class PromptTemplateController extends Controller
     public function edit(PromptTemplate $promptTemplate)
     {
         // Check if user can edit this template
-        if ($promptTemplate->is_system || ($promptTemplate->user_id !== Auth::id() && !$promptTemplate->is_public)) {
-            abort(403, 'You do not have permission to edit this template.');
+        // System templates cannot be edited
+        // Users can edit their own templates
+        // Users can edit public templates (to create a copy/fork)
+        if ($promptTemplate->is_system) {
+            return redirect()->route('ai.prompt-templates.show', $promptTemplate)
+                ->with('error', 'System templates cannot be edited. Please duplicate this template to make changes.');
+        }
+        
+        if ($promptTemplate->user_id !== Auth::id() && !$promptTemplate->is_public) {
+            return redirect()->route('ai.prompt-templates.show', $promptTemplate)
+                ->with('error', 'You do not have permission to edit this template.');
         }
 
         $promptTemplate->load('user');
@@ -178,8 +187,14 @@ class PromptTemplateController extends Controller
     public function update(Request $request, PromptTemplate $promptTemplate)
     {
         // Check if user can edit this template
-        if ($promptTemplate->is_system || ($promptTemplate->user_id !== Auth::id() && !$promptTemplate->is_public)) {
-            abort(403, 'You do not have permission to edit this template.');
+        // System templates cannot be edited
+        // Users can only update their own templates
+        if ($promptTemplate->is_system) {
+            abort(403, 'System templates cannot be edited.');
+        }
+        
+        if ($promptTemplate->user_id !== Auth::id()) {
+            abort(403, 'You can only update templates that you own.');
         }
 
         $validated = $request->validate([

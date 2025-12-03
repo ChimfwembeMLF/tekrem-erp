@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useTranslate } from '@/Hooks/useTranslate';
 import { toast } from 'sonner';
+import useRoute from '@/Hooks/useRoute';
 
 interface PromptTemplate {
     id: number;
@@ -51,21 +52,20 @@ interface PromptTemplate {
 }
 
 interface PaginatedData {
-    data: {
-        templates: PromptTemplate[];
-        current_page: number;
-        last_page: number;
-        per_page: number;
-        total: number;
-        from: number;
-        to: number;
-    }
+    templates: PromptTemplate[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    from: number;
+    to: number;
+
     links: Array<{
         url: string | null;
         label: string;
         active: boolean;
     }>;
-   
+
 }
 
 interface Props {
@@ -83,6 +83,7 @@ export default function Index({ templates, filters }: Props) {
     const [search, setSearch] = useState(filters.search || '');
     const [selectedCategory, setSelectedCategory] = useState(filters.category || 'all');
     const [visibilityFilter, setVisibilityFilter] = useState(filters.is_public || 'all');
+    const route = useRoute();
 
     const handleSearch = () => {
         router.get(route('ai.prompt-templates.index'), {
@@ -164,6 +165,9 @@ export default function Index({ templates, filters }: Props) {
         if (template.length <= maxLength) return template;
         return template.substring(0, maxLength) + '...';
     };
+
+    console.log('templates.data.templates', templates.data);
+
 
     return (
         <AppLayout
@@ -249,7 +253,7 @@ export default function Index({ templates, filters }: Props) {
                     </Card>
 
                     {/* Templates Grid */}
-                    {templates.data.templates?.length === 0 ? (
+                    {templates.data?.length === 0 ? (
                         <Card>
                             <CardContent className="text-center py-12">
                                 <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -269,7 +273,7 @@ export default function Index({ templates, filters }: Props) {
                         </Card>
                     ) : (
                         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                            {templates.data.templates?.map((template) => (
+                            {templates.data?.map((template) => (
                                 <Card key={template.id} className="relative hover:shadow-lg transition-shadow">
                                     <CardHeader>
                                         <div className="flex items-start justify-between">
