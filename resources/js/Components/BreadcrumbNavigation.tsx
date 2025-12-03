@@ -41,19 +41,15 @@ export default function BreadcrumbNavigation({ className }: { className?: string
             <React.Fragment key={index}>
               <BreadcrumbItem>
                 {breadcrumb.isActive ? (
-                  <BreadcrumbPage>
+                  <BreadcrumbPage className="flex items-center gap-1">
                     {Icon && <Icon className="w-4 h-4" />}
-                    {breadcrumb.label && (
-                      <span className="ml-1">{breadcrumb.label}</span>
-                    )}
+                    {breadcrumb.label && <span>{breadcrumb.label}</span>}
                   </BreadcrumbPage>
                 ) : (
                   <BreadcrumbLink asChild>
-                    <Link href={breadcrumb.href!}>
+                    <Link href={breadcrumb.href!} className="flex items-center gap-1">
                       {Icon && <Icon className="w-4 h-4" />}
-                      {breadcrumb.label && (
-                        <span className="ml-1">{breadcrumb.label}</span>
-                      )}
+                      {breadcrumb.label && <span>{breadcrumb.label}</span>}
                     </Link>
                   </BreadcrumbLink>
                 )}

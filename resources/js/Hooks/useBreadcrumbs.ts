@@ -372,6 +372,82 @@ export default function useBreadcrumbs(): BreadcrumbItem[] {
             label: t('navigation.dashboard', 'Dashboard'),
             isActive: true,
           });
+        } else if (currentRoute === 'projects.index') {
+          breadcrumbs.push({
+            label: t('projects.all_projects', 'All Projects'),
+            isActive: true,
+          });
+        } else if (currentRoute === 'projects.create') {
+          breadcrumbs.push({
+            label: t('common.create', 'Create Project'),
+            isActive: true,
+          });
+        } else if (currentRoute === 'projects.show') {
+          breadcrumbs.push({
+            label: t('common.details', 'Project Details'),
+            isActive: true,
+          });
+        } else if (currentRoute === 'projects.edit') {
+          breadcrumbs.push({
+            label: t('common.edit', 'Edit Project'),
+            isActive: true,
+          });
+        } else if (currentRoute === 'projects.analytics') {
+          breadcrumbs.push({
+            label: t('projects.analytics', 'Analytics'),
+            isActive: true,
+          });
+        } else if (currentRoute === 'projects.my-tasks') {
+          breadcrumbs.push({
+            label: t('projects.my_tasks', 'My Tasks'),
+            isActive: true,
+          });
+        } else if (currentRoute.startsWith('projects.templates.')) {
+          breadcrumbs.push({
+            label: t('projects.templates', 'Templates'),
+            href: route('projects.templates.index'),
+            isActive: currentRoute === 'projects.templates.index',
+          });
+
+          if (currentRoute === 'projects.templates.create') {
+            breadcrumbs.push({
+              label: t('common.create', 'Create'),
+              isActive: true,
+            });
+          } else if (currentRoute === 'projects.templates.edit') {
+            breadcrumbs.push({
+              label: t('common.edit', 'Edit'),
+              isActive: true,
+            });
+          } else if (currentRoute === 'projects.templates.show') {
+            breadcrumbs.push({
+              label: t('common.details', 'Details'),
+              isActive: true,
+            });
+          }
+        } else if (currentRoute.startsWith('projects.tags.')) {
+          breadcrumbs.push({
+            label: t('projects.tags', 'Tags'),
+            href: route('projects.tags.index'),
+            isActive: currentRoute === 'projects.tags.index',
+          });
+
+          if (currentRoute === 'projects.tags.create') {
+            breadcrumbs.push({
+              label: t('common.create', 'Create'),
+              isActive: true,
+            });
+          } else if (currentRoute === 'projects.tags.edit') {
+            breadcrumbs.push({
+              label: t('common.edit', 'Edit'),
+              isActive: true,
+            });
+          } else if (currentRoute === 'projects.tags.show') {
+            breadcrumbs.push({
+              label: t('common.details', 'Details'),
+              isActive: true,
+            });
+          }
         }
       }
 

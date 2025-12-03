@@ -240,5 +240,12 @@ class User extends Authenticatable
         return $this->hasOne(\App\Models\HR\Employee::class);
     }
 
+    /**
+     * Get the projects managed by this user.
+     */
+    public function managedProjects()
+    {
+        return $this->hasMany(\App\Models\Project::class, 'manager_id');
+    }
 
 }

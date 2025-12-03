@@ -4,6 +4,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
+import { Input } from '@/Components/ui/input';
 import { 
   DragDropContext, 
   Droppable, 
@@ -20,8 +21,29 @@ import {
   Paperclip,
   Calendar,
   Target,
-  Activity
+  Activity,
+  X,
+  Check,
+  Pencil,
+  Trash2
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/Components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/Components/ui/alert-dialog';
 import useRoute from '@/Hooks/useRoute';
 
 interface User {
@@ -119,6 +141,11 @@ export default function AgileBoard({
     initialColumns || board.columns || []
   );
   const [selectedSprint, setSelectedSprint] = useState<number | null>(activeSprint?.id || null);
+  const [isAddingColumn, setIsAddingColumn] = useState(false);
+  const [newColumnName, setNewColumnName] = useState('');
+  const [editingColumnId, setEditingColumnId] = useState<number | null>(null);
+  const [editColumnName, setEditColumnName] = useState('');
+  const [columnToDelete, setColumnToDelete] = useState<BoardColumn | null>(null);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -187,37 +214,131 @@ export default function AgileBoard({
   };
 
   const boardContent = (
-    <div className={embedded ? "h-[600px] overflow-x-auto" : "h-[calc(100vh-12rem)] overflow-x-auto"}>
-      <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="flex gap-4 h-full p-6">
-          {columns.map((column) => (
-              <div key={column.id} className="flex-shrink-0 w-80">
-                <Card className="h-full flex flex-col">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <CardTitle className="text-sm font-medium">
-                          {column.name}
-                        </CardTitle>
-                        <Badge variant="outline" className="text-xs">
-                          {column.cards.length}
-                        </Badge>
-                        {column.wip_limit && column.cards.length > column.wip_limit && (
-                          <Badge variant="destructive" className="text-xs">
-                            WIP Exceeded
-                          </Badge>
+    <>
+      <div className={embedded ? "h-[600px] overflow-x-auto" : "h-[calc(100vh-12rem)] overflow-x-auto"}>
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <div className="flex gap-4 h-full p-6">
+            {columns.map((column) => (
+                <div key={column.id} className="flex-shrink-0 w-80">
+                  <Card className="h-full flex flex-col">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          {editingColumnId === column.id ? (
+                            <div className="flex items-center gap-2 flex-1">
+                              <Input
+                                autoFocus
+                                value={editColumnName}
+                                onChange={(e) => setEditColumnName(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && editColumnName.trim()) {
+                                    router.put(route('agile.columns.update', column.id), {
+                                      name: editColumnName.trim()
+                                    }, {
+                                      preserveScroll: true,
+                                      onSuccess: () => {
+                                        setEditingColumnId(null);
+                                        setEditColumnName('');
+                                      }
+                                    });
+                                  } else if (e.key === 'Escape') {
+                                    setEditingColumnId(null);
+                                    setEditColumnName('');
+                                  }
+                                }}
+                                className="h-7 text-sm"
+                              />
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 w-7 p-0"
+                                onClick={() => {
+                                  if (editColumnName.trim()) {
+                                    router.put(route('agile.columns.update', column.id), {
+                                      name: editColumnName.trim()
+                                    }, {
+                                      preserveScroll: true,
+                                      onSuccess: () => {
+                                        setEditingColumnId(null);
+                                        setEditColumnName('');
+                                      }
+                                    });
+                                  }
+                                }}
+                              >
+                                <Check className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 w-7 p-0"
+                                onClick={() => {
+                                  setEditingColumnId(null);
+                                  setEditColumnName('');
+                                }}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <>
+                              <CardTitle className="text-sm font-medium truncate">
+                                {column.name}
+                              </CardTitle>
+                              <Badge variant="outline" className="text-xs">
+                                {column.cards.length}
+                              </Badge>
+                              {column.wip_limit && column.cards.length > column.wip_limit && (
+                                <Badge variant="destructive" className="text-xs">
+                                  WIP Exceeded
+                                </Badge>
+                              )}
+                            </>
+                          )}
+                        </div>
+                        {editingColumnId !== column.id && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setEditingColumnId(column.id);
+                                  setEditColumnName(column.name);
+                                }}
+                              >
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Rename Column
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  router.visit(route('agile.board.settings', board.id));
+                                }}
+                              >
+                                <Settings className="mr-2 h-4 w-4" />
+                                Set WIP Limit
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-red-600"
+                                onClick={() => setColumnToDelete(column)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete Column
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         )}
                       </div>
-                      <Button variant="ghost" size="sm">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    {column.wip_limit && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        WIP Limit: {column.wip_limit}
-                      </p>
-                    )}
-                  </CardHeader>
+                      {column.wip_limit && editingColumnId !== column.id && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          WIP Limit: {column.wip_limit}
+                        </p>
+                      )}
+                    </CardHeader>
                   
                   <Droppable droppableId={column.id.toString()}>
                     {(provided, snapshot) => (
@@ -344,21 +465,119 @@ export default function AgileBoard({
               </div>
             ))}
 
-            {/* Add Column Button */}
+            {/* Add Column Button/Input */}
             <div className="flex-shrink-0 w-80">
-              <Button
-                variant="outline"
-                className="w-full h-32 border-dashed"
-                onClick={() => router.visit(route('agile.columns.create', board.id))}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Column
-              </Button>
+              {isAddingColumn ? (
+                <Card className="h-32 flex items-center justify-center">
+                  <CardContent className="p-4 w-full">
+                    <div className="flex gap-2">
+                      <Input
+                        autoFocus
+                        placeholder="Column name..."
+                        value={newColumnName}
+                        onChange={(e) => setNewColumnName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && newColumnName.trim()) {
+                            router.post(route('agile.columns.create', board.id), {
+                              name: newColumnName.trim(),
+                              order: columns.length
+                            }, {
+                              preserveScroll: true,
+                              onSuccess: () => {
+                                setNewColumnName('');
+                                setIsAddingColumn(false);
+                              }
+                            });
+                          } else if (e.key === 'Escape') {
+                            setNewColumnName('');
+                            setIsAddingColumn(false);
+                          }
+                        }}
+                        className="flex-1"
+                      />
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          if (newColumnName.trim()) {
+                            router.post(route('agile.columns.create', board.id), {
+                              name: newColumnName.trim(),
+                              order: columns.length
+                            }, {
+                              preserveScroll: true,
+                              onSuccess: () => {
+                                setNewColumnName('');
+                                setIsAddingColumn(false);
+                              }
+                            });
+                          }
+                        }}
+                        disabled={!newColumnName.trim()}
+                      >
+                        <Check className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setNewColumnName('');
+                          setIsAddingColumn(false);
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="w-full h-32 border-dashed hover:border-solid hover:bg-accent"
+                  onClick={() => setIsAddingColumn(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Column
+                </Button>
+              )}
             </div>
           </div>
         </DragDropContext>
       </div>
-    );
+
+      {/* Delete Column Confirmation Dialog */}
+      <AlertDialog open={!!columnToDelete} onOpenChange={(open) => !open && setColumnToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Column</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{columnToDelete?.name}"? 
+              {columnToDelete && columnToDelete.cards.length > 0 && (
+                <span className="block mt-2 text-red-600 font-semibold">
+                  This column contains {columnToDelete.cards.length} card(s). They will need to be moved first.
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (columnToDelete) {
+                  router.delete(route('agile.columns.destroy', columnToDelete.id), {
+                    preserveScroll: true,
+                    onSuccess: () => setColumnToDelete(null)
+                  });
+                }
+              }}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={columnToDelete ? columnToDelete.cards.length > 0 : false}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
 
   if (embedded) {
     return (

@@ -117,6 +117,17 @@ export interface Project {
   metadata?: Record<string, any>;
   created_at?: string;
   updated_at?: string;
+  // Relationships
+  client?: any;
+  manager?: any;
+  team?: any[];
+  milestones?: ProjectMilestone[];
+  files?: ProjectFile[];
+  time_logs?: ProjectTimeLog[];
+  conversations?: any[];
+  total_hours?: number;
+  total_billable_amount?: number;
+  enable_boards?: boolean;
 }
 
 export interface ProjectFile {
@@ -169,6 +180,103 @@ export interface ProjectTimeLog {
   is_billable?: boolean;
   hourly_rate?: number;
   status?: string;
+  metadata?: Record<string, any>;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface BoardCard {
+  id: number;
+  board_id: number;
+  column_id: number;
+  project_task_id?: number;
+  title: string;
+  description?: string;
+  type?: 'story' | 'task' | 'bug' | 'epic';
+  priority?: 'low' | 'medium' | 'high' | 'critical';
+  story_points?: number;
+  assigned_to?: number;
+  tags?: string[];
+  order?: number;
+  due_date?: string;
+  attachments?: number;
+  comments?: number;
+  checklist_progress?: { completed: number; total: number };
+  metadata?: Record<string, any>;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface BoardColumn {
+  id: number;
+  board_id: number;
+  name: string;
+  order?: number;
+  wip_limit?: number;
+  card_count?: number;
+  metadata?: Record<string, any>;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface Board {
+  id: number;
+  project_id: number;
+  name: string;
+  description?: string;
+  type?: 'kanban' | 'scrum';
+  is_active?: boolean;
+  columns?: BoardColumn[];
+  metadata?: Record<string, any>;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface Sprint {
+  id: number;
+  project_id: number;
+  name: string;
+  goal?: string;
+  start_date?: string;
+  end_date?: string;
+  status?: 'planned' | 'active' | 'completed' | 'cancelled';
+  velocity?: number;
+  completed_points?: number;
+  total_points?: number;
+  metadata?: Record<string, any>;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface Epic {
+  id: number;
+  project_id: number;
+  name: string;
+  description?: string;
+  color?: string;
+  status?: 'active' | 'completed' | 'archived';
+  start_date?: string;
+  end_date?: string;
+  progress?: number;
+  metadata?: Record<string, any>;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface Backlog {
+  id: number;
+  project_id: number;
+  card_id?: number;
+  epic_id?: number;
+  sprint_id?: number;
+  type: 'product' | 'sprint';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  story_points?: number;
+  status?: 'todo' | 'in_progress' | 'done';
+  order?: number;
+  card?: BoardCard;
+  epic?: Epic;
+  sprint?: Sprint;
   metadata?: Record<string, any>;
   created_at?: string;
   updated_at?: string;

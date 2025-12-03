@@ -44,6 +44,13 @@ class Tag extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    /**
+     * Get the projects that have this tag.
+     */
+    public function projects(): BelongsToMany
+    {
+        return $this->belongsToMany(Project::class, 'project_tags');
+    }
 
     /**
      * Get the tasks that have this tag.

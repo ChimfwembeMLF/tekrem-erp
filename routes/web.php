@@ -234,6 +234,30 @@ Route::middleware([
         // My Tasks (global route for current user's tasks)
         Route::get('/my-tasks', [\App\Http\Controllers\ProjectTaskController::class, 'myTasks'])->name('my-tasks');
 
+        // Templates (must be before /{project} catch-all)
+        Route::prefix('templates')->name('templates.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\ProjectTemplateController::class, 'index'])->name('index');
+            Route::get('/create', [\App\Http\Controllers\ProjectTemplateController::class, 'create'])->name('create');
+            Route::post('/', [\App\Http\Controllers\ProjectTemplateController::class, 'store'])->name('store');
+            Route::get('/{template}', [\App\Http\Controllers\ProjectTemplateController::class, 'show'])->name('show');
+            Route::get('/{template}/edit', [\App\Http\Controllers\ProjectTemplateController::class, 'edit'])->name('edit');
+            Route::put('/{template}', [\App\Http\Controllers\ProjectTemplateController::class, 'update'])->name('update');
+            Route::delete('/{template}', [\App\Http\Controllers\ProjectTemplateController::class, 'destroy'])->name('destroy');
+            Route::post('/{template}/duplicate', [\App\Http\Controllers\ProjectTemplateController::class, 'duplicate'])->name('duplicate');
+        });
+
+        // Tags (must be before /{project} catch-all)
+        Route::prefix('tags')->name('tags.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\TagController::class, 'index'])->name('index');
+            Route::get('/create', [\App\Http\Controllers\TagController::class, 'create'])->name('create');
+            Route::post('/', [\App\Http\Controllers\TagController::class, 'store'])->name('store');
+            Route::get('/search', [\App\Http\Controllers\TagController::class, 'search'])->name('search');
+            Route::get('/{tag}', [\App\Http\Controllers\TagController::class, 'show'])->name('show');
+            Route::get('/{tag}/edit', [\App\Http\Controllers\TagController::class, 'edit'])->name('edit');
+            Route::put('/{tag}', [\App\Http\Controllers\TagController::class, 'update'])->name('update');
+            Route::delete('/{tag}', [\App\Http\Controllers\TagController::class, 'destroy'])->name('destroy');
+        });
+
         // Projects CRUD
         Route::get('/list', [\App\Http\Controllers\ProjectController::class, 'index'])->name('index');
         Route::get('/create', [\App\Http\Controllers\ProjectController::class, 'create'])->name('create');
@@ -246,14 +270,9 @@ Route::middleware([
         // Kanban Board
         Route::get('/{project}/kanban', [\App\Http\Controllers\ProjectController::class, 'kanban'])->name('kanban');
 
-
         // Generate project insights
-        Route::post('/{project}/ai-milestones', [ProjectController::class, 'generateAIMilestonesApi'])
+        Route::post('/{project}/ai-milestones', [\App\Http\Controllers\ProjectController::class, 'generateAIMilestonesApi'])
         ->name('projects.ai-milestones');
-
-        // Generate custom project insights
-        Route::post('/projects/ai-milestones/custom', [\App\Http\Controllers\ProjectAIController::class, 'generateCustomAIMilestonesApi'])
-        ->name('projects.ai-milestones.custom');
 
         // Milestones
         Route::prefix('{project}/milestones')->name('milestones.')->group(function () {
@@ -291,30 +310,6 @@ Route::middleware([
             Route::patch('/{timeLog}/approve', [\App\Http\Controllers\ProjectTimeLogController::class, 'approve'])->name('approve');
         });
 
-        // Templates
-        Route::prefix('templates')->name('templates.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\ProjectTemplateController::class, 'index'])->name('index');
-            Route::get('/create', [\App\Http\Controllers\ProjectTemplateController::class, 'create'])->name('create');
-            Route::post('/', [\App\Http\Controllers\ProjectTemplateController::class, 'store'])->name('store');
-            Route::get('/{template}', [\App\Http\Controllers\ProjectTemplateController::class, 'show'])->name('show');
-            Route::get('/{template}/edit', [\App\Http\Controllers\ProjectTemplateController::class, 'edit'])->name('edit');
-            Route::put('/{template}', [\App\Http\Controllers\ProjectTemplateController::class, 'update'])->name('update');
-            Route::delete('/{template}', [\App\Http\Controllers\ProjectTemplateController::class, 'destroy'])->name('destroy');
-            Route::post('/{template}/duplicate', [\App\Http\Controllers\ProjectTemplateController::class, 'duplicate'])->name('duplicate');
-        });
-
-        // Tags
-        Route::prefix('tags')->name('tags.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\TagController::class, 'index'])->name('index');
-            Route::get('/create', [\App\Http\Controllers\TagController::class, 'create'])->name('create');
-            Route::post('/', [\App\Http\Controllers\TagController::class, 'store'])->name('store');
-            Route::get('/search', [\App\Http\Controllers\TagController::class, 'search'])->name('search');
-            Route::get('/{tag}', [\App\Http\Controllers\TagController::class, 'show'])->name('show');
-            Route::get('/{tag}/edit', [\App\Http\Controllers\TagController::class, 'edit'])->name('edit');
-            Route::put('/{tag}', [\App\Http\Controllers\TagController::class, 'update'])->name('update');
-            Route::delete('/{tag}', [\App\Http\Controllers\TagController::class, 'destroy'])->name('destroy');
-        });
-
         // Tasks
         Route::prefix('{project}/tasks')->name('tasks.')->group(function () {
             Route::get('/', [\App\Http\Controllers\ProjectTaskController::class, 'index'])->name('index');
@@ -327,7 +322,6 @@ Route::middleware([
             Route::patch('/{task}/status', [\App\Http\Controllers\ProjectTaskController::class, 'updateStatus'])->name('update-status');
         });
 
-      
         // LiveChat Integration
         Route::get('/{project}/livechat', [\App\Http\Controllers\CRM\LiveChatController::class, 'projectChat'])->name('livechat');
     });
@@ -1128,101 +1122,3 @@ Route::prefix('/whatsapp')->middleware(['auth'])->group(function () {
     Route::post('/chats/{chat}/typing', [\App\Http\Controllers\SocialMedia\WhatsAppChatController::class, 'typing']);
     Route::post('/chats/{chat}/upload', [\App\Http\Controllers\SocialMedia\WhatsAppChatController::class, 'uploadMedia']);
 });
-
-Route::prefix('projects')->name('projects.')->middleware('permission:view projects')->group(function () {
-        // Dashboard
-        Route::get('/', [\App\Http\Controllers\ProjectController::class, 'dashboard'])->name('dashboard');
-        Route::get('/analytics', [\App\Http\Controllers\ProjectController::class, 'analytics'])->name('analytics');
-
-        // My Tasks (global route for current user's tasks)
-        Route::get('/my-tasks', [\App\Http\Controllers\ProjectTaskController::class, 'myTasks'])->name('my-tasks');
-
-        // Projects CRUD
-        Route::get('/list', [\App\Http\Controllers\ProjectController::class, 'index'])->name('index');
-        Route::get('/create', [\App\Http\Controllers\ProjectController::class, 'create'])->name('create');
-        Route::post('/', [\App\Http\Controllers\ProjectController::class, 'store'])->name('store');
-        Route::get('/{project}', [\App\Http\Controllers\ProjectController::class, 'show'])->name('show');
-        Route::get('/{project}/edit', [\App\Http\Controllers\ProjectController::class, 'edit'])->name('edit');
-        Route::put('/{project}', [\App\Http\Controllers\ProjectController::class, 'update'])->name('update');
-        Route::delete('/{project}', [\App\Http\Controllers\ProjectController::class, 'destroy'])->name('destroy');
-
-        // Kanban Board
-        Route::get('/{project}/kanban', [\App\Http\Controllers\ProjectController::class, 'kanban'])->name('kanban');
-
-        
-        // Milestones
-        Route::prefix('{project}/milestones')->name('milestones.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\ProjectMilestoneController::class, 'index'])->name('index');
-            Route::get('/create', [\App\Http\Controllers\ProjectMilestoneController::class, 'create'])->name('create');
-            Route::post('/', [\App\Http\Controllers\ProjectMilestoneController::class, 'store'])->name('store');
-            Route::get('/{milestone}', [\App\Http\Controllers\ProjectMilestoneController::class, 'show'])->name('show');
-            Route::get('/{milestone}/edit', [\App\Http\Controllers\ProjectMilestoneController::class, 'edit'])->name('edit');
-            Route::put('/{milestone}', [\App\Http\Controllers\ProjectMilestoneController::class, 'update'])->name('update');
-            Route::delete('/{milestone}', [\App\Http\Controllers\ProjectMilestoneController::class, 'destroy'])->name('destroy');
-            Route::patch('/{milestone}/status', [\App\Http\Controllers\ProjectMilestoneController::class, 'updateStatus'])->name('update-status');
-        });
-
-        // Files
-        Route::prefix('{project}/files')->name('files.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\ProjectFileController::class, 'index'])->name('index');
-            Route::get('/create', [\App\Http\Controllers\ProjectFileController::class, 'create'])->name('create');
-            Route::post('/', [\App\Http\Controllers\ProjectFileController::class, 'store'])->name('store');
-            Route::get('/{file}', [\App\Http\Controllers\ProjectFileController::class, 'show'])->name('show');
-            Route::get('/{file}/download', [\App\Http\Controllers\ProjectFileController::class, 'download'])->name('download');
-            Route::delete('/{file}', [\App\Http\Controllers\ProjectFileController::class, 'destroy'])->name('destroy');
-            Route::post('/{file}/new-version', [\App\Http\Controllers\ProjectFileController::class, 'newVersion'])->name('new-version');
-        });
-
-        // Time Logs
-        Route::prefix('{project}/time-logs')->name('time-logs.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\ProjectTimeLogController::class, 'index'])->name('index');
-            Route::get('/create', [\App\Http\Controllers\ProjectTimeLogController::class, 'create'])->name('create');
-            Route::post('/', [\App\Http\Controllers\ProjectTimeLogController::class, 'store'])->name('store');
-            Route::get('/{timeLog}', [\App\Http\Controllers\ProjectTimeLogController::class, 'show'])->name('show');
-            Route::get('/{timeLog}/edit', [\App\Http\Controllers\ProjectTimeLogController::class, 'edit'])->name('edit');
-            Route::put('/{timeLog}', [\App\Http\Controllers\ProjectTimeLogController::class, 'update'])->name('update');
-            Route::delete('/{timeLog}', [\App\Http\Controllers\ProjectTimeLogController::class, 'destroy'])->name('destroy');
-            Route::patch('/{timeLog}/submit', [\App\Http\Controllers\ProjectTimeLogController::class, 'submit'])->name('submit');
-            Route::patch('/{timeLog}/approve', [\App\Http\Controllers\ProjectTimeLogController::class, 'approve'])->name('approve');
-        });
-
-        // Templates
-        Route::prefix('templates')->name('templates.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\ProjectTemplateController::class, 'index'])->name('index');
-            Route::get('/create', [\App\Http\Controllers\ProjectTemplateController::class, 'create'])->name('create');
-            Route::post('/', [\App\Http\Controllers\ProjectTemplateController::class, 'store'])->name('store');
-            Route::get('/{template}', [\App\Http\Controllers\ProjectTemplateController::class, 'show'])->name('show');
-            Route::get('/{template}/edit', [\App\Http\Controllers\ProjectTemplateController::class, 'edit'])->name('edit');
-            Route::put('/{template}', [\App\Http\Controllers\ProjectTemplateController::class, 'update'])->name('update');
-            Route::delete('/{template}', [\App\Http\Controllers\ProjectTemplateController::class, 'destroy'])->name('destroy');
-            Route::post('/{template}/duplicate', [\App\Http\Controllers\ProjectTemplateController::class, 'duplicate'])->name('duplicate');
-        });
-
-        // Tags
-        Route::prefix('tags')->name('tags.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\TagController::class, 'index'])->name('index');
-            Route::get('/create', [\App\Http\Controllers\TagController::class, 'create'])->name('create');
-            Route::post('/', [\App\Http\Controllers\TagController::class, 'store'])->name('store');
-            Route::get('/search', [\App\Http\Controllers\TagController::class, 'search'])->name('search');
-            Route::get('/{tag}', [\App\Http\Controllers\TagController::class, 'show'])->name('show');
-            Route::get('/{tag}/edit', [\App\Http\Controllers\TagController::class, 'edit'])->name('edit');
-            Route::put('/{tag}', [\App\Http\Controllers\TagController::class, 'update'])->name('update');
-            Route::delete('/{tag}', [\App\Http\Controllers\TagController::class, 'destroy'])->name('destroy');
-        });
-
-        // Tasks
-        Route::prefix('{project}/tasks')->name('tasks.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\ProjectTaskController::class, 'index'])->name('index');
-            Route::get('/create', [\App\Http\Controllers\ProjectTaskController::class, 'create'])->name('create');
-            Route::post('/', [\App\Http\Controllers\ProjectTaskController::class, 'store'])->name('store');
-            Route::get('/{task}', [\App\Http\Controllers\ProjectTaskController::class, 'show'])->name('show');
-            Route::get('/{task}/edit', [\App\Http\Controllers\ProjectTaskController::class, 'edit'])->name('edit');
-            Route::put('/{task}', [\App\Http\Controllers\ProjectTaskController::class, 'update'])->name('update');
-            Route::delete('/{task}', [\App\Http\Controllers\ProjectTaskController::class, 'destroy'])->name('destroy');
-            Route::patch('/{task}/status', [\App\Http\Controllers\ProjectTaskController::class, 'updateStatus'])->name('update-status');
-        });
-
-      
-        // LiveChat Integration
-        Route::get('/{project}/livechat', [\App\Http\Controllers\CRM\LiveChatController::class, 'projectChat'])->name('livechat');
-    });
