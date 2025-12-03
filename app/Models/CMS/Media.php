@@ -46,6 +46,11 @@ class Media extends Model
         'last_used_at' => 'datetime',
     ];
 
+    protected $appends = [
+        'url',
+        'human_file_size',
+    ];
+
     /**
      * Get the user who uploaded this media.
      */
@@ -138,9 +143,15 @@ class Media extends Model
     public function getHumanFileSizeAttribute(): string
     {
         $bytes = $this->file_size;
+        
+        if (!is_numeric($bytes) || $bytes === null) {
+            return '0 B';
+        }
+        
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $i = 0;
 
-        for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
+        for (; $bytes > 1024 && $i < count($units) - 1; $i++) {
             $bytes /= 1024;
         }
 

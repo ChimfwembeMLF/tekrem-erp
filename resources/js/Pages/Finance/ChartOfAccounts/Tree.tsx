@@ -350,7 +350,7 @@ export default function Tree({ accountTree, categories, types, filters }: Props)
                     <SelectValue placeholder={t('All Categories')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">{t('All Categories')}</SelectItem>
+                    <SelectItem value="none">{t('All Categories')}</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category} value={category}>
                         {t(category.charAt(0).toUpperCase() + category.slice(1))}
@@ -367,7 +367,7 @@ export default function Tree({ accountTree, categories, types, filters }: Props)
                     <SelectValue placeholder={t('All Types')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">{t('All Types')}</SelectItem>
+                    <SelectItem value="none">{t('All Types')}</SelectItem>
                     {types.map((type) => (
                       <SelectItem key={type} value={type}>
                         {t(type.charAt(0).toUpperCase() + type.slice(1))}

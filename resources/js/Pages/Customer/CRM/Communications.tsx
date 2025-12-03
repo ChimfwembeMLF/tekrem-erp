@@ -195,7 +195,7 @@ export default function Communications({ communications, client, filters }: Prop
                                         <SelectValue placeholder="All Types" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="">All Types</SelectItem>
+                                        <SelectItem value="none">All Types</SelectItem>
                                         <SelectItem value="email">Email</SelectItem>
                                         <SelectItem value="phone">Phone</SelectItem>
                                         <SelectItem value="meeting">Meeting</SelectItem>

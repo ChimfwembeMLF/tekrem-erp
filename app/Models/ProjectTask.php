@@ -21,6 +21,7 @@ class ProjectTask extends Model
     protected $fillable = [
         'project_id',
         'milestone_id',
+        'card_id',
         'title',
         'description',
         'type',
@@ -71,6 +72,14 @@ class ProjectTask extends Model
     public function milestone(): BelongsTo
     {
         return $this->belongsTo(ProjectMilestone::class, 'milestone_id');
+    }
+
+    /**
+     * Get the linked board card (for hybrid projects).
+     */
+    public function card(): BelongsTo
+    {
+        return $this->belongsTo(BoardCard::class, 'card_id');
     }
 
     /**

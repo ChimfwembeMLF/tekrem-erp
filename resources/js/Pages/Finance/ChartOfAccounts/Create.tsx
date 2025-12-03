@@ -255,7 +255,7 @@ export default function Create({
                         <SelectValue placeholder={t('Select parent account (optional)')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">{t('No Parent (Root Account)')}</SelectItem>
+                        <SelectItem value="none">{t('No Parent (Root Account)')}</SelectItem>
                         {parentAccounts.map((account) => (
                           <SelectItem key={account.id} value={account.id.toString()}>
                             <span style={{ marginLeft: `${account.level * 12}px` }}>

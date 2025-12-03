@@ -456,14 +456,14 @@ export default function PageEditor({
                   <div>
                     <Label htmlFor="parent_id">{t('cms.parent_page', 'Parent Page')}</Label>
                     <Select 
-                      value={formData.parent_id?.toString() || ''} 
-                      onValueChange={(value) => handleInputChange('parent_id', value ? parseInt(value) : undefined)}
+                      value={formData.parent_id?.toString() || 'none'} 
+                      onValueChange={(value) => handleInputChange('parent_id', value === 'none' ? undefined : parseInt(value))}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder={t('cms.select_parent', 'Select parent page')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="empty">{t('cms.no_parent', 'No parent')}</SelectItem>
+                        <SelectItem value="none">{t('cms.no_parent', 'No parent')}</SelectItem>
                         {pages.filter(p => p.id !== page?.id).map((page) => (
                           <SelectItem key={page.id} value={page.id.toString()}>
                             {page.title}

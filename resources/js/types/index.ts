@@ -233,6 +233,9 @@ export interface Project {
   status: 'draft' | 'active' | 'on-hold' | 'completed' | 'cancelled';
   priority: 'low' | 'medium' | 'high' | 'critical';
   category: string | null;
+  methodology: 'waterfall' | 'agile' | 'hybrid';
+  enable_boards: boolean;
+  enable_milestones: boolean;
   start_date: string | null;
   end_date: string | null;
   deadline: string | null;
@@ -257,6 +260,9 @@ export interface Project {
   conversations?: Conversation[];
   expenses?: any[]; // Finance module integration
   invoices?: any[]; // Finance module integration
+  boards?: any[]; // Agile boards
+  releases?: any[]; // Release management
+  backlogs?: any[]; // Product/Sprint backlogs
   // Computed properties
   status_color?: string;
   priority_color?: string;

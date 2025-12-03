@@ -398,11 +398,11 @@ export default function RichTextEditor({
         data-placeholder={placeholder}
         style={{
           '--placeholder-color': '#9ca3af'
-        }}
+        } as React.CSSProperties}
         suppressContentEditableWarning={true}
       />
 
-      <style jsx>{`
+      <style>{`
         [contenteditable]:empty:before {
           content: attr(data-placeholder);
           color: var(--placeholder-color);

@@ -4,6 +4,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import PageEditor from '@/Components/CMS/PageEditor';
 import useTranslate from '@/Hooks/useTranslate';
 import { toast } from 'sonner';
+import useRoute from '@/Hooks/useRoute';
 
 interface Template {
   id: number;
@@ -21,6 +22,7 @@ interface Props {
 
 export default function CreatePage({ templates, pages, languages }: Props) {
   const { t } = useTranslate();
+  const route = useRoute();
 
   const handleSave = (data: any) => {
     router.post(route('cms.pages.store'), data, {
@@ -45,9 +47,7 @@ export default function CreatePage({ templates, pages, languages }: Props) {
   };
 
   return (
-    <AppLayout>
-      <Head title={t('cms.create_page', 'Create Page')} />
-
+    <AppLayout title={t('cms.create_page', 'Create Page')}>
       <PageEditor
         templates={templates}
         pages={pages}

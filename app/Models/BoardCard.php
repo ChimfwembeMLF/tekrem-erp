@@ -14,6 +14,7 @@ class BoardCard extends Model
         'column_id',
         'sprint_id',
         'epic_id',
+        'task_id',
         'type',
         'title',
         'description',
@@ -52,6 +53,18 @@ class BoardCard extends Model
     public function epic()
     {
         return $this->belongsTo(Epic::class);
+    }
+
+    /**
+     * Get the project task associated with this board card.
+     *
+     * Defines a belongsTo relationship with ProjectTask via the 'task_id' foreign key.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function task()
+    {
+        return $this->belongsTo(ProjectTask::class, 'task_id');
     }
 
     public function assignee()

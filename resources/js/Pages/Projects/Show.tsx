@@ -1,5 +1,5 @@
 import React from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
@@ -18,27 +18,28 @@ import {
   Plus,
   Eye,
   Download,
-  Kanban
+  Kanban,
+  Layers,
+  Zap,
+  GitBranch
 } from 'lucide-react';
 import useRoute from '@/Hooks/useRoute';
 import usePermissions from '@/Hooks/usePermissions';
 import AIInsights from '@/Components/Projects/AIInsights';
 import { Project, ProjectMilestone, ProjectFile, ProjectTimeLog } from '@/types';
+import BoardView from '@/Pages/Agile/Board';
 
 interface ProjectShowProps {
   auth: {
     user: any;
   };
-  project: Project & {
-    milestones: ProjectMilestone[];
-    files: ProjectFile[];
-    time_logs: ProjectTimeLog[];
-    total_hours: number;
-    total_billable_amount: number;
-  };
+  project: Project;
+  board?: any;
+  columns?: any[];
+  cards?: any[];
 }
 
-export default function ProjectShow({ auth, project }: ProjectShowProps) {
+export default function ProjectShow({ auth, project, board, columns = [], cards = [] }: ProjectShowProps) {
   const route = useRoute();
   const { hasPermission } = usePermissions();
 
@@ -86,6 +87,22 @@ export default function ProjectShow({ auth, project }: ProjectShowProps) {
   const totalMilestones = project.milestones?.length || 0;
   const milestoneProgress = totalMilestones > 0 ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
 
+  // Determine methodology display
+  const methodology = project.methodology || 'hybrid';
+  const showMilestones = project.enable_milestones ?? true;
+  const showBoards = project.enable_boards ?? true;
+
+  const getMethodologyBadge = () => {
+    const badges = {
+      waterfall: { icon: Layers, label: 'Waterfall', color: 'bg-blue-100 text-blue-800' },
+      agile: { icon: Zap, label: 'Agile', color: 'bg-green-100 text-green-800' },
+      hybrid: { icon: GitBranch, label: 'Hybrid', color: 'bg-purple-100 text-purple-800' },
+    };
+    return badges[methodology as keyof typeof badges] || badges.hybrid;
+  };
+
+  const methodologyBadge = getMethodologyBadge();
+
   return (
     <AppLayout
       title={project.name}
@@ -96,10 +113,10 @@ export default function ProjectShow({ auth, project }: ProjectShowProps) {
               {project.name}
             </h2>
             <div className="flex items-center gap-2 mt-2">
-              <Badge variant="outline" className={getStatusBadgeColor(project?.status)}>
+              <Badge variant="outline" className={getStatusBadgeColor(project.status || 'draft')}>
                 {project.status}
               </Badge>
-              <Badge variant="outline" className={getPriorityBadgeColor(project?.priority)}>
+              <Badge variant="outline" className={getPriorityBadgeColor(project.priority || 'medium')}>
                 {project.priority}
               </Badge>
               {project.category && (
@@ -107,6 +124,10 @@ export default function ProjectShow({ auth, project }: ProjectShowProps) {
                   {project.category}
                 </Badge>
               )}
+              <Badge variant="outline" className={methodologyBadge.color}>
+                <methodologyBadge.icon className="h-3 w-3 mr-1" />
+                {methodologyBadge.label}
+              </Badge>
             </div>
           </div>
           <div className="flex gap-2">
@@ -122,12 +143,6 @@ export default function ProjectShow({ auth, project }: ProjectShowProps) {
               <Button variant="outline">
                 <MessageSquare className="h-4 w-4 mr-2" />
                 Project Chat
-              </Button>
-            </Link>
-            <Link href={route('projects.kanban', project.id)}>
-              <Button variant="outline">
-                <Kanban className="h-4 w-4 mr-2" />
-                Kanban
               </Button>
             </Link>
           </div>
@@ -224,7 +239,7 @@ export default function ProjectShow({ auth, project }: ProjectShowProps) {
                   <div className="flex items-center text-sm">
                     <DollarSign className="h-4 w-4 mr-2 text-gray-500" />
                     <span className="text-gray-600">Spent:</span>
-                    <span className="ml-2 font-medium">{formatCurrency(project.spent_amount)}</span>
+                    <span className="ml-2 font-medium">{formatCurrency(project.spent_amount || 0)}</span>
                   </div>
 
                   {project.start_date && (
@@ -283,15 +298,42 @@ export default function ProjectShow({ auth, project }: ProjectShowProps) {
         <AIInsights project={project} milestones={project.milestones} />
 
         {/* Tabs for detailed information */}
-        <Tabs defaultValue="milestones" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="milestones">Milestones</TabsTrigger>
-            <TabsTrigger value="files">Files</TabsTrigger>
-            <TabsTrigger value="time-logs">Time Logs</TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
+        <Tabs defaultValue={showMilestones ? "milestones" : showBoards ? "board" : "files"} className="w-full">
+          <TabsList className={`grid w-full ${showMilestones && showBoards ? 'grid-cols-6' : showMilestones || showBoards ? 'grid-cols-5' : 'grid-cols-4'}`}>
+            {showMilestones && (
+              <TabsTrigger value="milestones">
+                <Target className="h-4 w-4 mr-2" />
+                Milestones
+              </TabsTrigger>
+            )}
+            {showBoards && (
+              <TabsTrigger value="board">
+                <Kanban className="h-4 w-4 mr-2" />
+                Board
+              </TabsTrigger>
+            )}
+            {showBoards && (
+              <TabsTrigger value="backlog">
+                <Layers className="h-4 w-4 mr-2" />
+                Backlog
+              </TabsTrigger>
+            )}
+            <TabsTrigger value="files">
+              <FileText className="h-4 w-4 mr-2" />
+              Files
+            </TabsTrigger>
+            <TabsTrigger value="time-logs">
+              <Clock className="h-4 w-4 mr-2" />
+              Time Logs
+            </TabsTrigger>
+            <TabsTrigger value="activity">
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Activity
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="milestones" className="space-y-4">
+          {showMilestones && (
+            <TabsContent value="milestones" className="space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-medium">Project Milestones</h3>
               {hasPermission('projects.milestones.create') && (
@@ -316,7 +358,7 @@ export default function ProjectShow({ auth, project }: ProjectShowProps) {
                             {milestone.description || 'No description'}
                           </p>
                           <div className="flex items-center gap-4 mt-2">
-                            <Badge variant="outline" className={getStatusBadgeColor(milestone.status)}>
+                            <Badge variant="outline" className={getStatusBadgeColor(milestone.status || 'pending')}>
                               {milestone.status}
                             </Badge>
                             {milestone.due_date && (
@@ -367,6 +409,97 @@ export default function ProjectShow({ auth, project }: ProjectShowProps) {
               )}
             </div>
           </TabsContent>
+          )}
+
+          {showBoards && (
+            <>
+              <TabsContent value="board" className="space-y-4">
+                {board && columns.length > 0 ? (
+                  <BoardView 
+                    auth={auth}
+                    project={project}
+                    board={board}
+                    columns={columns}
+                    cards={cards}
+                    embedded={true}
+                  />
+                ) : (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-medium">Board</h3>
+                      {hasPermission('projects.edit') && (
+                        <Link href={route('agile.boards.create', project.id)}>
+                          <Button>
+                            <Plus className="h-4 w-4 mr-2" />
+                            Create Board
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
+
+                    <Card>
+                      <CardContent className="p-8 text-center">
+                        <Kanban className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-500 mb-4">No board created yet</p>
+                        <p className="text-sm text-gray-400 mb-4">
+                          Create a board to organize work items (stories, tasks, bugs) into columns.
+                        </p>
+                        {hasPermission('projects.edit') && (
+                          <Link href={route('agile.boards.create', project.id)}>
+                            <Button>
+                              <Plus className="h-4 w-4 mr-2" />
+                              Create Board
+                            </Button>
+                          </Link>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {methodology === 'hybrid' && project.milestones && project.milestones.length > 0 && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-sm">Hybrid Mode Active</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-sm text-gray-600">
+                            This project uses both Waterfall and Agile methodologies. 
+                            Tasks and cards can be linked for synchronized tracking.
+                          </p>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </>
+                )}
+              </TabsContent>
+
+              <TabsContent value="backlog" className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-medium">Product Backlog</h3>
+                  {hasPermission('projects.edit') && (
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Backlog Item
+                    </Button>
+                  )}
+                </div>
+
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <Layers className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500 mb-4">No backlog items yet</p>
+                    <p className="text-sm text-gray-400 mb-4">
+                      Manage your product backlog with prioritized user stories and tasks.
+                      Assign story points and move items into sprints.
+                    </p>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create First Backlog Item
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </>
+          )}
 
           <TabsContent value="files" className="space-y-4">
             <div className="flex justify-between items-center">
@@ -460,7 +593,7 @@ export default function ProjectShow({ auth, project }: ProjectShowProps) {
                           </p>
                           <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
                             <span>{log.hours}h logged</span>
-                            <span>{formatDate(log.log_date)}</span>
+                            <span>{formatDate(log.log_date || null)}</span>
                             {log.is_billable && log.hourly_rate && (
                               <span>Billable: {formatCurrency(log.total_amount)}</span>
                             )}

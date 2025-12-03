@@ -269,7 +269,7 @@ export default function Create({ models, contextTypes }: Props) {
                                                     <SelectValue placeholder={t('Select a specific record')} />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="">{t('No specific record (module-wide context)')}</SelectItem>
+                                                    <SelectItem value="none">{t('No specific record (module-wide context)')}</SelectItem>
                                                     {contextOptions.map((option) => (
                                                         <SelectItem key={option.value} value={option.value.toString()}>
                                                             {option.label}

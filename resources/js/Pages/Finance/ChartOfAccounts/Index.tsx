@@ -232,7 +232,7 @@ export default function Index({ accounts, categories, types, filters }: Props) {
                     <SelectValue placeholder={t('All Categories')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">{t('All Categories')}</SelectItem>
+                    <SelectItem value="none">{t('All Categories')}</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category} value={category}>
                         {t(category.charAt(0).toUpperCase() + category.slice(1))}
@@ -249,7 +249,7 @@ export default function Index({ accounts, categories, types, filters }: Props) {
                     <SelectValue placeholder={t('All Types')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">{t('All Types')}</SelectItem>
+                    <SelectItem value="none">{t('All Types')}</SelectItem>
                     {types.map((type) => (
                       <SelectItem key={type} value={type}>
                         {t(type.charAt(0).toUpperCase() + type.slice(1))}
@@ -266,7 +266,7 @@ export default function Index({ accounts, categories, types, filters }: Props) {
                     <SelectValue placeholder={t('All Levels')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">{t('All Levels')}</SelectItem>
+                    <SelectItem value="none">{t('All Levels')}</SelectItem>
                     <SelectItem value="0">{t('Level 0 (Root)')}</SelectItem>
                     <SelectItem value="1">{t('Level 1')}</SelectItem>
                     <SelectItem value="2">{t('Level 2')}</SelectItem>

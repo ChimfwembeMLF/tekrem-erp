@@ -332,6 +332,90 @@ Route::middleware([
         Route::get('/{project}/livechat', [\App\Http\Controllers\CRM\LiveChatController::class, 'projectChat'])->name('livechat');
     });
 
+    // Agile/PM routes
+    Route::prefix('agile')->name('agile.')->middleware('permission:view projects')->group(function () {
+        // Boards
+        Route::prefix('boards')->name('boards.')->group(function () {
+            Route::get('/{project}/create', [\App\Http\Controllers\Agile\BoardController::class, 'create'])->name('create');
+            Route::post('/{project}', [\App\Http\Controllers\Agile\BoardController::class, 'store'])->name('store');
+        });
+
+        Route::prefix('board')->name('board.')->group(function () {
+            Route::get('/{board}', [\App\Http\Controllers\Agile\BoardController::class, 'show'])->name('show');
+            Route::get('/{board}/edit', [\App\Http\Controllers\Agile\BoardController::class, 'edit'])->name('edit');
+            Route::put('/{board}', [\App\Http\Controllers\Agile\BoardController::class, 'update'])->name('update');
+            Route::delete('/{board}', [\App\Http\Controllers\Agile\BoardController::class, 'destroy'])->name('destroy');
+            Route::get('/{board}/settings', [\App\Http\Controllers\Agile\BoardController::class, 'settings'])->name('settings');
+        });
+
+        // Board Columns
+        Route::prefix('columns')->name('columns.')->group(function () {
+            Route::post('/{board}', [\App\Http\Controllers\Agile\BoardColumnController::class, 'store'])->name('create');
+            Route::put('/{column}', [\App\Http\Controllers\Agile\BoardColumnController::class, 'update'])->name('update');
+            Route::delete('/{column}', [\App\Http\Controllers\Agile\BoardColumnController::class, 'destroy'])->name('destroy');
+        });
+
+        // Board Cards
+        Route::prefix('cards')->name('cards.')->group(function () {
+            Route::get('/create', [\App\Http\Controllers\Agile\BoardCardController::class, 'create'])->name('create');
+            Route::post('/{board}', [\App\Http\Controllers\Agile\BoardCardController::class, 'store'])->name('store');
+            Route::get('/{card}', [\App\Http\Controllers\Agile\BoardCardController::class, 'show'])->name('show');
+            Route::get('/{card}/edit', [\App\Http\Controllers\Agile\BoardCardController::class, 'edit'])->name('edit');
+            Route::put('/{card}', [\App\Http\Controllers\Agile\BoardCardController::class, 'update'])->name('update');
+            Route::put('/{card}/move', [\App\Http\Controllers\Agile\BoardCardController::class, 'move'])->name('move');
+            Route::delete('/{card}', [\App\Http\Controllers\Agile\BoardCardController::class, 'destroy'])->name('destroy');
+        });
+
+        // Sprints
+        Route::prefix('sprints')->name('sprints.')->group(function () {
+            Route::get('/{project}', [\App\Http\Controllers\Agile\SprintController::class, 'index'])->name('index');
+            Route::post('/{project}', [\App\Http\Controllers\Agile\SprintController::class, 'store'])->name('create');
+            Route::get('/{sprint}/show', [\App\Http\Controllers\Agile\SprintController::class, 'show'])->name('show');
+            Route::put('/{sprint}', [\App\Http\Controllers\Agile\SprintController::class, 'update'])->name('update');
+            Route::post('/{sprint}/start', [\App\Http\Controllers\Agile\SprintController::class, 'start'])->name('start');
+            Route::post('/{sprint}/complete', [\App\Http\Controllers\Agile\SprintController::class, 'complete'])->name('complete');
+            Route::delete('/{sprint}', [\App\Http\Controllers\Agile\SprintController::class, 'destroy'])->name('destroy');
+        });
+
+        // Backlog
+        Route::prefix('backlog')->name('backlog.')->group(function () {
+            Route::get('/{project}', [\App\Http\Controllers\Agile\BacklogController::class, 'index'])->name('index');
+            Route::post('/{project}', [\App\Http\Controllers\Agile\BacklogController::class, 'store'])->name('store');
+            Route::put('/{backlog}', [\App\Http\Controllers\Agile\BacklogController::class, 'update'])->name('update');
+            Route::put('/{backlog}/move', [\App\Http\Controllers\Agile\BacklogController::class, 'move'])->name('move');
+            Route::delete('/{backlog}', [\App\Http\Controllers\Agile\BacklogController::class, 'destroy'])->name('destroy');
+        });
+
+        // Releases
+        Route::prefix('releases')->name('releases.')->group(function () {
+            Route::get('/{project}', [\App\Http\Controllers\Agile\ReleaseController::class, 'index'])->name('index');
+            Route::get('/{project}/create', [\App\Http\Controllers\Agile\ReleaseController::class, 'create'])->name('create');
+            Route::post('/{project}', [\App\Http\Controllers\Agile\ReleaseController::class, 'store'])->name('store');
+            Route::get('/{release}/show', [\App\Http\Controllers\Agile\ReleaseController::class, 'show'])->name('show');
+            Route::get('/{release}/edit', [\App\Http\Controllers\Agile\ReleaseController::class, 'edit'])->name('edit');
+            Route::put('/{release}', [\App\Http\Controllers\Agile\ReleaseController::class, 'update'])->name('update');
+            Route::post('/{release}/publish', [\App\Http\Controllers\Agile\ReleaseController::class, 'publish'])->name('publish');
+            Route::delete('/{release}', [\App\Http\Controllers\Agile\ReleaseController::class, 'destroy'])->name('destroy');
+        });
+
+        // Epics
+        Route::prefix('epics')->name('epics.')->group(function () {
+            Route::get('/{project}', [\App\Http\Controllers\Agile\EpicController::class, 'index'])->name('index');
+            Route::post('/{project}', [\App\Http\Controllers\Agile\EpicController::class, 'store'])->name('store');
+            Route::get('/{epic}/show', [\App\Http\Controllers\Agile\EpicController::class, 'show'])->name('show');
+            Route::put('/{epic}', [\App\Http\Controllers\Agile\EpicController::class, 'update'])->name('update');
+            Route::delete('/{epic}', [\App\Http\Controllers\Agile\EpicController::class, 'destroy'])->name('destroy');
+        });
+
+        // Hybrid Mode Sync
+        Route::prefix('hybrid')->name('hybrid.')->group(function () {
+            Route::post('/link/task-to-card/{task}', [\App\Http\Controllers\Agile\HybridSyncController::class, 'linkTaskToCard'])->name('link.task-to-card');
+            Route::post('/link/card-to-task/{card}', [\App\Http\Controllers\Agile\HybridSyncController::class, 'linkCardToTask'])->name('link.card-to-task');
+            Route::delete('/unlink/task/{task}', [\App\Http\Controllers\Agile\HybridSyncController::class, 'unlinkTask'])->name('unlink.task');
+            Route::delete('/unlink/card/{card}', [\App\Http\Controllers\Agile\HybridSyncController::class, 'unlinkCard'])->name('unlink.card');
+        });
+    });
+
     // Finance routes
     Route::prefix('finance')->name('finance.')->middleware('permission:view finance')->group(function () {
         Route::get('/', [\App\Http\Controllers\Finance\DashboardController::class, 'index'])->name('dashboard');

@@ -25,4 +25,13 @@ class Epic extends Model
     {
         return $this->hasMany(BoardCard::class, 'epic_id');
     }
+
+    /**
+     * Get the releases associated with this epic.
+     */
+    public function releases()
+    {
+        return $this->belongsToMany(Release::class, 'epic_release')
+            ->withTimestamps();
+    }
 }

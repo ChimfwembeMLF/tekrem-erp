@@ -35,7 +35,12 @@ interface Media {
   file_path: string;
   url: string;
   mime_type: string;
-  size: number;
+  file_size: number;
+  human_file_size: string;
+  dimensions?: {
+    width: number;
+    height: number;
+  };
   width?: number;
   height?: number;
   alt_text?: string;
@@ -71,6 +76,7 @@ export default function MediaShow({ media, variants = [] }: Props) {
   const route = useRoute();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
+    name: media.name || '',
     alt_text: media.alt_text || '',
     caption: media.caption || '',
     description: media.description || ''
@@ -87,13 +93,17 @@ export default function MediaShow({ media, variants = [] }: Props) {
             toast.success(t('cms.media_updated', 'Media updated successfully'));
             setIsEditing(false);
           },
-          onError: () => {
-            toast.error(t('cms.media_update_failed', 'Failed to update media'));
+          onError: (errors) => {
+            const errorMessage = typeof errors === 'object' && errors !== null
+              ? Object.values(errors).flat().join(', ')
+              : t('cms.media_update_failed', 'Failed to update media');
+            toast.error(errorMessage);
           }
         });
         break;
       case 'cancel':
         setFormData({
+          name: media.name || '',
           alt_text: media.alt_text || '',
           caption: media.caption || '',
           description: media.description || ''
@@ -256,13 +266,20 @@ export default function MediaShow({ media, variants = [] }: Props) {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <Label className="text-sm font-medium text-muted-foreground">
-                      {t('cms.file_name', 'File Name')}
-                    </Label>
-                    <p className="font-mono text-sm bg-muted px-2 py-1 rounded">
-                      {media.name}
-                    </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="name">{t('cms.file_name', 'File Name')}</Label>
+                    {isEditing ? (
+                      <Input
+                        id="name"
+                        value={formData.name}
+                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder={t('cms.file_name_placeholder', 'Enter file name')}
+                      />
+                    ) : (
+                      <p className="font-mono text-sm bg-muted px-2 py-1 rounded">
+                        {media.name}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <Label className="text-sm font-medium text-muted-foreground">
@@ -415,7 +432,7 @@ export default function MediaShow({ media, variants = [] }: Props) {
                 <div className="flex items-center gap-2 text-sm">
                   <HardDrive className="h-4 w-4 text-muted-foreground" />
                   <span className="text-muted-foreground">{t('cms.file_size', 'File Size')}:</span>
-                  <span>{formatFileSize(media.size)}</span>
+                  <span>{media.human_file_size}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <FileText className="h-4 w-4 text-muted-foreground" />
@@ -432,7 +449,7 @@ export default function MediaShow({ media, variants = [] }: Props) {
                 <div className="flex items-center gap-2 text-sm">
                   <User className="h-4 w-4 text-muted-foreground" />
                   <span className="text-muted-foreground">{t('cms.uploaded_by', 'Uploaded by')}:</span>
-                  <span>{media.created_by.name}</span>
+                  {/* <span>{media.created_by.name}</span> */}
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="h-4 w-4 text-muted-foreground" />

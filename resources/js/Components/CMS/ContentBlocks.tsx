@@ -56,6 +56,7 @@ export default function ContentBlocks({ blocks, onChange, readonly = false }: Pr
   const { t } = useTranslate();
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [showMediaPicker, setShowMediaPicker] = useState(false);
+  const [currentBlockId, setCurrentBlockId] = useState<string | null>(null);
   const [editingBlock, setEditingBlock] = useState<string | null>(null);
 
   const addBlock = (type: string) => {
@@ -176,7 +177,10 @@ export default function ContentBlocks({ blocks, onChange, readonly = false }: Pr
               />
               <Button
                 variant="outline"
-                onClick={() => setShowMediaPicker(true)}
+                onClick={() => {
+                  setCurrentBlockId(block.id);
+                  setShowMediaPicker(true);
+                }}
               >
                 <Image className="h-4 w-4 mr-2" />
                 {t('cms.browse', 'Browse')}
@@ -197,6 +201,57 @@ export default function ContentBlocks({ blocks, onChange, readonly = false }: Pr
                 <img
                   src={block.data.url}
                   alt={block.data.alt}
+                  className="max-w-full h-auto rounded border"
+                  style={{ maxHeight: '200px' }}
+                />
+              </div>
+            )}
+          </div>
+        );
+
+      case 'video':
+        return (
+          <div className="space-y-3">
+            <div className="flex gap-2">
+              <Input
+                value={block.data.url || ''}
+                onChange={(e) => updateBlock(block.id, { url: e.target.value })}
+                placeholder={t('cms.video_url', 'Video URL')}
+              />
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setCurrentBlockId(block.id);
+                  setShowMediaPicker(true);
+                }}
+              >
+                <Video className="h-4 w-4 mr-2" />
+                {t('cms.browse', 'Browse')}
+              </Button>
+            </div>
+            <Input
+              value={block.data.caption || ''}
+              onChange={(e) => updateBlock(block.id, { caption: e.target.value })}
+              placeholder={t('cms.caption', 'Caption')}
+            />
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id={`autoplay-${block.id}`}
+                checked={block.data.autoplay || false}
+                onChange={(e) => updateBlock(block.id, { autoplay: e.target.checked })}
+                className="rounded"
+              />
+              <label htmlFor={`autoplay-${block.id}`} className="text-sm">
+                {t('cms.autoplay', 'Autoplay')}
+              </label>
+            </div>
+            {block.data.url && (
+              <div className="mt-2">
+                <video
+                  src={block.data.url}
+                  controls
+                  autoPlay={block.data.autoplay}
                   className="max-w-full h-auto rounded border"
                   style={{ maxHeight: '200px' }}
                 />
@@ -349,6 +404,27 @@ export default function ContentBlocks({ blocks, onChange, readonly = false }: Pr
           </div>
         );
 
+      case 'video':
+        return block.data.url ? (
+          <div className="text-center">
+            <video
+              src={block.data.url}
+              controls
+              autoPlay={block.data.autoplay}
+              className="max-w-full h-auto rounded border"
+              style={{ maxHeight: '300px' }}
+            />
+            {block.data.caption && (
+              <p className="text-sm text-muted-foreground mt-2">{block.data.caption}</p>
+            )}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded">
+            <Video className="h-8 w-8 mx-auto mb-2" />
+            {t('cms.no_video_selected', 'No video selected')}
+          </div>
+        );
+
       case 'quote':
         return (
           <blockquote className="border-l-4 border-primary pl-4 italic">
@@ -406,6 +482,7 @@ export default function ContentBlocks({ blocks, onChange, readonly = false }: Pr
 
   return (
     <div className="space-y-4">
+      {console.log('Rendering blocks:', blocks.length, blocks)}
       {blocks.map((block, index) => (
         <Card
           key={block.id}
@@ -454,6 +531,7 @@ export default function ContentBlocks({ blocks, onChange, readonly = false }: Pr
           </CardHeader>
           
           <CardContent>
+            {console.log('Block:', block.id, 'EditingBlock:', editingBlock, 'Block data:', block.data)}
             {editingBlock === block.id ? (
               renderBlockEditor(block, index)
             ) : (
@@ -494,11 +572,24 @@ export default function ContentBlocks({ blocks, onChange, readonly = false }: Pr
       {/* Media Picker Modal */}
       {showMediaPicker && (
         <MediaPicker
+          isOpen={showMediaPicker}
           onSelect={(media) => {
-            // Handle media selection
+            console.log('Media selected:', media, 'for block:', currentBlockId);
+            if (currentBlockId) {
+              updateBlock(currentBlockId, { 
+                url: media.url,
+                alt: media.alt_text || media.name,
+                caption: media.caption || ''
+              });
+            }
             setShowMediaPicker(false);
+            setCurrentBlockId(null);
           }}
-          onClose={() => setShowMediaPicker(false)}
+          onClose={() => {
+            setShowMediaPicker(false);
+            setCurrentBlockId(null);
+          }}
+          type="all"
         />
       )}
     </div>

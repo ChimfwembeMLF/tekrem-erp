@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { FolderPlus, Folder } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
 import { toast } from 'sonner';
+import useRoute from '@/Hooks/useRoute';
 
 interface MediaFolder {
   id: number;
@@ -42,6 +43,8 @@ export default function FolderModal({
 }: Props) {
   const { t } = useTranslate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const route = useRoute();
+  
   const [formData, setFormData] = useState({
     name: '',
     description: '',

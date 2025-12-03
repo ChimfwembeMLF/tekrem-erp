@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { router } from '@inertiajs/react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/Components/ui/dialog';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -19,6 +20,7 @@ import {
   X
 } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
+import useRoute from '@/Hooks/useRoute';
 
 interface Media {
   id: number;
@@ -66,6 +68,7 @@ export default function MediaPicker({
   className = ''
 }: Props) {
   const { t } = useTranslate();
+  const route = useRoute();
   const [media, setMedia] = useState<Media[]>([]);
   const [folders, setFolders] = useState<MediaFolder[]>([]);
   const [selectedMedia, setSelectedMedia] = useState<Media[]>([]);
@@ -88,8 +91,12 @@ export default function MediaPicker({
       if (type !== 'all') params.append('type', type);
       if (currentFolder) params.append('folder_id', currentFolder.toString());
 
+      console.log('Fetching media with params:', { type, currentFolder, params: params.toString() });
+
       const response = await fetch(`/cms/media/picker?${params}`);
       const data = await response.json();
+      
+      console.log('Received media data:', data);
       
       setMedia(data.media || []);
       setFolders(data.folders || []);
@@ -127,33 +134,43 @@ export default function MediaPicker({
 
   const handleFileUpload = async (files: FileList) => {
     setUploading(true);
-    try {
-      const formData = new FormData();
-      Array.from(files).forEach(file => {
-        formData.append('files[]', file);
-      });
-      if (currentFolder) {
-        formData.append('folder_id', currentFolder.toString());
-      }
-
-      const response = await fetch('/cms/media/upload', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-        },
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        fetchMedia(); // Refresh media list
-      }
-    } catch (error) {
-      console.error('Failed to upload files:', error);
-    } finally {
-      setUploading(false);
+    
+    const formData = new FormData();
+    Array.from(files).forEach(file => {
+      formData.append('files[]', file);
+    });
+    
+    // Always send folder_id, even if null
+    if (currentFolder) {
+      formData.append('folder_id', currentFolder.toString());
+    } else {
+      formData.append('folder_id', '');
     }
+
+    router.post(route('cms.media.upload'), formData, {
+      preserveScroll: true,
+      onSuccess: (page) => {
+        setUploading(false);
+        fetchMedia(); // Refresh media list
+        
+        const props = page.props as any;
+        if (props.success && props.message) {
+          // Success notification handled by parent component or toast
+          console.log(props.message, props.media);
+        }
+      },
+      onError: (errors) => {
+        setUploading(false);
+        console.error('Upload failed:', errors);
+        const errorMessage = typeof errors === 'object' && errors.upload
+          ? errors.upload
+          : 'Failed to upload files. Please try again.';
+        alert(errorMessage);
+      },
+      onFinish: () => {
+        setUploading(false);
+      }
+    });
   };
 
   const handleMediaSelect = (mediaItem: Media) => {
@@ -175,22 +192,30 @@ export default function MediaPicker({
     }
   };
 
-  const getMediaIcon = (mediaType: string) => {
-    switch (mediaType) {
-      case 'image':
-        return <Image className="h-4 w-4" />;
-      case 'video':
-        return <Video className="h-4 w-4" />;
-      default:
-        return <FileText className="h-4 w-4" />;
+  const getMediaIcon = (mimeType: string) => {
+    if (mimeType.startsWith('image/')) {
+      return <Image className="h-4 w-4" />;
+    } else if (mimeType.startsWith('video/')) {
+      return <Video className="h-4 w-4" />;
+    } else {
+      return <FileText className="h-4 w-4" />;
     }
   };
 
   const filteredMedia = media.filter(item => {
-    if (type !== 'all' && item.type !== type) return false;
+    if (type !== 'all') {
+      const itemType = item.mime_type.startsWith('image/') ? 'image' 
+        : item.mime_type.startsWith('video/') ? 'video' 
+        : 'document';
+      if (itemType !== type) return false;
+    }
     if (searchQuery && !item.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
+
+  console.log('Filtered media count:', filteredMedia.length, 'from', media.length);
+
+  console.log('MediaPicker rendering - isOpen:', isOpen, 'type:', type, 'filteredMedia:', filteredMedia);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -226,12 +251,21 @@ export default function MediaPicker({
                 </Button>
               </div>
               
-              <Select value={currentFolder?.toString() || ''} onValueChange={(value) => setCurrentFolder(value ? parseInt(value) : null)}>
+              <Select 
+                value={currentFolder?.toString() || 'all'} 
+                onValueChange={(value) => {
+                  if (value === 'all') {
+                    setCurrentFolder(null);
+                  } else {
+                    setCurrentFolder(parseInt(value));
+                  }
+                }}
+              >
                 <SelectTrigger className="w-48">
                   <SelectValue placeholder={t('cms.all_folders', 'All folders')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{t('cms.all_folders', 'All folders')}</SelectItem>
+                  <SelectItem value="all">{t('cms.all_folders', 'All folders')}</SelectItem>
                   {folders.map((folder) => (
                     <SelectItem key={folder.id} value={folder.id.toString()}>
                       <div className="flex items-center gap-2">
@@ -267,10 +301,26 @@ export default function MediaPicker({
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                 </div>
+              ) : filteredMedia.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Image className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>{t('cms.no_media_found', 'No media files found')}</p>
+                  {currentFolder && (
+                    <p className="text-xs mt-2">
+                      {t('cms.no_media_in_folder', 'This folder is empty. Try selecting "All folders" or upload new files to this folder.')}
+                    </p>
+                  )}
+                </div>
               ) : viewMode === 'grid' ? (
                 <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
+                  {console.log('Rendering grid with', filteredMedia.length, 'items')}
                   {filteredMedia.map((item) => {
                     const isSelected = multiple && selectedMedia.some(m => m.id === item.id);
+                    const isImage = item.mime_type.startsWith('image/');
+                    const isVideo = item.mime_type.startsWith('video/');
+                    
+                    console.log('Rendering item:', item.id, item.name, 'url:', item.url);
+                    
                     return (
                       <div
                         key={item.id}
@@ -279,15 +329,20 @@ export default function MediaPicker({
                         }`}
                         onClick={() => handleMediaSelect(item)}
                       >
-                        {item.type === 'image' ? (
+                        {isImage ? (
                           <img
                             src={item.url}
                             alt={item.alt_text || item.name}
                             className="w-full h-20 object-cover"
                           />
+                        ) : isVideo ? (
+                          <video
+                            src={item.url}
+                            className="w-full h-20 object-cover"
+                          />
                         ) : (
                           <div className="w-full h-20 bg-gray-100 flex items-center justify-center">
-                            {getMediaIcon(item.type)}
+                            {getMediaIcon(item.mime_type)}
                           </div>
                         )}
                         
@@ -313,6 +368,9 @@ export default function MediaPicker({
                 <div className="space-y-2">
                   {filteredMedia.map((item) => {
                     const isSelected = multiple && selectedMedia.some(m => m.id === item.id);
+                    const isImage = item.mime_type.startsWith('image/');
+                    const isVideo = item.mime_type.startsWith('video/');
+                    
                     return (
                       <div
                         key={item.id}
@@ -321,15 +379,20 @@ export default function MediaPicker({
                         }`}
                         onClick={() => handleMediaSelect(item)}
                       >
-                        {item.type === 'image' ? (
+                        {isImage ? (
                           <img
                             src={item.url}
                             alt={item.alt_text || item.name}
                             className="w-12 h-12 object-cover rounded"
                           />
+                        ) : isVideo ? (
+                          <video
+                            src={item.url}
+                            className="w-12 h-12 object-cover rounded"
+                          />
                         ) : (
                           <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
-                            {getMediaIcon(item.type)}
+                            {getMediaIcon(item.mime_type)}
                           </div>
                         )}
                         
@@ -351,13 +414,6 @@ export default function MediaPicker({
                       </div>
                     );
                   })}
-                </div>
-              )}
-
-              {!loading && filteredMedia.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Image className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>{t('cms.no_media_found', 'No media files found')}</p>
                 </div>
               )}
             </div>

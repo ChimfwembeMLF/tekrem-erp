@@ -330,8 +330,34 @@ class ProjectController extends Controller
                 return $log->hours * ($log->hourly_rate ?? 0);
             });
 
+        // Load board data for Agile/Hybrid projects
+        $board = null;
+        $columns = [];
+        $cards = [];
+
+        if ($project->enable_boards) {
+            $board = $project->boards()->first();
+            if ($board) {
+                $columns = $board->columns()
+                    ->orderBy('order')
+                    ->get();
+                
+                foreach ($columns as $column) {
+                    $column->cards = $column->cards()
+                        ->with(['assignee', 'reporter'])
+                        ->orderBy('order')
+                        ->get();
+                }
+                
+                $cards = $columns->flatMap->cards;
+            }
+        }
+
         return Inertia::render('Projects/Show', [
             'project' => $project,
+            'board' => $board,
+            'columns' => $columns,
+            'cards' => $cards,
         ]);
     }
 

@@ -207,7 +207,7 @@ export function CardForm({
                 <SelectValue placeholder="Select story points" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No points</SelectItem>
+                <SelectItem value="none">No points</SelectItem>
                 {storyPointOptions.map(points => (
                   <SelectItem key={points} value={points.toString()}>
                     {points} points

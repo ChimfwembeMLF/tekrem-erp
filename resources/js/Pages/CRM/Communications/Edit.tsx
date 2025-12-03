@@ -111,7 +111,7 @@ export default function CommunicationEdit({ communication, clients, leads }: Com
                         <SelectValue placeholder="Select direction" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Not specified</SelectItem>
+                        <SelectItem value="none">Not specified</SelectItem>
                         <SelectItem value="inbound">Inbound</SelectItem>
                         <SelectItem value="outbound">Outbound</SelectItem>
                       </SelectContent>
@@ -146,7 +146,7 @@ export default function CommunicationEdit({ communication, clients, leads }: Com
                         <SelectValue placeholder="Select status" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Not specified</SelectItem>
+                        <SelectItem value="none">Not specified</SelectItem>
                         <SelectItem value="completed">Completed</SelectItem>
                         <SelectItem value="scheduled">Scheduled</SelectItem>
                         <SelectItem value="cancelled">Cancelled</SelectItem>

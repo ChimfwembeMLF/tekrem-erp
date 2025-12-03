@@ -89,7 +89,7 @@ class MediaController extends Controller
     /**
      * Upload files.
      */
-    public function upload(Request $request): JsonResponse
+    public function upload(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'files' => ['required', 'array'],
@@ -98,9 +98,12 @@ class MediaController extends Controller
             'optimize' => ['boolean'],
         ]);
 
-        $folder = $validated['folder_id'] ? MediaFolder::find($validated['folder_id']) : null;
+        // Get folder_id from request, convert empty string to null
+        $folderId = $request->input('folder_id');
+        $folderId = !empty($folderId) ? $folderId : null;
+        $folder = $folderId ? MediaFolder::find($folderId) : null;
         $options = [
-            'optimize' => $validated['optimize'] ?? true,
+            'optimize' => $request->input('optimize', true),
         ];
 
         try {
@@ -111,17 +114,16 @@ class MediaController extends Controller
                 $options
             );
 
-            return response()->json([
+            return back()->with([
                 'success' => true,
                 'message' => 'Files uploaded successfully.',
                 'media' => $uploadedMedia,
             ]);
 
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Upload failed: ' . $e->getMessage(),
-            ], 500);
+            return back()->withErrors([
+                'upload' => 'Upload failed: ' . $e->getMessage(),
+            ]);
         }
     }
 

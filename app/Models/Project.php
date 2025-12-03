@@ -25,6 +25,9 @@ class Project extends Model
         'status',
         'priority',
         'category',
+        'methodology',
+        'enable_boards',
+        'enable_milestones',
         'start_date',
         'end_date',
         'deadline',
@@ -50,6 +53,8 @@ class Project extends Model
         'budget' => 'decimal:2',
         'spent_amount' => 'decimal:2',
         'progress' => 'integer',
+        'enable_boards' => 'boolean',
+        'enable_milestones' => 'boolean',
         'team_members' => 'array',
         'tags' => 'array',
         'metadata' => 'array',
@@ -147,6 +152,38 @@ class Project extends Model
     public function conversations(): MorphMany
     {
         return $this->morphMany(Conversation::class, 'conversable');
+    }
+
+    /**
+     * Get the boards for the project (Agile).
+     */
+    public function boards(): HasMany
+    {
+        return $this->hasMany(Board::class);
+    }
+
+    /**
+     * Get the releases for the project.
+     */
+    public function releases(): HasMany
+    {
+        return $this->hasMany(Release::class);
+    }
+
+    /**
+     * Get the backlogs for the project.
+     */
+    public function backlogs(): HasMany
+    {
+        return $this->hasMany(Backlog::class);
+    }
+
+    /**
+     * Get the product backlog items.
+     */
+    public function productBacklog(): HasMany
+    {
+        return $this->hasMany(Backlog::class)->where('type', 'product');
     }
 
     /**
@@ -306,5 +343,69 @@ class Project extends Model
     public function scopeActive($query)
     {
         return $query->where('status', 'active');
+    }
+
+    /**
+     * Scope to filter projects by methodology.
+     */
+    public function scopeWaterfall($query)
+    {
+        return $query->where('methodology', 'waterfall');
+    }
+
+    /**
+     * Scope to filter Agile projects.
+     */
+    public function scopeAgile($query)
+    {
+        return $query->where('methodology', 'agile');
+    }
+
+    /**
+     * Scope to filter Hybrid projects.
+     */
+    public function scopeHybrid($query)
+    {
+        return $query->where('methodology', 'hybrid');
+    }
+
+    /**
+     * Check if project uses boards (Agile/Kanban).
+     */
+    public function usesBoards(): bool
+    {
+        return $this->enable_boards && in_array($this->methodology, ['agile', 'hybrid']);
+    }
+
+    /**
+     * Check if project uses milestones (Waterfall).
+     */
+    public function usesMilestones(): bool
+    {
+        return $this->enable_milestones && in_array($this->methodology, ['waterfall', 'hybrid']);
+    }
+
+    /**
+     * Check if project is Agile.
+     */
+    public function isAgile(): bool
+    {
+        return $this->methodology === 'agile';
+    }
+
+    /**
+     * Check if project is Waterfall.
+     */
+    public function isWaterfall(): bool
+    {
+        return $this->methodology === 'waterfall';
+    }
+
+    /**
+     * Check if project is Hybrid.
+     */
+    public function isHybrid(): bool
+    {
+        return $this->methodology === 'hybrid';
     }
 }

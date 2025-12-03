@@ -218,8 +218,7 @@ export default function MediaIndex({
   };
 
   return (
-    <AppLayout>
-      <Head title={t('cms.media', 'Media Library')} />
+    <AppLayout title={t('cms.media', 'Media Library')}>
 
       <div className="space-y-6">
         {/* Header */}
@@ -467,17 +466,33 @@ export default function MediaIndex({
                         className="absolute top-2 left-2 z-10"
                       />
 
-                      {item.type === 'image' ? (
-                        <img
-                          src={item.url}
-                          alt={item.alt_text || item.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          {getMediaIcon(item.type)}
-                        </div>
-                      )}
+                      {(() => {
+                        const isImage = item.mime_type.startsWith('image/');
+                        const isVideo = item.mime_type.startsWith('video/');
+
+                        if (isImage) {
+                          return (
+                            <img
+                              src={item.url}
+                              alt={item.alt_text || item.name}
+                              className="w-full h-full object-cover"
+                            />
+                          );
+                        } else if (isVideo) {
+                          return (
+                            <video
+                              src={item.url}
+                              className="w-full h-full object-cover"
+                            />
+                          );
+                        } else {
+                          return (
+                            <div className="w-full h-full flex items-center justify-center">
+                              {getMediaIcon(item.type)}
+                            </div>
+                          );
+                        }
+                      })()}
 
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <DropdownMenu>
@@ -539,17 +554,33 @@ export default function MediaIndex({
                       }}
                     />
 
-                    {item.type === 'image' ? (
-                      <img
-                        src={item.url}
-                        alt={item.alt_text || item.name}
-                        className="w-12 h-12 object-cover rounded"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
-                        {getMediaIcon(item.type)}
-                      </div>
-                    )}
+                    {(() => {
+                      const isImage = item.mime_type.startsWith('image/');
+                      const isVideo = item.mime_type.startsWith('video/');
+
+                      if (isImage) {
+                        return (
+                          <img
+                            src={item.url}
+                            alt={item.alt_text || item.name}
+                            className="w-12 h-12 object-cover rounded"
+                          />
+                        );
+                      } else if (isVideo) {
+                        return (
+                          <video
+                            src={item.url}
+                            className="w-12 h-12 object-cover rounded"
+                          />
+                        );
+                      } else {
+                        return (
+                          <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
+                            {getMediaIcon(item.type)}
+                          </div>
+                        );
+                      }
+                    })()}
 
                     <div className="flex-1">
                       <p className="font-medium">{item.name}</p>

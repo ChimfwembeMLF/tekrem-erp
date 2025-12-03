@@ -4,6 +4,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import PageEditor from '@/Components/CMS/PageEditor';
 import useTranslate from '@/Hooks/useTranslate';
 import { toast } from 'sonner';
+import useRoute from '@/Hooks/useRoute';
 
 interface Page {
   id: number;
@@ -50,6 +51,7 @@ interface Props {
 
 export default function EditPage({ page, templates, pages, languages }: Props) {
   const { t } = useTranslate();
+  const route = useRoute();
 
   const handleSave = (data: any) => {
     router.put(route('cms.pages.update', page.id), data, {
@@ -73,8 +75,7 @@ export default function EditPage({ page, templates, pages, languages }: Props) {
   };
 
   return (
-    <AppLayout>
-      <Head title={t('cms.edit_page', 'Edit Page')} />
+    <AppLayout title={t('cms.edit_page', 'Edit Page')}>
 
       <PageEditor
         page={page}

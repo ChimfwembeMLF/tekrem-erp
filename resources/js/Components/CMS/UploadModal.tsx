@@ -16,6 +16,7 @@ import { Progress } from '@/Components/ui/progress';
 import { Upload, X, File, Image, Video, FileText } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
 import { toast } from 'sonner';
+import useRoute from '@/Hooks/useRoute';
 
 interface MediaFolder {
   id: number;
@@ -51,6 +52,7 @@ export default function UploadModal({
   const [folderId, setFolderId] = useState<string>(currentFolderId?.toString() || 'root');
   const [optimize, setOptimize] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const route = useRoute();
 
   const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(event.target.files || []);
@@ -124,13 +126,27 @@ export default function UploadModal({
               status: 'uploading' as const
             })));
           },
-          onSuccess: () => {
+          onSuccess: (page) => {
+            const response = page.props as any;
+            
             setFiles(prev => prev.map(file => ({
               ...file,
               progress: 100,
               status: 'completed' as const
             })));
-            toast.success(t('cms.files_uploaded', 'Files uploaded successfully'));
+            
+            const uploadedCount = response?.media?.length || files.length;
+            const fileWord = uploadedCount === 1 ? 'file' : 'files';
+            const message = response?.message || `Successfully uploaded ${uploadedCount} ${fileWord}!`;
+            
+            toast.success(
+              `🎉 ${message}`,
+              {
+                description: t('cms.files_uploaded_desc', 'Your media files are now available in the library'),
+                duration: 4000,
+              }
+            );
+            
             onUploadComplete?.();
             resolve();
           },
@@ -161,7 +177,7 @@ export default function UploadModal({
   const handleClose = () => {
     if (!isUploading) {
       setFiles([]);
-      setFolderId(currentFolderId?.toString() || '');
+      setFolderId(currentFolderId?.toString() || 'root');
       setOptimize(true);
       onClose();
     }
@@ -248,8 +264,8 @@ export default function UploadModal({
                 {files.map((uploadFile) => (
                   <div key={uploadFile.id} className="flex items-center gap-3 p-3 border rounded-lg">
                     {getFileIcon(uploadFile.file)}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{uploadFile.file.name}</p>
+                    <div className="flex-1 min-w-0 max-w-full">
+                      <p className="text-sm font-medium truncate max-w-full">{uploadFile.file.name}</p>
                       <p className="text-xs text-muted-foreground">
                         {formatFileSize(uploadFile.file.size)}
                       </p>

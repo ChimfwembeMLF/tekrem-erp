@@ -8,6 +8,7 @@ import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { Checkbox } from '@/Components/ui/checkbox';
+import { Badge } from '@/Components/ui/badge';
 
 import useRoute from '@/Hooks/useRoute';
 import { Project, Client, User } from '@/types';
@@ -39,6 +40,9 @@ export default function ProjectEdit({ auth, project, clients, users, tags, selec
     status: project.status || 'draft',
     priority: project.priority || 'medium',
     category: project.category || '',
+    methodology: (project.methodology as 'waterfall' | 'agile' | 'hybrid') || 'hybrid',
+    enable_boards: project.enable_boards ?? true,
+    enable_milestones: project.enable_milestones ?? true,
     start_date: project.start_date || '',
     end_date: project.end_date || '',
     deadline: project.deadline || '',
@@ -179,6 +183,124 @@ export default function ProjectEdit({ auth, project, clients, users, tags, selec
                       />
                       {errors.budget && <p className="text-red-500 text-sm">{errors.budget}</p>}
                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Project Methodology */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Project Methodology</CardTitle>
+                  <CardDescription>
+                    Update how you want to manage this project
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="methodology">Management Approach</Label>
+                    <Select 
+                      value={data.methodology} 
+                      onValueChange={(value: 'waterfall' | 'agile' | 'hybrid') => {
+                        setData('methodology', value);
+                        // Auto-adjust feature flags based on methodology
+                        if (value === 'waterfall') {
+                          setData('enable_boards', false);
+                          setData('enable_milestones', true);
+                        } else if (value === 'agile') {
+                          setData('enable_boards', true);
+                          setData('enable_milestones', false);
+                        } else {
+                          setData('enable_boards', true);
+                          setData('enable_milestones', true);
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="waterfall">
+                          <div className="flex flex-col">
+                            <span className="font-medium">Waterfall</span>
+                            <span className="text-xs text-gray-500">Traditional milestone-based project management</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="agile">
+                          <div className="flex flex-col">
+                            <span className="font-medium">Agile/Scrum</span>
+                            <span className="text-xs text-gray-500">Sprint-based with boards, cards, and backlogs</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="hybrid">
+                          <div className="flex flex-col">
+                            <span className="font-medium">Hybrid</span>
+                            <span className="text-xs text-gray-500">Combine both approaches for maximum flexibility</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.methodology && <p className="text-red-500 text-sm">{errors.methodology}</p>}
+                  </div>
+
+                  {/* Feature Toggles */}
+                  <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                    <h4 className="font-medium text-sm text-gray-700">Enabled Features</h4>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="enable_milestones"
+                          checked={data.enable_milestones}
+                          onCheckedChange={(checked) => setData('enable_milestones', !!checked)}
+                          disabled={data.methodology === 'waterfall'}
+                        />
+                        <Label htmlFor="enable_milestones" className="text-sm">
+                          Milestones & Tasks
+                          {data.methodology === 'waterfall' && (
+                            <Badge variant="outline" className="ml-2 text-xs">Required</Badge>
+                          )}
+                        </Label>
+                      </div>
+                      <span className="text-xs text-gray-500">Waterfall approach</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="enable_boards"
+                          checked={data.enable_boards}
+                          onCheckedChange={(checked) => setData('enable_boards', !!checked)}
+                          disabled={data.methodology === 'agile'}
+                        />
+                        <Label htmlFor="enable_boards" className="text-sm">
+                          Boards & Sprints
+                          {data.methodology === 'agile' && (
+                            <Badge variant="outline" className="ml-2 text-xs">Required</Badge>
+                          )}
+                        </Label>
+                      </div>
+                      <span className="text-xs text-gray-500">Agile approach</span>
+                    </div>
+                  </div>
+
+                  {/* Methodology Info */}
+                  <div className="text-sm text-gray-600 space-y-2">
+                    {data.methodology === 'waterfall' && (
+                      <p>
+                        <strong>Waterfall:</strong> Projects are organized into sequential milestones and tasks. 
+                        Best for projects with clearly defined requirements and deadlines.
+                      </p>
+                    )}
+                    {data.methodology === 'agile' && (
+                      <p>
+                        <strong>Agile:</strong> Work is organized into sprints with kanban boards, user stories, and backlogs. 
+                        Ideal for iterative development and changing requirements.
+                      </p>
+                    )}
+                    {data.methodology === 'hybrid' && (
+                      <p>
+                        <strong>Hybrid:</strong> Use both approaches simultaneously. Tasks and cards can be linked for maximum flexibility. 
+                        Perfect for complex projects requiring both structure and agility.
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>

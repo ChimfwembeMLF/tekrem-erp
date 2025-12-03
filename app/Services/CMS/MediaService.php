@@ -8,7 +8,7 @@ use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Intervention\Image\Facades\Image;
+// use Intervention\Image\Facades\Image; // Disabled - not installed
 
 class MediaService
 {
@@ -47,15 +47,15 @@ class MediaService
             'is_public' => $options['is_public'] ?? true,
         ]);
         
-        // Create image variants if it's an image
-        if ($media->isImage()) {
-            $this->createImageVariants($media);
-        }
+        // Create image variants if it's an image (disabled - requires Intervention Image)
+        // if ($media->isImage()) {
+        //     $this->createImageVariants($media);
+        // }
         
-        // Optimize if requested
-        if ($options['optimize'] ?? true) {
-            $this->optimizeMedia($media);
-        }
+        // Optimize if requested (disabled - requires Intervention Image)
+        // if ($options['optimize'] ?? true) {
+        //     $this->optimizeMedia($media);
+        // }
         
         return $media;
     }
@@ -194,12 +194,15 @@ class MediaService
      */
     public function optimizeMedia(Media $media): bool
     {
+        // Disabled - requires Intervention Image package
+        return false;
+        
         if (!$media->isImage()) {
             return false;
         }
         
         try {
-            $image = Image::make(Storage::disk('public')->path($media->file_path));
+            // $image = Image::make(Storage::disk('public')->path($media->file_path));
             
             // Optimize image
             $image->orientate(); // Fix orientation
@@ -235,6 +238,9 @@ class MediaService
      */
     public function createImageVariants(Media $media, array $sizes = []): array
     {
+        // Disabled - requires Intervention Image package
+        return [];
+        
         if (!$media->isImage()) {
             return [];
         }
@@ -250,7 +256,7 @@ class MediaService
         $variants = $media->variants ?? [];
         
         try {
-            $originalImage = Image::make(Storage::disk('public')->path($media->file_path));
+            // $originalImage = Image::make(Storage::disk('public')->path($media->file_path));
             
             foreach ($sizes as $name => $dimensions) {
                 [$width, $height] = $dimensions;
@@ -333,11 +339,15 @@ class MediaService
         // Get image dimensions
         if (str_starts_with($file->getMimeType(), 'image/')) {
             try {
-                $image = Image::make($file->getPathname());
-                $info['dimensions'] = [
-                    'width' => $image->width(),
-                    'height' => $image->height(),
-                ];
+                // Disabled - requires Intervention Image package
+                // Use PHP's getimagesize instead
+                $imageInfo = @getimagesize($file->getPathname());
+                if ($imageInfo) {
+                    $info['dimensions'] = [
+                        'width' => $imageInfo[0],
+                        'height' => $imageInfo[1],
+                    ];
+                }
                 
                 // Get EXIF data
                 $exif = @exif_read_data($file->getPathname());

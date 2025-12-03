@@ -260,7 +260,7 @@ export default function Index({ statements, accounts, filters, statuses }: Props
                     <SelectValue placeholder={t('All Accounts')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">{t('All Accounts')}</SelectItem>
+                    <SelectItem value="none">{t('All Accounts')}</SelectItem>
                     {accounts.map((account) => (
                       <SelectItem key={account.id} value={account.id.toString()}>
                         {account.account_code} - {account.name}
@@ -277,7 +277,7 @@ export default function Index({ statements, accounts, filters, statuses }: Props
                     <SelectValue placeholder={t('All Statuses')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">{t('All Statuses')}</SelectItem>
+                    <SelectItem value="none">{t('All Statuses')}</SelectItem>
                     {Object.entries(statuses).map(([key, label]) => (
                       <SelectItem key={key} value={key}>
                         {t(label)}
