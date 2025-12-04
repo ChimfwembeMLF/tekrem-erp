@@ -54,6 +54,22 @@ class Account extends Model
         'level' => 'integer',
     ];
 
+        /**
+     * Parent account relationship.
+     */
+    public function parent()
+    {
+        return $this->belongsTo(Account::class, 'parent_account_id');
+    }
+
+    /**
+     * Children accounts relationship.
+     */
+    public function children()
+    {
+        return $this->hasMany(Account::class, 'parent_account_id');
+    }
+
     /**
      * Get the user that owns the account.
      */

@@ -7,7 +7,6 @@ use App\Models\Finance\Transaction;
 use App\Models\Finance\Invoice;
 use App\Models\Finance\Expense;
 use App\Models\Finance\Account;
-// use App\Models\Finance\ChartOfAccount; // Not available, using Account instead
 use App\Models\Finance\BankReconciliation;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -52,7 +51,6 @@ class ReportGeneratorService
      */
     private function generatePdfReport(Report $report, array $data): string
     {
-        $dompdf = new \Barryvdh\DomPDF\Facade();
         $logoPath = public_path('tekrem-logo.png');
         $logoBase64 = '';
         if (file_exists($logoPath)) {
@@ -66,11 +64,10 @@ class ReportGeneratorService
             'logoBase64' => $logoBase64,
         ])->render();
 
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->render();
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html)
+            ->setPaper('A4', 'portrait');
 
-        $output = $dompdf->output();
+        $output = $pdf->output();
         $filename = 'reports/' . $report->type . '_' . $report->id . '_' . now()->format('Y_m_d_H_i_s') . '.pdf';
         \Storage::put($filename, $output);
         return $filename;
@@ -252,7 +249,7 @@ class ReportGeneratorService
      */
     private function getTrialBalanceData(string $asOfDate): array
     {
-        $accounts = ChartOfAccount::where('is_active', true)
+        $accounts = Account::where('is_active', true)
             ->where('balance', '!=', 0)
             ->get();
 
@@ -283,7 +280,7 @@ class ReportGeneratorService
      */
     private function getChartOfAccountsData(): array
     {
-        $accounts = ChartOfAccount::with('parent', 'children')
+        $accounts = Account::with('parent', 'children')
             ->orderBy('account_code')
             ->get();
 

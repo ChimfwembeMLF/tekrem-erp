@@ -2,15 +2,15 @@
 
 namespace Database\Factories\Finance;
 
-use App\Models\Finance\ChartOfAccount;
+use App\Models\Finance\Account;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Finance\ChartOfAccount>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Finance\Account>
  */
 class ChartOfAccountFactory extends Factory
 {
-    protected $model = ChartOfAccount::class;
+    protected $model = Account::class;
 
     /**
      * Define the model's default state.
@@ -200,7 +200,7 @@ class ChartOfAccountFactory extends Factory
     /**
      * Create a child account with a specific parent.
      */
-    public function child(ChartOfAccount $parent): static
+    public function child(Account $parent): static
     {
         return $this->state(fn (array $attributes) => [
             'parent_id' => $parent->id,

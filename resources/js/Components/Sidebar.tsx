@@ -176,12 +176,12 @@ export default function Sidebar({ settings }: SidebarProps) {
       icon: <Wallet className="h-5 w-5" />,
       active: route().current('finance.accounts.*')
     },
-    {
-      href: route('finance.chart-of-accounts.index'),
-      label: t('finance.chart_of_accounts', 'Chart of Accounts'),
-      icon: <TreePine className="h-5 w-5" />,
-      active: route().current('finance.chart-of-accounts.*')
-    },
+    // {
+    //   href: route('finance.chart-of-accounts.index'),
+    //   label: t('finance.chart_of_accounts', 'Chart of Accounts'),
+    //   icon: <TreePine className="h-5 w-5" />,
+    //   active: route().current('finance.chart-of-accounts.*')
+    // },
     {
       href: route('finance.transactions.index'),
       label: t('finance.transactions', 'Transactions'),
