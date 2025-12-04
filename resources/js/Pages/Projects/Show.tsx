@@ -131,6 +131,14 @@ export default function ProjectShow({ auth, project, board, columns = [], cards 
             </div>
           </div>
           <div className="flex gap-2">
+            {showMilestones && (
+              <Link href={route('projects.kanban', project.id)}>
+                <Button variant="outline">
+                  <Kanban className="h-4 w-4 mr-2" />
+                  Kanban Board
+                </Button>
+              </Link>
+            )}
             {hasPermission('projects.edit') && (
               <Link href={route('projects.edit', project.id)}>
                 <Button variant="outline">

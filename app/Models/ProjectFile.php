@@ -165,7 +165,7 @@ class ProjectFile extends Model
                 return match ($this->access_level) {
                     'public' => true,
                     'team' => in_array($user->id, $this->project->team_members ?? []),
-                    'managers' => $user->hasRole(['admin', 'manager']),
+                    'managers' => $user->hasRole(['super_user', 'admin', 'manager']),
                     'private' => false,
                     default => false,
                 };
@@ -264,7 +264,7 @@ class ProjectFile extends Model
                   $subQ->where('access_level', 'managers')
                        ->whereHas('uploader', function ($userQ) {
                            $userQ->whereHas('roles', function ($roleQ) {
-                               $roleQ->whereIn('name', ['admin', 'manager']);
+                               $roleQ->whereIn('name', ['super_user', 'admin', 'manager']);
                            });
                        });
               });

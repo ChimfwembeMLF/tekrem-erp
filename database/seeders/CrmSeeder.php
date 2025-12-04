@@ -16,16 +16,16 @@ class CrmSeeder extends Seeder
      */
     public function run(): void
     {
-        // Get admin and staff users
-        $admin = User::whereHas('roles', function ($query) {
-            $query->where('name', 'admin');
+        // Get admin or super_user and staff users
+        $adminOrSuperUser = User::whereHas('roles', function ($query) {
+            $query->whereIn('name', ['admin', 'super_user']);
         })->first();
 
         $staff = User::whereHas('roles', function ($query) {
             $query->where('name', 'staff');
         })->first();
 
-        if (!$admin || !$staff) {
+        if (!$adminOrSuperUser || !$staff) {
             $this->command->info('Please run the RoleSeeder and UserSeeder first.');
             return;
         }
@@ -45,7 +45,7 @@ class CrmSeeder extends Seeder
                 'country' => 'USA',
                 'notes' => 'Long-term client since 2020',
                 'status' => 'active',
-                'user_id' => $admin->id,
+                'user_id' => $adminOrSuperUser->id,
             ],
             [
                 'name' => 'Wayne Enterprises',
@@ -75,7 +75,7 @@ class CrmSeeder extends Seeder
                 'country' => 'USA',
                 'notes' => 'Innovative technology company',
                 'status' => 'inactive',
-                'user_id' => $admin->id,
+                'user_id' => $adminOrSuperUser->id,
             ],
         ];
 
@@ -124,7 +124,7 @@ class CrmSeeder extends Seeder
                 'notes' => 'Potential high-value client',
                 'source' => 'Website',
                 'status' => 'new',
-                'user_id' => $admin->id,
+                'user_id' => $adminOrSuperUser->id,
             ],
             [
                 'name' => 'Queen Industries',
@@ -156,7 +156,7 @@ class CrmSeeder extends Seeder
                 'notes' => 'Looking for technology solutions',
                 'source' => 'Trade Show',
                 'status' => 'qualified',
-                'user_id' => $admin->id,
+                'user_id' => $adminOrSuperUser->id,
             ],
         ];
 

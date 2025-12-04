@@ -722,7 +722,7 @@ class LiveChatController extends Controller
         $user = Auth::user();
 
         // Check if user has access to this project
-        if (!$user->hasRole(['admin', 'staff']) &&
+        if (!$user->hasRole(['super_user', 'admin', 'staff']) &&
             $project->manager_id !== $user->id &&
             !in_array($user->id, $project->team_members ?? [])) {
             abort(403, 'Unauthorized access to project chat.');

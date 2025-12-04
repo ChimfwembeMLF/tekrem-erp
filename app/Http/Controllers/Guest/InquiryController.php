@@ -210,17 +210,17 @@ class InquiryController extends Controller
         // Get users with appropriate permissions based on inquiry type
         return match($type) {
             'sales' => \App\Models\User::whereHas('roles', function($q) {
-                $q->whereIn('name', ['admin', 'manager']);
+                $q->whereIn('name', ['super_user', 'admin', 'manager']);
             })->orWhereHas('permissions', function($q) {
                 $q->where('name', 'manage sales');
             })->get(),
             
             'partnership' => \App\Models\User::whereHas('roles', function($q) {
-                $q->whereIn('name', ['admin', 'manager']);
+                $q->whereIn('name', ['super_user', 'admin', 'manager']);
             })->get(),
             
             default => \App\Models\User::whereHas('roles', function($q) {
-                $q->whereIn('name', ['admin', 'staff']);
+                $q->whereIn('name', ['super_user', 'admin', 'staff']);
             })->orWhereHas('permissions', function($q) {
                 $q->where('name', 'manage inquiries');
             })->get()

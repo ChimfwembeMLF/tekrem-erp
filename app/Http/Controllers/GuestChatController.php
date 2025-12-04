@@ -234,7 +234,7 @@ class GuestChatController extends Controller
     {
         // Get staff with admin or staff roles (simplified for now)
         $availableStaff = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['admin', 'staff']);
+            $query->whereIn('name', ['super_user', 'admin', 'staff']);
         })->get();
 
         // If no users found, get all users (fallback)

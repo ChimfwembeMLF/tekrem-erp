@@ -55,7 +55,7 @@ class TrainingController extends Controller
     public function create(): Response
     {
         $instructors = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['admin', 'staff']);
+            $query->whereIn('name', ['super_user', 'admin', 'staff']);
         })->orderBy('name')->get(['id', 'name']);
 
         $categories = Training::distinct()->pluck('category')->filter()->sort()->values();
@@ -122,7 +122,7 @@ class TrainingController extends Controller
         $training->load(['instructor']);
 
         $instructors = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['admin', 'staff']);
+            $query->whereIn('name', ['super_user', 'admin', 'staff']);
         })->orderBy('name')->get(['id', 'name']);
 
         $categories = Training::distinct()->pluck('category')->filter()->sort()->values();

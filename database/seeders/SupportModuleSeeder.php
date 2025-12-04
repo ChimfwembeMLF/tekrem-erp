@@ -120,9 +120,11 @@ class SupportModuleSeeder extends Seeder
         ]);
 
         // Get admin user for creating content
-        $adminUser = User::where('email', 'admin@tekrem.com')->first();
+        $user = User::whereHas('roles', function ($query) {
+            $query->whereIn('name', ['admin', 'super_user']);
+        })->first();
 
-        if ($adminUser) {
+        if ($user) {
             // Create Knowledge Base Articles
             KnowledgeBaseArticle::create([
                 'title' => 'Getting Started with TekRem ERP',
@@ -130,7 +132,7 @@ class SupportModuleSeeder extends Seeder
                 'content' => '<h2>Welcome to TekRem ERP</h2><p>This guide will help you get started with our comprehensive ERP system...</p>',
                 'excerpt' => 'Learn the basics of using TekRem ERP system',
                 'category_id' => $generalCategory->id,
-                'author_id' => $adminUser->id,
+                'author_id' => $user->id,
                 'status' => 'published',
                 'is_featured' => true,
                 'published_at' => now(),
@@ -143,7 +145,7 @@ class SupportModuleSeeder extends Seeder
                 'content' => '<h2>Password Reset Process</h2><p>Follow these steps to reset your password...</p>',
                 'excerpt' => 'Step-by-step guide to reset your account password',
                 'category_id' => $technicalCategory->id,
-                'author_id' => $adminUser->id,
+                'author_id' => $user->id,
                 'status' => 'published',
                 'is_featured' => false,
                 'published_at' => now(),
@@ -155,7 +157,7 @@ class SupportModuleSeeder extends Seeder
                 'question' => 'How do I create a new support ticket?',
                 'answer' => 'To create a new support ticket, navigate to the Support section and click on "Create Ticket". Fill in the required information and submit.',
                 'category_id' => $generalCategory->id,
-                'author_id' => $adminUser->id,
+                'author_id' => $user->id,
                 'is_published' => true,
                 'is_featured' => true,
                 'sort_order' => 1,
@@ -165,7 +167,7 @@ class SupportModuleSeeder extends Seeder
                 'question' => 'What are the different priority levels?',
                 'answer' => 'We have four priority levels: Low (non-urgent), Medium (standard), High (important), and Urgent (critical issues requiring immediate attention).',
                 'category_id' => $generalCategory->id,
-                'author_id' => $adminUser->id,
+                'author_id' => $user->id,
                 'is_published' => true,
                 'is_featured' => true,
                 'sort_order' => 2,
@@ -181,7 +183,7 @@ class SupportModuleSeeder extends Seeder
                     'status' => 'open',
                     'priority' => 'high',
                     'category_id' => $bugCategory->id,
-                    'created_by' => $adminUser->id,
+                    'created_by' => $user->id,
                     'requester_type' => 'App\\Models\\Client',
                     'requester_id' => $client->id,
                     'sla_policy_id' => $premiumSLA->id,
@@ -194,7 +196,7 @@ class SupportModuleSeeder extends Seeder
                     'status' => 'open',
                     'priority' => 'medium',
                     'category_id' => $featureCategory->id,
-                    'created_by' => $adminUser->id,
+                    'created_by' => $user->id,
                     'requester_type' => 'App\\Models\\Client',
                     'requester_id' => $client->id,
                     'sla_policy_id' => $defaultSLA->id,

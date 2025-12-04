@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use App\Models\ProjectTimeLog;
 use App\Models\User;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -16,6 +17,12 @@ class ProjectTimeLogController extends Controller
      */
     public function index(Request $request, Project $project)
     {
+        // Check if time tracking is enabled
+        if (!Setting::get('projects.time_tracking.enable_time_tracking', true)) {
+            return redirect()->route('projects.show', $project)
+                ->with('error', 'Time tracking is currently disabled.');
+        }
+
         $query = $project->timeLogs()->with(['user', 'milestone']);
 
         // Apply filters
@@ -49,6 +56,11 @@ class ProjectTimeLogController extends Controller
             'timeLogs' => $timeLogs,
             'users' => $users,
             'filters' => $request->only(['search', 'status', 'user_id', 'date_from', 'date_to']),
+            'settings' => [
+                'enable_billable_hours' => Setting::get('projects.time_tracking.enable_billable_hours', true),
+                'enable_time_approval' => Setting::get('projects.time_tracking.enable_time_approval', false),
+                'enable_time_reports' => Setting::get('projects.time_tracking.enable_time_reports', true),
+            ],
         ]);
     }
 
@@ -57,6 +69,18 @@ class ProjectTimeLogController extends Controller
      */
     public function create(Project $project)
     {
+        // Check if time tracking is enabled
+        if (!Setting::get('projects.time_tracking.enable_time_tracking', true)) {
+            return redirect()->route('projects.show', $project)
+                ->with('error', 'Time tracking is currently disabled.');
+        }
+
+        // Check if manual time entry is enabled
+        if (!Setting::get('projects.time_tracking.enable_manual_time_entry', true)) {
+            return redirect()->route('projects.show', $project)
+                ->with('error', 'Manual time entry is currently disabled.');
+        }
+
         $milestones = $project->milestones()->select('id', 'name')->get();
         $users = User::select('id', 'name')->get();
 
@@ -64,6 +88,13 @@ class ProjectTimeLogController extends Controller
             'project' => $project,
             'milestones' => $milestones,
             'users' => $users,
+            'settings' => [
+                'enable_billable_hours' => Setting::get('projects.time_tracking.enable_billable_hours', true),
+                'default_hourly_rate' => Setting::get('projects.time_tracking.default_hourly_rate', 50),
+                'minimum_time_increment' => Setting::get('projects.time_tracking.minimum_time_increment', 15),
+                'enable_overtime_tracking' => Setting::get('projects.time_tracking.enable_overtime_tracking', false),
+                'overtime_threshold_hours' => Setting::get('projects.time_tracking.overtime_threshold_hours', 8),
+            ],
         ]);
     }
 
@@ -72,15 +103,52 @@ class ProjectTimeLogController extends Controller
      */
     public function store(Request $request, Project $project)
     {
-        $validated = $request->validate([
+        // Check if time tracking is enabled
+        if (!Setting::get('projects.time_tracking.enable_time_tracking', true)) {
+            return back()->withErrors(['error' => 'Time tracking is currently disabled.']);
+        }
+
+        if (!Setting::get('projects.time_tracking.enable_manual_time_entry', true)) {
+            return back()->withErrors(['error' => 'Manual time entry is currently disabled.']);
+        }
+
+        // Get settings
+        $enableBillableHours = Setting::get('projects.time_tracking.enable_billable_hours', true);
+        $minimumIncrement = Setting::get('projects.time_tracking.minimum_time_increment', 15);
+        $defaultHourlyRate = Setting::get('projects.time_tracking.default_hourly_rate', 50);
+        $enableApproval = Setting::get('projects.time_tracking.enable_time_approval', false);
+
+        $rules = [
             'description' => 'nullable|string',
-            'hours' => 'required|numeric|min:0.1|max:24',
+            'hours' => [
+                'required',
+                'numeric',
+                'min:' . ($minimumIncrement / 60),
+                'max:24',
+            ],
             'log_date' => 'required|date',
             'milestone_id' => 'nullable|exists:project_milestones,id',
             'user_id' => 'required|exists:users,id',
-            'is_billable' => 'boolean',
-            'hourly_rate' => 'nullable|numeric|min:0',
-        ]);
+        ];
+
+        if ($enableBillableHours) {
+            $rules['is_billable'] = 'boolean';
+            $rules['hourly_rate'] = 'nullable|numeric|min:0';
+        }
+
+        $validated = $request->validate($rules);
+
+        // Use default hourly rate if not provided and billable
+        if ($enableBillableHours && !empty($validated['is_billable']) && !isset($validated['hourly_rate'])) {
+            $validated['hourly_rate'] = $defaultHourlyRate;
+        }
+
+        // Set status based on approval requirement
+        if ($enableApproval) {
+            $validated['status'] = 'pending';
+        } else {
+            $validated['status'] = 'approved';
+        }
 
         $validated['project_id'] = $project->id;
 

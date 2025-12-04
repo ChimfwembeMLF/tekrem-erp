@@ -246,7 +246,7 @@ class QuoteController extends Controller
             
             // Get sales team and managers
             $users = \App\Models\User::whereHas('roles', function($q) {
-                $q->whereIn('name', ['admin', 'manager']);
+                $q->whereIn('name', ['super_user', 'admin', 'manager']);
             })->orWhereHas('permissions', function($q) {
                 $q->whereIn('name', ['manage quotes', 'manage sales']);
             })->get();
@@ -285,7 +285,7 @@ class QuoteController extends Controller
             }
             
             $managers = \App\Models\User::whereHas('roles', function($q) {
-                $q->whereIn('name', ['admin', 'manager']);
+                $q->whereIn('name', ['super_user', 'admin', 'manager']);
             })->get();
             
             $users = $users->merge($managers)->unique('id');

@@ -304,7 +304,7 @@ class SupportController extends Controller
             
             // Get support staff
             $users = \App\Models\User::whereHas('roles', function($q) {
-                $q->whereIn('name', ['admin', 'staff']);
+                $q->whereIn('name', ['super_user', 'admin', 'staff']);
             })->orWhereHas('permissions', function($q) {
                 $q->whereIn('name', ['manage support', 'view support tickets']);
             })->get();

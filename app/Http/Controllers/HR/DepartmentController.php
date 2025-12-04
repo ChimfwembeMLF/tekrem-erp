@@ -65,7 +65,7 @@ class DepartmentController extends Controller
     public function create(): Response
     {
         $managers = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['admin', 'staff']);
+            $query->whereIn('name', ['super_user', 'admin', 'staff']);
         })->orderBy('name')->get(['id', 'name']);
 
         $parentDepartments = Department::active()
@@ -147,7 +147,7 @@ class DepartmentController extends Controller
         $department->load(['manager', 'parentDepartment']);
 
         $managers = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['admin', 'staff']);
+            $query->whereIn('name', ['super_user', 'admin', 'staff']);
         })->orderBy('name')->get(['id', 'name']);
 
         $parentDepartments = Department::active()

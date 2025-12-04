@@ -68,6 +68,16 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+      /**
+     * Override hasPermissionTo so super_user and admin have all permissions.
+     */
+    public function hasPermissionTo($permission, $guardName = null): bool
+    {
+        if ($this->hasRole(['super_user', 'admin'])) {
+            return true;
+        }
+        return parent::hasPermissionTo($permission, $guardName);
+    }
 
     /**
      * The departments that the user belongs to.
@@ -246,6 +256,38 @@ class User extends Authenticatable
     public function managedProjects()
     {
         return $this->hasMany(\App\Models\Project::class, 'manager_id');
+    }
+
+    /**
+     * Check if user is a super user.
+     */
+    public function isSuperUser(): bool
+    {
+        return $this->hasRole('super_user');
+    }
+
+    /**
+     * Check if user is an admin (super user or admin role).
+     */
+    public function isAdmin(): bool
+    {
+        return $this->hasRole(['super_user', 'admin']);
+    }
+
+    /**
+     * Check if user is a staff member (super user, admin, or staff role).
+     */
+    public function isStaff(): bool
+    {
+        return $this->hasRole(['super_user', 'admin', 'staff']);
+    }
+
+    /**
+     * Check if user is a manager (super user, admin, or manager role).
+     */
+    public function isManager(): bool
+    {
+        return $this->hasRole(['super_user', 'admin', 'manager']);
     }
 
 }

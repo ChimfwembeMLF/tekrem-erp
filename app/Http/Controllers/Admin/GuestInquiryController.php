@@ -56,7 +56,7 @@ class GuestInquiryController extends Controller
 
         // Get filter options
         $users = User::whereHas('roles', function($q) {
-            $q->whereIn('name', ['admin', 'staff', 'manager']);
+            $q->whereIn('name', ['super_user', 'admin', 'staff', 'manager']);
         })->select('id', 'name')->get();
 
         $stats = [

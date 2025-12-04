@@ -13,12 +13,12 @@ class TagSeeder extends Seeder
      */
     public function run(): void
     {
-        $adminUser = User::whereHas('roles', function ($query) {
-            $query->where('name', 'admin');
+        $user = User::whereHas('roles', function ($query) {
+            $query->whereIn('name', ['admin', 'super_user']);
         })->first();
 
-        if (!$adminUser) {
-            $this->command->warn('No admin user found. Skipping tag seeding.');
+        if (!$user) {
+            $this->command->warn('No admin or super_user found. Skipping tag seeding.');
             return;
         }
 
@@ -128,7 +128,7 @@ class TagSeeder extends Seeder
                     'color' => $tagData['color'],
                     'type' => $tagData['type'],
                     'description' => $tagData['description'],
-                    'created_by' => $adminUser->id,
+                    'created_by' => $user->id,
                     'is_active' => true,
                 ]
             );

@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Models\ProjectTask;
 use App\Models\User;
 use App\Models\Tag;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -47,7 +48,7 @@ class ProjectTaskController extends Controller
 
         // Get staff users for filter dropdown (only admin and staff roles)
         $staffUsers = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['admin', 'staff']);
+            $query->whereIn('name', ['super_user', 'admin', 'staff']);
         })->select('id', 'name')->get();
 
         return Inertia::render('Projects/Tasks/Index', [
@@ -55,6 +56,11 @@ class ProjectTaskController extends Controller
             'tasks' => $tasks,
             'staffUsers' => $staffUsers,
             'filters' => $request->only(['search', 'status', 'type', 'priority', 'assigned_to']),
+            'settings' => [
+                'enable_task_priorities' => Setting::get('projects.tasks.enable_task_priorities', true),
+                'enable_task_estimates' => Setting::get('projects.tasks.enable_task_estimates', true),
+                'enable_subtasks' => Setting::get('projects.tasks.enable_subtasks', true),
+            ],
         ]);
     }
 
@@ -65,12 +71,21 @@ class ProjectTaskController extends Controller
     {
         $milestones = $project->milestones()->select('id', 'name')->get();
         
-        // Get staff users only (admin and staff roles)
+        // Get staff users only (super user, admin and staff roles)
         $staffUsers = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['admin', 'staff']);
+            $query->whereIn('name', ['super_user', 'admin', 'staff']);
         })->select('id', 'name')->get();
 
-        $availableTasks = $project->tasks()->select('id', 'title')->get();
+        // Check settings
+        $enableDependencies = Setting::get('projects.tasks.enable_task_dependencies', true);
+        $enableSubtasks = Setting::get('projects.tasks.enable_subtasks', true);
+        $enablePriorities = Setting::get('projects.tasks.enable_task_priorities', true);
+        $enableEstimates = Setting::get('projects.tasks.enable_task_estimates', true);
+        $enableComments = Setting::get('projects.tasks.enable_task_comments', true);
+        $enableAttachments = Setting::get('projects.tasks.enable_task_attachments', true);
+        $defaultPriority = Setting::get('projects.tasks.default_task_priority', 'medium');
+
+        $availableTasks = $enableDependencies ? $project->tasks()->select('id', 'title')->get() : collect();
         $tags = Tag::active()->ofType('task')->select('id', 'name', 'color')->get();
 
         return Inertia::render('Projects/Tasks/Create', [
@@ -79,6 +94,15 @@ class ProjectTaskController extends Controller
             'staffUsers' => $staffUsers,
             'availableTasks' => $availableTasks,
             'tags' => $tags,
+            'settings' => [
+                'enable_task_dependencies' => $enableDependencies,
+                'enable_subtasks' => $enableSubtasks,
+                'enable_task_priorities' => $enablePriorities,
+                'enable_task_estimates' => $enableEstimates,
+                'enable_task_comments' => $enableComments,
+                'enable_task_attachments' => $enableAttachments,
+                'default_task_priority' => $defaultPriority,
+            ],
         ]);
     }
 
@@ -87,27 +111,54 @@ class ProjectTaskController extends Controller
      */
     public function store(Request $request, Project $project)
     {
-        $validated = $request->validate([
+        // Check settings
+        $enableDependencies = Setting::get('projects.tasks.enable_task_dependencies', true);
+        $enableSubtasks = Setting::get('projects.tasks.enable_subtasks', true);
+        $enablePriorities = Setting::get('projects.tasks.enable_task_priorities', true);
+        $enableEstimates = Setting::get('projects.tasks.enable_task_estimates', true);
+        $defaultPriority = Setting::get('projects.tasks.default_task_priority', 'medium');
+        $autoAssign = Setting::get('projects.tasks.auto_assign_tasks', false);
+        $assignmentMethod = Setting::get('projects.tasks.task_assignment_method', 'manual');
+
+        $rules = [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'type' => 'required|in:task,issue,bug,feature,improvement',
-            'priority' => 'required|in:low,medium,high,critical',
             'milestone_id' => 'nullable|exists:project_milestones,id',
-            'assigned_to' => 'nullable|exists:users,id',
             'due_date' => 'nullable|date',
             'start_date' => 'nullable|date',
-            'estimated_hours' => 'nullable|numeric|min:0',
-            'dependencies' => 'nullable|array',
-            'dependencies.*' => 'exists:project_tasks,id',
-            'parent_task_id' => 'nullable|exists:project_tasks,id',
             'tags' => 'nullable|array',
             'tags.*' => 'exists:tags,id',
-        ]);
+        ];
+
+        if ($enablePriorities) {
+            $rules['priority'] = 'required|in:low,medium,high,critical';
+        }
+        if ($enableEstimates) {
+            $rules['estimated_hours'] = 'nullable|numeric|min:0';
+        }
+        if ($enableDependencies) {
+            $rules['dependencies'] = 'nullable|array';
+            $rules['dependencies.*'] = 'exists:project_tasks,id';
+        }
+        if ($enableSubtasks) {
+            $rules['parent_task_id'] = 'nullable|exists:project_tasks,id';
+        }
+        if (!$autoAssign) {
+            $rules['assigned_to'] = 'nullable|exists:users,id';
+        }
+
+        $validated = $request->validate($rules);
+
+        // Use default priority if not provided and priorities are enabled
+        if ($enablePriorities && !isset($validated['priority'])) {
+            $validated['priority'] = $defaultPriority;
+        }
 
         // Validate that assigned user is staff/admin
         if ($validated['assigned_to']) {
             $user = User::find($validated['assigned_to']);
-            if (!$user->hasRole(['admin', 'staff'])) {
+            if (!$user->hasRole(['super_user', 'admin', 'staff'])) {
                 return back()->withErrors(['assigned_to' => 'Tasks can only be assigned to staff members or administrators.']);
             }
         }
@@ -138,6 +189,14 @@ class ProjectTaskController extends Controller
         return Inertia::render('Projects/Tasks/Show', [
             'project' => $project,
             'task' => $task,
+            'settings' => [
+                'enable_task_comments' => Setting::get('projects.tasks.enable_task_comments', true),
+                'enable_task_attachments' => Setting::get('projects.tasks.enable_task_attachments', true),
+                'enable_task_priorities' => Setting::get('projects.tasks.enable_task_priorities', true),
+                'enable_task_estimates' => Setting::get('projects.tasks.enable_task_estimates', true),
+                'enable_task_dependencies' => Setting::get('projects.tasks.enable_task_dependencies', true),
+                'enable_subtasks' => Setting::get('projects.tasks.enable_subtasks', true),
+            ],
         ]);
     }
 
@@ -151,13 +210,19 @@ class ProjectTaskController extends Controller
         
         // Get staff users only
         $staffUsers = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['admin', 'staff']);
+            $query->whereIn('name', ['super_user', 'admin', 'staff']);
         })->select('id', 'name')->get();
 
-        $availableTasks = $project->tasks()
+        // Check settings
+        $enableDependencies = Setting::get('projects.tasks.enable_task_dependencies', true);
+        $enableSubtasks = Setting::get('projects.tasks.enable_subtasks', true);
+        $enablePriorities = Setting::get('projects.tasks.enable_task_priorities', true);
+        $enableEstimates = Setting::get('projects.tasks.enable_task_estimates', true);
+
+        $availableTasks = $enableDependencies ? $project->tasks()
             ->where('id', '!=', $task->id)
             ->select('id', 'title')
-            ->get();
+            ->get() : collect();
         
         $tags = Tag::active()->ofType('task')->select('id', 'name', 'color')->get();
 
@@ -168,6 +233,12 @@ class ProjectTaskController extends Controller
             'staffUsers' => $staffUsers,
             'availableTasks' => $availableTasks,
             'tags' => $tags,
+            'settings' => [
+                'enable_task_dependencies' => $enableDependencies,
+                'enable_subtasks' => $enableSubtasks,
+                'enable_task_priorities' => $enablePriorities,
+                'enable_task_estimates' => $enableEstimates,
+            ],
         ]);
     }
 
@@ -199,7 +270,7 @@ class ProjectTaskController extends Controller
         // Validate that assigned user is staff/admin
         if ($validated['assigned_to']) {
             $user = User::find($validated['assigned_to']);
-            if (!$user->hasRole(['admin', 'staff'])) {
+            if (!$user->hasRole(['super_user', 'admin', 'staff'])) {
                 return back()->withErrors(['assigned_to' => 'Tasks can only be assigned to staff members or administrators.']);
             }
         }
@@ -275,5 +346,44 @@ class ProjectTaskController extends Controller
             'tasks' => $tasks,
             'filters' => $request->only(['status', 'priority']),
         ]);
+    }
+
+    /**
+     * Auto-assign a task based on the configured method.
+     */
+    private function autoAssignTask(Project $project, string $method): ?int
+    {
+        $teamMembers = $project->team_members ?? [];
+        
+        if (empty($teamMembers)) {
+            return null;
+        }
+
+        switch ($method) {
+            case 'round_robin':
+                // Get last assigned user and pick next in rotation
+                $lastTask = $project->tasks()->latest()->first();
+                $lastAssignedIndex = $lastTask && $lastTask->assigned_to 
+                    ? array_search($lastTask->assigned_to, $teamMembers) 
+                    : -1;
+                $nextIndex = ($lastAssignedIndex + 1) % count($teamMembers);
+                return $teamMembers[$nextIndex];
+
+            case 'workload_based':
+                // Assign to team member with least number of open tasks
+                $taskCounts = [];
+                foreach ($teamMembers as $memberId) {
+                    $taskCounts[$memberId] = ProjectTask::where('assigned_to', $memberId)
+                        ->whereNotIn('status', ['done', 'cancelled'])
+                        ->count();
+                }
+                return array_key_exists(min($taskCounts), $taskCounts) 
+                    ? array_search(min($taskCounts), $taskCounts) 
+                    : $teamMembers[0];
+
+            case 'manual':
+            default:
+                return null;
+        }
     }
 }

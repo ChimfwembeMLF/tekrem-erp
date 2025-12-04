@@ -221,7 +221,7 @@ class NotificationService
 
         // Add finance managers and admins
         $financeUsers = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['admin', 'manager']);
+            $query->whereIn('name', ['super_user', 'admin', 'manager']);
         })->get();
 
         $users = $users->merge($financeUsers)->unique('id');
@@ -258,7 +258,7 @@ class NotificationService
 
         // Add finance managers and admins
         $financeUsers = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['admin', 'manager']);
+            $query->whereIn('name', ['super_user', 'admin', 'manager']);
         })->get();
 
         $users = $users->merge($financeUsers)->unique('id');
@@ -283,7 +283,7 @@ class NotificationService
     {
         // Get admin and manager users
         $users = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['admin', 'manager']);
+            $query->whereIn('name', ['super_user', 'admin', 'manager']);
         })->get();
 
         // Send notifications

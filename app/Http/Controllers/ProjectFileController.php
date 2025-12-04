@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\ProjectFile;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -16,6 +17,12 @@ class ProjectFileController extends Controller
      */
     public function index(Request $request, Project $project)
     {
+        // Check if file sharing is enabled
+        if (!Setting::get('projects.collaboration.enable_file_sharing', true)) {
+            return redirect()->route('projects.show', $project)
+                ->with('error', 'File sharing is currently disabled.');
+        }
+
         $query = $project->files()->with('uploader')->latestVersions();
 
         // Apply filters
@@ -37,6 +44,10 @@ class ProjectFileController extends Controller
             'project' => $project,
             'files' => $files,
             'filters' => $request->only(['search', 'category']),
+            'settings' => [
+                'max_file_size_mb' => Setting::get('projects.collaboration.max_file_size_mb', 10),
+                'allowed_file_types' => Setting::get('projects.collaboration.allowed_file_types', ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx']),
+            ],
         ]);
     }
 
@@ -45,11 +56,21 @@ class ProjectFileController extends Controller
      */
     public function create(Project $project)
     {
+        // Check if file sharing is enabled
+        if (!Setting::get('projects.collaboration.enable_file_sharing', true)) {
+            return redirect()->route('projects.show', $project)
+                ->with('error', 'File sharing is currently disabled.');
+        }
+
         $milestones = $project->milestones()->select('id', 'name')->get();
 
         return Inertia::render('Projects/Files/Create', [
             'project' => $project,
             'milestones' => $milestones,
+            'settings' => [
+                'max_file_size_mb' => Setting::get('projects.collaboration.max_file_size_mb', 10),
+                'allowed_file_types' => Setting::get('projects.collaboration.allowed_file_types', ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx']),
+            ],
         ]);
     }
 
@@ -58,8 +79,24 @@ class ProjectFileController extends Controller
      */
     public function store(Request $request, Project $project)
     {
+        // Check if file sharing is enabled
+        if (!Setting::get('projects.collaboration.enable_file_sharing', true)) {
+            return back()->withErrors(['error' => 'File sharing is currently disabled.']);
+        }
+
+        // Get file settings
+        $maxFileSizeMB = Setting::get('projects.collaboration.max_file_size_mb', 10);
+        $allowedFileTypes = Setting::get('projects.collaboration.allowed_file_types', [
+            'jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx'
+        ]);
+
         $validated = $request->validate([
-            'file' => 'required|file|max:10240', // 10MB max
+            'file' => [
+                'required',
+                'file',
+                'max:' . ($maxFileSizeMB * 1024), // Convert MB to KB
+                'mimes:' . implode(',', $allowedFileTypes),
+            ],
             'name' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'category' => 'required|in:document,image,contract,design,other',
@@ -103,6 +140,9 @@ class ProjectFileController extends Controller
         return Inertia::render('Projects/Files/Show', [
             'project' => $project,
             'file' => $file,
+            'settings' => [
+                'enable_document_collaboration' => Setting::get('projects.collaboration.enable_document_collaboration', true),
+            ],
         ]);
     }
 

@@ -46,7 +46,7 @@ class CategoryController extends Controller
     {
         $slaOptions = SLA::active()->get(['id', 'name']);
         $users = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['admin', 'staff']);
+            $query->whereIn('name', ['super_user', 'admin', 'staff']);
         })->get(['id', 'name']);
 
         return Inertia::render('Support/Categories/Create', [
@@ -165,7 +165,7 @@ class CategoryController extends Controller
     {
         $slaOptions = SLA::active()->get(['id', 'name']);
         $users = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['admin', 'staff']);
+            $query->whereIn('name', ['super_user', 'admin', 'staff']);
         })->get(['id', 'name']);
 
         return Inertia::render('Support/Categories/Edit', [

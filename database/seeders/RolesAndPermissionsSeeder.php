@@ -231,6 +231,13 @@ class RolesAndPermissionsSeeder extends Seeder
             'view all projects',
             'manage project members',
             'view project analytics',
+            'manage-project-settings',
+
+            // Frontend dot notation permissions for projects
+            'projects.create',
+            'projects.edit',
+            'projects.delete',
+            'projects.update',
 
             // Project Milestones
             'view milestones',
@@ -238,6 +245,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit milestones',
             'delete milestones',
             'manage project milestones',
+
+            // Frontend dot notation permissions for milestones
+            'projects.milestones.create',
+            'projects.milestones.edit',
+            'projects.milestones.delete',
+            'projects.milestones.update',
 
             // Project Tasks
             'view tasks',
@@ -247,12 +260,22 @@ class RolesAndPermissionsSeeder extends Seeder
             'assign tasks',
             'view all tasks',
 
+            // Frontend dot notation permissions for tasks
+            'projects.tasks.create',
+            'projects.tasks.edit',
+            'projects.tasks.delete',
+
             // Project Files
             'view project files',
             'upload project files',
             'edit project files',
             'delete project files',
             'download project files',
+
+            // Frontend dot notation permissions for files
+            'projects.files.create',
+            'projects.files.edit',
+            'projects.files.delete',
 
             // Time Tracking
             'view time logs',
@@ -262,12 +285,27 @@ class RolesAndPermissionsSeeder extends Seeder
             'approve time logs',
             'view all time logs',
 
+            // Frontend dot notation permissions for time logs
+            'projects.time-logs.create',
+            'projects.time-logs.edit',
+            'projects.time-logs.delete',
+
             // Project Templates
             'view project templates',
             'create project templates',
             'edit project templates',
             'delete project templates',
             'use project templates',
+
+            // Frontend dot notation permissions for templates
+            'projects.templates.create',
+            'projects.templates.edit',
+            'projects.templates.delete',
+
+            // Project Tags
+            'projects.tags.create',
+            'projects.tags.edit',
+            'projects.tags.delete',
 
             // ========== SUPPORT MODULE ==========
             // Tickets
@@ -428,6 +466,17 @@ class RolesAndPermissionsSeeder extends Seeder
         // Create roles with descriptions and assign permissions
         $this->command->info('Creating roles and assigning permissions...');
 
+        // ========== SUPER USER ROLE ==========
+        $superUserRole = Role::firstOrCreate([
+            'name' => 'super_user'
+        ], [
+            'description' => 'Super User with absolute access - highest level system administrator'
+        ]);
+
+        // Super User gets ALL permissions
+        $superUserRole->givePermissionTo(Permission::all());
+        $this->command->info('✓ Super User role created with absolute permissions');
+
         // ========== ADMIN ROLE ==========
         $adminRole = Role::firstOrCreate([
             'name' => 'admin'
@@ -489,12 +538,19 @@ class RolesAndPermissionsSeeder extends Seeder
 
             // Projects Module (full access)
             'view projects', 'create projects', 'edit projects', 'delete projects',
-            'view all projects', 'manage project members', 'view project analytics',
+            'view all projects', 'manage project members', 'view project analytics', 'manage-project-settings',
+            'projects.create', 'projects.edit', 'projects.delete', 'projects.update',
             'view milestones', 'create milestones', 'edit milestones', 'delete milestones', 'manage project milestones',
+            'projects.milestones.create', 'projects.milestones.edit', 'projects.milestones.delete', 'projects.milestones.update',
             'view tasks', 'create tasks', 'edit tasks', 'delete tasks', 'assign tasks', 'view all tasks',
+            'projects.tasks.create', 'projects.tasks.edit', 'projects.tasks.delete',
             'view project files', 'upload project files', 'edit project files', 'delete project files', 'download project files',
+            'projects.files.create', 'projects.files.edit', 'projects.files.delete',
             'view time logs', 'create time logs', 'edit time logs', 'approve time logs', 'view all time logs',
+            'projects.time-logs.create', 'projects.time-logs.edit', 'projects.time-logs.delete',
             'view project templates', 'create project templates', 'edit project templates', 'use project templates',
+            'projects.templates.create', 'projects.templates.edit', 'projects.templates.delete',
+            'projects.tags.create', 'projects.tags.edit', 'projects.tags.delete',
 
             // Support Module (full access)
             'view tickets', 'create tickets', 'edit tickets', 'delete tickets',
@@ -564,11 +620,18 @@ class RolesAndPermissionsSeeder extends Seeder
 
             // Projects Module (good access)
             'view projects', 'create projects', 'edit projects', 'view project analytics',
+            'projects.create', 'projects.edit', 'projects.update',
             'view milestones', 'create milestones', 'edit milestones',
+            'projects.milestones.create', 'projects.milestones.edit', 'projects.milestones.update',
             'view tasks', 'create tasks', 'edit tasks', 'assign tasks',
+            'projects.tasks.create', 'projects.tasks.edit',
             'view project files', 'upload project files', 'edit project files', 'download project files',
+            'projects.files.create', 'projects.files.edit',
             'view time logs', 'create time logs', 'edit time logs',
+            'projects.time-logs.create', 'projects.time-logs.edit',
             'view project templates', 'use project templates',
+            'projects.templates.create', 'projects.templates.edit',
+            'projects.tags.create', 'projects.tags.edit',
 
             // Support Module (good access)
             'view tickets', 'create tickets', 'edit tickets', 'assign tickets', 'close tickets', 'reopen tickets',
@@ -627,10 +690,27 @@ class RolesAndPermissionsSeeder extends Seeder
         $customerRole->givePermissionTo($customerPermissions);
         $this->command->info('✓ Customer role created with portal permissions');
 
+        // ========== CREATE SUPER USER ==========
+        $this->command->info('');
+        $this->command->info('Creating super user account...');
+        
+        $superUser = \App\Models\User::firstOrCreate(
+            ['email' => 'superuser@tekrem.com'],
+            [
+                'name' => 'Super User',
+                'password' => \Illuminate\Support\Facades\Hash::make('superuser123'),
+                'email_verified_at' => now(),
+            ]
+        );
+        
+        $superUser->assignRole('super_user');
+        $this->command->info('✓ Super User account created (superuser@system.local / superuser123)');
+
         $this->command->info('');
         $this->command->info('🎉 RBAC System Setup Complete!');
         $this->command->info('📊 Created ' . Permission::count() . ' permissions');
-        $this->command->info('👥 Created 4 roles: admin, manager, staff, customer');
+        $this->command->info('👥 Created 5 roles: super_user, admin, manager, staff, customer');
         $this->command->info('🔐 All permissions properly assigned to roles');
+        $this->command->info('👤 Super User created: superuser@tekrem.com');
     }
 }

@@ -224,7 +224,7 @@ class ProjectController extends Controller
             
             // Get project managers and admins
             $users = \App\Models\User::whereHas('roles', function($q) {
-                $q->whereIn('name', ['admin', 'manager']);
+                $q->whereIn('name', ['super_user', 'admin', 'manager']);
             })->orWhereHas('permissions', function($q) {
                 $q->whereIn('name', ['manage projects', 'view projects']);
             })->get();

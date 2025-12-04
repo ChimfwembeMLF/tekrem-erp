@@ -67,7 +67,7 @@ class ReportService
         $endDate = Carbon::parse($filters['end_date'] ?? now());
 
         $agents = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['admin', 'staff']);
+            $query->whereIn('name', ['super_user', 'admin', 'staff']);
         })->with(['assignedTickets' => function ($query) use ($startDate, $endDate) {
             $query->whereBetween('created_at', [$startDate, $endDate]);
         }])->get();

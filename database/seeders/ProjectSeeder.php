@@ -16,12 +16,15 @@ class ProjectSeeder extends Seeder
      */
     public function run(): void
     {
-        // Get users and clients for relationships
-        $users = User::all();
+        // Get admin or super_user for relationships
+        $user = User::whereHas('roles', function ($query) {
+            $query->whereIn('name', ['admin', 'super_user']);
+        })->first();
         $clients = Client::all();
+        $allUsers = User::all();
 
-        if ($users->isEmpty() || $clients->isEmpty()) {
-            $this->command->warn('No users or clients found. Please run UserSeeder and ClientSeeder first.');
+        if (!$user || $clients->isEmpty()) {
+            $this->command->warn('No admin/super_user or clients found. Please run UserSeeder and ClientSeeder first.');
             return;
         }
 
@@ -62,7 +65,7 @@ class ProjectSeeder extends Seeder
                     'default_budget' => 50000,
                     'estimated_duration' => 90,
                 ],
-                'created_by' => $users->first()->id,
+                'created_by' => $user->id,
             ],
             [
                 'name' => 'Mobile App Development',
@@ -104,7 +107,7 @@ class ProjectSeeder extends Seeder
                     'default_budget' => 75000,
                     'estimated_duration' => 120,
                 ],
-                'created_by' => $users->first()->id,
+                'created_by' => $user->id,
             ],
             [
                 'name' => 'AI Integration Project',
@@ -141,7 +144,7 @@ class ProjectSeeder extends Seeder
                     'default_budget' => 100000,
                     'estimated_duration' => 150,
                 ],
-                'created_by' => $users->first()->id,
+                'created_by' => $user->id,
             ],
         ];
 
@@ -163,8 +166,8 @@ class ProjectSeeder extends Seeder
                 'spent_amount' => 25000,
                 'progress' => 35,
                 'client_id' => $clients->random()->id,
-                'manager_id' => $users->random()->id,
-                'team_members' => $users->random(min(3, $users->count()))->pluck('id')->toArray(),
+                'manager_id' => $allUsers->random()->id,
+                'team_members' => $allUsers->random(min(3, $allUsers->count()))->pluck('id')->toArray(),
                 'tags' => ['ERP', 'Enhancement', 'Web Development'],
             ],
             [
@@ -179,8 +182,8 @@ class ProjectSeeder extends Seeder
                 'spent_amount' => 15000,
                 'progress' => 20,
                 'client_id' => $clients->random()->id,
-                'manager_id' => $users->random()->id,
-                'team_members' => $users->random(min(4, $users->count()))->pluck('id')->toArray(),
+                'manager_id' => $allUsers->random()->id,
+                'team_members' => $allUsers->random(min(4, $allUsers->count()))->pluck('id')->toArray(),
                 'tags' => ['Mobile', 'CRM', 'React Native'],
             ],
             [
@@ -195,8 +198,8 @@ class ProjectSeeder extends Seeder
                 'spent_amount' => 0,
                 'progress' => 0,
                 'client_id' => $clients->random()->id,
-                'manager_id' => $users->random()->id,
-                'team_members' => $users->random(min(2, $users->count()))->pluck('id')->toArray(),
+                'manager_id' => $allUsers->random()->id,
+                'team_members' => $allUsers->random(min(2, $allUsers->count()))->pluck('id')->toArray(),
                 'tags' => ['AI', 'Chatbot', 'Machine Learning'],
             ],
             [
@@ -212,8 +215,8 @@ class ProjectSeeder extends Seeder
                 'spent_amount' => 92000,
                 'progress' => 100,
                 'client_id' => $clients->random()->id,
-                'manager_id' => $users->random()->id,
-                'team_members' => $users->random(min(5, $users->count()))->pluck('id')->toArray(),
+                'manager_id' => $allUsers->random()->id,
+                'team_members' => $allUsers->random(min(5, $allUsers->count()))->pluck('id')->toArray(),
                 'tags' => ['E-commerce', 'Laravel', 'React'],
             ],
             [
@@ -228,8 +231,8 @@ class ProjectSeeder extends Seeder
                 'spent_amount' => 20000,
                 'progress' => 40,
                 'client_id' => $clients->random()->id,
-                'manager_id' => $users->random()->id,
-                'team_members' => $users->random(min(3, $users->count()))->pluck('id')->toArray(),
+                'manager_id' => $allUsers->random()->id,
+                'team_members' => $allUsers->random(min(3, $allUsers->count()))->pluck('id')->toArray(),
                 'tags' => ['Analytics', 'Dashboard', 'BI'],
             ],
         ];
@@ -238,7 +241,7 @@ class ProjectSeeder extends Seeder
             $project = Project::create($projectData);
 
             // Create milestones for each project
-            $this->createMilestonesForProject($project, $users);
+            $this->createMilestonesForProject($project, $allUsers);
         }
 
         $this->command->info('Projects seeded successfully!');
@@ -247,7 +250,7 @@ class ProjectSeeder extends Seeder
     /**
      * Create milestones for a project.
      */
-    private function createMilestonesForProject(Project $project, $users): void
+    private function createMilestonesForProject(Project $project, $allUsers): void
     {
         $milestoneTemplates = [
             [
@@ -300,7 +303,7 @@ class ProjectSeeder extends Seeder
                 'progress' => $milestoneData['progress'],
                 'status' => $milestoneData['status'],
                 'order' => $milestoneData['order'],
-                'assigned_to' => $users->random()->id,
+                'assigned_to' => $allUsers->random()->id,
                 'due_date' => $project->deadline ?
                     $project->start_date?->addDays($milestoneData['order'] * 15) :
                     now()->addDays($milestoneData['order'] * 15),

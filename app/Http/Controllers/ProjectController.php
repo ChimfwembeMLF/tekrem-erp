@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\ProjectTemplate;
 use App\Models\ProjectTimeLog;
 use App\Models\Tag;
+use App\Models\Setting;
 use App\Services\MistralAI;
 use App\Services\ProjectPlanningAIService;
 use Illuminate\Http\Request;
@@ -24,15 +25,18 @@ class ProjectController extends Controller
     {
         $user = Auth::user();
 
+        // Check if analytics is enabled
+        $analyticsEnabled = Setting::get('projects.general.enable_project_analytics', true);
+
         // Get analytics data
-        $analytics = [
+        $analytics = $analyticsEnabled ? [
             'total_projects' => Project::count(),
             'active_projects' => Project::where('status', 'active')->count(),
             'completed_projects' => Project::where('status', 'completed')->count(),
             'overdue_projects' => Project::overdue()->count(),
             'total_budget' => Project::sum('budget'),
             'total_spent' => Project::sum('spent_amount'),
-        ];
+        ] : null;
 
         // Get recent projects
         $recentProjects = Project::with(['client', 'manager'])
@@ -81,6 +85,9 @@ class ProjectController extends Controller
             'recentProjects' => $recentProjects,
             'overdueProjects' => $overdueProjects,
             'upcomingDeadlines' => $upcomingDeadlines,
+            'settings' => [
+                'enable_project_analytics' => $analyticsEnabled,
+            ],
         ]);
     }
   /**
@@ -196,6 +203,10 @@ class ProjectController extends Controller
         return Inertia::render('Projects/Index', [
             'projects' => $projects,
             'filters' => $request->only(['search', 'status', 'priority', 'category']),
+            'settings' => [
+                'enable_project_categories' => Setting::get('projects.general.enable_project_categories', true),
+                'enable_project_tags' => Setting::get('projects.general.enable_project_tags', true),
+            ],
         ]);
     }
 
@@ -208,11 +219,18 @@ class ProjectController extends Controller
 
         // Get only staff and admin users for team members
         $users = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['admin', 'staff']);
+            $query->whereIn('name', ['super_user', 'admin', 'staff']);
         })->select('id', 'name')->get();
 
-        $templates = ProjectTemplate::where('is_active', true)->get();
-        $tags = Tag::active()->ofType('project')->select('id', 'name', 'color')->get();
+        // Check settings
+        $enableTemplates = Setting::get('projects.general.enable_project_templates', true);
+        $enableTags = Setting::get('projects.general.enable_project_tags', true);
+        $enableCategories = Setting::get('projects.general.enable_project_categories', true);
+        $enableBudgets = Setting::get('projects.general.enable_project_budgets', true);
+        $enableClientAccess = Setting::get('projects.general.enable_client_access', true);
+
+        $templates = $enableTemplates ? ProjectTemplate::where('is_active', true)->get() : collect();
+        $tags = $enableTags ? Tag::active()->ofType('project')->select('id', 'name', 'color')->get() : collect();
 
         return Inertia::render('Projects/Create', [
             'clients' => $clients,
@@ -226,6 +244,15 @@ class ProjectController extends Controller
                     'slug' => $tag->slug,
                 ];
             }),
+            'settings' => [
+                'enable_project_templates' => $enableTemplates,
+                'enable_project_tags' => $enableTags,
+                'enable_project_categories' => $enableCategories,
+                'enable_project_budgets' => $enableBudgets,
+                'enable_client_access' => $enableClientAccess,
+                'default_project_status' => Setting::get('projects.general.default_project_status', 'planning'),
+                'project_id_format' => Setting::get('projects.general.project_id_format', 'PRJ-{YYYY}-{####}'),
+            ],
         ]);
     }
 
@@ -234,30 +261,54 @@ class ProjectController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        // Check settings
+        $enableTemplates = Setting::get('projects.general.enable_project_templates', true);
+        $enableBudgets = Setting::get('projects.general.enable_project_budgets', true);
+        $enableTags = Setting::get('projects.general.enable_project_tags', true);
+        $enableCategories = Setting::get('projects.general.enable_project_categories', true);
+        $defaultStatus = Setting::get('projects.general.default_project_status', 'planning');
+        $requireApproval = Setting::get('projects.general.enable_project_approval', false);
+
+        $rules = [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'status' => 'required|in:draft,active,on-hold,completed,cancelled',
+            'status' => 'required|in:draft,planning,active,on-hold,completed,cancelled',
             'priority' => 'required|in:low,medium,high,critical',
-            'category' => 'nullable|string|max:255',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'deadline' => 'nullable|date',
-            'budget' => 'nullable|numeric|min:0',
             'client_id' => 'nullable|exists:clients,id',
             'manager_id' => 'required|exists:users,id',
             'team_members' => 'nullable|array',
             'team_members.*' => 'exists:users,id',
-            'tags' => 'nullable|array',
-            'tags.*' => 'string|max:255',
-            'template_id' => 'nullable|exists:project_templates,id',
-            'generate_ai_milestones' => 'nullable|boolean',
-        ]);
+        ];
+
+        if ($enableCategories) {
+            $rules['category'] = 'nullable|string|max:255';
+        }
+        if ($enableBudgets) {
+            $rules['budget'] = 'nullable|numeric|min:0';
+        }
+        if ($enableTags) {
+            $rules['tags'] = 'nullable|array';
+            $rules['tags.*'] = 'string|max:255';
+        }
+        if ($enableTemplates) {
+            $rules['template_id'] = 'nullable|exists:project_templates,id';
+            $rules['generate_ai_milestones'] = 'nullable|boolean';
+        }
+
+        $validated = $request->validate($rules);
+
+        // Use default status if not provided
+        if (!isset($validated['status'])) {
+            $validated['status'] = $requireApproval ? 'draft' : $defaultStatus;
+        }
 
         // Validate that team members are staff/admin
         if (!empty($validated['team_members'])) {
             $staffUsers = User::whereHas('roles', function ($query) {
-                $query->whereIn('name', ['admin', 'staff']);
+                $query->whereIn('name', ['super_user', 'admin', 'staff']);
             })->whereIn('id', $validated['team_members'])->count();
 
             if ($staffUsers !== count($validated['team_members'])) {
@@ -358,6 +409,14 @@ class ProjectController extends Controller
             'board' => $board,
             'columns' => $columns,
             'cards' => $cards,
+            'settings' => [
+                'enable_project_budgets' => Setting::get('projects.general.enable_project_budgets', true),
+                'enable_client_access' => Setting::get('projects.general.enable_client_access', true),
+                'enable_project_analytics' => Setting::get('projects.general.enable_project_analytics', true),
+                'enable_time_tracking' => Setting::get('projects.time_tracking.enable_time_tracking', true),
+                'enable_milestones' => Setting::get('projects.milestones.enable_milestones', true),
+                'enable_file_sharing' => Setting::get('projects.collaboration.enable_file_sharing', true),
+            ],
         ]);
     }
 
@@ -371,10 +430,16 @@ class ProjectController extends Controller
 
         // Get only staff and admin users for team members
         $users = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['admin', 'staff']);
+            $query->whereIn('name', ['super_user', 'admin', 'staff']);
         })->select('id', 'name')->get();
 
-        $tags = Tag::active()->ofType('project')->select('id', 'name', 'color')->get();
+        // Check settings
+        $enableTags = Setting::get('projects.general.enable_project_tags', true);
+        $enableCategories = Setting::get('projects.general.enable_project_categories', true);
+        $enableBudgets = Setting::get('projects.general.enable_project_budgets', true);
+        $enableClientAccess = Setting::get('projects.general.enable_client_access', true);
+
+        $tags = $enableTags ? Tag::active()->ofType('project')->select('id', 'name', 'color')->get() : collect();
 
         return Inertia::render('Projects/Edit', [
             'project' => $project,
@@ -396,6 +461,12 @@ class ProjectController extends Controller
                     'slug' => $tag->slug,
                 ];
             }),
+            'settings' => [
+                'enable_project_tags' => $enableTags,
+                'enable_project_categories' => $enableCategories,
+                'enable_project_budgets' => $enableBudgets,
+                'enable_client_access' => $enableClientAccess,
+            ],
         ]);
     }
 
@@ -425,7 +496,7 @@ class ProjectController extends Controller
         // Validate that team members are staff/admin
         if (!empty($validated['team_members'])) {
             $staffUsers = User::whereHas('roles', function ($query) {
-                $query->whereIn('name', ['admin', 'staff']);
+                $query->whereIn('name', ['super_user', 'admin', 'staff']);
             })->whereIn('id', $validated['team_members'])->count();
 
             if ($staffUsers !== count($validated['team_members'])) {

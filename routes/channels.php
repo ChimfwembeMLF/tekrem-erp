@@ -30,7 +30,7 @@ Broadcast::channel('client.{clientId}', function (User $user, $clientId) {
     }
 
     // Allow access if the user is an admin, staff, or the assigned user
-    return $user->hasRole(['admin', 'staff']) || $user->id === $client->user_id;
+    return $user->hasRole(['super_user', 'admin', 'staff']) || $user->id === $client->user_id;
 });
 
 // Lead chat channel
@@ -43,7 +43,7 @@ Broadcast::channel('lead.{leadId}', function (User $user, $leadId) {
     }
 
     // Allow access if the user is an admin, staff, or the assigned user
-    return $user->hasRole(['admin', 'staff']) || $user->id === $lead->user_id;
+    return $user->hasRole(['super_user', 'admin', 'staff']) || $user->id === $lead->user_id;
 });
 
 // User private channel for receiving messages
@@ -60,7 +60,7 @@ Broadcast::channel('conversation.{conversationId}', function (User $user, $conve
     }
 
     // Allow access if the user is a participant, creator, assignee, or has admin/staff role
-    return $user->hasRole(['admin', 'staff']) ||
+    return $user->hasRole(['super_user', 'admin', 'staff']) ||
            $conversation->created_by === $user->id ||
            $conversation->assigned_to === $user->id ||
            $conversation->hasParticipant($user->id);
@@ -69,14 +69,14 @@ Broadcast::channel('conversation.{conversationId}', function (User $user, $conve
 // Guest chat channel - allows staff to receive guest messages
 Broadcast::channel('guest-chat', function (User $user) {
     // Only staff and admin can listen to guest chat notifications
-    return $user->hasRole(['admin', 'staff']);
+    return $user->hasRole(['super_user', 'admin', 'staff']);
 });
 
 // Guest session channel - for specific guest conversations
 Broadcast::channel('guest-session.{sessionId}', function ($user, $sessionId) {
     // Allow access for staff/admin or if it's a guest session (no user)
     if ($user instanceof User) {
-        return $user->hasRole(['admin', 'staff']);
+        return $user->hasRole(['super_user', 'admin', 'staff']);
     }
 
     // For guest users, we'll handle this differently in the frontend

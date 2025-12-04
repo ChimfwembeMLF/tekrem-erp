@@ -188,7 +188,7 @@ class AnalyticsController extends Controller
     private function getAgentPerformance(array $dateRange): array
     {
         return User::whereHas('roles', function ($query) {
-                $query->whereIn('name', ['admin', 'staff']);
+                $query->whereIn('name', ['super_user', 'admin', 'staff']);
             })
             ->withCount([
                 'assignedTickets as tickets_assigned' => function ($query) use ($dateRange) {

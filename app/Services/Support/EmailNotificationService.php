@@ -112,7 +112,7 @@ class EmailNotificationService
                 ->with('user')
                 ->where('user_id', '!=', $comment->user_id)
                 ->whereHas('user.roles', function ($query) {
-                    $query->whereIn('name', ['admin', 'staff']);
+                    $query->whereIn('name', ['super_user', 'admin', 'staff']);
                 })
                 ->get()
                 ->pluck('user')

@@ -374,6 +374,13 @@ export default function Sidebar({ settings }: SidebarProps) {
       icon: <BarChart3 className="h-5 w-5" />,
       active: route().current('projects.analytics.*')
     },
+    {
+      href: route('projects.setup.index'),
+      label: t('projects.settings', 'Settings'),
+      icon: <Settings className="h-5 w-5" />,
+      active: route().current('projects.setup.*'),
+      requirePermission: 'manage-project-settings'
+    },
   ] : [];
 
   // HR navigation items - only visible to users with hr permission
@@ -505,7 +512,7 @@ export default function Sidebar({ settings }: SidebarProps) {
   ] : [];
 
   // Admin navigation items - only visible to admin users
-  const adminItems = hasAnyRole(['admin']) ? [
+  const adminItems = hasAnyRole(['admin', 'super_user']) ? [
     {
       href: route('admin.users.index'),
       label: t('admin.users', 'User Management'),
@@ -839,7 +846,7 @@ export default function Sidebar({ settings }: SidebarProps) {
         )}
 
         {/* Admin Navigation - Only visible to admin users */}
-        {hasAnyRole(['admin']) && (
+        {hasAnyRole(['admin', 'super_user']) && (
           <Collapsible className="mt-4 pt-4 border-t border-border">
             <CollapsibleTrigger className={cn(
               "w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors",
@@ -1078,7 +1085,7 @@ export default function Sidebar({ settings }: SidebarProps) {
     <>
       {/* Desktop Sidebar */}
       <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 z-10">
-        <div className="flex flex-col flex-grow border-r border-border bg-background">
+        <div className="flex flex-col flex-grow border-r border-border bg-background h-screen overflow-y-auto">
           <SidebarContent />
         </div>
       </div>

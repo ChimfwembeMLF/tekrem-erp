@@ -14,8 +14,6 @@ class ProjectSetupController extends Controller
      */
     public function index(): Response
     {
-        $this->authorize('manage-project-settings');
-
         return Inertia::render('Projects/Setup/Index', [
             'generalSettings' => $this->getGeneralSettings(),
             'taskSettings' => $this->getTaskSettings(),
@@ -31,8 +29,6 @@ class ProjectSetupController extends Controller
      */
     public function updateGeneral(Request $request)
     {
-        $this->authorize('manage-project-settings');
-
         $validated = $request->validate([
             'project_id_format' => 'required|string|max:50',
             'project_prefix' => 'nullable|string|max:10',
@@ -65,8 +61,6 @@ class ProjectSetupController extends Controller
      */
     public function updateTasks(Request $request)
     {
-        $this->authorize('manage-project-settings');
-
         $validated = $request->validate([
             'enable_task_dependencies' => 'boolean',
             'enable_task_priorities' => 'boolean',
@@ -98,8 +92,6 @@ class ProjectSetupController extends Controller
      */
     public function updateTimeTracking(Request $request)
     {
-        $this->authorize('manage-project-settings');
-
         $validated = $request->validate([
             'enable_time_tracking' => 'boolean',
             'enable_manual_time_entry' => 'boolean',
@@ -130,8 +122,6 @@ class ProjectSetupController extends Controller
      */
     public function updateMilestones(Request $request)
     {
-        $this->authorize('manage-project-settings');
-
         $validated = $request->validate([
             'enable_milestones' => 'boolean',
             'enable_milestone_dependencies' => 'boolean',
@@ -159,8 +149,6 @@ class ProjectSetupController extends Controller
      */
     public function updateCollaboration(Request $request)
     {
-        $this->authorize('manage-project-settings');
-
         $validated = $request->validate([
             'enable_team_chat' => 'boolean',
             'enable_file_sharing' => 'boolean',
@@ -190,8 +178,6 @@ class ProjectSetupController extends Controller
      */
     public function updateAI(Request $request)
     {
-        $this->authorize('manage-project-settings');
-
         $validated = $request->validate([
             'enable_ai_planning' => 'boolean',
             'enable_ai_task_generation' => 'boolean',

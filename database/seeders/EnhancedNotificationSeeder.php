@@ -16,7 +16,7 @@ class EnhancedNotificationSeeder extends Seeder
     public function run(): void
     {
         // Get users with different roles
-        $adminUsers = User::role('admin')->get();
+        $adminUsers = User::role(['admin', 'super_user'])->get();
         $staffUsers = User::role('staff')->get();
         $allUsers = $adminUsers->merge($staffUsers);
 

@@ -68,7 +68,7 @@ class TicketController extends Controller
 
         $categories = TicketCategory::active()->ordered()->get(['id', 'name']);
         $users = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['admin', 'staff']);
+            $query->whereIn('name', ['super_user', 'admin', 'staff']);
         })->get(['id', 'name']);
 
         return Inertia::render('Support/Tickets/Index', [
@@ -86,7 +86,7 @@ class TicketController extends Controller
     {
         $categories = TicketCategory::active()->ordered()->get();
         $users = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['admin', 'staff']);
+            $query->whereIn('name', ['super_user', 'admin', 'staff']);
         })->get(['id', 'name']);
 
         $clients = Client::select('id', 'name', 'email')->get();
@@ -200,7 +200,7 @@ class TicketController extends Controller
         ]);
 
         $users = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['admin', 'staff']);
+            $query->whereIn('name', ['super_user', 'admin', 'staff']);
         })->get(['id', 'name']);
 
         return Inertia::render('Support/Tickets/Show', [
@@ -217,7 +217,7 @@ class TicketController extends Controller
     {
         $categories = TicketCategory::active()->ordered()->get();
         $users = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['admin', 'staff']);
+            $query->whereIn('name', ['super_user', 'admin', 'staff']);
         })->get(['id', 'name']);
 
         return Inertia::render('Support/Tickets/Edit', [

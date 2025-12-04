@@ -48,7 +48,7 @@ class PerformanceController extends Controller
         });
 
         $reviewers = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['admin', 'staff']);
+            $query->whereIn('name', ['super_user', 'admin', 'staff']);
         })->orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('HR/Performance/Index', [
@@ -73,7 +73,7 @@ class PerformanceController extends Controller
         });
 
         $reviewers = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['admin', 'staff']);
+            $query->whereIn('name', ['super_user', 'admin', 'staff']);
         })->orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('HR/Performance/Create', [
@@ -128,7 +128,7 @@ class PerformanceController extends Controller
         $performance->load(['employee.user', 'reviewer']);
 
         $reviewers = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['admin', 'staff']);
+            $query->whereIn('name', ['super_user', 'admin', 'staff']);
         })->orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('HR/Performance/Edit', [

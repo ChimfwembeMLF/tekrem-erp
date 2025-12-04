@@ -189,7 +189,7 @@ class EnhancedNotificationService
 
         // Add finance managers and admins
         $financeUsers = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['admin', 'manager']);
+            $query->whereIn('name', ['super_user', 'admin', 'manager']);
         })->where('is_active', true)->get();
 
         return $users->merge($financeUsers)->unique('id');
@@ -215,7 +215,7 @@ class EnhancedNotificationService
 
         // Add finance managers and admins
         $financeUsers = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['admin', 'manager']);
+            $query->whereIn('name', ['super_user', 'admin', 'manager']);
         })->where('is_active', true)->get();
 
         return $users->merge($financeUsers)->unique('id');
@@ -229,7 +229,7 @@ class EnhancedNotificationService
     protected static function getReconciliationNotificationUsers(): \Illuminate\Database\Eloquent\Collection
     {
         return User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['admin', 'manager']);
+            $query->whereIn('name', ['super_user', 'admin', 'manager']);
         })->where('is_active', true)->get();
     }
 

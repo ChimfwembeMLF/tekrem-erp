@@ -185,26 +185,162 @@ export interface ProjectTimeLog {
   updated_at?: string;
 }
 
+export interface CardAttachment {
+  id: number;
+  card_id: number;
+  user_id: number;
+  filename: string;
+  path: string;
+  mime_type: string;
+  size: number;
+  created_at: string;
+  updated_at: string;
+  user?: User;
+}
+
+export interface CardComment {
+  id: number;
+  card_id: number;
+  user_id: number;
+  parent_id?: number;
+  content: string;
+  created_at: string;
+  updated_at: string;
+  user?: User;
+  replies?: CardComment[];
+}
+
+export interface CardChecklistItem {
+  id: number;
+  checklist_id: number;
+  title: string;
+  completed: boolean;
+  order: number;
+  assigned_to?: number;
+  due_date?: string;
+  created_at: string;
+  updated_at: string;
+  assignee?: User;
+}
+
+export interface CardChecklist {
+  id: number;
+  card_id: number;
+  title: string;
+  order: number;
+  created_at: string;
+  updated_at: string;
+  items?: CardChecklistItem[];
+}
+
+export interface CardActivityLog {
+  id: number;
+  card_id: number;
+  user_id: number;
+  action: string;
+  field?: string;
+  old_value?: string;
+  new_value?: string;
+  created_at: string;
+  user?: User;
+}
+
+export interface CardWatcher {
+  id: number;
+  card_id: number;
+  user_id: number;
+  created_at: string;
+  user?: User;
+}
+
+export interface CardRelation {
+  id: number;
+  card_id: number;
+  related_card_id: number;
+  relation_type: 'blocks' | 'blocked_by' | 'relates_to' | 'duplicates' | 'duplicated_by';
+  created_at: string;
+  updated_at: string;
+  related_card?: BoardCard;
+}
+
+export interface CardVote {
+  id: number;
+  card_id: number;
+  user_id: number;
+  created_at: string;
+  user?: User;
+}
+
+export interface CardSubscriber {
+  id: number;
+  card_id: number;
+  user_id: number;
+  created_at: string;
+  user?: User;
+}
+
+export interface CardReminder {
+  id: number;
+  card_id: number;
+  user_id: number;
+  remind_at: string;
+  message?: string;
+  sent: boolean;
+  created_at: string;
+  updated_at: string;
+  user?: User;
+}
+
+export interface CardLabel {
+  id: number;
+  name: string;
+  color: string;
+  board_id?: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface BoardCard {
   id: number;
   board_id: number;
   column_id: number;
+  sprint_id?: number;
+  epic_id?: number;
   project_task_id?: number;
   title: string;
   description?: string;
-  type?: 'story' | 'task' | 'bug' | 'epic';
-  priority?: 'low' | 'medium' | 'high' | 'critical';
+  type: 'story' | 'task' | 'bug' | 'epic';
+  priority: 'low' | 'medium' | 'high' | 'critical';
   story_points?: number;
-  assigned_to?: number;
-  tags?: string[];
-  order?: number;
+  assignee_id?: number;
+  reporter_id?: number;
+  status?: string;
+  labels?: string[];
+  dependencies?: any[];
+  order: number;
   due_date?: string;
-  attachments?: number;
-  comments?: number;
-  checklist_progress?: { completed: number; total: number };
-  metadata?: Record<string, any>;
-  created_at?: string;
-  updated_at?: string;
+  created_at: string;
+  updated_at: string;
+  // Relationships
+  assignee?: User;
+  reporter?: User;
+  attachments?: CardAttachment[];
+  comments?: CardComment[];
+  checklists?: CardChecklist[];
+  activity_logs?: CardActivityLog[];
+  watchers?: CardWatcher[];
+  relations?: CardRelation[];
+  votes?: CardVote[];
+  subscribers?: CardSubscriber[];
+  reminders?: CardReminder[];
+  card_labels?: CardLabel[];
+  // Counts
+  attachments_count?: number;
+  comments_count?: number;
+  watchers_count?: number;
+  votes_count?: number;
+  checklist_items_total?: number;
+  checklist_items_completed?: number;
 }
 
 export interface BoardColumn {

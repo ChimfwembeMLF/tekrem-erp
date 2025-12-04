@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\User;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -39,6 +40,11 @@ class ProjectMilestoneController extends Controller
             'project' => $project,
             'milestones' => $milestones,
             'filters' => $request->only(['search', 'status', 'priority']),
+            'settings' => [
+                'enable_milestones' => Setting::get('projects.milestones.enable_milestones', true),
+                'enable_milestone_dependencies' => Setting::get('projects.milestones.enable_milestone_dependencies', true),
+                'enable_milestone_budgets' => Setting::get('projects.milestones.enable_milestone_budgets', true),
+            ],
         ]);
     }
 
@@ -47,11 +53,22 @@ class ProjectMilestoneController extends Controller
      */
     public function create(Project $project)
     {
+        // Check if milestones are enabled
+        if (!Setting::get('projects.milestones.enable_milestones', true)) {
+            return redirect()->route('projects.show', $project)
+                ->with('error', 'Milestones are currently disabled.');
+        }
+
         $users = User::select('id', 'name')->get();
 
         return Inertia::render('Projects/Milestones/Create', [
             'project' => $project,
             'users' => $users,
+            'settings' => [
+                'enable_milestone_dependencies' => Setting::get('projects.milestones.enable_milestone_dependencies', true),
+                'enable_milestone_budgets' => Setting::get('projects.milestones.enable_milestone_budgets', true),
+                'enable_milestone_approval' => Setting::get('projects.milestones.enable_milestone_approval', false),
+            ],
         ]);
     }
 
@@ -60,15 +77,38 @@ class ProjectMilestoneController extends Controller
      */
     public function store(Request $request, Project $project)
     {
-        $validated = $request->validate([
+        // Check if milestones are enabled
+        if (!Setting::get('projects.milestones.enable_milestones', true)) {
+            return back()->withErrors(['error' => 'Milestones are currently disabled.']);
+        }
+
+        // Check settings
+        $enableDependencies = Setting::get('projects.milestones.enable_milestone_dependencies', true);
+        $enableBudgets = Setting::get('projects.milestones.enable_milestone_budgets', true);
+        $enableApproval = Setting::get('projects.milestones.enable_milestone_approval', false);
+
+        $rules = [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'due_date' => 'nullable|date',
             'priority' => 'required|in:low,medium,high,critical',
             'assigned_to' => 'nullable|exists:users,id',
-            'dependencies' => 'nullable|array',
-            'dependencies.*' => 'exists:project_milestones,id',
-        ]);
+        ];
+
+        if ($enableDependencies) {
+            $rules['dependencies'] = 'nullable|array';
+            $rules['dependencies.*'] = 'exists:project_milestones,id';
+        }
+        if ($enableBudgets) {
+            $rules['budget'] = 'nullable|numeric|min:0';
+        }
+
+        $validated = $request->validate($rules);
+
+        // Set status based on approval requirement
+        if ($enableApproval) {
+            $validated['status'] = 'pending_approval';
+        }
 
         // Set the order as the next in sequence
         $validated['order'] = $project->milestones()->max('order') + 1;
@@ -90,6 +130,11 @@ class ProjectMilestoneController extends Controller
         return Inertia::render('Projects/Milestones/Show', [
             'project' => $project,
             'milestone' => $milestone,
+            'settings' => [
+                'enable_milestone_dependencies' => Setting::get('projects.milestones.enable_milestone_dependencies', true),
+                'enable_milestone_budgets' => Setting::get('projects.milestones.enable_milestone_budgets', true),
+                'enable_milestone_reports' => Setting::get('projects.milestones.enable_milestone_reports', true),
+            ],
         ]);
     }
 
@@ -99,16 +144,22 @@ class ProjectMilestoneController extends Controller
     public function edit(Project $project, ProjectMilestone $milestone)
     {
         $users = User::select('id', 'name')->get();
-        $availableDependencies = $project->milestones()
+        
+        $enableDependencies = Setting::get('projects.milestones.enable_milestone_dependencies', true);
+        $availableDependencies = $enableDependencies ? $project->milestones()
             ->where('id', '!=', $milestone->id)
             ->select('id', 'name')
-            ->get();
+            ->get() : collect();
 
         return Inertia::render('Projects/Milestones/Edit', [
             'project' => $project,
             'milestone' => $milestone,
             'users' => $users,
             'availableDependencies' => $availableDependencies,
+            'settings' => [
+                'enable_milestone_dependencies' => $enableDependencies,
+                'enable_milestone_budgets' => Setting::get('projects.milestones.enable_milestone_budgets', true),
+            ],
         ]);
     }
 

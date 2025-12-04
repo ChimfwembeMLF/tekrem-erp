@@ -14,14 +14,16 @@ class ReportSeeder extends Seeder
      */
     public function run(): void
     {
-        $adminUser = User::where('email', 'admin@tekrem.com')->first();
+        $user = User::whereHas('roles', function ($query) {
+            $query->whereIn('name', ['admin', 'super_user']);
+        })->first();
         
-        if (!$adminUser) {
-            // If no admin user exists, create reports for the first user
-            $adminUser = User::first();
+        if (!$user) {
+            // If no admin or super_user exists, create reports for the first user
+            $user = User::first();
         }
 
-        if (!$adminUser) {
+        if (!$user) {
             $this->command->warn('No users found. Please run the user seeder first.');
             return;
         }
@@ -40,7 +42,7 @@ class ReportSeeder extends Seeder
                 'generated_at' => now()->subDays(2),
                 'file_path' => 'reports/income_statement_oct_2025.pdf',
                 'file_size' => 1024 * 245, // 245KB
-                'created_by' => $adminUser->id,
+                'created_by' => $user->id,
                 'created_at' => now()->subDays(5),
             ],
             [
@@ -56,7 +58,7 @@ class ReportSeeder extends Seeder
                 'generated_at' => now()->subDays(4),
                 'file_path' => 'reports/cash_flow_q3_2025.pdf',
                 'file_size' => 1024 * 189, // 189KB
-                'created_by' => $adminUser->id,
+                'created_by' => $user->id,
                 'created_at' => now()->subDays(7),
             ],
             [
@@ -71,7 +73,7 @@ class ReportSeeder extends Seeder
                 'generated_at' => now()->subDays(3),
                 'file_path' => 'reports/balance_sheet_sep_2025.pdf',
                 'file_size' => 1024 * 156, // 156KB
-                'created_by' => $adminUser->id,
+                'created_by' => $user->id,
                 'created_at' => now()->subDays(10),
             ],
             [
@@ -88,7 +90,7 @@ class ReportSeeder extends Seeder
                 'generated_at' => null,
                 'file_path' => null,
                 'file_size' => null,
-                'created_by' => $adminUser->id,
+                'created_by' => $user->id,
                 'created_at' => now()->subHours(3),
             ],
             [
@@ -104,7 +106,7 @@ class ReportSeeder extends Seeder
                 'generated_at' => now()->subDays(1),
                 'file_path' => 'reports/trial_balance_oct_2025.pdf',
                 'file_size' => 1024 * 98, // 98KB
-                'created_by' => $adminUser->id,
+                'created_by' => $user->id,
                 'created_at' => now()->subDays(2),
             ],
             [
@@ -119,7 +121,7 @@ class ReportSeeder extends Seeder
                 'generated_at' => now()->subDays(1),
                 'file_path' => 'reports/chart_of_accounts.pdf',
                 'file_size' => 1024 * 134, // 134KB
-                'created_by' => $adminUser->id,
+                'created_by' => $user->id,
                 'created_at' => now()->subDays(6),
             ],
             [
@@ -135,7 +137,7 @@ class ReportSeeder extends Seeder
                 'generated_at' => now()->subDays(5),
                 'file_path' => 'reports/reconciliation_summary_sep_2025.pdf',
                 'file_size' => 1024 * 87, // 87KB
-                'created_by' => $adminUser->id,
+                'created_by' => $user->id,
                 'created_at' => now()->subDays(8),
             ],
             [
@@ -151,7 +153,7 @@ class ReportSeeder extends Seeder
                 'generated_at' => null,
                 'file_path' => null,
                 'file_size' => null,
-                'created_by' => $adminUser->id,
+                'created_by' => $user->id,
                 'created_at' => now()->subMinutes(30),
             ],
         ];

@@ -12,7 +12,7 @@ export default function usePermissions() {
    */
   const isAdmin = (): boolean => {
     if (!user) return false;
-    return roles.includes('admin');
+    return roles.includes('admin') || roles.includes('super_user');
   };
 
   /**

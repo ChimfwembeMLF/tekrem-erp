@@ -110,7 +110,7 @@ Route::middleware([
     });
 
     // Admin routes
-    Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {
+    Route::prefix('admin')->name('admin.')->middleware('role:admin|super_user')->group(function () {
         // Modules Management
         Route::resource('modules', \App\Http\Controllers\Admin\ModuleController::class);
         // Settings routes
@@ -215,7 +215,7 @@ Route::middleware([
         });
 
         // AI Conversation Export routes (Admin only)
-        Route::prefix('ai-conversations')->name('ai-conversations.')->middleware('role:admin')->group(function () {
+        Route::prefix('ai-conversations')->name('ai-conversations.')->middleware('role:admin|super_user')->group(function () {
             Route::get('/export', function () {
                 return \Inertia\Inertia::render('Settings/AIConversationExport');
             })->name('export.index');
@@ -233,6 +233,17 @@ Route::middleware([
 
         // My Tasks (global route for current user's tasks)
         Route::get('/my-tasks', [\App\Http\Controllers\ProjectTaskController::class, 'myTasks'])->name('my-tasks');
+
+        // Project Setup/Settings (must be before /{project} catch-all)
+        Route::prefix('setup')->name('setup.')->middleware('permission:manage-project-settings')->group(function () {
+            Route::get('/', [\App\Http\Controllers\ProjectSetupController::class, 'index'])->name('index');
+            Route::post('/update-general', [\App\Http\Controllers\ProjectSetupController::class, 'updateGeneral'])->name('update-general');
+            Route::post('/update-tasks', [\App\Http\Controllers\ProjectSetupController::class, 'updateTasks'])->name('update-tasks');
+            Route::post('/update-time-tracking', [\App\Http\Controllers\ProjectSetupController::class, 'updateTimeTracking'])->name('update-time-tracking');
+            Route::post('/update-milestones', [\App\Http\Controllers\ProjectSetupController::class, 'updateMilestones'])->name('update-milestones');
+            Route::post('/update-collaboration', [\App\Http\Controllers\ProjectSetupController::class, 'updateCollaboration'])->name('update-collaboration');
+            Route::post('/update-ai', [\App\Http\Controllers\ProjectSetupController::class, 'updateAI'])->name('update-ai');
+        });
 
         // Templates (must be before /{project} catch-all)
         Route::prefix('templates')->name('templates.')->group(function () {
@@ -703,13 +714,13 @@ Route::middleware([
         });
 
         // SLA Management (Admin only)
-        Route::middleware(['role:admin'])->prefix('sla')->name('sla.')->group(function () {
+        Route::middleware(['role:admin|super_user'])->prefix('sla')->name('sla.')->group(function () {
             Route::resource('/', \App\Http\Controllers\Support\SLAController::class)->parameters(['' => 'sla']);
             Route::post('{sla}/activate', [\App\Http\Controllers\Support\SLAController::class, 'activate'])->name('activate');
         });
 
         // Automation Rules (Admin only)
-        Route::middleware(['role:admin'])->prefix('automation')->name('automation.')->group(function () {
+        Route::middleware(['role:admin|super_user'])->prefix('automation')->name('automation.')->group(function () {
             Route::resource('/', \App\Http\Controllers\Support\AutomationController::class)->parameters(['' => 'automation']);
             Route::post('{automation}/toggle', [\App\Http\Controllers\Support\AutomationController::class, 'toggle'])->name('toggle');
             Route::post('{automation}/test', [\App\Http\Controllers\Support\AutomationController::class, 'test'])->name('test');
@@ -750,7 +761,7 @@ Route::middleware([
     });
 
     // AI Module Routes
-    Route::prefix('ai')->name('ai.')->middleware(['auth', 'verified', 'role:admin|staff'])->group(function () {
+    Route::prefix('ai')->name('ai.')->middleware(['auth', 'verified', 'role:admin|super_user|staff'])->group(function () {
         // Dashboard
         Route::get('dashboard', [\App\Http\Controllers\AI\DashboardController::class, 'index'])->name('dashboard');
         Route::get('dashboard/service-status', [\App\Http\Controllers\AI\DashboardController::class, 'serviceStatus'])->name('dashboard.service-status');
@@ -981,7 +992,7 @@ Route::middleware([
     });
 
     // Settings routes - Admin only
-    Route::middleware(['role:admin'])->prefix('settings')->name('settings.')->group(function () {
+    Route::middleware(['role:admin|super_user'])->prefix('settings')->name('settings.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Settings\SettingsController::class, 'index'])->name('index');
         Route::get('/general', [\App\Http\Controllers\Settings\SettingsController::class, 'general'])->name('general');
         Route::put('/general', [\App\Http\Controllers\Settings\SettingsController::class, 'updateGeneral'])->name('general.update');
