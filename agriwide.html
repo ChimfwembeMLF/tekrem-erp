@@ -14,6 +14,12 @@
             <p class="text-green-100 text-sm mt-1">Test your n8n agricultural AI agent</p>
         </div>
 
+        <!-- Previous Conversations -->
+        <div class="bg-white p-4 rounded-lg shadow-lg mt-4">
+            <h2 class="text-lg font-semibold mb-3">Previous Conversations</h2>
+            <div id="previousConversations" class="space-y-2"></div>
+        </div>
+
         <!-- Configuration Panel -->
         <div class="bg-white p-4 shadow-lg border-b">
             <h2 class="text-lg font-semibold mb-3">Configuration</h2>
@@ -135,12 +141,24 @@
                     <pre id="responseDebug" class="bg-gray-100 p-3 rounded text-xs overflow-auto max-h-64">No response yet</pre>
                 </div>
             </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                    <h3 class="text-sm font-medium text-blue-700 mb-2">Generate Title Request:</h3>
+                    <pre id="titleRequestDebug" class="bg-blue-50 p-3 rounded text-xs overflow-auto max-h-64">No request yet</pre>
+                </div>
+                <div>
+                    <h3 class="text-sm font-medium text-blue-700 mb-2">Generate Title Response:</h3>
+                    <pre id="titleResponseDebug" class="bg-blue-50 p-3 rounded text-xs overflow-auto max-h-64">No response yet</pre>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         let messages = [];
         let currentAttachment = null;
+        let chatTitle = null;
+        let sessionId = document.getElementById('sessionId') ? document.getElementById('sessionId').value : null;
 
         function generateUUID() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -153,6 +171,7 @@
         function generateSessionId() {
             const newSessionId = generateUUID();
             document.getElementById('sessionId').value = newSessionId;
+            sessionId = newSessionId;
             clearChat();
             alert('New session ID generated: ' + newSessionId);
         }
@@ -162,10 +181,12 @@
         function clearChat() {
             messages = [];
             currentAttachment = null;
+            chatTitle = null;
             document.getElementById('chatMessages').innerHTML = `<div class="text-center text-gray-500 text-sm">Start a conversation with the Agricultural AI Assistant</div>`;
             document.getElementById('requestDebug').textContent = 'No request yet';
             document.getElementById('responseDebug').textContent = 'No response yet';
             document.getElementById('attachmentDisplay').classList.add('hidden');
+            displayChatTitle();
         }
 
         function handleFileSelect(event) {
@@ -209,7 +230,7 @@
             if(!message){setStatus('Please enter a message',true);return;}
 
             const apiEndpoint=document.getElementById('apiEndpoint').value;
-            const sessionId=document.getElementById('sessionId').value;
+            sessionId=document.getElementById('sessionId').value;
             const userName=document.getElementById('userName').value;
             const farmName=document.getElementById('farmName').value;
             const location=document.getElementById('location').value;
@@ -230,6 +251,37 @@
                     reader.onerror=reject;
                     reader.readAsDataURL(currentAttachment.file);
                 });
+            }
+
+            // Send /chat/generate-title only for the first user message
+            if (messages.length === 1) {
+                const titleReqPayload = { message, session_id: sessionId };
+                document.getElementById('titleRequestDebug').textContent = JSON.stringify(titleReqPayload, null, 2);
+                try {
+                    const titleResponse = await fetch(apiEndpoint.replace('/chat/message', '/chat/generate-title'), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(titleReqPayload)
+                    });
+                    let titleRespData;
+                    if (titleResponse.ok) {
+                        titleRespData = await titleResponse.json();
+                        chatTitle = titleRespData.title;
+                        displayChatTitle();
+                        saveConversation(sessionId, chatTitle);
+                    } else {
+                        titleRespData = { error: true, status: titleResponse.status, message: await titleResponse.text() };
+                        chatTitle = null;
+                        displayChatTitle();
+                        saveConversation(sessionId, chatTitle);
+                    }
+                    document.getElementById('titleResponseDebug').textContent = JSON.stringify(titleRespData, null, 2);
+                } catch (err) {
+                    chatTitle = null;
+                    displayChatTitle();
+                    saveConversation(sessionId, chatTitle);
+                    document.getElementById('titleResponseDebug').textContent = `Error: ${err.message}`;
+                }
             }
 
             const requestPayload={
@@ -261,6 +313,59 @@
         }
 
         function sendQuickTest(testMessage){ document.getElementById('messageInput').value=testMessage; sendMessage(); }
+
+        function displayChatTitle() {
+            let header = document.querySelector('.bg-green-600.text-white.p-6');
+            let titleEl = document.getElementById('chatTitleDisplay');
+            if (!titleEl) {
+                titleEl = document.createElement('div');
+                titleEl.id = 'chatTitleDisplay';
+                titleEl.className = 'mt-2 text-lg font-semibold text-yellow-200';
+                header.appendChild(titleEl);
+            }
+            if (chatTitle) {
+                titleEl.textContent = `📝 Chat Title: ${chatTitle}`;
+            } else {
+                titleEl.textContent = '';
+            }
+        }
+
+        // Save conversation to localStorage
+        function saveConversation(sessionId, title) {
+            if (!sessionId) return;
+            let conversations = JSON.parse(localStorage.getItem('agriwide_conversations') || '[]');
+            // Remove any previous entry for this session
+            conversations = conversations.filter(c => c.sessionId !== sessionId);
+            conversations.unshift({ sessionId, title: title || 'Untitled', date: new Date().toISOString() });
+            // Limit to last 10 conversations
+            conversations = conversations.slice(0, 10);
+            localStorage.setItem('agriwide_conversations', JSON.stringify(conversations));
+            renderPreviousConversations();
+        }
+
+        // Render previous conversations in the UI
+        function renderPreviousConversations() {
+            const container = document.getElementById('previousConversations');
+            if (!container) return;
+            let conversations = JSON.parse(localStorage.getItem('agriwide_conversations') || '[]');
+            if (conversations.length === 0) {
+                container.innerHTML = '<div class="text-gray-500 text-sm">No previous conversations yet.</div>';
+                return;
+            }
+            container.innerHTML = '';
+            conversations.forEach(conv => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center justify-between bg-gray-50 border border-gray-200 rounded px-3 py-2';
+                div.innerHTML = `<span class='font-medium text-green-700'>${conv.title}</span><span class='text-xs text-gray-500'>${new Date(conv.date).toLocaleString()}</span>`;
+                container.appendChild(div);
+            });
+        }
+
+        // Render on load
+        window.addEventListener('load', () => {
+            document.getElementById('messageInput').focus();
+            renderPreviousConversations();
+        });
         window.addEventListener('load',()=>{ document.getElementById('messageInput').focus(); });
     </script>
 
@@ -299,5 +404,6 @@
             </div>
         </div>
     </div>
+    <a href="https://www.digitalocean.com/?refcode=229e9a16b30b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://web-platforms.sfo2.cdn.digitaloceanspaces.com/WWW/Badge%201.svg" alt="DigitalOcean Referral Badge" /></a>
 </body>
 </html>

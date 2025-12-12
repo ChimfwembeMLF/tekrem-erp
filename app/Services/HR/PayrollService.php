@@ -59,6 +59,27 @@ class PayrollService
             ->first();
         $bonus = $performance->bonus ?? 0;
 
+        // 5. Payroll Components (allowances, deductions, taxes)
+        $componentNet = 0;
+        $componentDetails = [];
+        $employeeComponents = \App\Models\HR\EmployeePayrollComponent::where('employee_id', $employee->id)
+            ->where('period', $period)
+            ->with('component')
+            ->get();
+        foreach ($employeeComponents as $comp) {
+            $type = $comp->component->type;
+            if ($type === 'allowance') {
+                $componentNet += $comp->amount;
+            } else {
+                $componentNet -= $comp->amount;
+            }
+            $componentDetails[] = [
+                'name' => $comp->component->name,
+                'type' => $type,
+                'amount' => $comp->amount,
+            ];
+        }
+
         // 5. Training costs (for analytics/payroll if company policy deducts or reimburses)
         $trainingEnrollments = TrainingEnrollment::where('employee_id', $employee->id)
             ->whereHas('training', function($q) use ($period) {
@@ -94,21 +115,23 @@ class PayrollService
     $team = $employee->team ?? null;
     // You can aggregate payroll by department/team elsewhere for analytics
 
-    // 9. Calculate gross and net pay
-    $gross = $baseSalary + ($overtime * ($employee->overtime_rate ?? 0)) + $bonus;
-    $deductions = ($absences * ($employee->daily_rate ?? 0)) + ($unpaidLeaveDays * ($employee->daily_rate ?? 0)) + $trainingCost;
-    $net = $gross - $deductions;
+        // 9. Calculate gross and net pay
+        $gross = $baseSalary + ($overtime * ($employee->overtime_rate ?? 0)) + $bonus + $componentNet;
+        $deductions = ($absences * ($employee->daily_rate ?? 0)) + ($unpaidLeaveDays * ($employee->daily_rate ?? 0)) + $trainingCost;
+        $net = $gross - $deductions;
 
-        // 6. Store payroll record
+        // 10. Store payroll record with approval workflow fields
         $payroll = Payroll::create([
             'employee_id' => $employee->id,
             'period' => $period,
             'amount' => $net,
+            'status' => 'pending',
+            'payslip_file_path' => null, // Will be set after PDF generation
         ]);
 
         $cashAccount = Account::where('name', 'Cash & Cash Equivalents')->firstOrFail();
 
-        // 10. Post to finance
+        // 11. Post to finance
         Transaction::create([
             'type' => 'payroll',
             'amount' => $net,
@@ -120,14 +143,28 @@ class PayrollService
             'credit_account_code' => '1000', // Bank/cash
         ]);
 
-        // 11. Store payslip as document (stub: you may want to generate a PDF in production)
+        // 12. Store payslip as document (stub: you may want to generate a PDF in production)
         $payslipPath = "payslips/{$employee->id}_{$period}.txt";
         \Storage::put($payslipPath, "Payslip for {$employee->user->name} ({$period})\nNet Pay: {$net}");
+        $payroll->payslip_file_path = $payslipPath;
+        $payroll->save();
         Document::create([
             'title' => "Payslip - {$employee->user->name} - {$period}",
             'file_path' => $payslipPath,
             'description' => "Auto-generated payslip for {$employee->user->name} ({$period})",
             'owner_id' => $employee->user_id,
+        ]);
+
+        // 13. Audit log
+        \App\Models\HR\PayrollAudit::create([
+            'payroll_id' => $payroll->id,
+            'user_id' => $employee->user_id,
+            'action' => 'created',
+            'changes' => [
+                'gross' => $gross,
+                'net' => $net,
+                'components' => $componentDetails,
+            ],
         ]);
 
         return $payroll;

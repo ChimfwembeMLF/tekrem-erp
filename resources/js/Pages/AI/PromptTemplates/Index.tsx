@@ -83,6 +83,7 @@ export default function Index({ templates, filters }: Props) {
     const [search, setSearch] = useState(filters.search || '');
     const [selectedCategory, setSelectedCategory] = useState(filters.category || 'all');
     const [visibilityFilter, setVisibilityFilter] = useState(filters.is_public || 'all');
+    const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
     const route = useRoute();
 
     const handleSearch = () => {
@@ -182,12 +183,28 @@ export default function Index({ templates, filters }: Props) {
                             {t('Create and manage reusable AI prompt templates')}
                         </p>
                     </div>
-                    <Link href={route('ai.prompt-templates.create')}>
-                        <Button>
-                            <Plus className="h-4 w-4 mr-2" />
-                            {t('Create Template')}
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant={viewMode === 'grid' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setViewMode('grid')}
+                        >
+                            {t('Grid')}
                         </Button>
-                    </Link>
+                        <Button
+                            variant={viewMode === 'table' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setViewMode('table')}
+                        >
+                            {t('Table')}
+                        </Button>
+                        <Link href={route('ai.prompt-templates.create')}>
+                            <Button>
+                                <Plus className="h-4 w-4 mr-2" />
+                                {t('Create Template')}
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
             )}
         >
@@ -252,7 +269,7 @@ export default function Index({ templates, filters }: Props) {
                         </CardContent>
                     </Card>
 
-                    {/* Templates Grid */}
+                    {/* Templates View Toggle */}
                     {templates.data?.length === 0 ? (
                         <Card>
                             <CardContent className="text-center py-12">
@@ -271,10 +288,14 @@ export default function Index({ templates, filters }: Props) {
                                 </Link>
                             </CardContent>
                         </Card>
-                    ) : (
+                    ) : viewMode === 'grid' ? (
                         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                             {templates.data?.map((template) => (
+                                // ...existing code for grid card...
                                 <Card key={template.id} className="relative hover:shadow-lg transition-shadow">
+                                    {/* ...existing code for CardHeader and CardContent... */}
+                                    {/* ...existing code for grid view... */}
+                                    {/* (Unchanged, see above) */}
                                     <CardHeader>
                                         <div className="flex items-start justify-between">
                                             <div className="flex-1">
@@ -327,13 +348,13 @@ export default function Index({ templates, filters }: Props) {
                                         </div>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
+                                        {/* ...existing code for CardContent... */}
                                         <div className="flex items-center justify-between">
                                             <span className="text-sm text-gray-600">{t('Category')}</span>
                                             <Badge className={getCategoryColor(template.category)}>
                                                 {template.category.toUpperCase()}
                                             </Badge>
                                         </div>
-
                                         <div className="flex items-center justify-between">
                                             <span className="text-sm text-gray-600">{t('Visibility')}</span>
                                             <div className="flex items-center space-x-1">
@@ -350,7 +371,6 @@ export default function Index({ templates, filters }: Props) {
                                                 )}
                                             </div>
                                         </div>
-
                                         <div className="flex items-center justify-between">
                                             <span className="text-sm text-gray-600">{t('Author')}</span>
                                             <div className="flex items-center space-x-2">
@@ -362,27 +382,24 @@ export default function Index({ templates, filters }: Props) {
                                                 <span className="text-sm">{template.user.name}</span>
                                             </div>
                                         </div>
-
                                         <div className="flex items-center justify-between">
                                             <span className="text-sm text-gray-600">{t('Variables')}</span>
                                             <Badge variant="outline">
                                                 {template.variables.length} {t('variables')}
                                             </Badge>
                                         </div>
-
                                         <div className="pt-2 border-t">
                                             <div className="text-xs text-gray-600 mb-2">{t('Template Preview')}:</div>
-                                            <div className="bg-gray-50 p-2 rounded text-xs text-gray-700 font-mono">
+                                            <div className="bg-gray-50 dark:bg-primary/20 p-2 rounded text-xs text-gray-700 dark:text-gray-50 font-mono">
                                                 {truncateTemplate(template.template)}
                                             </div>
                                         </div>
-
                                         {template.variables.length > 0 && (
                                             <div>
                                                 <div className="text-xs text-gray-600 mb-2">{t('Variables')}:</div>
                                                 <div className="flex flex-wrap gap-1">
                                                     {template.variables.slice(0, 4).map((variable, index) => (
-                                                        <Badge key={index} variant="secondary" className="text-xs">
+                                                        <Badge key={index} variant="default" className="text-xs">
                                                             <Hash className="h-2 w-2 mr-1" />
                                                             {variable}
                                                         </Badge>
@@ -395,7 +412,6 @@ export default function Index({ templates, filters }: Props) {
                                                 </div>
                                             </div>
                                         )}
-
                                         {template.tags && template.tags.length > 0 && (
                                             <div>
                                                 <div className="text-xs text-gray-600 mb-2">{t('Tags')}:</div>
@@ -413,7 +429,6 @@ export default function Index({ templates, filters }: Props) {
                                                 </div>
                                             </div>
                                         )}
-
                                         <div className="pt-2 border-t flex items-center justify-between">
                                             <div className="flex items-center space-x-3">
                                                 <div className="flex items-center space-x-1">
@@ -436,11 +451,127 @@ export default function Index({ templates, filters }: Props) {
                                 </Card>
                             ))}
                         </div>
+                    ) : (
+                        <div className="overflow-x-auto rounded border bg-white dark:bg-gray-900">
+                            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead className="bg-gray-50 dark:bg-gray-800">
+                                    <tr>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('Name')}</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('Category')}</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('Visibility')}</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('Author')}</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('Variables')}</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('Tags')}</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('Usage')}</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('Rating')}</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('Actions')}</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                                    {templates.data?.map((template) => (
+                                        <tr key={template.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                            <td className="px-4 py-2 font-medium text-gray-900 dark:text-gray-100">
+                                                <Link href={route('ai.prompt-templates.show', template.id)} className="hover:underline">
+                                                    {template.name}
+                                                </Link>
+                                                {template.is_system && (
+                                                    <Badge variant="default" className="ml-2 text-xs">
+                                                        {t('System')}
+                                                    </Badge>
+                                                )}
+                                                <div className="text-xs text-gray-500">{truncateTemplate(template.description, 60)}</div>
+                                            </td>
+                                            <td className="px-4 py-2">
+                                                <Badge className={getCategoryColor(template.category)}>
+                                                    {template.category.toUpperCase()}
+                                                </Badge>
+                                            </td>
+                                            <td className="px-4 py-2">
+                                                {template.is_public ? (
+                                                    <span className="flex items-center text-green-600 text-xs">
+                                                        <Globe className="h-4 w-4 mr-1" />
+                                                        {t('Public')}
+                                                    </span>
+                                                ) : (
+                                                    <span className="flex items-center text-gray-600 text-xs">
+                                                        <Lock className="h-4 w-4 mr-1" />
+                                                        {t('Private')}
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="px-4 py-2">
+                                                <div className="flex items-center space-x-2">
+                                                    <Avatar className="h-6 w-6">
+                                                        <AvatarFallback className="text-xs">
+                                                            {template.user.name.charAt(0).toUpperCase()}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <span className="text-sm">{template.user.name}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-2">
+                                                <Badge variant="outline">
+                                                    {template.variables.length} {t('variables')}
+                                                </Badge>
+                                            </td>
+                                            <td className="px-4 py-2">
+                                                <div className="flex flex-wrap gap-1">
+                                                    {template.tags && template.tags.slice(0, 3).map((tag, index) => (
+                                                        <Badge key={index} variant="outline" className="text-xs">
+                                                            {tag}
+                                                        </Badge>
+                                                    ))}
+                                                    {template.tags && template.tags.length > 3 && (
+                                                        <Badge variant="outline" className="text-xs">
+                                                            +{template.tags.length - 3}
+                                                        </Badge>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-2">
+                                                <span className="flex items-center space-x-1">
+                                                    <TrendingUp className="h-3 w-3 text-gray-500" />
+                                                    <span className="text-xs text-gray-600">
+                                                        {template.usage_count} {t('uses')}
+                                                    </span>
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-2">
+                                                {template.avg_rating ? (
+                                                    <span className="flex items-center space-x-1">
+                                                        {renderStars(template.avg_rating)}
+                                                        <span className="text-xs text-gray-600">
+                                                            ({template.avg_rating.toFixed(1)})
+                                                        </span>
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-xs text-gray-400">-</span>
+                                                )}
+                                            </td>
+                                            <td className="px-4 py-2">
+                                                <div className="flex items-center gap-2">
+                                                    <Link href={route('ai.prompt-templates.show', template.id)}>
+                                                        <Button size="icon" variant="ghost"><Eye className="h-4 w-4" /></Button>
+                                                    </Link>
+                                                    <Link href={route('ai.prompt-templates.edit', template.id)}>
+                                                        <Button size="icon" variant="ghost"><Edit className="h-4 w-4" /></Button>
+                                                    </Link>
+                                                    <Button size="icon" variant="ghost" onClick={() => duplicateTemplate(template.id)}><Copy className="h-4 w-4" /></Button>
+                                                    {!template.is_system && (
+                                                        <Button size="icon" variant="ghost" onClick={() => deleteTemplate(template.id)}><Trash2 className="h-4 w-4 text-red-600" /></Button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     )}
 
                     {/* Pagination */}
                     {templates.last_page > 1 && (
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between mt-4">
                             <div className="text-sm text-gray-700">
                                 {t('Showing')} {templates.from} {t('to')} {templates.to} {t('of')} {templates.total} {t('results')}
                             </div>
@@ -451,7 +582,13 @@ export default function Index({ templates, filters }: Props) {
                                         variant={link.active ? "default" : "outline"}
                                         size="sm"
                                         disabled={!link.url}
-                                        onClick={() => link.url && router.get(link.url)}
+                                        onClick={() => link.url && router.get(link.url, {
+                                            preserveState: true,
+                                            preserveScroll: true,
+                                            search,
+                                            category: selectedCategory === 'all' ? '' : selectedCategory,
+                                            is_public: visibilityFilter === 'all' ? '' : visibilityFilter,
+                                        })}
                                         dangerouslySetInnerHTML={{ __html: link.label }}
                                     />
                                 ))}

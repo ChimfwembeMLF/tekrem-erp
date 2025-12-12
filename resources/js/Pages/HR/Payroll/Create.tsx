@@ -1,5 +1,6 @@
 
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Head, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/card';
@@ -8,6 +9,15 @@ import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import useRoute from '@/Hooks/useRoute';
+import MediaPicker from '@/Components/CMS/MediaPicker';
+
+// Dummy data for components (replace with actual props or API call)
+const payrollComponents = [
+  { id: 1, name: 'Housing Allowance', type: 'allowance' },
+  { id: 2, name: 'Transport Allowance', type: 'allowance' },
+  { id: 3, name: 'PAYE', type: 'tax' },
+  { id: 4, name: 'NAPSA', type: 'deduction' },
+];
 
 interface Employee {
   id: number;
@@ -22,11 +32,35 @@ interface CreatePayrollProps {
 
 export default function CreatePayroll({ employees = [] }: CreatePayrollProps) {
   const route = useRoute();
+  const [components, setComponents] = useState([
+    { payroll_component_id: '', amount: '' },
+  ]);
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
   const { data, setData, post, processing, errors } = useForm({
     employee_id: '',
     period: '',
     amount: '',
+    status: 'pending',
+    payslip_file_path: '',
+    components: [],
   });
+
+  const handleComponentChange = (idx: number, field: string, value: string) => {
+    const updated = [...components];
+    updated[idx][field] = value;
+    setComponents(updated);
+    setData('components', updated);
+  };
+
+  const addComponent = () => {
+    setComponents([...components, { payroll_component_id: '', amount: '' }]);
+  };
+
+  const removeComponent = (idx: number) => {
+    const updated = components.filter((_, i) => i !== idx);
+    setComponents(updated);
+    setData('components', updated);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +70,7 @@ export default function CreatePayroll({ employees = [] }: CreatePayrollProps) {
   return (
     <AppLayout title="Add Payroll Record">
       <Head title="Add Payroll Record" />
-      <div className="max-w-xl mx-auto py-8">
+      <div className="w-full mx-auto py-8">
         <Card>
           <CardHeader>
             <CardTitle>Add Payroll Record</CardTitle>
@@ -63,28 +97,90 @@ export default function CreatePayroll({ employees = [] }: CreatePayrollProps) {
                 <Label htmlFor="period">Period</Label>
                 <Input
                   id="period"
-                  type="date"
+                  type="month"
                   value={data.period}
                   onChange={e => setData('period', e.target.value)}
                 />
                 {errors.period && <div className="text-red-500 text-xs mt-1">{errors.period}</div>}
               </div>
-
-              <div className="space-y-2">
+              <div>
                 <Label htmlFor="amount">Amount</Label>
                 <Input
                   id="amount"
-                  type="text"
-                  value={data.amount ? Number(data.amount).toLocaleString('en-ZM', { style: 'currency', currency: 'ZMW' }) : ''}
-                  onChange={e => {
-                    // remove non-numeric characters except dot
-                    const numeric = e.target.value.replace(/[^0-9.]/g, '');
-                    setData('amount', numeric);
-                  }}
+                  type="number"
+                  value={data.amount}
+                  onChange={e => setData('amount', e.target.value)}
                 />
                 {errors.amount && <div className="text-red-500 text-xs mt-1">{errors.amount}</div>}
               </div>
-
+              <div>
+                <Label>Status</Label>
+                <Select value={data.status} onValueChange={value => setData('status', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="approved">Approved</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Payslip File</Label>
+                <div className="flex gap-2 items-center">
+                  <Input
+                    id="payslip_file_path"
+                    type="text"
+                    value={data.payslip_file_path}
+                    onChange={e => setData('payslip_file_path', e.target.value)}
+                    placeholder="Select or paste file path"
+                    className="flex-1"
+                  />
+                  <Button type="button" variant="outline" onClick={() => setShowMediaPicker(true)}>
+                    Pick File
+                  </Button>
+                </div>
+                <MediaPicker
+                  isOpen={showMediaPicker}
+                  onSelect={media => {
+                    setData('payslip_file_path', media.url);
+                    setShowMediaPicker(false);
+                  }}
+                  onClose={() => setShowMediaPicker(false)}
+                  type="document"
+                />
+              </div>
+              <div>
+                <Label>Payroll Components</Label>
+                {components.map((comp, idx) => (
+                  <div key={idx} className="flex gap-2 mb-2">
+                    <Select
+                      value={comp.payroll_component_id}
+                      onValueChange={value => handleComponentChange(idx, 'payroll_component_id', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Component" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {payrollComponents.map(pc => (
+                          <SelectItem key={pc.id} value={pc.id.toString()}>
+                            {pc.name} ({pc.type})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      type="number"
+                      placeholder="Amount"
+                      value={comp.amount}
+                      onChange={e => handleComponentChange(idx, 'amount', e.target.value)}
+                    />
+                    <Button type="button" variant="destructive" onClick={() => removeComponent(idx)}>-</Button>
+                  </div>
+                ))}
+                <Button type="button" onClick={addComponent} variant="secondary">Add Component</Button>
+              </div>
               <Button type="submit" disabled={processing}>Save Payroll</Button>
             </form>
           </CardContent>

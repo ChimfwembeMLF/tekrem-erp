@@ -8,6 +8,8 @@ use Inertia\Inertia;
 use App\Models\HR\Payroll;
 use App\Models\HR\Employee;
 use App\Services\HR\PayrollService;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class PayrollController extends Controller
 {
@@ -85,5 +87,40 @@ class PayrollController extends Controller
     {
         $payroll->delete();
         return redirect()->route('hr.payroll.index')->with('success', 'Payroll record deleted.');
+    }
+
+     public function approve(Payroll $payroll)
+    {
+        $payroll->status = 'approved';
+        $payroll->approved_by = Auth::id();
+        $payroll->approved_at = Carbon::now();
+        $payroll->rejected_reason = null;
+        $payroll->save();
+        \App\Models\HR\PayrollAudit::create([
+            'payroll_id' => $payroll->id,
+            'user_id' => Auth::id(),
+            'action' => 'approved',
+            'changes' => ['status' => 'approved'],
+        ]);
+        return redirect()->back()->with('success', 'Payroll approved.');
+    }
+
+    public function reject(Request $request, Payroll $payroll)
+    {
+        $data = $request->validate([
+            'reason' => 'required|string',
+        ]);
+        $payroll->status = 'rejected';
+        $payroll->approved_by = Auth::id();
+        $payroll->approved_at = Carbon::now();
+        $payroll->rejected_reason = $data['reason'];
+        $payroll->save();
+        \App\Models\HR\PayrollAudit::create([
+            'payroll_id' => $payroll->id,
+            'user_id' => Auth::id(),
+            'action' => 'rejected',
+            'changes' => ['status' => 'rejected', 'reason' => $data['reason']],
+        ]);
+        return redirect()->back()->with('success', 'Payroll rejected.');
     }
 }

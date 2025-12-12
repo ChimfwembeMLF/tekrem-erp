@@ -671,6 +671,8 @@ Route::middleware([
 
         // Payroll
         Route::resource('payroll', \App\Http\Controllers\HR\PayrollController::class);
+        Route::post('payroll/{payroll}/approve', [\App\Http\Controllers\HR\PayrollController::class, 'approve'])->name('payroll.approve');
+        Route::post('payroll/{payroll}/reject', [\App\Http\Controllers\HR\PayrollController::class, 'reject'])->name('payroll.reject');
 
         // Onboarding
         Route::resource('onboarding', \App\Http\Controllers\HR\OnboardingController::class);
