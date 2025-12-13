@@ -13,12 +13,37 @@ use Carbon\Carbon;
 
 class PayrollController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Fetch payroll records (replace with actual model logic)
-        $payrolls = Payroll::all();
+        $query = Payroll::query()->with(['employee.user']);
+
+        // Filtering by employee name
+        if ($request->filled('employee')) {
+            $employeeName = $request->input('employee');
+            $query->whereHas('employee.user', function ($q) use ($employeeName) {
+                $q->where('name', 'like', "%$employeeName%");
+            });
+        }
+
+        // Filtering by period
+        if ($request->filled('period')) {
+            $query->where('period', $request->input('period'));
+        }
+
+        // Filtering by status
+        if ($request->filled('status') && $request->input('status') !== 'all') {
+            $query->where('status', $request->input('status'));
+        }
+
+        $payrolls = $query->orderByDesc('id')->paginate(15)->appends($request->all());
+
         return Inertia::render('HR/Payroll/Index', [
             'payrolls' => $payrolls,
+            'filters' => [
+                'employee' => $request->input('employee'),
+                'period' => $request->input('period'),
+                'status' => $request->input('status'),
+            ],
         ]);
     }
 

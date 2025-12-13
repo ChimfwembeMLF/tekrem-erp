@@ -134,7 +134,7 @@ export default function PayrollIndex({ payrolls, filters }: PayrollIndexProps) {
                     <Input
                       name="employee"
                       placeholder="Search employee..."
-                      defaultValue={filters.employee || ''}
+                      defaultValue={filters?.employee || ''}
                       className="pl-10"
                     />
                   </div>
