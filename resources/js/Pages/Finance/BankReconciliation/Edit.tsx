@@ -1,5 +1,7 @@
 import React from 'react';
-import { Input, Button, Select, SelectItem, SelectTrigger, SelectValue, SelectContent } from '@/Components/ui';
+import { Input } from '@/Components/ui/input';
+import { Button } from '@/Components/ui/button';
+import { Select, SelectItem, SelectTrigger, SelectValue, SelectContent } from '@/Components/ui/select';
 import useTranslate from '@/Hooks/useTranslate';
 import { useForm } from '@inertiajs/react';
 import useRoute from '@/Hooks/useRoute';
