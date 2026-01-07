@@ -31,7 +31,7 @@ jobs:
       - name: Build frontend assets
         run: |
           if [ -f vite.config.ts ] || [ -f vite.config.js ]; then
-            yarn run build || npm run build
+            yarn build || npm run build
           fi
 
       - name: Copy .env.example to .env
@@ -53,16 +53,16 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          port: 22
+          port: ${{ secrets.SERVER_PORT }}
           source: |
-            public/build
-            public/assets
-            resources/js
-            resources/css
-            app
-            routes
-            config
-            resources/views
+            public/build/**
+            public/assets/**
+            resources/js/**
+            resources/css/**
+            app/**
+            routes/**
+            config/**
+            resources/views/**
             artisan
             composer.json
             composer.lock
