@@ -16,8 +16,9 @@
 Thumbs.db
 
 
+
 # Ignore composer dependencies
-/vendor/
+# /vendor/
 
 
 # Ignore node dependencies
@@ -63,5 +64,6 @@ coverage/
 
 
 
+
 # Ignore build output
-public/build
+# public/build
