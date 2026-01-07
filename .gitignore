@@ -1,3 +1,4 @@
+
 # Ignore environment and IDE files
 .env
 .env.*
@@ -5,48 +6,61 @@
 .idea/
 .vscode/
 
+
 # Ignore log files
 *.log
+
 
 # Ignore OS generated files
 .DS_Store
 Thumbs.db
 
+
 # Ignore composer dependencies
 /vendor/
+
 
 # Ignore node dependencies
 /node_modules/
 
+
 # Ignore build output (if any)
 # (You requested not to ignore public/build, so it's not listed)
+
 
 # Ignore other common files
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+
 # Ignore Laravel storage and cache
 # /storage/
 # /bootstrap/
 
+
 # Ignore test coverage
 coverage/
+
 
 # Ignore cypress output
 /cypress/videos/
 /cypress/screenshots/
 
+
 # Ignore database
 # /database/*.sqlite
+
 
 # Ignore compiled assets
 /public/hot
 /public/storage
 
+
 # Ignore misc
 *.swp
 *.swo
+
 
 
 # Ignore build output
