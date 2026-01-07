@@ -113,6 +113,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: List files before deployment
+        run: |
+          echo "Listing files in workspace before deployment:"
+          ls -lR
+
       - name: Deploy to server
         uses: appleboy/scp-action@v0.1.4
         with:
