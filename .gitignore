@@ -17,16 +17,18 @@ Thumbs.db
 
 
 
+
 # Ignore composer dependencies
-# /vendor/
+vendor/
 
 
 # Ignore node dependencies
 /node_modules/
 
 
-# Ignore build output (if any)
-# (You requested not to ignore public/build, so it's not listed)
+
+# Ignore build output
+public/build/
 
 
 # Ignore other common files

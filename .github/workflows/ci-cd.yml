@@ -118,26 +118,6 @@ jobs:
           echo "Listing files in workspace before deployment:"
           ls -lR
 
-      - name: Deploy to server
-        uses: appleboy/scp-action@v0.1.4
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          port: ${{ secrets.SERVER_PORT }}
-          source: |
-            public/build/**
-            public/assets/**
-            resources/js/**
-            resources/css/**
-            app/**
-            routes/**
-            config/**
-            resources/views/**
-            artisan
-            composer.json
-            composer.lock
-          target: ${{ secrets.SERVER_PATH }}
 
       - name: SSH run post-deployment hooks (optional)
         uses: appleboy/ssh-action@v1.0.0
