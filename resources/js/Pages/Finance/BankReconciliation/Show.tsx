@@ -7,7 +7,7 @@ import { Button } from '@/Components/ui/button';
 import { ArrowLeft, Edit } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
 import { useRoute } from 'ziggy-js';
-
+// test ci-cd
 interface Account {
   id: number;
   name: string;
