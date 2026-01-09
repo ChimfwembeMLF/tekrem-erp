@@ -20,6 +20,7 @@ class Project extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'company_id',
         'name',
         'description',
         'status',
@@ -37,7 +38,7 @@ class Project extends Model
         'client_id',
         'manager_id',
         'team_members',
-        'tags',
+        'tags',      
         'metadata',
     ];
 
@@ -233,6 +234,14 @@ class Project extends Model
                 default => 'bg-gray-100 text-gray-800',
             }
         );
+    }
+
+    /**
+    * Get the company that owns the project.
+    */
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
     }
 
     /**

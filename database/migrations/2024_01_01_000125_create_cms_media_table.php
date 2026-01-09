@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('cms_media', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable();
             $table->string('name');
             $table->string('original_name');
             $table->string('file_path');
@@ -41,6 +42,8 @@ return new class extends Migration
             $table->boolean('is_public')->default(true);
             
             $table->timestamps();
+
+            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
             $table->softDeletes();
             
             // Indexes

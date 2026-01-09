@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('invoice_items', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable();
             $table->foreignId('invoice_id')->constrained()->onDelete('cascade');
             $table->string('description');
             $table->integer('quantity')->default(1);
@@ -21,6 +22,8 @@ return new class extends Migration
             $table->decimal('tax_rate', 5, 2)->default(0); // Percentage
             $table->decimal('discount_rate', 5, 2)->default(0); // Percentage
             $table->timestamps();
+
+            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
         });
     }
 

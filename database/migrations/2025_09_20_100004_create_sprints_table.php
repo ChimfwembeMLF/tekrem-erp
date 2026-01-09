@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('sprints', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable();
             $table->unsignedBigInteger('board_id');
             $table->string('name');
             $table->text('goal')->nullable();
@@ -20,6 +21,8 @@ return new class extends Migration
             $table->date('end_date')->nullable();
             $table->enum('status', ['planned', 'active', 'completed', 'archived'])->default('planned');
             $table->timestamps();
+
+            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
 
             $table->foreign('board_id')->references('id')->on('boards')->onDelete('cascade');
         });

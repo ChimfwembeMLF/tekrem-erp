@@ -10,6 +10,7 @@ class Sprint extends Model
     use HasFactory;
 
     protected $fillable = [
+        'company_id',
         'board_id',
         'name',
         'goal',
@@ -22,6 +23,14 @@ class Sprint extends Model
         'end_date',
         'status',
     ];
+
+    /**
+     * Get the company that owns the sprint.
+     */
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
 
     protected $casts = [
         'start_date' => 'date',

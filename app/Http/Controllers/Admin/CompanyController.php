@@ -18,9 +18,12 @@ class CompanyController extends Controller
         $user = Auth::user();
         $companyId = $request->input('company_id');
 
-        // Ensure the user has access to this company
-        if (!$user->companies->contains('id', $companyId)) {
-            abort(403, 'Unauthorized company switch.');
+
+        // Allow super_user and admin to switch to any company
+        if (!$user->hasRole(['super_user', 'admin'])) {
+            if (!$user->companies->contains('id', $companyId)) {
+                abort(403, 'Unauthorized company switch.');
+            }
         }
 
         // Set the current company in the session

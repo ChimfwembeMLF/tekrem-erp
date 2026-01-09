@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('boards', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable();
             $table->unsignedBigInteger('project_id');
             $table->string('name');
             $table->text('description')->nullable();
@@ -21,6 +22,8 @@ return new class extends Migration
             $table->enum('visibility', ['public', 'private'])->default('private');
             $table->json('settings')->nullable();
             $table->timestamps();
+
+            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
 
             $table->foreign('project_id')->references('id')->on('projects')->onDelete('cascade');
             $table->foreign('owner_id')->references('id')->on('users')->onDelete('set null');

@@ -10,6 +10,7 @@ class Board extends Model
     use HasFactory;
 
     protected $fillable = [
+        'company_id',
         'project_id',
         'name',
         'description',
@@ -18,6 +19,14 @@ class Board extends Model
         'visibility',
         'settings',
     ];
+
+    /**
+     * Get the company that owns the board.
+     */
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
 
     protected $casts = [
         'settings' => 'array',

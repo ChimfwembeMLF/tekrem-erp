@@ -17,6 +17,7 @@ class Communication extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'company_id',
         'type',
         'content',
         'subject',
@@ -27,6 +28,14 @@ class Communication extends Model
         'communicable_type',
         'user_id',
     ];
+
+    /**
+     * Get the company that owns the communication.
+     */
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
+    }
 
     /**
      * The attributes that should be cast.

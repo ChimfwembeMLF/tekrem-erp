@@ -29,4 +29,14 @@ class ModuleBilling extends Model
     {
         return $this->belongsTo(Module::class);
     }
+
+    public function invoice()
+    {
+        return $this->belongsTo(\App\Models\Finance\Invoice::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

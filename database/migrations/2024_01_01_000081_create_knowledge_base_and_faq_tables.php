@@ -14,6 +14,7 @@ return new class extends Migration
         // Knowledge Base Articles
         Schema::create('knowledge_base_articles', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable();
             $table->string('title');
             $table->string('slug')->unique();
             $table->longText('content');
@@ -31,11 +32,14 @@ return new class extends Migration
             $table->timestamp('published_at')->nullable();
             $table->integer('sort_order')->default(0);
             $table->timestamps();
+
+            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
         });
 
         // FAQs
         Schema::create('f_a_q_s', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable();
             $table->string('question');
             $table->longText('answer');
             $table->foreignId('category_id')->nullable()->constrained('knowledge_base_categories')->onDelete('set null');
@@ -48,6 +52,8 @@ return new class extends Migration
             $table->json('tags')->nullable();
             $table->integer('sort_order')->default(0);
             $table->timestamps();
+
+            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
         });
     }
 

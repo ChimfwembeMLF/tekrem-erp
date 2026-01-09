@@ -52,4 +52,13 @@ return [
         'model' => env('MISTRAL_MODEL', 'mistral-small'),
     ],
 
+    'google_ai' => [
+        'api_key' => env('GOOGLE_AI_STUDIO_API_KEY'),
+        'api_url' => env(
+            'GOOGLE_AI_API_URL',
+            'https://generativelanguage.googleapis.com/v1beta/models'
+        ),
+        'model' => env('GOOGLE_AI_MODEL', 'gemini-1.5-pro'),
+    ],
+
 ];

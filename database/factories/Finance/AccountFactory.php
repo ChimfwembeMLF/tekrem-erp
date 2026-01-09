@@ -45,6 +45,9 @@ class AccountFactory extends Factory
             'description' => $this->faker->optional()->sentence(),
             'is_active' => $this->faker->boolean(90), // 90% chance of being active
             'user_id' => User::factory(),
+            'company_id' => function() {
+                return \App\Models\Company::factory();
+            },
         ];
     }
 

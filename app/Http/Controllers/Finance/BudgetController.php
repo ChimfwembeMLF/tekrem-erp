@@ -17,7 +17,9 @@ class BudgetController extends Controller
      */
     public function index(Request $request)
     {
+        $company = app('currentCompany');
         $query = Budget::where('user_id', auth()->id())
+            ->where('company_id', $company->id)
             ->with(['category', 'account']);
 
         // Search functionality
@@ -81,7 +83,8 @@ class BudgetController extends Controller
      */
     public function create()
     {
-        $accounts = Account::where('user_id', auth()->id())
+        $company = app('currentCompany');
+        $accounts = Account::where('company_id', $company->id)
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'type', 'currency']);
@@ -132,6 +135,7 @@ class BudgetController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
+        $company = app('currentCompany');
         Budget::create([
             'name' => $request->name,
             'amount' => $request->amount,
@@ -143,6 +147,7 @@ class BudgetController extends Controller
             'description' => $request->description,
             'status' => $request->status,
             'user_id' => auth()->id(),
+            'company_id' => $company->id,
         ]);
 
         return redirect()->route('finance.budgets.index')
@@ -199,7 +204,8 @@ class BudgetController extends Controller
             abort(403);
         }
 
-        $accounts = Account::where('user_id', auth()->id())
+        $company = app('currentCompany');
+        $accounts = Account::where('company_id', $company->id)
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'type', 'currency']);

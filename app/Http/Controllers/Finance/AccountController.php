@@ -15,7 +15,8 @@ class AccountController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Account::where('user_id', auth()->id())
+        $company = app('currentCompany');
+        $query = Account::where('company_id', $company->id)
             ->with(['transactions' => function($query) {
                 $query->latest()->limit(5);
             }]);
@@ -111,6 +112,7 @@ class AccountController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
+        $company = app('currentCompany');
         $account = Account::create([
             'name' => $request->name,
             'type' => $request->type,
@@ -122,6 +124,7 @@ class AccountController extends Controller
             'description' => $request->description,
             'is_active' => $request->boolean('is_active', true),
             'user_id' => auth()->id(),
+            'company_id' => $company->id,
         ]);
 
         return redirect()->route('finance.accounts.index')
@@ -133,8 +136,9 @@ class AccountController extends Controller
      */
     public function show(Account $account)
     {
-        // Ensure user can only view their own accounts
-        if ($account->user_id !== auth()->id()) {
+        $company = app('currentCompany');
+        // Ensure user can only view their own accounts and company
+        if ($account->user_id !== auth()->id() || $account->company_id !== $company->id) {
             abort(403);
         }
 
@@ -176,8 +180,9 @@ class AccountController extends Controller
      */
     public function edit(Account $account)
     {
-        // Ensure user can only edit their own accounts
-        if ($account->user_id !== auth()->id()) {
+        $company = app('currentCompany');
+        // Ensure user can only edit their own accounts and company
+        if ($account->user_id !== auth()->id() || $account->company_id !== $company->id) {
             abort(403);
         }
 
@@ -212,8 +217,9 @@ class AccountController extends Controller
      */
     public function update(Request $request, Account $account)
     {
-        // Ensure user can only update their own accounts
-        if ($account->user_id !== auth()->id()) {
+        $company = app('currentCompany');
+        // Ensure user can only update their own accounts and company
+        if ($account->user_id !== auth()->id() || $account->company_id !== $company->id) {
             abort(403);
         }
 
@@ -255,8 +261,9 @@ class AccountController extends Controller
      */
     public function destroy(Account $account)
     {
-        // Ensure user can only delete their own accounts
-        if ($account->user_id !== auth()->id()) {
+        $company = app('currentCompany');
+        // Ensure user can only delete their own accounts and company
+        if ($account->user_id !== auth()->id() || $account->company_id !== $company->id) {
             abort(403);
         }
 

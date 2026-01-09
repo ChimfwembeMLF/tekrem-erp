@@ -5,48 +5,78 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class UserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Create admin user
-        $admin = User::firstOrCreate(
-            ['email' => 'admin@tekrem.com'],
-            [
-                'name' => 'Admin User',
-                'password' => Hash::make('password'),
-            ]
-        );
-        if (!$admin->hasRole('admin')) {
-            $admin->assignRole('admin');
+        // Ensure roles exist
+        $roles = [
+            'admin',
+            'user',
+            'super_user',
+            'staff',
+            'customer',
+        ];
+
+        foreach ($roles as $role) {
+            Role::firstOrCreate(['name' => $role]);
         }
 
-        // Create staff user
-        $staff = User::firstOrCreate(
-            ['email' => 'staff@tekrem.com'],
-            [
-                'name' => 'Staff User',
-                'password' => Hash::make('password'),
-            ]
+        $this->createUser(
+            'admin@tekrem.com',
+            'TekRem Admin',
+            'admin'
         );
-        if (!$staff->hasRole('staff')) {
-            $staff->assignRole('staff');
-        }
 
-        // Create customer user
-        $customer = User::firstOrCreate(
-            ['email' => 'customer@tekrem.com'],
+        $this->createUser(
+            'user@tekrem.com',
+            'TekRem User',
+            'user'
+        );
+
+        $this->createUser(
+            'super@tekrem.com',
+            'TekRem Super User',
+            'super_user'
+        );
+
+        $this->createUser(
+            'admin@acme.com',
+            'Acme Admin',
+            'admin'
+        );
+
+        $this->createUser(
+            'admin@globex.com',
+            'Globex Admin',
+            'admin'
+        );
+
+        $this->createUser(
+            'staff@tekrem.com',
+            'Staff User',
+            'staff'
+        );
+
+        $this->createUser(
+            'customer@tekrem.com',
+            'Customer User',
+            'customer'
+        );
+    }
+
+    private function createUser(string $email, string $name, string $role): void
+    {
+        $user = User::firstOrCreate(
+            ['email' => $email],
             [
-                'name' => 'Customer User',
+                'name' => $name,
                 'password' => Hash::make('password'),
             ]
         );
-        if (!$customer->hasRole('customer')) {
-            $customer->assignRole('customer');
-        }
+
+        $user->syncRoles([$role]);
     }
 }

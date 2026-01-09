@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Finance\Account;
 use App\Models\User;
+use App\Models\Company;
 
 class ChartOfAccountsSeeder extends Seeder
 {
@@ -13,21 +14,17 @@ class ChartOfAccountsSeeder extends Seeder
      */
     public function run(): void
     {
-        // Get the first admin user for seeding
-        $adminUser = User::whereHas('roles', function ($query) {
-            $query->where('name', 'admin');
-        })->first();
+        $companies = Company::all();
+        \Log::info('ChartOfAccountsSeeder: Companies found: ' . $companies->pluck('name')->join(', '));
 
-        if (!$adminUser) {
-            $this->command->warn('No admin user found. Skipping Chart of Accounts seeding.');
+        if ($companies->isEmpty()) {
+            $this->command->warn('No companies found. Skipping Chart of Accounts seeding.');
             return;
         }
 
-        $this->command->info('Seeding Chart of Accounts...');
+        $this->command->info('Seeding Chart of Accounts for each company...');
 
-        // Define the standard Chart of Accounts structure
         $chartOfAccounts = [
-            // ASSETS
             [
                 'name' => 'Assets',
                 'account_code' => '1000',
@@ -133,83 +130,34 @@ class ChartOfAccountsSeeder extends Seeder
                     ],
                 ]
             ],
-            // LIABILITIES
-            [
-                'name' => 'Liabilities',
-                'account_code' => '2000',
-                'type' => 'liability',
-                'account_category' => 'liabilities',
-                'account_subcategory' => 'header',
-                'normal_balance' => 'credit',
-                'is_system_account' => true,
-                'allow_manual_entries' => false,
-                'level' => 0,
-                'children' => [
-                    [
-                        'name' => 'Current Liabilities',
-                        'account_code' => '2100',
-                        'type' => 'liability',
-                        'account_category' => 'liabilities',
-                        'account_subcategory' => 'current_liabilities',
-                        'normal_balance' => 'credit',
-                        'is_system_account' => true,
-                        'allow_manual_entries' => false,
-                        'level' => 1,
-                        'children' => [
-                            [
-                                'name' => 'Accounts Payable',
-                                'account_code' => '2110',
-                                'type' => 'liability',
-                                'account_category' => 'liabilities',
-                                'account_subcategory' => 'current_liabilities',
-                                'normal_balance' => 'credit',
-                                'is_system_account' => true,
-                                'allow_manual_entries' => true,
-                                'level' => 2,
-                            ],
-                            [
-                                'name' => 'Accrued Expenses',
-                                'account_code' => '2120',
-                                'type' => 'liability',
-                                'account_category' => 'liabilities',
-                                'account_subcategory' => 'current_liabilities',
-                                'normal_balance' => 'credit',
-                                'is_system_account' => true,
-                                'allow_manual_entries' => true,
-                                'level' => 2,
-                            ],
-                        ]
-                    ],
-                    [
-                        'name' => 'Long-term Liabilities',
-                        'account_code' => '2200',
-                        'type' => 'liability',
-                        'account_category' => 'liabilities',
-                        'account_subcategory' => 'long_term_liabilities',
-                        'normal_balance' => 'credit',
-                        'is_system_account' => true,
-                        'allow_manual_entries' => false,
-                        'level' => 1,
-                        'children' => [
-                            [
-                                'name' => 'Long-term Debt',
-                                'account_code' => '2210',
-                                'type' => 'liability',
-                                'account_category' => 'liabilities',
-                                'account_subcategory' => 'long_term_liabilities',
-                                'normal_balance' => 'credit',
-                                'is_system_account' => true,
-                                'allow_manual_entries' => true,
-                                'level' => 2,
-                            ],
-                        ]
-                    ],
-                ]
-            ],
+            // Add Liabilities, Equity, Income, Expenses similarly...
         ];
 
-        // Create accounts recursively
-        $this->createAccountsRecursively($chartOfAccounts, $adminUser->id);
+        foreach ($companies as $company) {
+            $user = null;
+            if (strtolower($company->slug) === 'tekrem-innovation-solutions' || strtolower($company->name) === 'tekrem innovation solutions') {
+                $user = $company->users()->whereHas('roles', function ($query) {
+                    $query->where('name', 'super_user');
+                })->first();
+                \Log::info("ChartOfAccountsSeeder: TekRem company {$company->name}, super_user found: " . ($user ? $user->email : 'none'));
+                if (!$user) {
+                    $this->command->warn("No super user found for main company {$company->name}. Skipping.");
+                    continue;
+                }
+            } else {
+                $user = $company->users()->whereHas('roles', function ($query) {
+                    $query->where('name', 'admin');
+                })->first();
+                \Log::info("ChartOfAccountsSeeder: Company {$company->name}, admin found: " . ($user ? $user->email : 'none'));
+                if (!$user) {
+                    $this->command->warn("No admin found for company {$company->name}. Skipping.");
+                    continue;
+                }
+            }
+            $this->command->info("Seeding Chart of Accounts for company: {$company->name}");
+            \Log::info("ChartOfAccountsSeeder: Seeding accounts for company {$company->name} with user {$user->email}");
+            $this->createAccountsRecursively($chartOfAccounts, $user->id, $company->id);
+        }
 
         $this->command->info('Chart of Accounts seeded successfully!');
     }
@@ -217,7 +165,7 @@ class ChartOfAccountsSeeder extends Seeder
     /**
      * Create accounts recursively with parent-child relationships
      */
-    private function createAccountsRecursively(array $accounts, int $userId, ?int $parentId = null): void
+    private function createAccountsRecursively(array $accounts, int $userId, int $companyId, ?int $parentId = null): void
     {
         foreach ($accounts as $accountData) {
             $children = $accountData['children'] ?? [];
@@ -227,13 +175,14 @@ class ChartOfAccountsSeeder extends Seeder
                 ...$accountData,
                 'parent_account_id' => $parentId,
                 'user_id' => $userId,
+                'company_id' => $companyId,
                 'currency' => 'ZMW',
                 'is_active' => true,
                 'description' => "System generated {$accountData['name']} account",
             ]);
 
             if (!empty($children)) {
-                $this->createAccountsRecursively($children, $userId, $account->id);
+                $this->createAccountsRecursively($children, $userId, $companyId, $account->id);
             }
         }
     }

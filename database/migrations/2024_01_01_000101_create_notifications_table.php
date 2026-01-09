@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('notifications', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('type'); // chat, lead, client, communication, etc.
             $table->text('message');
@@ -20,6 +21,8 @@ return new class extends Migration
             $table->boolean('is_read')->default(false);
             $table->nullableMorphs('notifiable'); // For client, lead, etc.
             $table->timestamps();
+
+            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
         });
     }
 

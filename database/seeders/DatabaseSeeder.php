@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Log;
 
 class DatabaseSeeder extends Seeder
 {
@@ -16,23 +17,29 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->command->info('🌱 Starting TekRem ERP Database Seeding...');
+        Log::info('DatabaseSeeder running at ' . now());
 
         // 1. Foundation - Roles and Permissions (must be first)
         $this->command->info('📋 Seeding roles and permissions...');
+        Log::info('RolesAndPermissionsSeeder running at ' . now());
         $this->call(RolesAndPermissionsSeeder::class);
 
         // 2. Users (depends on roles)
         $this->command->info('👥 Seeding users...');
+        Log::info('UserSeeder running at ' . now());
         $this->call(UserSeeder::class);
 
         // 3. Independent seeders (no dependencies)
         $this->command->info('⚙️ Seeding settings...');
+        Log::info('SettingsSeeder running at ' . now());
         $this->call(SettingsSeeder::class);
 
         $this->command->info('💰 Seeding finance categories...');
+        Log::info('FinanceCategoriesSeeder running at ' . now());
         $this->call(FinanceCategoriesSeeder::class);
 
         $this->command->info('📊 Seeding chart of accounts...');
+        Log::info('ChartOfAccountsSeeder running at ' . now());
         $this->call(ChartOfAccountsSeeder::class);
 
         $this->command->info('🏛️ Seeding ZRA configuration...');

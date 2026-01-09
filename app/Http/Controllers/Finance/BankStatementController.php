@@ -60,7 +60,9 @@ class BankStatementController extends Controller
         $statements = $query->paginate(20)->withQueryString();
 
         // Get accounts for filter dropdown
-        $accounts = Account::where('is_active', true)
+        $company = app('currentCompany');
+        $accounts = Account::where('company_id', $company->id)
+            ->where('is_active', true)
             ->whereIn('type', ['checking', 'savings', 'business', 'cash'])
             ->orderBy('name')
             ->get(['id', 'name', 'account_code']);
@@ -85,7 +87,9 @@ class BankStatementController extends Controller
     {
         $this->authorize('create finance');
 
-        $accounts = Account::where('is_active', true)
+        $company = app('currentCompany');
+        $accounts = Account::where('company_id', $company->id)
+            ->where('is_active', true)
             ->whereIn('type', ['checking', 'savings', 'business', 'cash'])
             ->orderBy('name')
             ->get(['id', 'name', 'account_code', 'balance']);

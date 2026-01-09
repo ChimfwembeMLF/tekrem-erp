@@ -37,7 +37,16 @@ class Account extends Model
         'description',
         'is_active',
         'user_id',
+        'company_id',
     ];
+
+    /**
+     * Get the company that owns the account.
+     */
+    public function company()
+    {
+        return $this->belongsTo(\App\Models\Company::class);
+    }
 
     /**
      * The attributes that should be cast.

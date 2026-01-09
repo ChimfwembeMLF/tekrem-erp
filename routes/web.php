@@ -124,14 +124,12 @@ Route::middleware([
         Route::get('/{module}/checkout', [\App\Http\Controllers\Admin\ModuleController::class, 'checkout'])->name('checkout');
 
         // Module Cart (multi-module checkout)
-        Route::prefix('cart')->name('cart.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Modules\CartController::class, 'index'])->name('index');
-            Route::post('/add', [\App\Http\Controllers\Modules\CartController::class, 'add'])->name('add');
-            Route::post('/remove', [\App\Http\Controllers\Modules\CartController::class, 'remove'])->name('remove');
-            Route::post('/clear', [\App\Http\Controllers\Modules\CartController::class, 'clear'])->name('clear');
-        });
+        Route::get('/modules/cart', [\App\Http\Controllers\Modules\CartController::class, 'index'])->name('cart.index');
+        Route::post('/modules/cart/add', [\App\Http\Controllers\Modules\CartController::class, 'add'])->name('cart.add');
+        Route::post('/modules/cart/remove', [\App\Http\Controllers\Modules\CartController::class, 'remove'])->name('cart.remove');
+        Route::post('/modules/cart/clear', [\App\Http\Controllers\Modules\CartController::class, 'clear'])->name('cart.clear');
         // List modules purchased/activated by current company
-        Route::get('/modules/my-modules', [\App\Http\Controllers\Admin\ModuleController::class, 'companyModules'])->name('company');
+        Route::get('/my-modules', [\App\Http\Controllers\Admin\ModuleController::class, 'companyModules'])->name('company');
         // Purchase a module (creates invoice)
         Route::post('/{module}/purchase', [\App\Http\Controllers\Admin\ModuleController::class, 'purchase'])->name('purchase');
         // Activate/purchase a module for current company

@@ -62,14 +62,13 @@ export default function TopNav({ settings }: TopNavProps) {
   }
 
     // Company context (for multi-tenancy)
+    const companies: Company[] = page.props.auth?.user?.companies || [];
+    const currentCompanyId = page.props.current_company_id || null;
+    const currentCompany = companies.find((c) => c.id === currentCompanyId);
 
-  const companies: Company[] = page.props.auth?.user?.companies || [];
-  const currentCompanyId = page.props.current_company_id || null;
-  const currentCompany = companies.find((c) => c.id === currentCompanyId);
-
-  const handleSwitchCompany = (companyId: number) => {
-    router.put('/admin/companies/switch', { company_id: companyId }, { preserveState: false });
-  };
+    const handleSwitchCompany = (companyId: number) => {
+      router.put('/admin/companies/switch', { company_id: companyId }, { preserveState: false });
+    };
   return (
     <div className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 md:pl-[calc(256px+24px)]">  
       {/* Page Title */}
@@ -79,35 +78,39 @@ export default function TopNav({ settings }: TopNavProps) {
 
       {/* Cart quick access for admin */}
       {isAdmin && (
-        <Button variant="ghost" size="icon" onClick={() => router.visit('/admin/modules/cart')} className="flex items-center gap-2">
+        <Button variant="ghost" size="icon" onClick={() => router.visit(route('admin.modules.cart.index'))} className="flex items-center gap-2">
           <ShoppingCart className="h-5 w-5 text-blue-600" />
           <span className="sr-only">Cart</span>
         </Button>
       )}
 
-      {/* Company Switcher (if admin and multiple companies) */}
-      {companies.length > 0 && (
+      {/* Company Switcher (visible for admin/super_user even if companies is empty) */}
+      {(isAdmin || companies.length > 0) && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="flex items-center gap-2">
               <Building className="h-5 w-5 text-blue-600" />
-              <span>{currentCompany ? currentCompany.name : 'Select Company'}</span>
+              <span>{currentCompany ? currentCompany.name : (companies.length > 0 ? 'Select Company' : 'No Companies')}</span>
               <ChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Switch Company</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {companies.map((company) => (
-              <DropdownMenuItem
-                key={company.id}
-                onClick={() => handleSwitchCompany(company.id)}
-                className={company.id === currentCompanyId ? 'font-bold text-blue-700' : ''}
-              >
-                {company.name}
-                {company.id === currentCompanyId && <Check className="ml-2 h-4 w-4" />}
-              </DropdownMenuItem>
-            ))}
+            {companies.length > 0 ? (
+              companies.map((company) => (
+                <DropdownMenuItem
+                  key={company.id}
+                  onClick={() => handleSwitchCompany(company.id)}
+                  className={company.id === currentCompanyId ? 'font-bold text-blue-700' : ''}
+                >
+                  {company.name}
+                  {company.id === currentCompanyId && <Check className="ml-2 h-4 w-4" />}
+                </DropdownMenuItem>
+              ))
+            ) : (
+              <DropdownMenuItem disabled>No companies available</DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       )}

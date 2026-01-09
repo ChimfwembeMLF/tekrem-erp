@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('board_cards', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable();
             $table->unsignedBigInteger('board_id');
             $table->unsignedBigInteger('column_id');
             $table->unsignedBigInteger('sprint_id')->nullable();
@@ -30,6 +31,8 @@ return new class extends Migration
             $table->json('dependencies')->nullable();
             $table->integer('order')->default(0);
             $table->timestamps();
+
+            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
 
             $table->foreign('board_id')->references('id')->on('boards')->onDelete('cascade');
             $table->foreign('column_id')->references('id')->on('board_columns')->onDelete('cascade');

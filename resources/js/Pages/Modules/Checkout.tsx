@@ -1,4 +1,5 @@
 import React from 'react';
+import { toast } from 'sonner';
 import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
@@ -35,10 +36,24 @@ const ModuleCheckout: React.FC<Props> = ({ module, addons, accounts: initialAcco
 
     const handleCheckout = () => {
         setIsProcessing(true);
-        router.post(`/admin/modules/${module.id}/purchase`, {
-            addons: selectedAddons,
-            billing_account_id: selectedAccount,
-        });
+        router.post(
+            `/admin/modules/${module.id}/purchase`,
+            {
+                addons: selectedAddons,
+                billing_account_id: selectedAccount,
+            },
+            {
+                onSuccess: (page) => {
+                    setIsProcessing(false);
+                    toast.success('Purchase completed!');
+                },
+                onError: (errors) => {
+                    setIsProcessing(false);
+                    toast.error('Purchase failed. Please check your details and try again.');
+                },
+                onFinish: () => setIsProcessing(false),
+            }
+        );
     };
 
     const base = Number(module.price) || 0;
@@ -83,8 +98,8 @@ const ModuleCheckout: React.FC<Props> = ({ module, addons, accounts: initialAcco
                         <div className="lg:col-span-2 space-y-6">
 
                             {/* Module Card */}
-                            <Card className="border-primary/90 shadow-sm hover:shadow-md transition-shadow duration-300 bg-card text-card-foreground dark:bg-card dark:text-card-foreground">
-                                <CardHeader className="border rounded-lg border-gray-600 bg-gradient-to-r from-primary to-transparent text-primary-foreground dark:text-primary-foreground">
+                            <Card className="border-secondary/40 shadow-sm hover:shadow-md transition-shadow duration-300 bg-card text-card-foreground dark:bg-card dark:text-card-foreground">
+                                <CardHeader className="border rounded-lg bg-gradient-to-br from-secondary to-primary text-primary-foreground dark:text-primary-foreground">
                                     <div className="flex items-start justify-between">
                                         <div>
                                             <CardTitle className="text-xl font-bold">{module.name}</CardTitle>
@@ -100,8 +115,8 @@ const ModuleCheckout: React.FC<Props> = ({ module, addons, accounts: initialAcco
 
                             {/* Add-ons */}
                             {addons.length > 0 && (
-                                <Card className="border-primary/90 shadow-sm hover:shadow-md transition-shadow duration-300 bg-card text-card-foreground dark:bg-card dark:text-card-foreground">
-                                    <CardHeader className="border-b border-primary/90 bg-gradient-to-r from-primary to-transparent text-primary-foreground dark:text-primary-foreground">
+                                <Card className="border-secondary/40 shadow-sm hover:shadow-md transition-shadow duration-300 bg-card text-card-foreground dark:bg-card dark:text-card-foreground">
+                                    <CardHeader className="border-b border-secondary/40 bg-gradient-to-br from-secondary to-primary text-primary-foreground dark:text-primary-foreground">
                                         <CardTitle className="text-lg font-bold flex items-center gap-2">
                                             <Plus className="w-5 h-5 text-primary/60" />
                                             Available Add-ons
@@ -154,7 +169,7 @@ const ModuleCheckout: React.FC<Props> = ({ module, addons, accounts: initialAcco
 
                             {/* Billing Account Card */}
                             <Card className="border-primary/20 shadow-sm hover:shadow-md transition-shadow duration-300 bg-card text-card-foreground dark:bg-card dark:text-card-foreground">
-                                <CardHeader className="border-b border-primary/90 bg-gradient-to-r from-primary to-transparent text-primary-foreground dark:text-primary-foreground">
+                                <CardHeader className="border-b border-secondary/40 bg-gradient-to-br from-secondary to-primary text-primary-foreground dark:text-primary-foreground">
                                     <CardTitle className="text-lg font-bold flex items-center gap-2">
                                         <CreditCard className="w-5 h-5 text-primary/600" />
                                         Payment Method

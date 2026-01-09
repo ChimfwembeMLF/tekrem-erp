@@ -17,9 +17,10 @@ class DashboardController extends Controller
     public function index()
     {
         $user = auth()->user();
+        $company = app('currentCompany');
 
         // Get financial overview data
-        $totalBalance = Account::where('user_id', $user->id)
+        $totalBalance = Account::where('company_id', $company->id)
             ->where('is_active', true)
             ->sum('balance');
 

@@ -19,6 +19,7 @@ class ProjectFile extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'company_id',
         'project_id',
         'milestone_id',
         'name',
@@ -35,6 +36,14 @@ class ProjectFile extends Model
         'access_level',
         'metadata',
     ];
+
+    /**
+     * Get the company that owns the project file.
+     */
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
+    }
 
     /**
      * The attributes that should be cast.

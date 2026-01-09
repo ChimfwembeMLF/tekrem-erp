@@ -10,6 +10,7 @@ class BoardCard extends Model
     use HasFactory;
 
     protected $fillable = [
+        'company_id',
         'board_id',
         'column_id',
         'sprint_id',
@@ -28,6 +29,14 @@ class BoardCard extends Model
         'dependencies',
         'order',
     ];
+
+    /**
+     * Get the company that owns the board card.
+     */
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
 
     protected $casts = [
         'labels' => 'array',

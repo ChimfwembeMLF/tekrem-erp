@@ -37,10 +37,10 @@ import useRoute from '@/Hooks/useRoute';
 import { toast } from 'sonner';
 import { TooltipProvider } from '@/Components/ui/tooltip';
 
-interface UnifiedBillingItem {
+interface ModuleBillingItem {
   id: number;
-  type: 'module_billing' | 'invoice';
   module_name?: string;
+  invoice_id?: number;
   invoice_number?: string;
   amount: number;
   currency: string;
@@ -53,7 +53,7 @@ interface UnifiedBillingItem {
 
 interface Props {
   billings: {
-    data: UnifiedBillingItem[];
+    data: ModuleBillingItem[];
     total: number;
   };
   filters: {
@@ -241,15 +241,14 @@ export default function Billing({ billings, filters, statuses, paymentMethods }:
                     <tbody>
                       {(Array.isArray(billings.data) ? billings.data : []).map((item) => (
                         <tr key={item.id} className="">
-                          <td className="px-4 py-2 font-medium">{getTypeLabel(item.type)}</td>
+                          <td className="px-4 py-2 font-medium">{item.module_name}</td>
                           <td className="px-4 py-2 font-medium">
-                            {item.type === 'invoice' ? (
-                              <span>
-                                {item.invoice_number ? `#${item.invoice_number}` : ''}
-                                {item.notes ? <span className="block text-xs text-gray-500">{item.notes}</span> : null}
-                              </span>
+                            {item.invoice_id ? (
+                              <Link href={route('finance.invoices.show', item.invoice_id)} className="text-blue-600 hover:underline">
+                                #{item.invoice_number}
+                              </Link>
                             ) : (
-                              item.module_name
+                              <span className="text-xs text-gray-400">No Invoice</span>
                             )}
                           </td>
                           <td className="px-4 py-2">{formatCurrency(item.amount, item.currency)}</td>
@@ -257,7 +256,7 @@ export default function Billing({ billings, filters, statuses, paymentMethods }:
                           <td className="px-4 py-2">{item.billing_date}</td>
                           <td className="px-4 py-2">{item.due_date}</td>
                           <td className="px-4 py-2 flex items-center gap-2">
-                            {item.type === 'module_billing' ? getMethodIcon(item.payment_method || '') : <span className="text-xs text-gray-400">-</span>}
+                            {getMethodIcon(item.payment_method || '')}
                             {item.payment_method ? item.payment_method.replace('_', ' ') : ''}
                           </td>
                           <td className="px-4 py-2">
@@ -268,19 +267,11 @@ export default function Billing({ billings, filters, statuses, paymentMethods }:
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                {item.type === 'invoice' ? (
-                                  <DropdownMenuItem asChild>
-                                    <Link href={route('finance.invoices.show', item.id)}>
-                                      <Eye className="h-4 w-4 mr-2" /> View Invoice
-                                    </Link>
-                                  </DropdownMenuItem>
-                                ) : (
-                                  <DropdownMenuItem asChild>
-                                    <Link href={route('admin.modules.billing.show', item.id)}>
-                                      <Eye className="h-4 w-4 mr-2" /> View Details
-                                    </Link>
-                                  </DropdownMenuItem>
-                                )}
+                                <DropdownMenuItem asChild>
+                                  <Link href={route('admin.modules.billing.show', item.id)}>
+                                    <Eye className="h-4 w-4 mr-2" /> View Details
+                                  </Link>
+                                </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </td>

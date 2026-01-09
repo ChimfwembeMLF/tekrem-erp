@@ -533,10 +533,10 @@ export default function Sidebar({ settings }: SidebarProps) {
       active: route().current('admin.permissions.*')
     },
     {
-      href: '/admin/modules/cart',
+      href: route('admin.modules.cart.index'),
       label: t('admin.cart', 'Cart'),
       icon: <ShoppingCart className="h-5 w-5" />, 
-      active: window.location.pathname.startsWith('/admin/modules/cart')
+      active: route().current('admin.modules.cart.index')
     },
     {
       href: route('admin.modules.marketplace'),

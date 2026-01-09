@@ -16,7 +16,9 @@ class ChartOfAccountsController extends Controller
     public function index(Request $request): Response
     {
 
-        $query = Account::with(['parentAccount', 'childAccounts'])
+        $company = app('currentCompany');
+        $query = Account::where('company_id', $company->id)
+            ->with(['parentAccount', 'childAccounts'])
             ->orderBy('account_code')
             ->orderBy('level')
             ->orderBy('name');
@@ -89,8 +91,12 @@ class ChartOfAccountsController extends Controller
         }
 
         // Get potential parent accounts (only those that allow child accounts)
-        $parentAccounts = Account::where('allow_manual_entries', false)
-            ->orWhereNull('allow_manual_entries')
+        $company = app('currentCompany');
+        $parentAccounts = Account::where('company_id', $company->id)
+            ->where(function($q){
+                $q->where('allow_manual_entries', false)
+                  ->orWhereNull('allow_manual_entries');
+            })
             ->orderBy('account_code')
             ->get()
             ->map(function ($account) {
@@ -168,12 +174,14 @@ class ChartOfAccountsController extends Controller
             $level = $parent ? $parent->level + 1 : 0;
         }
 
+        $company = app('currentCompany');
         $account = Account::create([
             ...$validated,
             'level' => $level,
             'balance' => $validated['initial_balance'] ?? 0,
             'is_active' => true,
             'user_id' => auth()->id(),
+            'company_id' => $company->id,
         ]);
 
         return redirect()->route('finance.chart-of-accounts.index')
@@ -221,7 +229,9 @@ class ChartOfAccountsController extends Controller
     {
 
         // Get potential parent accounts (excluding self and descendants)
-        $parentAccounts = Account::where('id', '!=', $account->id)
+        $company = app('currentCompany');
+        $parentAccounts = Account::where('company_id', $company->id)
+            ->where('id', '!=', $account->id)
             ->where(function ($query) use ($account) {
                 // Exclude descendants to prevent circular references
                 $query->where('parent_account_id', '!=', $account->id);

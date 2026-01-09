@@ -16,6 +16,7 @@ class InvoiceItem extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'company_id',
         'invoice_id',
         'module_id',
         'addon_id',
@@ -26,6 +27,13 @@ class InvoiceItem extends Model
         'tax_rate',
         'discount_rate',
     ];
+    /**
+     * Get the company that owns the invoice item.
+     */
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Company::class);
+    }
 
     /**
      * The attributes that should be cast.

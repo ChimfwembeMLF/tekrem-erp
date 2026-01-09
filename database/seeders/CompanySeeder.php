@@ -77,14 +77,26 @@ class CompanySeeder extends Seeder
             'settings' => json_encode($defaultSettings),
         ]);
 
+
         // Attach users to companies (assuming users exist)
-        $admin = User::where('email', 'admin@tekrem.com')->first();
+        $super = User::where('email', 'super@tekrem.com')->first();
+        $adminTekrem = User::where('email', 'admin@tekrem.com')->first();
         $staff = User::where('email', 'staff@tekrem.com')->first();
         $customer = User::where('email', 'customer@tekrem.com')->first();
+        $adminAcme = User::where('email', 'admin@acme.com')->first();
+        $adminGlobex = User::where('email', 'admin@globex.com')->first();
 
-        if ($admin) $tekrem->users()->attach($admin->id, ['role' => 'admin']);
-        if ($staff) $acme->users()->attach($staff->id, ['role' => 'staff']);
-        if ($customer) $globex->users()->attach($customer->id, ['role' => 'customer']);
+        // Attach users to TekRem
+        if ($super) $tekrem->users()->attach($super->id, ['role' => 'super_user']);
+        if ($adminTekrem) $tekrem->users()->attach($adminTekrem->id, ['role' => 'admin']);
+        if ($staff) $tekrem->users()->attach($staff->id, ['role' => 'staff']);
+        if ($customer) $tekrem->users()->attach($customer->id, ['role' => 'customer']);
+
+        // Attach admin to Acme
+        if ($adminAcme) $acme->users()->attach($adminAcme->id, ['role' => 'admin']);
+
+        // Attach admin to Globex
+        if ($adminGlobex) $globex->users()->attach($adminGlobex->id, ['role' => 'admin']);
 
         // Attach some modules to companies (assuming modules exist)
         $modules = Module::where('is_active', true)->take(2)->get();

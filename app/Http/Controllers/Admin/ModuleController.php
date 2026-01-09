@@ -95,11 +95,11 @@ class ModuleController extends Controller
             ->with(['addons' => function($q) { $q->where('is_active', true); }])
             ->findOrFail($moduleId);
 
-        // Fetch real billing accounts for the current user
-        $user = Auth::user();
+        // Fetch real billing accounts for the current user and company
+        $company = app('currentCompany');
         $accounts = [];
-        if ($user) {
-            $accounts = \App\Models\Finance\Account::where('user_id', $user->id)
+        if ($company) {
+            $accounts = \App\Models\Finance\Account::where('company_id', $company->id)
                 ->where('is_active', true)
                 ->get(['id', 'name', 'account_number', 'bank_name'])
                 ->map(function($acc) {
@@ -127,9 +127,64 @@ class ModuleController extends Controller
         $module = Module::where('is_active', true)
             ->with(['addons' => function($q) { $q->where('is_active', true); }])
             ->findOrFail($moduleId);
+
+        $company = app('currentCompany');
+        $companyData = [
+            'id' => $company->id,
+            'name' => $company->name,
+            'slug' => $company->slug,
+            'logo' => $company->logo,
+            'primary_color' => $company->primary_color,
+            'secondary_color' => $company->secondary_color,
+            'timezone' => $company->timezone,
+            'locale' => $company->locale,
+            'settings' => $company->settings,
+        ];
+
+        $users = $company->users()->get()->map(function($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => mask_email($user->email),
+                'role' => $user->pivot->role ?? null,
+                'permissions' => $user->pivot->permissions ?? [],
+                'profile_photo_url' => $user->profile_photo_url ?? null,
+            ];
+        });
+
+        $accounts = \App\Models\Finance\Account::where('company_id', $company->id)
+            ->get()
+            ->map(function($acc) {
+                return [
+                    'id' => $acc->id,
+                    'name' => $acc->name,
+                    'account_number' => mask_account_number($acc->account_number),
+                    'bank_name' => $acc->bank_name,
+                    'type' => $acc->type,
+                    'currency' => $acc->currency,
+                    'balance' => $acc->balance,
+                    'is_active' => $acc->is_active,
+                ];
+            });
+
+        // Helper functions for masking
+        function mask_email($email) {
+            $parts = explode('@', $email);
+            $name = substr($parts[0], 0, 2) . str_repeat('*', max(0, strlen($parts[0]) - 2));
+            return $name . '@' . $parts[1];
+        }
+        function mask_account_number($number) {
+            if (!$number) return null;
+            $len = strlen($number);
+            return str_repeat('*', max(0, $len - 4)) . substr($number, -4);
+        }
+
         return Inertia::render('Modules/Details', [
             'module' => $module,
             'addons' => $module->addons,
+            'company' => $companyData,
+            'users' => $users,
+            'accounts' => $accounts,
         ]);
     }
 
@@ -142,6 +197,7 @@ class ModuleController extends Controller
         if (!$company) {
             abort(403, 'No company selected.');
         }
+
         $module = Module::findOrFail($moduleId);
         // Check if module is active
         if (!$module->is_active) {
@@ -155,8 +211,27 @@ class ModuleController extends Controller
                 'message' => 'This module is expired and cannot be purchased.',
             ]);
         }
+
         $addonIds = $request->input('addons', []);
         $addons = $module->addons()->whereIn('id', $addonIds)->get();
+
+        // Validate billing account belongs to current user and company
+        $billingAccountId = $request->input('billing_account_id');
+        $user = Auth::user();
+        $company = app('currentCompany');
+        $billingAccount = null;
+        if ($billingAccountId && $user && $company) {
+            $billingAccount = \App\Models\Finance\Account::where('id', $billingAccountId)
+                ->where('user_id', $user->id)
+                ->where('company_id', $company->id)
+                ->where('is_active', true)
+                ->first();
+        }
+        if (!$billingAccount) {
+            return redirect()->back()->with('error', [
+                'message' => 'Invalid or unauthorized billing account selected.',
+            ]);
+        }
 
         // Check for active or unexpired module of the same type
         $activeModule = $company->modules()
@@ -233,7 +308,7 @@ class ModuleController extends Controller
             ]);
         }
 
-        // Create module billing record for billing module
+        // Create module billing record for billing module, link to invoice
         \App\Models\ModuleBilling::create([
             'company_id' => $company->id,
             'module_id' => $module->id,
@@ -243,6 +318,7 @@ class ModuleController extends Controller
             'billing_date' => now()->toDateString(),
             'due_date' => now()->addDays(7)->toDateString(),
             'payment_method' => null,
+            'invoice_id' => $invoice->id,
         ]);
 
         // Optionally: trigger payment link generation here

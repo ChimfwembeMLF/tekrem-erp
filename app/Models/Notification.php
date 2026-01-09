@@ -17,6 +17,7 @@ class Notification extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'company_id',
         'user_id',
         'type',
         'message',
@@ -25,6 +26,14 @@ class Notification extends Model
         'notifiable_id',
         'notifiable_type',
     ];
+
+    /**
+     * Get the company that owns the notification.
+     */
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
+    }
 
     /**
      * The attributes that should be cast.

@@ -17,6 +17,7 @@ class Budget extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'company_id',
         'name',
         'description',
         'amount',
@@ -31,6 +32,13 @@ class Budget extends Model
         'category_id',
         'user_id',
     ];
+    /**
+     * Get the company that owns the budget.
+     */
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Company::class);
+    }
 
     /**
      * The attributes that should be cast.

@@ -9,12 +9,33 @@ import { TooltipProvider } from '@/Components/ui/tooltip';
 interface BillingItem {
   id: number;
   module_name: string;
+  module_details?: {
+    description?: string;
+    features?: string[];
+  };
+  invoice_id?: number | null;
+  invoice_number?: string | null;
+  invoice_link?: string | null;
   amount: number;
   currency: string;
   status: string;
   billing_date: string;
   due_date: string;
   payment_method: string;
+  notes?: string;
+  company?: {
+    id: number;
+    name: string;
+  };
+  user?: {
+    id: number;
+    name: string;
+    email: string;
+  };
+  transaction_id?: string | null;
+  attachments?: any[];
+  history?: any[];
+  refund_status?: string | null;
 }
 
 interface Props {
@@ -79,6 +100,16 @@ export default function BillingShow({ billing }: Props) {
                 <div className="space-y-4">
                   <div>
                     <span className="font-semibold">Module:</span> {billing.module_name}
+                    {billing.module_details?.description && (
+                      <div className="text-sm text-gray-500">{billing.module_details.description}</div>
+                    )}
+                    {billing.module_details?.features && billing.module_details.features.length > 0 && (
+                      <ul className="text-xs text-gray-400 list-disc ml-4">
+                        {billing.module_details.features.map((f, i) => (
+                          <li key={i}>{f}</li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                   <div>
                     <span className="font-semibold">Amount:</span> {formatCurrency(billing.amount, billing.currency)}
@@ -93,8 +124,65 @@ export default function BillingShow({ billing }: Props) {
                     <span className="font-semibold">Due Date:</span> {billing.due_date}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold">Payment Method:</span> {getMethodIcon(billing.payment_method)} {billing.payment_method.replace('_', ' ')}
+                    <span className="font-semibold">Payment Method:</span> {getMethodIcon(billing.payment_method || '')} {billing.payment_method ? billing.payment_method.replace('_', ' ') : ''}
                   </div>
+                  {billing.invoice_id && (
+                    <div>
+                      <span className="font-semibold">Invoice:</span>{' '}
+                      {billing.invoice_link ? (
+                        <a href={billing.invoice_link} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
+                          #{billing.invoice_number}
+                        </a>
+                      ) : (
+                        <span>#{billing.invoice_number}</span>
+                      )}
+                    </div>
+                  )}
+                  {billing.notes && (
+                    <div>
+                      <span className="font-semibold">Notes:</span> {billing.notes}
+                    </div>
+                  )}
+                  {billing.company && (
+                    <div>
+                      <span className="font-semibold">Company:</span> {billing.company.name}
+                    </div>
+                  )}
+                  {billing.user && (
+                    <div>
+                      <span className="font-semibold">Recorded By:</span> {billing.user.name} ({billing.user.email})
+                    </div>
+                  )}
+                  {billing.transaction_id && (
+                    <div>
+                      <span className="font-semibold">Transaction ID:</span> {billing.transaction_id}
+                    </div>
+                  )}
+                  {billing.refund_status && (
+                    <div>
+                      <span className="font-semibold">Refund Status:</span> {billing.refund_status}
+                    </div>
+                  )}
+                  {billing.attachments && billing.attachments.length > 0 && (
+                    <div>
+                      <span className="font-semibold">Attachments:</span>
+                      <ul className="ml-4">
+                        {billing.attachments.map((file, i) => (
+                          <li key={i}><a href={file.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{file.name || file.url}</a></li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {billing.history && billing.history.length > 0 && (
+                    <div>
+                      <span className="font-semibold">History:</span>
+                      <ul className="ml-4 text-xs text-gray-500">
+                        {billing.history.map((h, i) => (
+                          <li key={i}>{h}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

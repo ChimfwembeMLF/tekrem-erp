@@ -15,6 +15,7 @@ type CartModule = {
     selected_addons?: number[];
 };
 import { Head, router } from '@inertiajs/react';
+import useRoute from '@/Hooks/useRoute';
 import AppLayout from '@/Layouts/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
@@ -25,6 +26,7 @@ interface CartProps {
 }
 
 export default function Cart({ modules }: CartProps) {
+    const route = useRoute();
     const [cartModules, setCartModules] = useState<CartModule[]>(modules);
     const [loading, setLoading] = useState(false);
     const handleRemove = (moduleId: number) => {
@@ -130,7 +132,7 @@ export default function Cart({ modules }: CartProps) {
                                 </div>
                                 <div className="flex mt-6 gap-2">
                                     <Button className="mr-2" onClick={handleClear} variant="outline" disabled={loading}>Clear Cart</Button>
-                                    <Button className="ml-2" disabled={loading || cartModules.length === 0} onClick={() => router.visit('/admin/modules/checkout')}>Proceed to Checkout</Button>
+                                    <Button className="ml-2" disabled={loading || cartModules.length === 0} onClick={() => router.visit(route('admin.modules.checkout', modules[0].id))}>Proceed to Checkout</Button>
                                 </div>
                             </>
                         )}

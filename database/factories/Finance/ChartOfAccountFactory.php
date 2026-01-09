@@ -48,6 +48,9 @@ class ChartOfAccountFactory extends Factory
             'is_system_account' => $this->faker->boolean(10), // 10% chance of being system account
             'created_at' => now(),
             'updated_at' => now(),
+            'company_id' => function() {
+                return \App\Models\Company::factory();
+            },
         ];
     }
 

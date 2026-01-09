@@ -11,8 +11,8 @@ class BillingController extends Controller
     public function index(Request $request)
     {
         $company = app('currentCompany');
-        // Module Billings
-        $billingQuery = $company->moduleBillings()->with('module');
+        // Only Module Billings, include invoice info
+        $billingQuery = $company->moduleBillings()->with(['module', 'invoice']);
         if ($search = $request->input('search')) {
             $billingQuery->whereHas('module', function ($q) use ($search) {
                 $q->where('name', 'like', "%$search%")
@@ -34,63 +34,25 @@ class BillingController extends Controller
         }
         $billings = $billingQuery->get();
 
-        // Invoices
-        $invoiceQuery = \App\Models\Finance\Invoice::where('billable_id', $company->id)
-            ->where('billable_type', get_class($company));
-        if ($search) {
-            $invoiceQuery->where(function($q) use ($search) {
-                $q->where('invoice_number', 'like', "%$search%")
-                  ->orWhere('notes', 'like', "%$search%") ;
-            });
-        }
-        if ($status) {
-            $invoiceQuery->where('status', $status);
-        }
-        if ($dateFrom) {
-            $invoiceQuery->whereDate('issue_date', '>=', $dateFrom);
-        }
-        if ($dateTo) {
-            $invoiceQuery->whereDate('due_date', '<=', $dateTo);
-        }
-        $invoices = $invoiceQuery->get();
-
-        // Merge and sort by date (descending)
-        $merged = collect();
-        foreach ($billings as $billing) {
-            $merged->push([
+        $data = $billings->map(function($billing) {
+            return [
                 'id' => $billing->id,
-                'type' => 'module_billing',
                 'module_name' => $billing->module ? $billing->module->name : '',
+                'invoice_id' => $billing->invoice ? $billing->invoice->id : null,
+                'invoice_number' => $billing->invoice ? $billing->invoice->invoice_number : null,
                 'amount' => $billing->amount,
                 'currency' => $billing->currency,
                 'status' => $billing->status,
                 'billing_date' => $billing->billing_date,
                 'due_date' => $billing->due_date,
                 'payment_method' => $billing->payment_method,
-            ]);
-        }
-        foreach ($invoices as $invoice) {
-            $merged->push([
-                'id' => $invoice->id,
-                'type' => 'invoice',
-                'invoice_number' => $invoice->invoice_number,
-                'amount' => $invoice->total_amount,
-                'currency' => $invoice->currency,
-                'status' => $invoice->status,
-                'billing_date' => $invoice->issue_date ? $invoice->issue_date->toDateString() : null,
-                'due_date' => $invoice->due_date ? $invoice->due_date->toDateString() : null,
-                'notes' => $invoice->notes,
-                'payment_method' => null,
-            ]);
-        }
-        $merged = $merged->sortByDesc(function($item) {
-            return $item['billing_date'] ?? $item['due_date'] ?? null;
-        })->values();
+            ];
+        })->sortByDesc('billing_date')->values();
 
         return Inertia::render('Modules/Billing', [
             'billings' => [
-                'data' => $merged,
-                'total' => $merged->count(),
+                'data' => $data,
+                'total' => $data->count(),
             ],
             'filters' => $request->only(['search', 'status', 'payment_method', 'date_from', 'date_to']),
             'statuses' => [
@@ -111,20 +73,44 @@ class BillingController extends Controller
 
     public function show($id)
     {
-        // TODO: Fetch billing record by $id
-        // Example stub
-        $billing = [
-            'id' => $id,
-            'module_name' => 'CRM',
-            'amount' => 100,
-            'currency' => 'ZMW',
-            'status' => 'paid',
-            'billing_date' => '2026-01-01',
-            'due_date' => '2026-01-10',
-            'payment_method' => 'credit_card',
+        $company = app('currentCompany');
+        $billing = $company->moduleBillings()
+            ->with(['module', 'invoice', 'user'])
+            ->findOrFail($id);
+
+        $billingData = [
+            'id' => $billing->id,
+            'module_name' => $billing->module ? $billing->module->name : '',
+            'module_details' => $billing->module ? [
+                'description' => $billing->module->description ?? '',
+                'features' => $billing->module->features ?? [],
+            ] : null,
+            'invoice_id' => $billing->invoice ? $billing->invoice->id : null,
+            'invoice_number' => $billing->invoice ? $billing->invoice->invoice_number : null,
+            'invoice_link' => $billing->invoice ? route('finance.invoices.show', $billing->invoice->id) : null,
+            'amount' => $billing->amount,
+            'currency' => $billing->currency,
+            'status' => $billing->status,
+            'billing_date' => $billing->billing_date,
+            'due_date' => $billing->due_date,
+            'payment_method' => $billing->payment_method,
+            'notes' => $billing->notes ?? '',
+            'company' => [
+                'id' => $company->id,
+                'name' => $company->name,
+            ],
+            'user' => $billing->user ? [
+                'id' => $billing->user->id,
+                'name' => $billing->user->name,
+                'email' => $billing->user->email,
+            ] : null,
+            'transaction_id' => $billing->transaction_id ?? null,
+            'attachments' => $billing->attachments ?? [],
+            'history' => $billing->history ?? [],
+            'refund_status' => $billing->refund_status ?? null,
         ];
         return Inertia::render('Modules/BillingShow', [
-            'billing' => $billing,
+            'billing' => $billingData,
         ]);
     }
 

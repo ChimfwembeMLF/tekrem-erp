@@ -1,6 +1,7 @@
 import React from 'react';
 import { TooltipProvider } from '@/Components/ui/tooltip';
 import { Head, usePage, router } from '@inertiajs/react';
+import useRoute from '@/Hooks/useRoute';
 import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
@@ -21,6 +22,7 @@ interface MarketplaceProps {
 }
 
 export default function Marketplace({ modules }: MarketplaceProps) {
+    const route = useRoute();
     // State for search, filter, and sort
     const [searchTerm, setSearchTerm] = React.useState('');
     const [category, setCategory] = React.useState('all');
@@ -43,13 +45,13 @@ export default function Marketplace({ modules }: MarketplaceProps) {
 
 
     const handleGoToCheckout = (moduleId: number) => {
-        router.visit(`/admin/modules/${moduleId}/checkout`);
+        router.visit(route('admin.modules.checkout', moduleId));
     };
 
     // Add to Cart handler
     const [showGoToCart, setShowGoToCart] = React.useState(false);
     const handleAddToCart = (moduleId: number) => {
-        router.post('/admin/modules/cart/add', { module_id: moduleId }, {
+        router.post(route('admin.modules.cart.add'), { module_id: moduleId }, {
             onSuccess: () => {
                 toast.success('Module added to cart!');
                 setShowGoToCart(true);
@@ -69,7 +71,7 @@ export default function Marketplace({ modules }: MarketplaceProps) {
                     <h1 className="text-3xl font-bold mb-6 flex items-center gap-2">
                         <ShoppingCart className="text-blue-600" /> Module Marketplace
                         {showGoToCart && (
-                            <Button variant="outline" size="sm" className="ml-4" onClick={() => router.visit('/admin/modules/cart')}>
+                            <Button variant="outline" size="sm" className="ml-4" onClick={() => router.visit(route('admin.modules.cart.index'))}>
                                 <ShoppingCart className="mr-2" /> Go to Cart
                             </Button>
                         )}
@@ -124,7 +126,7 @@ export default function Marketplace({ modules }: MarketplaceProps) {
                                             <div className="flex items-center gap-2">
                                                 <CardTitle>{module.name}</CardTitle>
                                                 <Tooltip content="View details">
-                                                    <Button variant="ghost" size="icon" onClick={() => router.visit(`/admin/modules/${module.id}`)}>
+                                                    <Button variant="ghost" size="icon" onClick={() => router.visit(route('admin.modules.show', module.id))}>
                                                         <Eye className="text-gray-500" />
                                                     </Button>
                                                 </Tooltip>
@@ -139,7 +141,7 @@ export default function Marketplace({ modules }: MarketplaceProps) {
                                                     <DropdownMenuItem onClick={() => handleGoToCheckout(module.id)}>
                                                         <ShoppingCart className="mr-2" /> Purchase / Checkout
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => router.visit(`/admin/modules/${module.id}`)}>
+                                                    <DropdownMenuItem onClick={() => router.visit(route('admin.modules.show', module.id))}>
                                                         <Info className="mr-2" /> Details
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
