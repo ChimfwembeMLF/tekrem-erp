@@ -9,6 +9,27 @@ export interface Team {
   created_at: DateTime;
   updated_at: DateTime;
 }
+export interface Company {
+  id: number;
+
+  name: string;
+  slug: string;
+
+  logo?: string | null;        // stored path or URL
+  logo_url?: string;           // computed on backend, optional
+
+  primary_color?: string | null;
+  secondary_color?: string | null;
+
+  timezone?: string;           // e.g. "Africa/Lusaka"
+  locale?: string;             // e.g. "en", "en-ZM"
+
+  settings?: Record<string, any>; // matches cast to array
+
+  created_at?: string;         // ISO datetime
+  updated_at?: string;
+}
+
 
 export interface User {
   id: number;
@@ -23,6 +44,7 @@ export interface User {
   updated_at: DateTime;
   roles?: string[];
   permissions?: string[];
+  companies?: Company[];
 }
 
 export interface Auth {

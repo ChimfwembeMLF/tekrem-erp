@@ -8,7 +8,8 @@ import {
   Globe, 
   Check, 
   ChevronDown,
-  Bell
+  Bell,
+  ShoppingCart
 } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import {
@@ -25,7 +26,8 @@ import useRoute from '@/Hooks/useRoute';
 import useTranslate from '@/Hooks/useTranslate';
 import useTypedPage from '@/Hooks/useTypedPage';
 import { ThemeToggle } from '@/Components/ThemeProvider';
-import { Team } from '@/types';
+import { Team, Company } from '@/types';
+import { Building } from 'lucide-react';
 import NotificationComponent from '@/Components/NotificationComponent';
 import ApplicationLogo from './ApplicationLogo';
 
@@ -37,6 +39,9 @@ export default function TopNav({ settings }: TopNavProps) {
   const route = useRoute();
   const { t, i18n, currentLanguage } = useTranslate();
   const page = useTypedPage();
+
+  // Show cart button for admin/super_user
+  const isAdmin = page.props.auth?.user?.roles?.includes('admin') || page.props.auth?.user?.roles?.includes('super_user');
 
   function switchToTeam(e: React.FormEvent, team: Team) {
     e.preventDefault();
@@ -56,7 +61,15 @@ export default function TopNav({ settings }: TopNavProps) {
     router.post(route('logout'));
   }
 
-  
+    // Company context (for multi-tenancy)
+
+  const companies: Company[] = page.props.auth?.user?.companies || [];
+  const currentCompanyId = page.props.current_company_id || null;
+  const currentCompany = companies.find((c) => c.id === currentCompanyId);
+
+  const handleSwitchCompany = (companyId: number) => {
+    router.put('/admin/companies/switch', { company_id: companyId }, { preserveState: false });
+  };
   return (
     <div className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 md:pl-[calc(256px+24px)]">  
       {/* Page Title */}
@@ -64,7 +77,40 @@ export default function TopNav({ settings }: TopNavProps) {
         {/* <h1 className="text-lg font-semibold">{settings.site_name || 'TekRem ERP'}</h1> */}
       </div>
 
-      {/* Right side items */}
+      {/* Cart quick access for admin */}
+      {isAdmin && (
+        <Button variant="ghost" size="icon" onClick={() => router.visit('/admin/modules/cart')} className="flex items-center gap-2">
+          <ShoppingCart className="h-5 w-5 text-blue-600" />
+          <span className="sr-only">Cart</span>
+        </Button>
+      )}
+
+      {/* Company Switcher (if admin and multiple companies) */}
+      {companies.length > 0 && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="flex items-center gap-2">
+              <Building className="h-5 w-5 text-blue-600" />
+              <span>{currentCompany ? currentCompany.name : 'Select Company'}</span>
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Switch Company</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {companies.map((company) => (
+              <DropdownMenuItem
+                key={company.id}
+                onClick={() => handleSwitchCompany(company.id)}
+                className={company.id === currentCompanyId ? 'font-bold text-blue-700' : ''}
+              >
+                {company.name}
+                {company.id === currentCompanyId && <Check className="ml-2 h-4 w-4" />}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
       <div className="flex items-center gap-4">
         {/* Theme Toggle */}
         <ThemeToggle />

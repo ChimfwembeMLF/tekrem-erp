@@ -161,7 +161,7 @@ export default function Dashboard({
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'ZMW',
     }).format(amount);
   };
 
@@ -192,6 +192,18 @@ export default function Dashboard({
               <RefreshCw className={cn("h-4 w-4 mr-2", refreshing && "animate-spin")} />
               {t('dashboard.refresh', 'Refresh')}
             </Button>
+            <Link href="/admin/modules/marketplace">
+              <Button size="sm" variant="secondary">
+                <Grid className="h-4 w-4 mr-2" />
+                Marketplace
+              </Button>
+            </Link>
+            <Link href="/admin/modules/my-modules">
+              <Button size="sm" variant="secondary">
+                <Server className="h-4 w-4 mr-2" />
+                My Modules
+              </Button>
+            </Link>
             {hasAnyRole(['admin']) && (
               <Link href="/settings">
                 <Button size="sm">

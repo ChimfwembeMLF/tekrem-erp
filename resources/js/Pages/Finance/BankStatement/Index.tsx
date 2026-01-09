@@ -203,7 +203,7 @@ export default function Index({ statements, accounts, filters, statuses }: Props
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'ZMW',
     }).format(amount);
   };
 

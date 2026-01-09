@@ -43,8 +43,10 @@ class HandleInertiaRequests extends Middleware
                     ...$request->user()->toArray(),
                     'roles' => $request->user()->user_roles ?? [],
                     'permissions' => $request->user()->user_permissions ?? [],
+                    'companies' => method_exists($request->user(), 'companies') ? $request->user()->companies()->get() : [],
                 ] : null,
             ],
+            'current_company_id' => session('current_company_id'),
             'notifications' => $request->user() ? [
                 'recent' => $request->user()->notifications()
                     ->latest()

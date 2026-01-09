@@ -49,7 +49,7 @@ export default function ModulesIndex({ modules, filters }: Props) {
   const [search, setSearch] = useState(filters.search || '');
 
   const handleSearch = () => {
-    router.get(route('admin.modules.index'), {
+    router.get(route('admin.modules.marketplace'), {
       search: search || undefined,
     }, {
       preserveState: true,
@@ -59,7 +59,7 @@ export default function ModulesIndex({ modules, filters }: Props) {
 
   const clearFilters = () => {
     setSearch('');
-    router.get(route('admin.modules.index'), {}, {
+    router.get(route('admin.modules.martetplace'), {}, {
       preserveState: true,
       replace: true,
     });

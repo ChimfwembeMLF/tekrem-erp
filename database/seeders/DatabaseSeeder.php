@@ -54,9 +54,16 @@ class DatabaseSeeder extends Seeder
         $this->command->info('📊 Seeding projects...');
         $this->call(ProjectSeeder::class);
 
+
         // 5b. System Modules
         $this->command->info('🧩 Seeding system modules...');
         $this->call(ModuleSeeder::class);
+        $this->command->info('➕ Seeding module add-ons...');
+        $this->call(AddonSeeder::class);
+
+        // 5c. Companies and relations
+        $this->command->info('🏢 Seeding companies and company-module relations...');
+        $this->call(CompanySeeder::class);
 
         // 6. HR module (needs users)
         $this->command->info('👨‍💼 Seeding HR data...');

@@ -157,10 +157,10 @@ class SettingsSeeder extends Seeder
             ],
             [
                 'key' => 'currency',
-                'value' => 'USD',
+                'value' => 'ZMW',
                 'group' => 'general',
                 'type' => 'select',
-                'options' => json_encode(['USD', 'ZMW', 'EUR', 'GBP', 'ZAR']),
+                'options' => json_encode(['ZMW', 'ZMW', 'EUR', 'GBP', 'ZAR']),
                 'label' => 'Currency',
                 'description' => 'Default currency for the application',
                 'is_public' => true,

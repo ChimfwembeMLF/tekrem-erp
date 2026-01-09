@@ -102,7 +102,7 @@ export default function Show({ invoice }: Props) {
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
-            currency: 'USD',
+            currency: 'ZMW',
         }).format(amount);
     };
 

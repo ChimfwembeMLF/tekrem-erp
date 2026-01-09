@@ -137,7 +137,7 @@ export default function Edit({ payment, accounts, invoices, clients, leads, paym
     });
   };
 
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
+  const formatCurrency = (amount: number, currency: string = 'ZMW') => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currency,

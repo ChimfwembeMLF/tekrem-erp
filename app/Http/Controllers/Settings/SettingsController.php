@@ -168,7 +168,7 @@ class SettingsController extends Controller
             'timezone' => Setting::get('timezone', config('app.timezone', 'UTC')),
             'date_format' => Setting::get('date_format', 'Y-m-d'),
             'time_format' => Setting::get('time_format', 'H:i:s'),
-            'currency' => Setting::get('currency', 'USD'),
+            'currency' => Setting::get('currency', 'ZMW'),
             'language' => Setting::get('language', 'en'),
         ];
     }

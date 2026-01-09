@@ -66,7 +66,7 @@ export default function Create({ clients = [], leads = [], currencies = {}, stat
     billable_id: '',
     issue_date: new Date().toISOString().split('T')[0],
     due_date: '',
-    currency: 'USD',
+    currency: 'ZMW',
     status: 'draft',
     notes: '',
     terms: '',

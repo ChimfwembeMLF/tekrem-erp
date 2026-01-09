@@ -22,7 +22,7 @@ class AccountFactory extends Factory
     {
         $accountTypes = ['checking', 'savings', 'business', 'credit_card', 'investment', 'loan', 'other', 'header', 'detail'];
         $accountCategories = ['assets', 'liabilities', 'equity', 'income', 'expenses'];
-        $currencies = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY'];
+        $currencies = ['ZMW', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY'];
         $initialBalance = $this->faker->randomFloat(2, 0, 10000);
 
         return [

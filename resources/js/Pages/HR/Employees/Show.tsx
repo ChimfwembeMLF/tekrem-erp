@@ -58,7 +58,7 @@ export default function ShowEmployee({ employee }: ShowEmployeeProps) {
       </ul>
     ) : <span className="text-gray-400">{emptyMsg}</span>;
 
-  const previousDocs = employee.documents?.filter(doc => doc.previous) || [];
+  const previoZMWocs = employee.documents?.filter(doc => doc.previous) || [];
   const currentDocs = employee.documents?.filter(doc => !doc.previous) || [];
 
   return (
@@ -143,9 +143,9 @@ export default function ShowEmployee({ employee }: ShowEmployeeProps) {
               {/* Previous Documents */}
               <TabsContent value="previous_docs">
                 <h3 className="font-semibold mb-2">Previous Documents</h3>
-                {previousDocs.length > 0 ? (
+                {previoZMWocs.length > 0 ? (
                   <ul className="list-disc ml-5 text-sm text-gray-700">
-                    {previousDocs.map((doc, i) => (
+                    {previoZMWocs.map((doc, i) => (
                       <li key={i}>
                         {doc.url ? <a href={doc.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{doc.name}</a> : doc.name}
                       </li>

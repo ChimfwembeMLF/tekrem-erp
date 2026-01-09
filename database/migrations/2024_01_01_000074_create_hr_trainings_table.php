@@ -28,7 +28,7 @@ return new class extends Migration
             $table->integer('max_participants')->nullable();
             $table->integer('enrolled_count')->default(0);
             $table->decimal('cost_per_participant', 10, 2)->nullable();
-            $table->string('currency', 3)->default('USD');
+            $table->string('currency', 3)->default('ZMW');
             $table->text('prerequisites')->nullable();
             $table->text('learning_objectives')->nullable();
             $table->json('materials')->nullable();

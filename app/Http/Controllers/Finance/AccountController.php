@@ -77,7 +77,7 @@ class AccountController extends Controller
         ];
 
         $currencies = [
-            'USD' => 'US Dollar',
+            'ZMW' => 'US Dollar',
             'EUR' => 'Euro',
             'GBP' => 'British Pound',
             'CAD' => 'Canadian Dollar',
@@ -192,7 +192,7 @@ class AccountController extends Controller
         ];
 
         $currencies = [
-            'USD' => 'US Dollar',
+            'ZMW' => 'US Dollar',
             'EUR' => 'Euro',
             'GBP' => 'British Pound',
             'CAD' => 'Canadian Dollar',

@@ -100,7 +100,7 @@ export default function Show({ expense, statuses }: Props) {
     });
   };
 
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
+  const formatCurrency = (amount: number, currency: string = 'ZMW') => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currency,

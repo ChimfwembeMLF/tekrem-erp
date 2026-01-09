@@ -28,7 +28,7 @@ export default function Create() {
       renderHeader={() => (
         <div className="flex items-center gap-4">
           <Button variant="outline" asChild>
-            <a href={route('admin.modules.index')}>
+            <a href={route('admin.modules.marketplace')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               {t('admin.back_to_modules', 'Back to Modules')}
             </a>

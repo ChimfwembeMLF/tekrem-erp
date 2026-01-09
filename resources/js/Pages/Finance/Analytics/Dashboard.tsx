@@ -97,7 +97,7 @@ export default function AnalyticsDashboard({ analytics, period: initialPeriod }:
     '1_year': t('common.last_year', 'Last year'),
   };
 
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
+  const formatCurrency = (amount: number, currency: string = 'ZMW') => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currency,

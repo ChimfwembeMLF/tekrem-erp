@@ -65,7 +65,7 @@ interface Props {
 export default function Show({ transaction }: Props) {
   const { t } = useTranslate();
 
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
+  const formatCurrency = (amount: number, currency: string = 'ZMW') => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currency,

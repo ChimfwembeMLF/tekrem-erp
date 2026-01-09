@@ -128,7 +128,7 @@ export default function Index({ payments, filters, statuses, paymentMethods, acc
     }
   };
 
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
+  const formatCurrency = (amount: number, currency: string = 'ZMW') => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currency,

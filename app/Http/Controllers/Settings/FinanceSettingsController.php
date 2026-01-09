@@ -93,7 +93,7 @@ class FinanceSettingsController extends Controller
 
         return Inertia::render('Settings/Finance/MoMo/ApiConfiguration', [
             'configuration' => $configuration,
-            'supportedCurrencies' => ['ZMW', 'USD', 'EUR', 'GBP'],
+            'supportedCurrencies' => ['ZMW', 'ZMW', 'EUR', 'GBP'],
             'encryptionAlgorithms' => ['AES-256-GCM', 'AES-256-CBC', 'ChaCha20-Poly1305'],
         ]);
     }

@@ -407,7 +407,7 @@ class DashboardController extends Controller
             [
                 'title' => 'Module Settings',
                 'description' => 'Configure module activation',
-                'route' => 'admin.modules.index',
+                'route' => 'admin.modules.marketplace',
                 'icon' => 'grid',
                 'color' => 'indigo',
             ],

@@ -68,6 +68,14 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+    /**
+     * Companies this user belongs to (multi-tenancy).
+     */
+    public function companies(): BelongsToMany
+    {
+        return $this->belongsToMany(Company::class)->withPivot('role', 'permissions')->withTimestamps();
+    }
+
       /**
      * Override hasPermissionTo so super_user and admin have all permissions.
      */

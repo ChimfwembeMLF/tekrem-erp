@@ -89,7 +89,7 @@ class InvoiceController extends Controller
             ->get(['id', 'name', 'email']);
 
         $currencies = [
-            'USD' => 'US Dollar',
+            'ZMW' => 'US Dollar',
             'EUR' => 'Euro',
             'GBP' => 'British Pound',
             'CAD' => 'Canadian Dollar',
@@ -238,7 +238,7 @@ class InvoiceController extends Controller
             ->get(['id', 'name', 'email']);
 
         $currencies = [
-            'USD' => 'US Dollar',
+            'ZMW' => 'US Dollar',
             'EUR' => 'Euro',
             'GBP' => 'British Pound',
             'CAD' => 'Canadian Dollar',

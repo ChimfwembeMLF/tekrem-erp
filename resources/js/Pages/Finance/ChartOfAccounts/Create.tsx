@@ -55,7 +55,7 @@ export default function Create({
     description: '',
     is_system_account: false,
     allow_manual_entries: true,
-    currency: 'USD',
+    currency: 'ZMW',
     initial_balance: '',
   });
 
@@ -309,7 +309,7 @@ export default function Create({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="USD">USD - US Dollar</SelectItem>
+                          <SelectItem value="ZMW">ZMW - US Dollar</SelectItem>
                           <SelectItem value="EUR">EUR - Euro</SelectItem>
                           <SelectItem value="GBP">GBP - British Pound</SelectItem>
                           <SelectItem value="CAD">CAD - Canadian Dollar</SelectItem>

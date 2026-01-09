@@ -142,7 +142,7 @@ export default function Index({ invoices, recent_payments, recent_quotations, st
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
-            currency: 'USD',
+            currency: 'ZMW',
         }).format(amount);
     };
 

@@ -153,7 +153,7 @@ class GuestQuoteRequest extends Model
     /**
      * Mark as quoted.
      */
-    public function markAsQuoted($amount, $currency = 'USD', $notes = null, $expiresInDays = 30)
+    public function markAsQuoted($amount, $currency = 'ZMW', $notes = null, $expiresInDays = 30)
     {
         $this->update([
             'quoted_amount' => $amount,

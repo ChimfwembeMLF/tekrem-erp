@@ -214,7 +214,7 @@ class ZraAuditLog extends Model
     /**
      * Get the HTTP status description.
      */
-    public function getHttpStatusDescriptionAttribute(): string
+    public function getHttpStatZMWescriptionAttribute(): string
     {
         if (!$this->http_status_code) {
             return 'N/A';

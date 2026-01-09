@@ -173,7 +173,7 @@ export default function Show({ conversation }: Props) {
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
-            currency: 'USD',
+            currency: 'ZMW',
             minimumFractionDigits: 4,
         }).format(amount);
     };

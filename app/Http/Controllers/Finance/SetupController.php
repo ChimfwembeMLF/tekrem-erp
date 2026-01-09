@@ -228,7 +228,7 @@ class SetupController extends Controller
     private function getGeneralSettings(): array
     {
         return [
-            'default_currency' => Setting::get('finance.general.default_currency', 'USD'),
+            'default_currency' => Setting::get('finance.general.default_currency', 'ZMW'),
             'currency_symbol' => Setting::get('finance.general.currency_symbol', '$'),
             'decimal_places' => Setting::get('finance.general.decimal_places', 2),
             'thousand_separator' => Setting::get('finance.general.thousand_separator', ','),

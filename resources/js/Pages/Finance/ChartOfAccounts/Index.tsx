@@ -168,7 +168,7 @@ export default function Index({ accounts, categories, types, filters }: Props) {
     }
   };
 
-  const formatBalance = (balance: number, currency: string = 'USD') => {
+  const formatBalance = (balance: number, currency: string = 'ZMW') => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currency,

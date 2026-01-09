@@ -32,7 +32,7 @@ export default function Create({ accountTypes = {}, currencies = {} }: Props) {
     account_number: '',
     bank_name: '',
     initial_balance: '',
-    currency: 'USD',
+    currency: 'ZMW',
     description: '',
     is_active: true,
   });

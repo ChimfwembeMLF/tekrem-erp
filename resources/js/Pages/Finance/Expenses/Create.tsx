@@ -96,7 +96,7 @@ export default function Create({ accounts = [], categories = [], statuses = {} }
     });
   };
 
-  const formatCurrency = (currency: string = 'USD') => {
+  const formatCurrency = (currency: string = 'ZMW') => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currency,

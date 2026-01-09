@@ -236,7 +236,7 @@ class SetupController extends Controller
     {
         return [
             'payroll_frequency' => Setting::get('hr.payroll.payroll_frequency', 'monthly'),
-            'default_currency' => Setting::get('hr.payroll.default_currency', 'USD'),
+            'default_currency' => Setting::get('hr.payroll.default_currency', 'ZMW'),
             'tax_calculation_method' => Setting::get('hr.payroll.tax_calculation_method', 'percentage'),
             'default_tax_rate' => Setting::get('hr.payroll.default_tax_rate', 10),
             'overtime_rate_multiplier' => Setting::get('hr.payroll.overtime_rate_multiplier', 1.5),

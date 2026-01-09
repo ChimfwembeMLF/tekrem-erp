@@ -57,6 +57,7 @@ import {
   Twitter,
   MessageCircle,
   Package,
+  ShoppingCart,
 } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import useRoute from '@/Hooks/useRoute';
@@ -532,10 +533,22 @@ export default function Sidebar({ settings }: SidebarProps) {
       active: route().current('admin.permissions.*')
     },
     {
-      href: route('admin.modules.index'),
+      href: '/admin/modules/cart',
+      label: t('admin.cart', 'Cart'),
+      icon: <ShoppingCart className="h-5 w-5" />, 
+      active: window.location.pathname.startsWith('/admin/modules/cart')
+    },
+    {
+      href: route('admin.modules.marketplace'),
       label: t('admin.modules', 'Module Management'),
       icon: <Package className="h-5 w-5" />,
       active: route().current('admin.modules.*')
+    },
+    {
+      href: route('admin.modules.billing'),
+      label: t('admin.modules.billing', 'Module Billing'),
+      icon: <CreditCard className="h-5 w-5" />, 
+      active: route().current('admin.modules.billing')
     },
   ] : [];
 

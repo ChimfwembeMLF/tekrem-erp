@@ -158,7 +158,7 @@ export default function Index({ trainings, categories, filters }: TrainingIndexP
     if (!amount) return '-';
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: currency || 'USD',
+      currency: currency || 'ZMW',
     }).format(amount);
   };
 

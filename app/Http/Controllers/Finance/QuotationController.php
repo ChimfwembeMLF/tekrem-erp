@@ -91,7 +91,7 @@ class QuotationController extends Controller
             ->get(['id', 'name', 'email', 'company']);
 
         $currencies = [
-            'USD' => 'US Dollar',
+            'ZMW' => 'US Dollar',
             'EUR' => 'Euro',
             'GBP' => 'British Pound',
             'CAD' => 'Canadian Dollar',
@@ -241,7 +241,7 @@ class QuotationController extends Controller
             ->get(['id', 'name', 'email', 'company']);
 
         $currencies = [
-            'USD' => 'US Dollar',
+            'ZMW' => 'US Dollar',
             'EUR' => 'Euro',
             'GBP' => 'British Pound',
             'CAD' => 'Canadian Dollar',

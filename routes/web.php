@@ -111,12 +111,45 @@ Route::middleware([
 
     // Admin routes
     Route::prefix('admin')->name('admin.')->middleware('role:admin|super_user')->group(function () {
-        // Modules Management
-        Route::resource('modules', \App\Http\Controllers\Admin\ModuleController::class);
+        // Company Switch Route
+        Route::put('/companies/switch', [\App\Http\Controllers\Admin\CompanyController::class, 'switch'])->name('companies.switch');
+         // Module Marketplace & Company Modules (company context)
+    Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'setCurrentCompany'])->prefix('modules')->name('modules.')->group(function () {
+        // List all available modules (marketplace)
+        Route::get('/marketplace', [\App\Http\Controllers\Admin\ModuleController::class, 'index'])->name('marketplace');
+        // Module details page
+        Route::get('/{module}', [\App\Http\Controllers\Admin\ModuleController::class, 'show'])->name('show');
+
+        // Module checkout page
+        Route::get('/{module}/checkout', [\App\Http\Controllers\Admin\ModuleController::class, 'checkout'])->name('checkout');
+
+        // Module Cart (multi-module checkout)
+        Route::prefix('cart')->name('cart.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Modules\CartController::class, 'index'])->name('index');
+            Route::post('/add', [\App\Http\Controllers\Modules\CartController::class, 'add'])->name('add');
+            Route::post('/remove', [\App\Http\Controllers\Modules\CartController::class, 'remove'])->name('remove');
+            Route::post('/clear', [\App\Http\Controllers\Modules\CartController::class, 'clear'])->name('clear');
+        });
+        // List modules purchased/activated by current company
+        Route::get('/modules/my-modules', [\App\Http\Controllers\Admin\ModuleController::class, 'companyModules'])->name('company');
+        // Purchase a module (creates invoice)
+        Route::post('/{module}/purchase', [\App\Http\Controllers\Admin\ModuleController::class, 'purchase'])->name('purchase');
+        // Activate/purchase a module for current company
+        Route::post('/{module}/activate', [\App\Http\Controllers\Admin\ModuleController::class, 'activate'])->name('activate');
+        // Deactivate a module for current company
+        Route::post('/{module}/deactivate', [\App\Http\Controllers\Admin\ModuleController::class, 'deactivate'])->name('deactivate');
+        // Module Billing (company context)
+            Route::get('/modules/billing', [\App\Http\Controllers\Modules\BillingController::class, 'index'])->name('billing');
+            Route::get('/modules/billing/create', [\App\Http\Controllers\Modules\BillingController::class, 'create'])->name('billing.create');
+            Route::post('/modules/billing', [\App\Http\Controllers\Modules\BillingController::class, 'store'])->name('billing.store');
+            Route::get('/modules/billing/{id}', [\App\Http\Controllers\Modules\BillingController::class, 'show'])->name('billing.show');
+            Route::put('/modules/billing/{id}', [\App\Http\Controllers\Modules\BillingController::class, 'update'])->name('billing.update');
+            Route::delete('/modules/billing/{id}', [\App\Http\Controllers\Modules\BillingController::class, 'destroy'])->name('billing.destroy');
+    });
         // Settings routes
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
-
+   
         // User Management
         Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
 

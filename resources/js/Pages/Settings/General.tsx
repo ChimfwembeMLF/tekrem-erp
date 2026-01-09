@@ -71,7 +71,7 @@ export default function GeneralSettings({ settings }: GeneralSettingsProps) {
   ];
 
   const currencies = [
-    { value: 'USD', label: 'US Dollar (USD)' },
+    { value: 'ZMW', label: 'US Dollar (ZMW)' },
     { value: 'EUR', label: 'Euro (EUR)' },
     { value: 'GBP', label: 'British Pound (GBP)' },
     { value: 'JPY', label: 'Japanese Yen (JPY)' },

@@ -402,7 +402,7 @@ export default function Edit({ service }: Props) {
                                             />
                                         </div>
                                         <p className="text-sm text-gray-600">
-                                            {t('Cost in USD per token')}
+                                            {t('Cost in ZMW per token')}
                                         </p>
                                     </div>
 

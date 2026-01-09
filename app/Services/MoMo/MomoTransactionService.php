@@ -240,17 +240,17 @@ class MomoTransactionService
      * Update transaction status based on provider response.
      *
      * @param MomoTransaction $transaction
-     * @param array $statusData
+     * @param array $statZMWata
      */
-    public function updateTransactionStatus(MomoTransaction $transaction, array $statusData): void
+    public function updateTransactionStatus(MomoTransaction $transaction, array $statZMWata): void
     {
         $oldStatus = $transaction->status;
-        $newStatus = $statusData['status'];
+        $newStatus = $statZMWata['status'];
 
         $transaction->update([
             'status' => $newStatus,
-            'provider_response' => array_merge($transaction->provider_response ?? [], $statusData['provider_response'] ?? []),
-            'failure_reason' => $statusData['reason'] ?? null,
+            'provider_response' => array_merge($transaction->provider_response ?? [], $statZMWata['provider_response'] ?? []),
+            'failure_reason' => $statZMWata['reason'] ?? null,
             'completed_at' => in_array($newStatus, ['completed', 'failed', 'cancelled']) ? now() : null,
         ]);
 

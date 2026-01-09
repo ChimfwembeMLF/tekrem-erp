@@ -50,7 +50,7 @@ return [
     */
 
     'defaults' => [
-        'currency' => env('COMPANY_DEFAULT_CURRENCY', 'USD'),
+        'currency' => env('COMPANY_DEFAULT_CURRENCY', 'ZMW'),
         'tax_rate' => env('COMPANY_DEFAULT_TAX_RATE', 0),
         'payment_terms' => env('COMPANY_DEFAULT_PAYMENT_TERMS', 'Net 30'),
         'quotation_validity_days' => env('COMPANY_QUOTATION_VALIDITY_DAYS', 30),

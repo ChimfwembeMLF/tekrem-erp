@@ -448,7 +448,7 @@ export default function Edit({ model, services }: Props) {
                                                 step="0.000001"
                                             />
                                             <p className="text-sm text-gray-600">
-                                                {t('Cost in USD per input token')}
+                                                {t('Cost in ZMW per input token')}
                                             </p>
                                         </div>
 
@@ -464,7 +464,7 @@ export default function Edit({ model, services }: Props) {
                                                 step="0.000001"
                                             />
                                             <p className="text-sm text-gray-600">
-                                                {t('Cost in USD per output token')}
+                                                {t('Cost in ZMW per output token')}
                                             </p>
                                         </div>
                                     </div>

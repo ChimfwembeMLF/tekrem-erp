@@ -21,7 +21,7 @@ return new class extends Migration
             $table->decimal('tax_amount', 15, 2)->default(0);
             $table->decimal('discount_amount', 15, 2)->default(0);
             $table->decimal('total_amount', 15, 2)->default(0);
-            $table->string('currency', 3)->default('USD');
+            $table->string('currency', 3)->default('ZMW');
             $table->text('notes')->nullable();
             $table->text('terms')->nullable();
             $table->foreignId('lead_id')->constrained()->onDelete('cascade');

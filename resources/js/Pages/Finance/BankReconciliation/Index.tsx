@@ -182,7 +182,7 @@ export default function Index({ reconciliations, accounts, filters, statuses }: 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'ZMW',
     }).format(amount);
   };
 

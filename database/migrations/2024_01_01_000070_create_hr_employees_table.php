@@ -24,7 +24,7 @@ return new class extends Migration
             $table->date('termination_date')->nullable();
             $table->text('termination_reason')->nullable();
             $table->decimal('salary', 12, 2)->nullable();
-            $table->string('salary_currency', 3)->default('USD');
+            $table->string('salary_currency', 3)->default('ZMW');
             $table->string('pay_frequency')->default('monthly'); // weekly, bi_weekly, monthly, annually
             $table->foreignId('manager_id')->nullable()->constrained('hr_employees')->onDelete('set null');
             $table->string('work_location')->nullable();

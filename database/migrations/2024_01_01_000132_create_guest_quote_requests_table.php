@@ -28,7 +28,7 @@ return new class extends Migration
             $table->string('priority')->default('normal'); // low, normal, high, urgent
             $table->string('status')->default('new'); // new, reviewing, quoted, accepted, rejected
             $table->decimal('quoted_amount', 10, 2)->nullable();
-            $table->string('quoted_currency', 3)->default('USD');
+            $table->string('quoted_currency', 3)->default('ZMW');
             $table->text('quote_notes')->nullable();
             $table->timestamp('quoted_at')->nullable();
             $table->timestamp('quote_expires_at')->nullable();

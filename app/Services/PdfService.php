@@ -141,7 +141,7 @@ class PdfService
     /**
      * Format currency for PDF
      */
-    public function formatCurrency($amount, $currency = 'USD')
+    public function formatCurrency($amount, $currency = 'ZMW')
     {
         return number_format($amount, 2) . ' ' . $currency;
     }

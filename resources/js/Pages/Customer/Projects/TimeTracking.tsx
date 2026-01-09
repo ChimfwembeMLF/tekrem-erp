@@ -74,7 +74,7 @@ export default function TimeTracking({ project, timeEntries, totalHours, totalAm
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
-            currency: 'USD',
+            currency: 'ZMW',
         }).format(amount);
     };
 

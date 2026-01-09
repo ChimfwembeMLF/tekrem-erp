@@ -29,7 +29,7 @@ class InvoiceFactory extends Factory
         $totalAmount = $subtotal + $taxAmount - $discountAmount;
         
         $statuses = ['draft', 'sent', 'paid', 'overdue', 'cancelled'];
-        $currencies = ['USD', 'EUR', 'GBP', 'CAD', 'AUD'];
+        $currencies = ['ZMW', 'EUR', 'GBP', 'CAD', 'AUD'];
         
         $issueDate = $this->faker->dateTimeBetween('-6 months', 'now');
         $dueDate = (clone $issueDate)->modify('+30 days');

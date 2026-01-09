@@ -22,7 +22,7 @@ return new class extends Migration
             $table->decimal('discount_amount', 15, 2)->default(0);
             $table->decimal('total_amount', 15, 2)->default(0);
             $table->decimal('paid_amount', 15, 2)->default(0);
-            $table->string('currency', 3)->default('USD');
+            $table->string('currency', 3)->default('ZMW');
             $table->text('notes')->nullable();
             $table->text('terms')->nullable();
             $table->nullableMorphs('billable'); // For client or lead

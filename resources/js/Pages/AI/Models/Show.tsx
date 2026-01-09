@@ -118,7 +118,7 @@ export default function Show({ model }: Props) {
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
-            currency: 'USD',
+            currency: 'ZMW',
             minimumFractionDigits: 6,
         }).format(amount);
     };

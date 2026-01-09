@@ -178,7 +178,7 @@ class Transaction extends Model
      */
     public function getFormattedAmountAttribute()
     {
-        $currency = $this->account->currency ?? 'USD';
+        $currency = $this->account->currency ?? 'ZMW';
         return number_format($this->amount, 2) . ' ' . $currency;
     }
 

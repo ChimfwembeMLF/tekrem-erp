@@ -42,7 +42,7 @@ export default function Create({ instructors, categories }: Props) {
     mode: '',
     max_participants: '',
     cost_per_participant: '',
-    currency: 'USD',
+    currency: 'ZMW',
     prerequisites: '',
     learning_objectives: '',
     materials: [] as string[],
@@ -351,7 +351,7 @@ export default function Create({ instructors, categories }: Props) {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="USD">USD</SelectItem>
+                        <SelectItem value="ZMW">ZMW</SelectItem>
                         <SelectItem value="EUR">EUR</SelectItem>
                         <SelectItem value="GBP">GBP</SelectItem>
                         <SelectItem value="CAD">CAD</SelectItem>

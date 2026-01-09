@@ -110,7 +110,7 @@ export default function Index({ payments, filters }: Props) {
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
-            currency: 'USD',
+            currency: 'ZMW',
         }).format(amount);
     };
 

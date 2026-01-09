@@ -227,7 +227,7 @@ class ChartOfAccountsSeeder extends Seeder
                 ...$accountData,
                 'parent_account_id' => $parentId,
                 'user_id' => $userId,
-                'currency' => 'USD',
+                'currency' => 'ZMW',
                 'is_active' => true,
                 'description' => "System generated {$accountData['name']} account",
             ]);

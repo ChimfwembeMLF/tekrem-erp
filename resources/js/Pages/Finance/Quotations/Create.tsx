@@ -58,7 +58,7 @@ export default function Create({ leads = [], currencies = {}, statuses = {}, sel
     lead_id: selectedLead?.id?.toString() || '',
     issue_date: new Date().toISOString().split('T')[0],
     expiry_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
-    currency: 'USD',
+    currency: 'ZMW',
     status: 'draft',
     notes: '',
     terms: '',

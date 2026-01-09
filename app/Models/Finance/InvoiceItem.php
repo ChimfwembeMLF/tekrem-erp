@@ -17,6 +17,8 @@ class InvoiceItem extends Model
      */
     protected $fillable = [
         'invoice_id',
+        'module_id',
+        'addon_id',
         'description',
         'quantity',
         'unit_price',
@@ -36,6 +38,8 @@ class InvoiceItem extends Model
         'total_price' => 'decimal:2',
         'tax_rate' => 'decimal:2',
         'discount_rate' => 'decimal:2',
+        'module_id' => 'integer',
+        'addon_id' => 'integer',
     ];
 
     /**
@@ -72,5 +76,15 @@ class InvoiceItem extends Model
     {
         $subtotal = $this->quantity * $this->unit_price;
         return $subtotal * ($this->discount_rate / 100);
+    }
+
+        public function module()
+    {
+        return $this->belongsTo(\App\Models\Module::class);
+    }
+
+    public function addon()
+    {
+        return $this->belongsTo(\App\Models\Addon::class);
     }
 }
