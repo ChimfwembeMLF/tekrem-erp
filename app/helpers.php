@@ -13,6 +13,11 @@ if (!function_exists('currentCompanyId')) {
             return $company->id;
         }
         // Fallback to session
-        return session('current_company_id');
+        $sessionId = session('current_company_id');
+        if ($sessionId) {
+            return $sessionId;
+        }
+        // Fallback to main company ID from config
+        return config('company.main_company_id');
     }
 }

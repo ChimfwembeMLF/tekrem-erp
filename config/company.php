@@ -1,7 +1,6 @@
 <?php
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Company Information
@@ -22,6 +21,7 @@ return [
     'website' => env('COMPANY_WEBSITE', 'www.tekrem.com'),
     'tax_number' => env('COMPANY_TAX_NUMBER', 'TAX123456789'),
     'logo' => env('COMPANY_LOGO', null),
+     'main_company_id' => env('MAIN_COMPANY_ID', 1),
 
     /*
     |--------------------------------------------------------------------------
