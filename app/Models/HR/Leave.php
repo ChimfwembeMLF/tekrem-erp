@@ -29,7 +29,8 @@ class Leave extends Model
         'half_day_period',
         'attachments',
         'submitted_at',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'start_date' => 'date',
@@ -268,5 +269,16 @@ class Leave extends Model
                 $leave->days_requested = $leave->calculateWorkingDays();
             }
         });
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

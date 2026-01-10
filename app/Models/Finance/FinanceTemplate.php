@@ -24,7 +24,8 @@ class FinanceTemplate extends Model
         'is_default',
         'is_active',
         'user_id',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -238,5 +239,16 @@ class FinanceTemplate extends Model
         $newTemplate->save();
 
         return $newTemplate;
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

@@ -11,20 +11,28 @@ use Inertia\Inertia;
 
 class BoardCardController extends Controller
 {
+    protected function companyId(): int
+    {
+        $companyId = session('current_company_id');
+        abort_unless($companyId, 403, 'No active company');
+        return $companyId;
+    }
+
     public function show(BoardCard $card)
     {
-        // $this->authorize('view', $card->board->project);
+        $companyId = $this->companyId();
+        abort_unless($card->company_id === $companyId, 403);
 
         $card->load([
             'assignee',
             'reporter',
             'column',
-            'board',
+            'board.project',
             'sprint',
             'epic',
             'task',
             'comments.user',
-            'attachments'
+            'attachments',
         ]);
 
         return Inertia::render('Agile/Cards/Show', [
@@ -35,13 +43,23 @@ class BoardCardController extends Controller
 
     public function create(Request $request)
     {
-        $board = Board::findOrFail($request->board);
-        // $this->authorize('update', $board->project);
+        $companyId = $this->companyId();
 
-        $column = $request->column ? BoardColumn::find($request->column) : null;
+        $board = Board::where('id', $request->board)
+            ->where('company_id', $companyId)
+            ->firstOrFail();
+
+        $column = $request->column
+            ? BoardColumn::where('id', $request->column)
+                ->where('board_id', $board->id)
+                ->where('company_id', $companyId)
+                ->firstOrFail()
+            : null;
+
+        $board->load(['columns', 'sprints', 'epics', 'project']);
 
         return Inertia::render('Agile/Cards/Create', [
-            'board' => $board->load('columns'),
+            'board' => $board,
             'project' => $board->project,
             'defaultColumn' => $column,
             'sprints' => $board->sprints,
@@ -51,10 +69,11 @@ class BoardCardController extends Controller
 
     public function store(Request $request, Board $board)
     {
-        // $this->authorize('update', $board->project);
+        $companyId = $this->companyId();
+        abort_unless($board->company_id === $companyId, 403);
 
         $validated = $request->validate([
-            'column_id' => 'required|exists:board_columns,id',
+            'column_id' => 'required|integer',
             'type' => 'required|in:story,task,bug,epic',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -63,26 +82,40 @@ class BoardCardController extends Controller
             'priority' => 'required|in:low,medium,high,critical',
             'story_points' => 'nullable|integer|min:0',
             'due_date' => 'nullable|date',
-            'sprint_id' => 'nullable|exists:sprints,id',
-            'epic_id' => 'nullable|exists:epics,id',
+            'sprint_id' => 'nullable|integer',
+            'epic_id' => 'nullable|integer',
             'labels' => 'nullable|array',
         ]);
 
-        $validated['board_id'] = $board->id;
-        $validated['reporter_id'] = $validated['reporter_id'] ?? auth()->id();
-        $validated['order'] = $board->cards()->where('column_id', $validated['column_id'])->max('order') + 1;
+        $column = BoardColumn::where('id', $validated['column_id'])
+            ->where('board_id', $board->id)
+            ->where('company_id', $companyId)
+            ->firstOrFail();
 
-        $card = BoardCard::create($validated);
+        $maxOrder = BoardCard::where('board_id', $board->id)
+            ->where('column_id', $column->id)
+            ->max('order');
 
-        return redirect()->route('agile.board.show', $board)
+        $card = BoardCard::create([
+            ...$validated,
+            'board_id' => $board->id,
+            'column_id' => $column->id,
+            'company_id' => $companyId,
+            'reporter_id' => $validated['reporter_id'] ?? auth()->id(),
+            'order' => ($maxOrder ?? -1) + 1,
+        ]);
+
+        return redirect()
+            ->route('agile.board.show', $board)
             ->with('success', 'Card created successfully.');
     }
 
     public function edit(BoardCard $card)
     {
-        // $this->authorize('update', $card->board->project);
+        $companyId = $this->companyId();
+        abort_unless($card->company_id === $companyId, 403);
 
-        $card->load(['board.columns', 'board.project']);
+        $card->load(['board.columns', 'board.project', 'board.sprints', 'board.epics']);
 
         return Inertia::render('Agile/Cards/Edit', [
             'card' => $card,
@@ -95,10 +128,11 @@ class BoardCardController extends Controller
 
     public function update(Request $request, BoardCard $card)
     {
-        // $this->authorize('update', $card->board->project);
+        $companyId = $this->companyId();
+        abort_unless($card->company_id === $companyId, 403);
 
         $validated = $request->validate([
-            'column_id' => 'sometimes|exists:board_columns,id',
+            'column_id' => 'sometimes|integer',
             'type' => 'sometimes|in:story,task,bug,epic',
             'title' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
@@ -106,15 +140,21 @@ class BoardCardController extends Controller
             'priority' => 'sometimes|in:low,medium,high,critical',
             'story_points' => 'nullable|integer|min:0',
             'due_date' => 'nullable|date',
-            'sprint_id' => 'nullable|exists:sprints,id',
-            'epic_id' => 'nullable|exists:epics,id',
+            'sprint_id' => 'nullable|integer',
+            'epic_id' => 'nullable|integer',
             'labels' => 'nullable|array',
             'status' => 'nullable|string',
         ]);
 
+        if (isset($validated['column_id'])) {
+            BoardColumn::where('id', $validated['column_id'])
+                ->where('board_id', $card->board_id)
+                ->where('company_id', $companyId)
+                ->firstOrFail();
+        }
+
         $card->update($validated);
 
-        // Sync to linked task if in hybrid mode
         if ($card->task_id && isset($validated['status'])) {
             $card->task()->update(['status' => $validated['status']]);
         }
@@ -124,31 +164,34 @@ class BoardCardController extends Controller
 
     public function move(Request $request, BoardCard $card)
     {
-        // $this->authorize('update', $card->board->project);
+        $companyId = $this->companyId();
+        abort_unless($card->company_id === $companyId, 403);
 
         $validated = $request->validate([
-            'column_id' => 'required|exists:board_columns,id',
+            'column_id' => 'required|integer',
             'order' => 'required|integer|min:0',
         ]);
 
-        $card->update([
-            'column_id' => $validated['column_id'],
-            'order' => $validated['order'],
-        ]);
+        BoardColumn::where('id', $validated['column_id'])
+            ->where('board_id', $card->board_id)
+            ->where('company_id', $companyId)
+            ->firstOrFail();
 
-        // Update other cards' order in the same column
-        $cards = BoardCard::where('column_id', $validated['column_id'])
+        $card->update($validated);
+
+        $cards = BoardCard::where('board_id', $card->board_id)
+            ->where('column_id', $validated['column_id'])
+            ->where('company_id', $companyId)
             ->where('id', '!=', $card->id)
             ->orderBy('order')
             ->get();
 
         $order = 0;
         foreach ($cards as $c) {
-            if ($order == $validated['order']) {
+            if ($order === $validated['order']) {
                 $order++;
             }
-            $c->update(['order' => $order]);
-            $order++;
+            $c->update(['order' => $order++]);
         }
 
         return response()->json(['success' => true]);
@@ -156,7 +199,8 @@ class BoardCardController extends Controller
 
     public function destroy(BoardCard $card)
     {
-        // $this->authorize('update', $card->board->project);
+        $companyId = $this->companyId();
+        abort_unless($card->company_id === $companyId, 403);
 
         $card->delete();
 

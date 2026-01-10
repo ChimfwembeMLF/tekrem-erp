@@ -26,7 +26,8 @@ class LeaveType extends Model
         'color',
         'is_active',
         'rules',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'is_paid' => 'boolean',
@@ -162,5 +163,16 @@ class LeaveType extends Model
             'used' => $usedDays,
             'remaining' => max(0, $remaining),
         ];
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

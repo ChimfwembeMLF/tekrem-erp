@@ -38,6 +38,8 @@ class SettingsController extends Controller
      */
     public function updateGeneral(Request $request): RedirectResponse
     {
+        $companyId = $this->getCompanyId();
+
         $validator = Validator::make($request->all(), [
             'site_name' => 'required|string|max:255',
             'site_description' => 'nullable|string|max:500',
@@ -57,7 +59,8 @@ class SettingsController extends Controller
         }
 
         // Update settings in database or config
-        // For now, we'll simulate this
+        Setting::setForCompany($companyId, 'settings', $request->all());
+
         session()->flash('flash', [
             'bannerStyle' => 'success',
             'banner' => 'General settings updated successfully!'
@@ -82,6 +85,8 @@ class SettingsController extends Controller
      */
     public function updateUsers(Request $request): RedirectResponse
     {
+        $companyId = $this->getCompanyId();
+
         $validator = Validator::make($request->all(), [
             'allow_registration' => 'boolean',
             'require_email_verification' => 'boolean',
@@ -102,6 +107,8 @@ class SettingsController extends Controller
         }
 
         // Update user settings
+        Setting::setForCompany($companyId, 'user_settings', $request->all());
+
         session()->flash('flash', [
             'bannerStyle' => 'success',
             'banner' => 'User management settings updated successfully!'
@@ -126,6 +133,8 @@ class SettingsController extends Controller
      */
     public function updateNotifications(Request $request): RedirectResponse
     {
+        $companyId = $this->getCompanyId();
+
         $validator = Validator::make($request->all(), [
             'email_notifications' => 'boolean',
             'sms_notifications' => 'boolean',
@@ -147,6 +156,8 @@ class SettingsController extends Controller
         }
 
         // Update notification settings
+        Setting::setForCompany($companyId, 'notification_settings', $request->all());
+
         session()->flash('flash', [
             'bannerStyle' => 'success',
             'banner' => 'Notification settings updated successfully!'
@@ -160,16 +171,18 @@ class SettingsController extends Controller
      */
     private function getSystemSettings(): array
     {
+        $companyId = $this->getCompanyId();
+
         return [
-            'site_name' => Setting::get('site_name', config('app.name', 'TekRem ERP')),
-            'site_description' => Setting::get('site_description', 'Comprehensive ERP solution for modern businesses'),
+            'site_name' => Setting::getForCompany($companyId, 'site_name', config('app.name', 'TekRem ERP')),
+            'site_description' => Setting::getForCompany($companyId, 'site_description', 'Comprehensive ERP solution for modern businesses'),
             'site_url' => config('app.url'),
-            'admin_email' => Setting::get('admin_email', 'admin@tekrem.com'),
-            'timezone' => Setting::get('timezone', config('app.timezone', 'UTC')),
-            'date_format' => Setting::get('date_format', 'Y-m-d'),
-            'time_format' => Setting::get('time_format', 'H:i:s'),
-            'currency' => Setting::get('currency', 'ZMW'),
-            'language' => Setting::get('language', 'en'),
+            'admin_email' => Setting::getForCompany($companyId, 'admin_email', 'admin@tekrem.com'),
+            'timezone' => Setting::getForCompany($companyId, 'timezone', config('app.timezone', 'UTC')),
+            'date_format' => Setting::getForCompany($companyId, 'date_format', 'Y-m-d'),
+            'time_format' => Setting::getForCompany($companyId, 'time_format', 'H:i:s'),
+            'currency' => Setting::getForCompany($companyId, 'currency', 'ZMW'),
+            'language' => Setting::getForCompany($companyId, 'language', 'en'),
         ];
     }
 
@@ -195,17 +208,19 @@ class SettingsController extends Controller
      */
     private function getUserSettings(): array
     {
+        $companyId = $this->getCompanyId();
+
         return [
-            'allow_registration' => true,
-            'require_email_verification' => true,
-            'default_role' => 'customer',
-            'password_min_length' => 8,
-            'password_require_uppercase' => true,
-            'password_require_lowercase' => true,
-            'password_require_numbers' => true,
-            'password_require_symbols' => false,
-            'session_timeout' => 120, // minutes
-            'max_login_attempts' => 5,
+            'allow_registration' => Setting::getForCompany($companyId, 'allow_registration', true),
+            'require_email_verification' => Setting::getForCompany($companyId, 'require_email_verification', true),
+            'default_role' => Setting::getForCompany($companyId, 'default_role', 'customer'),
+            'password_min_length' => Setting::getForCompany($companyId, 'password_min_length', 8),
+            'password_require_uppercase' => Setting::getForCompany($companyId, 'password_require_uppercase', true),
+            'password_require_lowercase' => Setting::getForCompany($companyId, 'password_require_lowercase', true),
+            'password_require_numbers' => Setting::getForCompany($companyId, 'password_require_numbers', true),
+            'password_require_symbols' => Setting::getForCompany($companyId, 'password_require_symbols', false),
+            'session_timeout' => Setting::getForCompany($companyId, 'session_timeout', 120), // minutes
+            'max_login_attempts' => Setting::getForCompany($companyId, 'max_login_attempts', 5),
         ];
     }
 
@@ -226,18 +241,25 @@ class SettingsController extends Controller
      */
     private function getNotificationSettings(): array
     {
+        $companyId = $this->getCompanyId();
+
         return [
-            'email_notifications' => true,
-            'sms_notifications' => false,
-            'push_notifications' => true,
-            'notification_frequency' => 'immediate',
-            'email_from_name' => config('app.name', 'TekRem ERP'),
-            'email_from_address' => 'noreply@tekrem.com',
-            'smtp_host' => config('mail.mailers.smtp.host'),
-            'smtp_port' => config('mail.mailers.smtp.port'),
-            'smtp_username' => config('mail.mailers.smtp.username'),
+            'email_notifications' => Setting::getForCompany($companyId, 'email_notifications', true),
+            'sms_notifications' => Setting::getForCompany($companyId, 'sms_notifications', false),
+            'push_notifications' => Setting::getForCompany($companyId, 'push_notifications', true),
+            'notification_frequency' => Setting::getForCompany($companyId, 'notification_frequency', 'immediate'),
+            'email_from_name' => Setting::getForCompany($companyId, 'email_from_name', config('app.name', 'TekRem ERP')),
+            'email_from_address' => Setting::getForCompany($companyId, 'email_from_address', 'noreply@tekrem.com'),
+            'smtp_host' => Setting::getForCompany($companyId, 'smtp_host', config('mail.mailers.smtp.host')),
+            'smtp_port' => Setting::getForCompany($companyId, 'smtp_port', config('mail.mailers.smtp.port')),
+            'smtp_username' => Setting::getForCompany($companyId, 'smtp_username', config('mail.mailers.smtp.username')),
             'smtp_password' => '••••••••',
-            'smtp_encryption' => config('mail.mailers.smtp.encryption'),
+            'smtp_encryption' => Setting::getForCompany($companyId, 'smtp_encryption', config('mail.mailers.smtp.encryption')),
         ];
+    }
+
+    protected function getCompanyId()
+    {
+        return currentCompanyId();
     }
 }

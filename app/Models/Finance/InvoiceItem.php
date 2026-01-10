@@ -26,7 +26,8 @@ class InvoiceItem extends Model
         'total_price',
         'tax_rate',
         'discount_rate',
-    ];
+        'company_id',
+];
     /**
      * Get the company that owns the invoice item.
      */
@@ -94,5 +95,10 @@ class InvoiceItem extends Model
     public function addon()
     {
         return $this->belongsTo(\App\Models\Addon::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

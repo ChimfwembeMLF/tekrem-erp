@@ -29,7 +29,8 @@ class BankReconciliationItem extends Model
         'is_cleared',
         'matched_by',
         'matched_at',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -308,5 +309,16 @@ class BankReconciliationItem extends Model
             'matched_by' => auth()->id(),
             'matched_at' => now(),
         ]);
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

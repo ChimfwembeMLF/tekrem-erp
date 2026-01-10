@@ -19,7 +19,8 @@ class MessageComment extends Model
         'message_id',
         'user_id',
         'comment',
-    ];
+        'company_id',
+];
 
     /**
      * Get the message that this comment belongs to.
@@ -35,5 +36,16 @@ class MessageComment extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

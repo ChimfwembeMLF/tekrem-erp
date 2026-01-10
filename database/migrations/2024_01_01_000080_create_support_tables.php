@@ -16,6 +16,8 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->text('description')->nullable();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->integer('response_time_hours')->default(24);
             $table->integer('resolution_time_hours')->default(72);
             $table->integer('escalation_time_hours')->default(48);

@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('ai_conversations', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('ai_model_id')->constrained()->onDelete('cascade');
             $table->string('title')->nullable();

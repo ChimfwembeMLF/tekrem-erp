@@ -32,27 +32,31 @@ class SocialMediaDashboardController extends Controller
         $this->linkedInService = $linkedInService;
     }
 
+    protected function getCompanyId()
+    {
+        return currentCompanyId();
+    }
+
     /**
      * Display unified social media dashboard
      */
     public function index(): Response
     {
-        // Get connection status for all platforms
+        $companyId = $this->getCompanyId();
         $connectionStatus = [
-            'facebook' => $this->facebookService->testConnection(),
-            'instagram' => $this->instagramService->testConnection(),
-            'linkedin' => $this->linkedInService->testConnection(),
+            'facebook' => $this->facebookService->testConnection($companyId),
+            'instagram' => $this->instagramService->testConnection($companyId),
+            'linkedin' => $this->linkedInService->testConnection($companyId),
         ];
 
-        // Get account counts
         $accountCounts = [
-            'facebook_pages' => FacebookPage::count(),
-            'instagram_accounts' => InstagramAccount::count(),
-            'linkedin_companies' => LinkedInCompany::count(),
+            'facebook_pages' => FacebookPage::where('company_id', $companyId)->count(),
+            'instagram_accounts' => InstagramAccount::where('company_id', $companyId)->count(),
+            'linkedin_companies' => LinkedInCompany::where('company_id', $companyId)->count(),
         ];
 
-        // Get recent posts across all platforms
-        $recentPosts = SocialPost::with(['user'])
+        $recentPosts = SocialPost::where('company_id', $companyId)
+            ->with(['user'])
             ->orderBy('created_at', 'desc')
             ->limit(20)
             ->get()
@@ -71,22 +75,20 @@ class SocialMediaDashboardController extends Controller
                 ];
             });
 
-        // Get scheduled posts
-        $scheduledPosts = SocialPost::where('status', SocialPost::STATUS_SCHEDULED)
+        $scheduledPosts = SocialPost::where('company_id', $companyId)
+            ->where('status', SocialPost::STATUS_SCHEDULED)
             ->where('scheduled_at', '>', now())
             ->orderBy('scheduled_at')
             ->limit(10)
             ->get();
 
-        // Get platform statistics
         $platformStats = [
-            'facebook' => $this->getFacebookStats(),
-            'instagram' => $this->getInstagramStats(),
-            'linkedin' => $this->getLinkedInStats(),
+            'facebook' => $this->getFacebookStats($companyId),
+            'instagram' => $this->getInstagramStats($companyId),
+            'linkedin' => $this->getLinkedInStats($companyId),
         ];
 
-        // Get overall engagement metrics
-        $engagementMetrics = $this->getOverallEngagementMetrics();
+        $engagementMetrics = $this->getOverallEngagementMetrics($companyId);
 
         return Inertia::render('SocialMedia/Dashboard/Index', [
             'connectionStatus' => $connectionStatus,
@@ -278,11 +280,12 @@ class SocialMediaDashboardController extends Controller
     /**
      * Get Facebook statistics
      */
-    private function getFacebookStats(): array
+    private function getFacebookStats($companyId): array
     {
-        $pages = FacebookPage::count();
+        $pages = FacebookPage::where('company_id', $companyId)->count();
         $posts = SocialPost::where('platform', 'facebook')
             ->where('created_at', '>=', now()->subDays(30))
+            ->where('company_id', $companyId)
             ->count();
         
         return [
@@ -295,44 +298,47 @@ class SocialMediaDashboardController extends Controller
     /**
      * Get Instagram statistics
      */
-    private function getInstagramStats(): array
+    private function getInstagramStats($companyId): array
     {
-        $accounts = InstagramAccount::count();
+        $accounts = InstagramAccount::where('company_id', $companyId)->count();
         $posts = SocialPost::where('platform', 'instagram')
             ->where('created_at', '>=', now()->subDays(30))
+            ->where('company_id', $companyId)
             ->count();
         
         return [
             'accounts' => $accounts,
             'posts_last_30_days' => $posts,
-            'total_followers' => InstagramAccount::sum('followers_count'),
+            'total_followers' => InstagramAccount::where('company_id', $companyId)->sum('followers_count'),
         ];
     }
 
     /**
      * Get LinkedIn statistics
      */
-    private function getLinkedInStats(): array
+    private function getLinkedInStats($companyId): array
     {
-        $companies = LinkedInCompany::count();
+        $companies = LinkedInCompany::where('company_id', $companyId)->count();
         $posts = SocialPost::where('platform', 'linkedin')
             ->where('created_at', '>=', now()->subDays(30))
+            ->where('company_id', $companyId)
             ->count();
         
         return [
             'companies' => $companies,
             'posts_last_30_days' => $posts,
-            'total_followers' => LinkedInCompany::sum('follower_count'),
+            'total_followers' => LinkedInCompany::where('company_id', $companyId)->sum('follower_count'),
         ];
     }
 
     /**
      * Get overall engagement metrics
      */
-    private function getOverallEngagementMetrics(): array
+    private function getOverallEngagementMetrics($companyId): array
     {
         $posts = SocialPost::where('status', SocialPost::STATUS_PUBLISHED)
             ->where('created_at', '>=', now()->subDays(30))
+            ->where('company_id', $companyId)
             ->get();
 
         return [

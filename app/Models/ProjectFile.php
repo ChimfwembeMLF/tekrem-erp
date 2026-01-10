@@ -35,7 +35,7 @@ class ProjectFile extends Model
         'uploaded_by',
         'access_level',
         'metadata',
-    ];
+];
 
     /**
      * Get the company that owns the project file.

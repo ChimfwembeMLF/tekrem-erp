@@ -17,6 +17,8 @@ return new class extends Migration
             $table->foreignId('ai_model_id')->constrained()->onDelete('cascade');
             $table->foreignId('ai_conversation_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignId('ai_prompt_template_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->string('operation_type'); // chat, completion, embedding, etc.
             $table->string('context_type')->nullable(); // crm, finance, support, etc.
             $table->unsignedBigInteger('context_id')->nullable();

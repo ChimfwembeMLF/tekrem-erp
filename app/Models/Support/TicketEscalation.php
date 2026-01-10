@@ -26,7 +26,8 @@ class TicketEscalation extends Model
         'escalated_at',
         'resolved_at',
         'status',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -77,5 +78,16 @@ class TicketEscalation extends Model
     public function scopeResolved($query)
     {
         return $query->where('status', 'resolved');
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

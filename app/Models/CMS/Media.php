@@ -34,7 +34,8 @@ class Media extends Model
         'last_used_at',
         'uploaded_by',
         'is_public',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'dimensions' => 'array',
@@ -392,4 +393,16 @@ class Media extends Model
             $media->deleteFile();
         });
     }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
+    }
+
+
 }

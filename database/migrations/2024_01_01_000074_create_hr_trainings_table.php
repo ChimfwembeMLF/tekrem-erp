@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('type')->default('internal'); // internal, external, online, certification
             $table->string('category')->nullable();
             $table->foreignId('instructor_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->string('provider')->nullable(); // External training provider
             $table->date('start_date');
             $table->date('end_date');

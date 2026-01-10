@@ -26,7 +26,8 @@ class Report extends Model
         'file_path',
         'file_size',
         'created_by',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -194,5 +195,16 @@ class Report extends Model
         $this->update([
             'status' => 'processing',
         ]);
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

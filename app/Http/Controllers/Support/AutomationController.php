@@ -18,12 +18,19 @@ class AutomationController extends Controller
         private AutomationService $automationService
     ) {}
 
+    protected function getCompanyId()
+    {
+        return currentCompanyId();
+    }
+
     /**
      * Display automation rules.
      */
     public function index(Request $request): Response
     {
-        $rules = AutomationRule::with(['createdBy', 'updatedBy'])
+        $companyId = $this->getCompanyId();
+        $rules = AutomationRule::where('company_id', $companyId)
+            ->with(['createdBy', 'updatedBy'])
             ->when($request->search, function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%")
                     ->orWhere('description', 'like', "%{$search}%");
@@ -63,6 +70,7 @@ class AutomationController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $companyId = $this->getCompanyId();
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
@@ -77,7 +85,7 @@ class AutomationController extends Controller
             'actions.*.params' => ['nullable', 'array'],
             'priority' => ['integer', 'min:0', 'max:100'],
         ]);
-
+        $validated['company_id'] = $companyId;
         // Validate rule configuration
         $errors = $this->automationService->validateRule($validated);
         if (!empty($errors)) {
@@ -95,6 +103,10 @@ class AutomationController extends Controller
      */
     public function show(AutomationRule $automation): Response
     {
+        $companyId = $this->getCompanyId();
+        if ($automation->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $automation->load(['createdBy', 'updatedBy']);
         
         $statistics = $this->automationService->getRuleStatistics($automation);
@@ -114,6 +126,10 @@ class AutomationController extends Controller
      */
     public function edit(AutomationRule $automation): Response
     {
+        $companyId = $this->getCompanyId();
+        if ($automation->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         return Inertia::render('Support/Automation/Edit', [
             'rule' => $automation,
             'availableTriggers' => $this->automationService->getAvailableTriggers(),
@@ -128,6 +144,10 @@ class AutomationController extends Controller
      */
     public function update(Request $request, AutomationRule $automation): RedirectResponse
     {
+        $companyId = $this->getCompanyId();
+        if ($automation->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
@@ -142,15 +162,12 @@ class AutomationController extends Controller
             'actions.*.params' => ['nullable', 'array'],
             'priority' => ['integer', 'min:0', 'max:100'],
         ]);
-
         // Validate rule configuration
         $errors = $this->automationService->validateRule($validated);
         if (!empty($errors)) {
             return redirect()->back()->withErrors($errors)->withInput();
         }
-
         $this->automationService->updateRule($automation, $validated);
-
         return redirect()->route('support.automation.show', $automation)
             ->with('success', 'Automation rule updated successfully.');
     }
@@ -160,8 +177,11 @@ class AutomationController extends Controller
      */
     public function destroy(AutomationRule $automation): RedirectResponse
     {
+        $companyId = $this->getCompanyId();
+        if ($automation->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $automation->delete();
-
         return redirect()->route('support.automation.index')
             ->with('success', 'Automation rule deleted successfully.');
     }

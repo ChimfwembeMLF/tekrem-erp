@@ -18,7 +18,9 @@ class AttendanceController extends Controller
      */
     public function index(Request $request): Response
     {
-        $query = Attendance::with(['employee.user'])
+        $companyId = currentCompanyId();
+        $query = Attendance::where('company_id', $companyId)
+            ->with(['employee.user'])
             ->when($request->search, function ($query, $search) {
                 $query->whereHas('employee.user', function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%");
@@ -39,12 +41,16 @@ class AttendanceController extends Controller
 
         $attendances = $query->latest('date')->paginate(15)->withQueryString();
 
-        $employees = Employee::with('user')->active()->get()->map(function ($employee) {
-            return [
-                'id' => $employee->id,
-                'name' => $employee->full_name,
-            ];
-        });
+        $employees = Employee::where('company_id', $companyId)
+            ->with('user')
+            ->active()
+            ->get()
+            ->map(function ($employee) {
+                return [
+                    'id' => $employee->id,
+                    'name' => $employee->full_name,
+                ];
+            });
 
         return Inertia::render('HR/Attendance/Index', [
             'attendances' => $attendances,
@@ -58,13 +64,18 @@ class AttendanceController extends Controller
      */
     public function create(): Response
     {
-        $employees = Employee::with('user')->active()->get()->map(function ($employee) {
-            return [
-                'id' => $employee->id,
-                'name' => $employee->full_name,
-                'employee_id' => $employee->employee_id,
-            ];
-        });
+        $companyId = currentCompanyId();
+        $employees = Employee::where('company_id', $companyId)
+            ->with('user')
+            ->active()
+            ->get()
+            ->map(function ($employee) {
+                return [
+                    'id' => $employee->id,
+                    'name' => $employee->full_name,
+                    'employee_id' => $employee->employee_id,
+                ];
+            });
 
         return Inertia::render('HR/Attendance/Create', [
             'employees' => $employees,
@@ -76,6 +87,7 @@ class AttendanceController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $companyId = currentCompanyId();
         $validated = $request->validate([
             'employee_id' => 'required|exists:hr_employees,id',
             'date' => 'required|date',
@@ -89,6 +101,7 @@ class AttendanceController extends Controller
         ]);
 
         $validated['is_manual_entry'] = true;
+        $validated['company_id'] = $companyId;
 
         // Calculate total hours if both clock in and out are provided
         if ($validated['clock_in'] && $validated['clock_out']) {
@@ -123,6 +136,9 @@ class AttendanceController extends Controller
      */
     public function show(Attendance $attendance): Response
     {
+        if ($attendance->company_id !== currentCompanyId()) {
+            abort(403);
+        }
         $attendance->load(['employee.user', 'approver']);
 
         return Inertia::render('HR/Attendance/Show', [
@@ -135,6 +151,9 @@ class AttendanceController extends Controller
      */
     public function edit(Attendance $attendance): Response
     {
+        if ($attendance->company_id !== currentCompanyId()) {
+            abort(403);
+        }
         $attendance->load(['employee.user']);
 
         return Inertia::render('HR/Attendance/Edit', [
@@ -147,6 +166,9 @@ class AttendanceController extends Controller
      */
     public function update(Request $request, Attendance $attendance): RedirectResponse
     {
+        if ($attendance->company_id !== currentCompanyId()) {
+            abort(403);
+        }
         $validated = $request->validate([
             'clock_in' => 'nullable|date_format:H:i',
             'clock_out' => 'nullable|date_format:H:i|after:clock_in',
@@ -189,6 +211,9 @@ class AttendanceController extends Controller
      */
     public function destroy(Attendance $attendance): RedirectResponse
     {
+        if ($attendance->company_id !== currentCompanyId()) {
+            abort(403);
+        }
         $attendance->delete();
 
         return redirect()->route('hr.attendance.index')
@@ -200,15 +225,17 @@ class AttendanceController extends Controller
      */
     public function clockIn(Request $request): RedirectResponse
     {
+        $companyId = currentCompanyId();
         $request->validate([
             'employee_id' => 'required|exists:hr_employees,id',
         ]);
 
         $today = now()->format('Y-m-d');
-        $employee = Employee::findOrFail($request->employee_id);
+        $employee = Employee::where('company_id', $companyId)->findOrFail($request->employee_id);
 
         // Check if already clocked in today
-        $existingAttendance = Attendance::where('employee_id', $employee->id)
+        $existingAttendance = Attendance::where('company_id', $companyId)
+            ->where('employee_id', $employee->id)
             ->where('date', $today)
             ->first();
 
@@ -220,6 +247,7 @@ class AttendanceController extends Controller
             $existingAttendance->clockIn($request->location, $request->ip());
         } else {
             Attendance::create([
+                'company_id' => $companyId,
                 'employee_id' => $employee->id,
                 'date' => $today,
                 'clock_in' => now(),
@@ -237,14 +265,16 @@ class AttendanceController extends Controller
      */
     public function clockOut(Request $request): RedirectResponse
     {
+        $companyId = currentCompanyId();
         $request->validate([
             'employee_id' => 'required|exists:hr_employees,id',
         ]);
 
         $today = now()->format('Y-m-d');
-        $employee = Employee::findOrFail($request->employee_id);
+        $employee = Employee::where('company_id', $companyId)->findOrFail($request->employee_id);
 
-        $attendance = Attendance::where('employee_id', $employee->id)
+        $attendance = Attendance::where('company_id', $companyId)
+            ->where('employee_id', $employee->id)
             ->where('date', $today)
             ->first();
 
@@ -266,11 +296,13 @@ class AttendanceController extends Controller
      */
     public function reports(Request $request): Response
     {
+        $companyId = currentCompanyId();
         $startDate = $request->start_date ?? now()->startOfMonth()->format('Y-m-d');
         $endDate = $request->end_date ?? now()->endOfMonth()->format('Y-m-d');
 
         // Get attendance summary
-        $attendanceSummary = Attendance::whereBetween('date', [$startDate, $endDate])
+        $attendanceSummary = Attendance::where('company_id', $companyId)
+            ->whereBetween('date', [$startDate, $endDate])
             ->selectRaw('
                 COUNT(*) as total_records,
                 SUM(CASE WHEN status = "present" THEN 1 ELSE 0 END) as present_count,
@@ -282,7 +314,8 @@ class AttendanceController extends Controller
             ->first();
 
         // Get department-wise attendance
-        $departmentStats = Attendance::join('hr_employees', 'hr_attendances.employee_id', '=', 'hr_employees.id')
+        $departmentStats = Attendance::where('company_id', $companyId)
+            ->join('hr_employees', 'hr_attendances.employee_id', '=', 'hr_employees.id')
             ->join('hr_departments', 'hr_employees.department_id', '=', 'hr_departments.id')
             ->whereBetween('hr_attendances.date', [$startDate, $endDate])
             ->selectRaw('

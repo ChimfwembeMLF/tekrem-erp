@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-      Schema::table('momo_providers', function (Blueprint $table) {
-    $table->string('health_status')->nullable()->after('is_active');
-    $table->timestamp('last_health_check')->nullable()->after('health_status');
-    $table->json('supported_currencies')->nullable()->after('provider_settings');
-    $table->json('fee_structure')->nullable()->after('supported_currencies');
-});
+        Schema::table('momo_providers', function (Blueprint $table) {
+            $table->string('health_status')->nullable()->after('is_active');
+            $table->timestamp('last_health_check')->nullable()->after('health_status');
+            $table->json('supported_currencies')->nullable()->after('provider_settings');
+            $table->json('fee_structure')->nullable()->after('supported_currencies');
+        });
     }
 
     /**

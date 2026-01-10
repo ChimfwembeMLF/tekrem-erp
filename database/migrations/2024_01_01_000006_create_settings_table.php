@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::create('settings', function (Blueprint $table) {
             $table->id();
-            $table->string('key')->unique();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
+            $table->string('key');
             $table->text('value')->nullable();
             $table->string('group')->default('general');
             $table->string('type')->default('string');
@@ -23,6 +25,7 @@ return new class extends Migration
             $table->boolean('is_public')->default(false);
             $table->integer('order')->default(0);
             $table->timestamps();
+            $table->unique(['company_id', 'key']);
         });
     }
 

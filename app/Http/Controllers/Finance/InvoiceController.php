@@ -19,7 +19,7 @@ class InvoiceController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Invoice::where('user_id', auth()->id())
+        $query = Invoice::where('company_id', currentCompanyId())
             ->with(['billable', 'payments']);
 
         // Search functionality
@@ -78,12 +78,12 @@ class InvoiceController extends Controller
     public function create()
     {
         // Get clients and leads for billable selection
-        $clients = Client::where('user_id', auth()->id())
+        $clients = Client::where('company_id', currentCompanyId())
             ->where('status', 'active')
             ->orderBy('name')
             ->get(['id', 'name', 'email']);
 
-        $leads = Lead::where('user_id', auth()->id())
+        $leads = Lead::where('company_id', currentCompanyId())
             ->where('status', 'qualified')
             ->orderBy('name')
             ->get(['id', 'name', 'email']);
@@ -139,7 +139,7 @@ class InvoiceController extends Controller
         // Verify billable entity ownership
         $billableClass = $request->billable_type === 'client' ? Client::class : Lead::class;
         $billable = $billableClass::where('id', $request->billable_id)
-            ->where('user_id', auth()->id())
+            ->where('company_id', currentCompanyId())
             ->first();
 
         if (!$billable) {
@@ -175,6 +175,7 @@ class InvoiceController extends Controller
                 'billable_id' => $request->billable_id,
                 'billable_type' => $billable::class,
                 'user_id' => auth()->id(),
+                'company_id' => currentCompanyId(),
             ]);
 
             // Create invoice items
@@ -198,7 +199,7 @@ class InvoiceController extends Controller
     public function show(Invoice $invoice)
     {
         // Ensure user can only view their own invoices
-        if ($invoice->user_id !== auth()->id()) {
+        if ($invoice->company_id !== currentCompanyId()) {
             abort(403);
         }
 
@@ -215,7 +216,7 @@ class InvoiceController extends Controller
     public function edit(Invoice $invoice)
     {
         // Ensure user can only edit their own invoices
-        if ($invoice->user_id !== auth()->id()) {
+        if ($invoice->company_id !== currentCompanyId()) {
             abort(403);
         }
 
@@ -227,12 +228,12 @@ class InvoiceController extends Controller
         $invoice->load(['billable', 'items']);
 
         // Get clients and leads for billable selection
-        $clients = Client::where('user_id', auth()->id())
+        $clients = Client::where('company_id', currentCompanyId())
             ->where('status', 'active')
             ->orderBy('name')
             ->get(['id', 'name', 'email']);
 
-        $leads = Lead::where('user_id', auth()->id())
+        $leads = Lead::where('company_id', currentCompanyId())
             ->where('status', 'qualified')
             ->orderBy('name')
             ->get(['id', 'name', 'email']);
@@ -266,7 +267,7 @@ class InvoiceController extends Controller
     public function update(Request $request, Invoice $invoice)
     {
         // Ensure user can only update their own invoices
-        if ($invoice->user_id !== auth()->id()) {
+        if ($invoice->company_id !== currentCompanyId()) {
             abort(403);
         }
 
@@ -299,7 +300,7 @@ class InvoiceController extends Controller
         // Verify billable entity ownership
         $billableClass = $request->billable_type === 'client' ? Client::class : Lead::class;
         $billable = $billableClass::where('id', $request->billable_id)
-            ->where('user_id', auth()->id())
+            ->where('company_id', currentCompanyId())
             ->first();
 
         if (!$billable) {
@@ -356,7 +357,7 @@ class InvoiceController extends Controller
     public function destroy(Invoice $invoice)
     {
         // Ensure user can only delete their own invoices
-        if ($invoice->user_id !== auth()->id()) {
+        if ($invoice->company_id !== currentCompanyId()) {
             abort(403);
         }
 
@@ -388,7 +389,7 @@ class InvoiceController extends Controller
     public function send(Invoice $invoice)
     {
         // Ensure user can only send their own invoices
-        if ($invoice->user_id !== auth()->id()) {
+        if ($invoice->company_id !== currentCompanyId()) {
             abort(403);
         }
 
@@ -415,7 +416,7 @@ class InvoiceController extends Controller
     public function pdf(Invoice $invoice)
     {
         // Ensure user can only generate PDF for their own invoices
-        if ($invoice->user_id !== auth()->id()) {
+        if ($invoice->company_id !== currentCompanyId()) {
             abort(403);
         }
 

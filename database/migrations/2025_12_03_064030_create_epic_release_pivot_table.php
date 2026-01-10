@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('epic_release', function (Blueprint $table) {
             $table->foreignId('epic_id')->constrained('epics')->cascadeOnDelete();
             $table->foreignId('release_id')->constrained('releases')->cascadeOnDelete();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->timestamps();
             
             $table->primary(['epic_id', 'release_id']);

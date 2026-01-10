@@ -14,7 +14,7 @@ class TagController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Tag::with('creator');
+        $query = Tag::with('creator')->where('company_id', currentCompanyId());
 
         // Apply filters
         if ($request->filled('search')) {
@@ -69,6 +69,7 @@ class TagController extends Controller
         ]);
 
         $validated['created_by'] = Auth::id();
+        $validated['company_id'] = currentCompanyId();
 
         $tag = Tag::create($validated);
 
@@ -81,6 +82,9 @@ class TagController extends Controller
      */
     public function show(Tag $tag)
     {
+        if ($tag->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $tag->load(['creator', 'projects', 'tasks']);
         $tag->usage_count = $tag->projects->count() + $tag->tasks->count();
 
@@ -94,6 +98,9 @@ class TagController extends Controller
      */
     public function edit(Tag $tag)
     {
+        if ($tag->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         return Inertia::render('Projects/Tags/Edit', [
             'tag' => $tag,
         ]);
@@ -104,6 +111,9 @@ class TagController extends Controller
      */
     public function update(Request $request, Tag $tag)
     {
+        if ($tag->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:tags,name,' . $tag->id,
             'description' => 'nullable|string',
@@ -123,6 +133,9 @@ class TagController extends Controller
      */
     public function destroy(Tag $tag)
     {
+        if ($tag->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         // Check if tag is in use
         $usageCount = $tag->projects()->count() + $tag->tasks()->count();
         
@@ -143,7 +156,7 @@ class TagController extends Controller
      */
     public function search(Request $request)
     {
-        $query = Tag::active();
+        $query = Tag::active()->where('company_id', currentCompanyId());
 
         if ($request->filled('q')) {
             $query->where('name', 'like', '%' . $request->q . '%');

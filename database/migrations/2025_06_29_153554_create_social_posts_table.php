@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('social_posts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->enum('platform', ['facebook', 'instagram', 'linkedin', 'twitter']);
             $table->string('platform_page_id')->nullable();
             $table->string('platform_post_id')->nullable();

@@ -18,6 +18,9 @@ return new class extends Migration
             $table->nullableMorphs('chattable'); // For client or lead
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('recipient_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
+
             $table->timestamps();
         });
     }

@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('ai_models', function (Blueprint $table) {
             $table->id();
             $table->foreignId('ai_service_id')->constrained()->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->string('name');
             $table->string('slug')->unique();
             $table->string('model_identifier'); // The actual model name used in API calls

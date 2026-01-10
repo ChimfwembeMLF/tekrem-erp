@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('tags', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->string('name')->unique();
             $table->string('slug')->unique();
             $table->string('color')->default('#3B82F6'); // Default blue color

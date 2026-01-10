@@ -28,7 +28,8 @@ class BoardCard extends Model
         'labels',
         'dependencies',
         'order',
-    ];
+        'company_id',
+];
 
     /**
      * Get the company that owns the board card.
@@ -134,5 +135,10 @@ class BoardCard extends Model
     public function reminders()
     {
         return $this->hasMany(CardReminder::class, 'card_id');
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

@@ -17,6 +17,10 @@ class ProjectTimeLogController extends Controller
      */
     public function index(Request $request, Project $project)
     {
+        // Enforce multi-tenancy
+        if ($project->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         // Check if time tracking is enabled
         if (!Setting::get('projects.time_tracking.enable_time_tracking', true)) {
             return redirect()->route('projects.show', $project)
@@ -69,6 +73,9 @@ class ProjectTimeLogController extends Controller
      */
     public function create(Project $project)
     {
+        if ($project->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         // Check if time tracking is enabled
         if (!Setting::get('projects.time_tracking.enable_time_tracking', true)) {
             return redirect()->route('projects.show', $project)
@@ -103,6 +110,9 @@ class ProjectTimeLogController extends Controller
      */
     public function store(Request $request, Project $project)
     {
+        if ($project->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         // Check if time tracking is enabled
         if (!Setting::get('projects.time_tracking.enable_time_tracking', true)) {
             return back()->withErrors(['error' => 'Time tracking is currently disabled.']);
@@ -163,6 +173,9 @@ class ProjectTimeLogController extends Controller
      */
     public function show(Project $project, ProjectTimeLog $timeLog)
     {
+        if ($project->company_id !== currentCompanyId() || $timeLog->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $timeLog->load('user', 'milestone');
 
         return Inertia::render('Projects/TimeLogs/Show', [
@@ -176,6 +189,9 @@ class ProjectTimeLogController extends Controller
      */
     public function edit(Project $project, ProjectTimeLog $timeLog)
     {
+        if ($project->company_id !== currentCompanyId() || $timeLog->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $milestones = $project->milestones()->select('id', 'name')->get();
         $users = User::select('id', 'name')->get();
 
@@ -192,6 +208,9 @@ class ProjectTimeLogController extends Controller
      */
     public function update(Request $request, Project $project, ProjectTimeLog $timeLog)
     {
+        if ($project->company_id !== currentCompanyId() || $timeLog->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $validated = $request->validate([
             'description' => 'nullable|string',
             'hours' => 'required|numeric|min:0.1|max:24',
@@ -213,6 +232,9 @@ class ProjectTimeLogController extends Controller
      */
     public function destroy(Project $project, ProjectTimeLog $timeLog)
     {
+        if ($project->company_id !== currentCompanyId() || $timeLog->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $timeLog->delete();
 
         return redirect()->route('projects.time-logs.index', $project)
@@ -224,6 +246,9 @@ class ProjectTimeLogController extends Controller
      */
     public function submit(Project $project, ProjectTimeLog $timeLog)
     {
+        if ($project->company_id !== currentCompanyId() || $timeLog->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $timeLog->submit();
 
         return back()->with('success', 'Time log submitted for approval.');
@@ -234,6 +259,9 @@ class ProjectTimeLogController extends Controller
      */
     public function approve(Project $project, ProjectTimeLog $timeLog)
     {
+        if ($project->company_id !== currentCompanyId() || $timeLog->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $timeLog->approve();
 
         return back()->with('success', 'Time log approved successfully.');

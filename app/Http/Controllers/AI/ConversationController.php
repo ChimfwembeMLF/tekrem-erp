@@ -18,8 +18,10 @@ class ConversationController extends Controller
      */
     public function index(Request $request)
     {
+        $companyId = session('current_company_id');
         $query = Conversation::query()
             ->with(['user', 'aiModel.service'])
+            ->where('company_id', $companyId)
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('title', 'like', "%{$search}%")
@@ -47,7 +49,7 @@ class ConversationController extends Controller
             ->withQueryString();
 
         $models = AIModel::with('service')->enabled()->orderBy('name')->get(['id', 'name', 'ai_service_id']);
-        $contextTypes = Conversation::distinct()->pluck('context_type')->filter()->sort()->values();
+        $contextTypes = Conversation::where('company_id', $companyId)->distinct()->pluck('context_type')->filter()->sort()->values();
 
         return Inertia::render('AI/Conversations/Index', [
             'conversations' => $conversations,
@@ -72,42 +74,49 @@ class ConversationController extends Controller
         ]);
     }
 
-  public function store(Request $request)
-{
-    $validated = $request->validate([
-        'title' => ['required', 'string', 'max:255'],
-        'ai_model_id' => ['required', 'exists:ai_models,id'],
-        'context_type' => ['nullable', 'string', 'in:crm,finance,projects,hr,support,general'],
-        'context_id' => ['nullable', 'integer'],
-        'initial_message' => ['nullable', 'string'],
-        'metadata' => ['array'],
-    ]);
+    /**
+     * Store a newly created conversation in storage.
+     */
+    public function store(Request $request)
+    {
+        $companyId = session('current_company_id');
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'ai_model_id' => ['required', 'exists:ai_models,id'],
+            'context_type' => ['nullable', 'string', 'in:crm,finance,projects,hr,support,general'],
+            'context_id' => ['nullable', 'integer'],
+            'initial_message' => ['nullable', 'string'],
+            'metadata' => ['array'],
+        ]);
 
-    $conversation = Conversation::create([
-        'user_id' => auth()->id(),
-        'ai_model_id' => $validated['ai_model_id'],
-        'title' => $validated['title'],
-        'context_type' => $validated['context_type'] ?? null,
-        'context_id' => $validated['context_id'] ?? null,
-        'metadata' => $validated['metadata'] ?? [],
-        'messages' => [],
-        'message_count' => 0,
-        'total_tokens' => 0,
-        'total_cost' => 0,
-        'last_message_at' => now(),
-    ]);
+        $conversation = Conversation::create([
+            'user_id' => auth()->id(),
+            'company_id' => $companyId,
+            'ai_model_id' => $validated['ai_model_id'],
+            'title' => $validated['title'],
+            'context_type' => $validated['context_type'] ?? null,
+            'context_id' => $validated['context_id'] ?? null,
+            'metadata' => $validated['metadata'] ?? [],
+            'messages' => [],
+            'message_count' => 0,
+            'total_tokens' => 0,
+            'total_cost' => 0,
+            'last_message_at' => now(),
+        ]);
 
-  
-    return redirect()->route('ai.conversations.show', $conversation)
-        ->with('success', 'Conversation created and AI responded successfully.');
-}
-
+        return redirect()->route('ai.conversations.show', $conversation)
+            ->with('success', 'Conversation created and AI responded successfully.');
+    }
 
     /**
      * Display the specified conversation.
      */
     public function show(Conversation $conversation)
     {
+        $companyId = session('current_company_id');
+        if ($conversation->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $conversation->load(['user', 'aiModel.service', 'usageLogs']);
 
         return Inertia::render('AI/Conversations/Show', [
@@ -120,6 +129,10 @@ class ConversationController extends Controller
      */
     public function edit(Conversation $conversation)
     {
+        $companyId = session('current_company_id');
+        if ($conversation->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $conversation->load(['user', 'aiModel.service']);
 
         return Inertia::render('AI/Conversations/Edit', [
@@ -132,6 +145,10 @@ class ConversationController extends Controller
      */
     public function update(Request $request, Conversation $conversation)
     {
+        $companyId = session('current_company_id');
+        if ($conversation->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $validated = $request->validate([
             'title' => ['nullable', 'string', 'max:255'],
             'metadata' => ['array'],
@@ -148,6 +165,10 @@ class ConversationController extends Controller
      */
     public function destroy(Conversation $conversation)
     {
+        $companyId = session('current_company_id');
+        if ($conversation->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $conversation->delete();
 
         return redirect()->route('ai.conversations.index')
@@ -159,6 +180,10 @@ class ConversationController extends Controller
      */
     public function archive(Conversation $conversation)
     {
+        $companyId = session('current_company_id');
+        if ($conversation->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $conversation->archive();
 
         return response()->json([
@@ -172,6 +197,10 @@ class ConversationController extends Controller
      */
     public function unarchive(Conversation $conversation)
     {
+        $companyId = session('current_company_id');
+        if ($conversation->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $conversation->unarchive();
 
         return response()->json([
@@ -185,8 +214,8 @@ class ConversationController extends Controller
      */
     public function addMessage(Request $request, Conversation $conversation)
     {
-        // Check authorization - user must own the conversation or be admin
-        if ($conversation->user_id !== auth()->id() && !auth()->user()->hasRole('admin')) {
+        $companyId = session('current_company_id');
+        if ($conversation->company_id !== $companyId) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized to add messages to this conversation.'
@@ -336,8 +365,9 @@ class ConversationController extends Controller
     {
         $period = $request->get('period', '30 days');
         $userId = $request->get('user_id');
+        $companyId = session('current_company_id');
 
-        $query = Conversation::query();
+        $query = Conversation::query()->where('company_id', $companyId);
 
         if ($userId) {
             $query->where('user_id', $userId);
@@ -389,8 +419,9 @@ class ConversationController extends Controller
         $format = $request->get('format', 'json');
         $period = $request->get('period', '30 days');
         $userId = $request->get('user_id');
+        $companyId = session('current_company_id');
 
-        $query = Conversation::query()->with(['user', 'aiModel.service']);
+        $query = Conversation::query()->with(['user', 'aiModel.service'])->where('company_id', $companyId);
 
         if ($userId) {
             $query->where('user_id', $userId);

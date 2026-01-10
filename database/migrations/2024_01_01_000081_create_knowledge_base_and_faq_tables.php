@@ -14,7 +14,8 @@ return new class extends Migration
         // Knowledge Base Articles
         Schema::create('knowledge_base_articles', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('company_id')->nullable();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->string('title');
             $table->string('slug')->unique();
             $table->longText('content');
@@ -32,8 +33,6 @@ return new class extends Migration
             $table->timestamp('published_at')->nullable();
             $table->integer('sort_order')->default(0);
             $table->timestamps();
-
-            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
         });
 
         // FAQs

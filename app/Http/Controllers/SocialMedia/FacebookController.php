@@ -19,21 +19,30 @@ class FacebookController extends Controller
         private FacebookService $facebookService
     ) {}
 
+    protected function getCompanyId()
+    {
+        return currentCompanyId();
+    }
+
     /**
      * Display Facebook integration dashboard
      */
     public function index(): Response
     {
-        $pages = FacebookPage::with(['facebookLeads', 'socialPosts'])
+        $companyId = $this->getCompanyId();
+        $pages = FacebookPage::where('company_id', $companyId)
+            ->with(['facebookLeads', 'socialPosts'])
             ->withCount(['facebookLeads', 'socialPosts'])
             ->get();
 
-        $recentLeads = FacebookLead::with('lead')
+        $recentLeads = FacebookLead::where('company_id', $companyId)
+            ->with('lead')
             ->latest('created_time')
             ->take(10)
             ->get();
 
         $recentPosts = SocialPost::where('platform', 'facebook')
+            ->where('company_id', $companyId)
             ->with('user')
             ->latest()
             ->take(10)
@@ -46,10 +55,10 @@ class FacebookController extends Controller
             'stats' => [
                 'total_pages' => $pages->count(),
                 'active_pages' => $pages->where('is_active', true)->count(),
-                'total_leads' => FacebookLead::count(),
-                'leads_this_month' => FacebookLead::whereMonth('created_time', now()->month)->count(),
-                'total_posts' => SocialPost::where('platform', 'facebook')->count(),
-                'published_posts' => SocialPost::where('platform', 'facebook')->where('status', 'published')->count(),
+                'total_leads' => FacebookLead::where('company_id', $companyId)->count(),
+                'leads_this_month' => FacebookLead::where('company_id', $companyId)->whereMonth('created_time', now()->month)->count(),
+                'total_posts' => SocialPost::where('platform', 'facebook')->where('company_id', $companyId)->count(),
+                'published_posts' => SocialPost::where('platform', 'facebook')->where('company_id', $companyId)->where('status', 'published')->count(),
             ]
         ]);
     }
@@ -59,18 +68,20 @@ class FacebookController extends Controller
      */
     public function syncPages(): JsonResponse
     {
+        $companyId = $this->getCompanyId();
         try {
             $pages = $this->facebookService->getPages();
             
             foreach ($pages as $pageData) {
                 FacebookPage::updateOrCreate(
-                    ['facebook_page_id' => $pageData['id']],
+                    ['facebook_page_id' => $pageData['id'], 'company_id' => $companyId],
                     [
                         'name' => $pageData['name'],
                         'category' => $pageData['category'] ?? null,
                         'access_token' => $pageData['access_token'],
                         'picture_url' => $pageData['picture']['data']['url'] ?? null,
                         'last_sync_at' => now(),
+                        'company_id' => $companyId
                     ]
                 );
             }
@@ -93,12 +104,15 @@ class FacebookController extends Controller
      */
     public function subscribeWebhooks(Request $request): JsonResponse
     {
+        $companyId = $this->getCompanyId();
         $request->validate([
             'page_id' => 'required|string'
         ]);
 
         try {
-            $page = FacebookPage::where('facebook_page_id', $request->page_id)->firstOrFail();
+            $page = FacebookPage::where('facebook_page_id', $request->page_id)
+                ->where('company_id', $companyId)
+                ->firstOrFail();
             
             $success = $this->facebookService->subscribeToWebhooks(
                 $page->facebook_page_id,
@@ -131,6 +145,7 @@ class FacebookController extends Controller
      */
     public function syncLeads(Request $request): JsonResponse
     {
+        $companyId = $this->getCompanyId();
         $request->validate([
             'page_id' => 'required|string',
             'since' => 'nullable|date'
@@ -142,7 +157,7 @@ class FacebookController extends Controller
             
             $processedCount = 0;
             foreach ($leads as $leadData) {
-                $lead = $this->facebookService->processLead($leadData);
+                $lead = $this->facebookService->processLead($leadData, $companyId);
                 if ($lead) {
                     $processedCount++;
                 }
@@ -166,6 +181,7 @@ class FacebookController extends Controller
      */
     public function createPost(Request $request): JsonResponse
     {
+        $companyId = $this->getCompanyId();
         $request->validate([
             'page_id' => 'required|string',
             'content' => 'required|string',
@@ -178,6 +194,7 @@ class FacebookController extends Controller
         try {
             $post = SocialPost::create([
                 'user_id' => auth()->id(),
+                'company_id' => $companyId,
                 'platform' => 'facebook',
                 'platform_page_id' => $request->page_id,
                 'title' => $request->title,
@@ -211,8 +228,11 @@ class FacebookController extends Controller
      */
     public function publishPost(SocialPost $post): JsonResponse
     {
+        $companyId = $this->getCompanyId();
         try {
-            $page = FacebookPage::where('facebook_page_id', $post->platform_page_id)->firstOrFail();
+            $page = FacebookPage::where('facebook_page_id', $post->platform_page_id)
+                ->where('company_id', $companyId)
+                ->firstOrFail();
             
             $content = [
                 'message' => $post->content,
@@ -258,6 +278,7 @@ class FacebookController extends Controller
      */
     public function getInsights(Request $request): JsonResponse
     {
+        $companyId = $this->getCompanyId();
         $request->validate([
             'page_id' => 'required|string',
             'since' => 'nullable|date',
@@ -265,7 +286,9 @@ class FacebookController extends Controller
         ]);
 
         try {
-            $page = FacebookPage::where('facebook_page_id', $request->page_id)->firstOrFail();
+            $page = FacebookPage::where('facebook_page_id', $request->page_id)
+                ->where('company_id', $companyId)
+                ->firstOrFail();
             
             $since = $request->since ? \Carbon\Carbon::parse($request->since) : now()->subDays(30);
             $until = $request->until ? \Carbon\Carbon::parse($request->until) : now();

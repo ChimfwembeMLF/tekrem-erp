@@ -24,7 +24,8 @@ class Setting extends Model
         'description',
         'is_public',
         'order',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -67,5 +68,16 @@ class Setting extends Model
         $setting = static::firstOrNew(['key' => $key]);
         $setting->value = $value;
         $setting->save();
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

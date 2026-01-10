@@ -17,8 +17,10 @@ class PromptTemplateController extends Controller
      */
     public function index(Request $request)
     {
+        $companyId = session('current_company_id');
         $query = PromptTemplate::query()
             ->with('user')
+            ->where('company_id', $companyId)
             ->when($request->search, function ($query, $search) {
                 $query->search($search);
             })
@@ -49,8 +51,8 @@ class PromptTemplateController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        $categories = PromptTemplate::distinct()->pluck('category')->filter()->sort()->values();
-        $allTags = PromptTemplate::whereNotNull('tags')
+        $categories = PromptTemplate::where('company_id', $companyId)->distinct()->pluck('category')->filter()->sort()->values();
+        $allTags = PromptTemplate::where('company_id', $companyId)->whereNotNull('tags')
             ->get()
             ->pluck('tags')
             ->flatten()
@@ -71,8 +73,9 @@ class PromptTemplateController extends Controller
      */
     public function create()
     {
-        $categories = PromptTemplate::distinct()->pluck('category')->filter()->sort()->values();
-        $allTags = PromptTemplate::whereNotNull('tags')
+        $companyId = session('current_company_id');
+        $categories = PromptTemplate::where('company_id', $companyId)->distinct()->pluck('category')->filter()->sort()->values();
+        $allTags = PromptTemplate::where('company_id', $companyId)->whereNotNull('tags')
             ->get()
             ->pluck('tags')
             ->flatten()
@@ -91,6 +94,7 @@ class PromptTemplateController extends Controller
      */
     public function store(Request $request)
     {
+        $companyId = session('current_company_id');
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'category' => ['required', 'string', 'max:100'],
@@ -104,17 +108,16 @@ class PromptTemplateController extends Controller
 
         // Generate slug from name
         $validated['slug'] = Str::slug($validated['name']);
+        $validated['user_id'] = Auth::id();
+        $validated['company_id'] = $companyId;
 
         // Ensure slug is unique
         $originalSlug = $validated['slug'];
         $counter = 1;
-        while (PromptTemplate::where('slug', $validated['slug'])->exists()) {
+        while (PromptTemplate::where('slug', $validated['slug'])->where('company_id', $companyId)->exists()) {
             $validated['slug'] = $originalSlug . '-' . $counter;
             $counter++;
         }
-
-        // Set user ID
-        $validated['user_id'] = Auth::id();
 
         // Extract variables from template if not provided
         if (empty($validated['variables'])) {
@@ -133,6 +136,10 @@ class PromptTemplateController extends Controller
      */
     public function show(PromptTemplate $promptTemplate)
     {
+        $companyId = session('current_company_id');
+        if ($promptTemplate->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $promptTemplate->load('user');
 
         // Check if user can view this template
@@ -150,6 +157,10 @@ class PromptTemplateController extends Controller
      */
     public function edit(PromptTemplate $promptTemplate)
     {
+        $companyId = session('current_company_id');
+        if ($promptTemplate->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         // Check if user can edit this template
         // System templates cannot be edited
         // Users can edit their own templates
@@ -158,22 +169,19 @@ class PromptTemplateController extends Controller
             return redirect()->route('ai.prompt-templates.show', $promptTemplate)
                 ->with('error', 'System templates cannot be edited. Please duplicate this template to make changes.');
         }
-        
         if ($promptTemplate->user_id !== Auth::id() && !$promptTemplate->is_public) {
             return redirect()->route('ai.prompt-templates.show', $promptTemplate)
                 ->with('error', 'You do not have permission to edit this template.');
         }
-
         $promptTemplate->load('user');
-        $categories = PromptTemplate::distinct()->pluck('category')->filter()->sort()->values();
-        $allTags = PromptTemplate::whereNotNull('tags')
+        $categories = PromptTemplate::where('company_id', $companyId)->distinct()->pluck('category')->filter()->sort()->values();
+        $allTags = PromptTemplate::where('company_id', $companyId)->whereNotNull('tags')
             ->get()
             ->pluck('tags')
             ->flatten()
             ->unique()
             ->sort()
             ->values();
-
         return Inertia::render('AI/PromptTemplates/Edit', [
             'template' => $promptTemplate,
             'categories' => $categories,
@@ -186,17 +194,19 @@ class PromptTemplateController extends Controller
      */
     public function update(Request $request, PromptTemplate $promptTemplate)
     {
+        $companyId = session('current_company_id');
+        if ($promptTemplate->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         // Check if user can edit this template
         // System templates cannot be edited
         // Users can only update their own templates
         if ($promptTemplate->is_system) {
             abort(403, 'System templates cannot be edited.');
         }
-        
         if ($promptTemplate->user_id !== Auth::id()) {
             abort(403, 'You can only update templates that you own.');
         }
-
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'category' => ['required', 'string', 'max:100'],
@@ -207,30 +217,23 @@ class PromptTemplateController extends Controller
             'is_public' => ['boolean'],
             'tags' => ['array'],
         ]);
-
         // Update slug if name changed
         if ($validated['name'] !== $promptTemplate->name) {
             $newSlug = Str::slug($validated['name']);
-            
-            // Ensure slug is unique (excluding current template)
             $originalSlug = $newSlug;
             $counter = 1;
-            while (PromptTemplate::where('slug', $newSlug)->where('id', '!=', $promptTemplate->id)->exists()) {
+            while (PromptTemplate::where('slug', $newSlug)->where('company_id', $companyId)->where('id', '!=', $promptTemplate->id)->exists()) {
                 $newSlug = $originalSlug . '-' . $counter;
                 $counter++;
             }
-            
             $validated['slug'] = $newSlug;
         }
-
         // Extract variables from template if not provided
         if (empty($validated['variables'])) {
             $template = new PromptTemplate(['template' => $validated['template']]);
             $validated['variables'] = $template->extractVariables();
         }
-
         $promptTemplate->update($validated);
-
         return redirect()->route('ai.prompt-templates.show', $promptTemplate)
             ->with('success', 'Prompt template updated successfully.');
     }
@@ -240,13 +243,15 @@ class PromptTemplateController extends Controller
      */
     public function destroy(PromptTemplate $promptTemplate)
     {
+        $companyId = session('current_company_id');
+        if ($promptTemplate->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         // Check if user can delete this template
         if ($promptTemplate->is_system || ($promptTemplate->user_id !== Auth::id() && !Auth::user()->hasRole('admin'))) {
             abort(403, 'You do not have permission to delete this template.');
         }
-
         $promptTemplate->delete();
-
         return redirect()->route('ai.prompt-templates.index')
             ->with('success', 'Prompt template deleted successfully.');
     }
@@ -256,25 +261,26 @@ class PromptTemplateController extends Controller
      */
     public function duplicate(PromptTemplate $promptTemplate)
     {
+        $companyId = session('current_company_id');
+        if ($promptTemplate->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $newTemplate = $promptTemplate->replicate();
         $newTemplate->name = $promptTemplate->name . ' (Copy)';
         $newTemplate->slug = Str::slug($newTemplate->name);
         $newTemplate->user_id = Auth::id();
+        $newTemplate->company_id = $companyId;
         $newTemplate->is_public = false;
         $newTemplate->is_system = false;
         $newTemplate->usage_count = 0;
         $newTemplate->avg_rating = null;
-
-        // Ensure slug is unique
         $originalSlug = $newTemplate->slug;
         $counter = 1;
-        while (PromptTemplate::where('slug', $newTemplate->slug)->exists()) {
+        while (PromptTemplate::where('slug', $newTemplate->slug)->where('company_id', $companyId)->exists()) {
             $newTemplate->slug = $originalSlug . '-' . $counter;
             $counter++;
         }
-
         $newTemplate->save();
-
         return redirect()->route('ai.prompt-templates.show', $newTemplate)
             ->with('success', 'Template duplicated successfully.');
     }
@@ -284,12 +290,14 @@ class PromptTemplateController extends Controller
      */
     public function rate(Request $request, PromptTemplate $promptTemplate)
     {
+        $companyId = session('current_company_id');
+        if ($promptTemplate->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $validated = $request->validate([
             'rating' => ['required', 'integer', 'min:1', 'max:5'],
         ]);
-
         $promptTemplate->addRating($validated['rating']);
-
         return response()->json([
             'success' => true,
             'message' => 'Rating added successfully.',
@@ -302,13 +310,15 @@ class PromptTemplateController extends Controller
      */
     public function render(Request $request, PromptTemplate $promptTemplate)
     {
+        $companyId = session('current_company_id');
+        if ($promptTemplate->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $validated = $request->validate([
             'data' => ['required', 'array'],
         ]);
-
         // Validate that all required variables are provided
         $validation = $promptTemplate->validateData($validated['data']);
-
         if (!$validation['valid']) {
             return response()->json([
                 'success' => false,
@@ -317,12 +327,8 @@ class PromptTemplateController extends Controller
                 'required_variables' => $validation['required_variables']
             ], 400);
         }
-
         $renderedTemplate = $promptTemplate->render($validated['data']);
-
-        // Increment usage count
         $promptTemplate->incrementUsage();
-
         return response()->json([
             'success' => true,
             'rendered_template' => $renderedTemplate,
@@ -335,17 +341,14 @@ class PromptTemplateController extends Controller
      */
     public function statistics(Request $request)
     {
+        $companyId = session('current_company_id');
         $period = $request->get('period', '30 days');
         $userId = $request->get('user_id');
-
-        $query = PromptTemplate::query();
-
+        $query = PromptTemplate::query()->where('company_id', $companyId);
         if ($userId) {
             $query->where('user_id', $userId);
         }
-
         $query->where('created_at', '>=', now()->sub($period));
-
         $stats = [
             'total_templates' => $query->count(),
             'public_templates' => $query->where('is_public', true)->count(),
@@ -354,18 +357,13 @@ class PromptTemplateController extends Controller
             'total_usage' => $query->sum('usage_count'),
             'avg_rating' => $query->whereNotNull('avg_rating')->avg('avg_rating'),
         ];
-
-        // Get templates by category
         $byCategory = $query->groupBy('category')
             ->selectRaw('category, count(*) as count')
             ->get()
             ->pluck('count', 'category');
-
-        // Get most popular templates
-        $popular = PromptTemplate::orderBy('usage_count', 'desc')
+        $popular = PromptTemplate::where('company_id', $companyId)->orderBy('usage_count', 'desc')
             ->limit(10)
             ->get(['id', 'name', 'usage_count', 'avg_rating']);
-
         return response()->json([
             'stats' => $stats,
             'by_category' => $byCategory,

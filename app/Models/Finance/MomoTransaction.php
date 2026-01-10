@@ -62,7 +62,8 @@ class MomoTransaction extends Model
         'metadata',
         'ip_address',
         'user_agent',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -327,5 +328,16 @@ class MomoTransaction extends Model
             'expired' => 'gray',
             default => 'blue',
         };
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

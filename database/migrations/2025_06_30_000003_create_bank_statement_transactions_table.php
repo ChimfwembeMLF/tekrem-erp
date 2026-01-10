@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('bank_statement_transactions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('bank_statement_id')->constrained()->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->date('transaction_date');
             $table->string('transaction_type'); // debit, credit
             $table->decimal('amount', 15, 2);

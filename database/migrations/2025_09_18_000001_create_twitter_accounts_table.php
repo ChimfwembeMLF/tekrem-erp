@@ -8,6 +8,7 @@ return new class extends Migration {
         Schema::create('twitter_accounts', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->string('twitter_id')->unique();
             $table->string('username');
             $table->string('access_token');

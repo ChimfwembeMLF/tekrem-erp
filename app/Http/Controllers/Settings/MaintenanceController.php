@@ -19,24 +19,22 @@ class MaintenanceController extends Controller
      */
     public function clearCache(Request $request): JsonResponse
     {
+        $companyId = currentCompanyId();
         try {
-            // Clear various caches
+            Cache::tags(['company:' . $companyId])->flush();
             Artisan::call('cache:clear');
             Artisan::call('config:clear');
             Artisan::call('route:clear');
             Artisan::call('view:clear');
-            
-            // Clear compiled views
             if (File::exists(storage_path('framework/views'))) {
                 File::cleanDirectory(storage_path('framework/views'));
             }
-
             Log::info('System cache cleared by admin', [
                 'user_id' => auth()->id(),
+                'company_id' => $companyId,
                 'ip' => $request->ip(),
                 'timestamp' => now()
             ]);
-
             return response()->json([
                 'success' => true,
                 'message' => 'All caches cleared successfully!',
@@ -51,9 +49,9 @@ class MaintenanceController extends Controller
         } catch (\Exception $e) {
             Log::error('Failed to clear cache', [
                 'error' => $e->getMessage(),
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
+                'company_id' => $companyId
             ]);
-
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to clear cache: ' . $e->getMessage()
@@ -66,10 +64,10 @@ class MaintenanceController extends Controller
      */
     public function clearLogs(Request $request): JsonResponse
     {
+        $companyId = currentCompanyId();
         try {
             $logPath = storage_path('logs');
             $clearedFiles = [];
-
             if (File::exists($logPath)) {
                 $files = File::files($logPath);
                 foreach ($files as $file) {
@@ -79,14 +77,13 @@ class MaintenanceController extends Controller
                     }
                 }
             }
-
             Log::info('System logs cleared by admin', [
                 'user_id' => auth()->id(),
+                'company_id' => $companyId,
                 'ip' => $request->ip(),
                 'files_cleared' => count($clearedFiles),
                 'timestamp' => now()
             ]);
-
             return response()->json([
                 'success' => true,
                 'message' => 'Log files cleared successfully!',
@@ -98,9 +95,9 @@ class MaintenanceController extends Controller
         } catch (\Exception $e) {
             Log::error('Failed to clear logs', [
                 'error' => $e->getMessage(),
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
+                'company_id' => $companyId
             ]);
-
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to clear logs: ' . $e->getMessage()
@@ -113,27 +110,21 @@ class MaintenanceController extends Controller
      */
     public function createBackup(Request $request): JsonResponse
     {
+        $companyId = currentCompanyId();
         try {
             $timestamp = now()->format('Y-m-d_H-i-s');
-            $backupName = "backup_{$timestamp}";
-            
-            // Create backup directory if it doesn't exist
+            $backupName = "backup_{$companyId}_{$timestamp}";
             $backupPath = storage_path('app/backups');
             if (!File::exists($backupPath)) {
                 File::makeDirectory($backupPath, 0755, true);
             }
-
-            // Database backup
             $dbBackupFile = "{$backupPath}/{$backupName}_database.sql";
             $this->createDatabaseBackup($dbBackupFile);
-
-            // Files backup (excluding storage and vendor)
             $filesBackupFile = "{$backupPath}/{$backupName}_files.zip";
             $this->createFilesBackup($filesBackupFile);
-
-            // Create backup manifest
             $manifest = [
                 'name' => $backupName,
+                'company_id' => $companyId,
                 'created_at' => now()->toISOString(),
                 'created_by' => auth()->user()->name,
                 'database_file' => basename($dbBackupFile),
@@ -141,16 +132,14 @@ class MaintenanceController extends Controller
                 'size' => $this->getBackupSize($dbBackupFile, $filesBackupFile),
                 'version' => app()->version(),
             ];
-
             File::put("{$backupPath}/{$backupName}_manifest.json", json_encode($manifest, JSON_PRETTY_PRINT));
-
             Log::info('System backup created by admin', [
                 'user_id' => auth()->id(),
+                'company_id' => $companyId,
                 'backup_name' => $backupName,
                 'size' => $manifest['size'],
                 'timestamp' => now()
             ]);
-
             return response()->json([
                 'success' => true,
                 'message' => 'Backup created successfully!',
@@ -164,9 +153,9 @@ class MaintenanceController extends Controller
         } catch (\Exception $e) {
             Log::error('Failed to create backup', [
                 'error' => $e->getMessage(),
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
+                'company_id' => $companyId
             ]);
-
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create backup: ' . $e->getMessage()

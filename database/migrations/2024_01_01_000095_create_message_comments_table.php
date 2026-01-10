@@ -16,6 +16,8 @@ return new class extends Migration
             $table->unsignedBigInteger('message_id'); // Reference to chats table
             $table->unsignedBigInteger('user_id'); // Who made the comment
             $table->text('comment'); // The comment content
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
 

@@ -21,6 +21,7 @@ return new class extends Migration
             $table->timestamp('generated_at')->nullable();
             $table->string('file_path')->nullable();
             $table->bigInteger('file_size')->nullable();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->unsignedBigInteger('created_by');
             $table->timestamps();
 

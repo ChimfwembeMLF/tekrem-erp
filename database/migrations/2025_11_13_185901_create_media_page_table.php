@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('media_id')->constrained('cms_media')->onDelete('cascade');
             $table->foreignId('page_id')->constrained('cms_pages')->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->timestamps();
             $table->softDeletes();
             $table->unique(['media_id', 'page_id']);

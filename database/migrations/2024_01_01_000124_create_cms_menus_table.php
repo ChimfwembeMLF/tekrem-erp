@@ -19,12 +19,16 @@ return new class extends Migration
             $table->string('location')->default('header'); // header, footer, sidebar
             $table->boolean('is_active')->default(true);
             $table->foreignId('created_by')->constrained('users');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->timestamps();
         });
 
         Schema::create('cms_menu_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('menu_id')->constrained('cms_menus')->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->string('title');
             $table->string('url')->nullable();
             $table->foreignId('page_id')->nullable()->constrained('cms_pages')->onDelete('cascade');

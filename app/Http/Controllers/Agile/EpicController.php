@@ -10,13 +10,24 @@ use Inertia\Inertia;
 
 class EpicController extends Controller
 {
+    protected function companyId(): int
+    {
+        $companyId = session('current_company_id');
+        abort_unless($companyId, 403, 'No active company');
+        return $companyId;
+    }
+
     public function index(Project $project)
     {
-        $this->authorize('view', $project);
+        $companyId = $this->companyId();
+        abort_unless($project->company_id === $companyId, 403);
+
+        // $this->authorize('view', $project);
 
         $epics = $project->epics()
-            ->with('cards')
-            ->orderBy('created_at', 'desc')
+            ->where('company_id', $companyId)
+            ->with(['cards' => fn ($q) => $q->where('company_id', $companyId)])
+            ->orderByDesc('created_at')
             ->get();
 
         return Inertia::render('Agile/Epics/Index', [
@@ -27,32 +38,41 @@ class EpicController extends Controller
 
     public function store(Request $request, Project $project)
     {
-        $this->authorize('update', $project);
+        $companyId = $this->companyId();
+        abort_unless($project->company_id === $companyId, 403);
+
+        // $this->authorize('update', $project);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'color' => 'required|string|max:7', // hex color
+            'color' => 'required|string|max:7',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after:start_date',
         ]);
 
-        $validated['project_id'] = $project->id;
-
-        $epic = Epic::create($validated);
+        Epic::create([
+            ...$validated,
+            'project_id' => $project->id,
+            'company_id' => $companyId,
+        ]);
 
         return back()->with('success', 'Epic created successfully.');
     }
 
     public function show(Epic $epic)
     {
-        $this->authorize('view', $epic->project);
+        $companyId = $this->companyId();
+        abort_unless($epic->company_id === $companyId, 403);
+
+        // $this->authorize('view', $epic->project);
 
         $epic->load([
-            'cards.assignee',
-            'cards.column',
+            'project',
             'releases',
-            'project'
+            'cards' => fn ($q) => $q
+                ->where('company_id', $companyId)
+                ->with(['assignee', 'column']),
         ]);
 
         return Inertia::render('Agile/Epics/Show', [
@@ -63,7 +83,10 @@ class EpicController extends Controller
 
     public function update(Request $request, Epic $epic)
     {
-        $this->authorize('update', $epic->project);
+        $companyId = $this->companyId();
+        abort_unless($epic->company_id === $companyId, 403);
+
+        // $this->authorize('update', $epic->project);
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
@@ -80,14 +103,19 @@ class EpicController extends Controller
 
     public function destroy(Epic $epic)
     {
-        $this->authorize('update', $epic->project);
+        $companyId = $this->companyId();
+        abort_unless($epic->company_id === $companyId, 403);
 
-        // Remove epic association from cards
-        $epic->cards()->update(['epic_id' => null]);
+        // $this->authorize('update', $epic->project);
+
+        $epic->cards()
+            ->where('company_id', $companyId)
+            ->update(['epic_id' => null]);
 
         $epic->delete();
 
-        return redirect()->route('agile.epics.index', $epic->project_id)
+        return redirect()
+            ->route('agile.epics.index', $epic->project_id)
             ->with('success', 'Epic deleted successfully.');
     }
 }

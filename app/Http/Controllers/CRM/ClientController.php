@@ -19,7 +19,9 @@ class ClientController extends Controller
      */
     public function index(Request $request)
     {
+        $companyId = currentCompanyId();
         $query = Client::query()
+            ->where('company_id', $companyId)
             ->with('user')
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($query) use ($search) {
@@ -54,6 +56,7 @@ class ClientController extends Controller
      */
     public function store(Request $request)
     {
+        $companyId = currentCompanyId();
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
@@ -70,6 +73,7 @@ class ClientController extends Controller
         ]);
 
         $validated['user_id'] = Auth::id();
+        $validated['company_id'] = $companyId;
 
         $client = Client::create($validated);
 
@@ -89,6 +93,10 @@ class ClientController extends Controller
      */
     public function show(Client $client)
     {
+        $companyId = currentCompanyId();
+        if ($client->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $client->load(['user', 'communications' => function ($query) {
             $query->with('user')->latest();
         }]);
@@ -104,6 +112,10 @@ class ClientController extends Controller
      */
     public function edit(Client $client)
     {
+        $companyId = currentCompanyId();
+        if ($client->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         return Inertia::render('CRM/Clients/Edit', [
             'client' => $client,
         ]);
@@ -114,6 +126,10 @@ class ClientController extends Controller
      */
     public function update(Request $request, Client $client)
     {
+        $companyId = currentCompanyId();
+        if ($client->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
@@ -140,6 +156,10 @@ class ClientController extends Controller
      */
     public function destroy(Client $client)
     {
+        $companyId = currentCompanyId();
+        if ($client->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $client->delete();
 
         return redirect()->route('crm.clients.index')
@@ -151,6 +171,10 @@ class ClientController extends Controller
      */
     public function healthAnalysis(Client $client, CRMAIService $crmAI)
     {
+        $companyId = currentCompanyId();
+        if ($client->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         try {
             $analysis = $crmAI->analyzeClientHealth($client);
 

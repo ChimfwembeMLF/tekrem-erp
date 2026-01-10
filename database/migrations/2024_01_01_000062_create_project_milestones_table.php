@@ -16,6 +16,8 @@ return new class extends Migration
             $table->foreignId('project_id')->constrained('projects')->onDelete('cascade');
             $table->string('name');
             $table->text('description')->nullable();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             
             // Dates
             $table->date('due_date')->nullable();
@@ -37,6 +39,7 @@ return new class extends Migration
             $table->timestamps();
             
             // Indexes
+            $table->index('company_id');
             $table->index(['project_id', 'status']);
             $table->index(['project_id', 'order']);
             $table->index(['assigned_to', 'status']);

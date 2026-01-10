@@ -50,7 +50,7 @@ class SetupController extends Controller
         ]);
 
         foreach ($validated as $key => $value) {
-            Setting::set("finance.general.{$key}", $value);
+            Setting::setForCompany("finance.general.{$key}", $value, currentCompanyId());
         }
 
         session()->flash('flash', [
@@ -86,7 +86,7 @@ class SetupController extends Controller
         ]);
 
         foreach ($validated as $key => $value) {
-            Setting::set("finance.invoice.{$key}", $value);
+            Setting::setForCompany("finance.invoice.{$key}", $value, currentCompanyId());
         }
 
         session()->flash('flash', [
@@ -119,7 +119,7 @@ class SetupController extends Controller
         ]);
 
         foreach ($validated as $key => $value) {
-            Setting::set("finance.payment.{$key}", $value);
+            Setting::setForCompany("finance.payment.{$key}", $value, currentCompanyId());
         }
 
         session()->flash('flash', [
@@ -149,7 +149,7 @@ class SetupController extends Controller
         ]);
 
         foreach ($validated as $key => $value) {
-            Setting::set("finance.tax.{$key}", $value);
+            Setting::setForCompany("finance.tax.{$key}", $value, currentCompanyId());
         }
 
         session()->flash('flash', [
@@ -179,7 +179,7 @@ class SetupController extends Controller
         ]);
 
         foreach ($validated as $key => $value) {
-            Setting::set("finance.budget.{$key}", $value);
+            Setting::setForCompany("finance.budget.{$key}", $value, currentCompanyId());
         }
 
         session()->flash('flash', [
@@ -211,7 +211,7 @@ class SetupController extends Controller
         ]);
 
         foreach ($validated as $key => $value) {
-            Setting::set("finance.reporting.{$key}", $value);
+            Setting::setForCompany("finance.reporting.{$key}", $value, currentCompanyId());
         }
 
         session()->flash('flash', [
@@ -228,18 +228,18 @@ class SetupController extends Controller
     private function getGeneralSettings(): array
     {
         return [
-            'default_currency' => Setting::get('finance.general.default_currency', 'ZMW'),
-            'currency_symbol' => Setting::get('finance.general.currency_symbol', '$'),
-            'decimal_places' => Setting::get('finance.general.decimal_places', 2),
-            'thousand_separator' => Setting::get('finance.general.thousand_separator', ','),
-            'decimal_separator' => Setting::get('finance.general.decimal_separator', '.'),
-            'fiscal_year_start' => Setting::get('finance.general.fiscal_year_start', '01-01'),
-            'enable_multi_currency' => Setting::get('finance.general.enable_multi_currency', false),
-            'auto_currency_conversion' => Setting::get('finance.general.auto_currency_conversion', false),
-            'enable_financial_analytics' => Setting::get('finance.general.enable_financial_analytics', true),
-            'enable_budget_tracking' => Setting::get('finance.general.enable_budget_tracking', true),
-            'enable_expense_approval' => Setting::get('finance.general.enable_expense_approval', true),
-            'enable_ai_categorization' => Setting::get('finance.general.enable_ai_categorization', true),
+            'default_currency' => Setting::getForCompany('finance.general.default_currency', 'ZMW', currentCompanyId()),
+            'currency_symbol' => Setting::getForCompany('finance.general.currency_symbol', '$', currentCompanyId()),
+            'decimal_places' => Setting::getForCompany('finance.general.decimal_places', 2, currentCompanyId()),
+            'thousand_separator' => Setting::getForCompany('finance.general.thousand_separator', ',', currentCompanyId()),
+            'decimal_separator' => Setting::getForCompany('finance.general.decimal_separator', '.', currentCompanyId()),
+            'fiscal_year_start' => Setting::getForCompany('finance.general.fiscal_year_start', '01-01', currentCompanyId()),
+            'enable_multi_currency' => Setting::getForCompany('finance.general.enable_multi_currency', false, currentCompanyId()),
+            'auto_currency_conversion' => Setting::getForCompany('finance.general.auto_currency_conversion', false, currentCompanyId()),
+            'enable_financial_analytics' => Setting::getForCompany('finance.general.enable_financial_analytics', true, currentCompanyId()),
+            'enable_budget_tracking' => Setting::getForCompany('finance.general.enable_budget_tracking', true, currentCompanyId()),
+            'enable_expense_approval' => Setting::getForCompany('finance.general.enable_expense_approval', true, currentCompanyId()),
+            'enable_ai_categorization' => Setting::getForCompany('finance.general.enable_ai_categorization', true, currentCompanyId()),
         ];
     }
 
@@ -249,20 +249,20 @@ class SetupController extends Controller
     private function getInvoiceSettings(): array
     {
         return [
-            'invoice_number_format' => Setting::get('finance.invoice.invoice_number_format', 'INV-{YYYY}-{####}'),
-            'invoice_prefix' => Setting::get('finance.invoice.invoice_prefix', 'INV'),
-            'auto_generate_numbers' => Setting::get('finance.invoice.auto_generate_numbers', true),
-            'default_payment_terms' => Setting::get('finance.invoice.default_payment_terms', 'Net 30'),
-            'default_due_days' => Setting::get('finance.invoice.default_due_days', 30),
-            'late_fee_enabled' => Setting::get('finance.invoice.late_fee_enabled', false),
-            'late_fee_percentage' => Setting::get('finance.invoice.late_fee_percentage', 5),
-            'late_fee_amount' => Setting::get('finance.invoice.late_fee_amount', 0),
-            'auto_send_invoices' => Setting::get('finance.invoice.auto_send_invoices', false),
-            'auto_send_reminders' => Setting::get('finance.invoice.auto_send_reminders', true),
-            'reminder_days_before' => Setting::get('finance.invoice.reminder_days_before', 3),
-            'reminder_days_after' => Setting::get('finance.invoice.reminder_days_after', 7),
-            'enable_online_payments' => Setting::get('finance.invoice.enable_online_payments', true),
-            'enable_partial_payments' => Setting::get('finance.invoice.enable_partial_payments', true),
+            'invoice_number_format' => Setting::getForCompany('finance.invoice.invoice_number_format', 'INV-{YYYY}-{####}', currentCompanyId()),
+            'invoice_prefix' => Setting::getForCompany('finance.invoice.invoice_prefix', 'INV', currentCompanyId()),
+            'auto_generate_numbers' => Setting::getForCompany('finance.invoice.auto_generate_numbers', true, currentCompanyId()),
+            'default_payment_terms' => Setting::getForCompany('finance.invoice.default_payment_terms', 'Net 30', currentCompanyId()),
+            'default_due_days' => Setting::getForCompany('finance.invoice.default_due_days', 30, currentCompanyId()),
+            'late_fee_enabled' => Setting::getForCompany('finance.invoice.late_fee_enabled', false, currentCompanyId()),
+            'late_fee_percentage' => Setting::getForCompany('finance.invoice.late_fee_percentage', 5, currentCompanyId()),
+            'late_fee_amount' => Setting::getForCompany('finance.invoice.late_fee_amount', 0, currentCompanyId()),
+            'auto_send_invoices' => Setting::getForCompany('finance.invoice.auto_send_invoices', false, currentCompanyId()),
+            'auto_send_reminders' => Setting::getForCompany('finance.invoice.auto_send_reminders', true, currentCompanyId()),
+            'reminder_days_before' => Setting::getForCompany('finance.invoice.reminder_days_before', 3, currentCompanyId()),
+            'reminder_days_after' => Setting::getForCompany('finance.invoice.reminder_days_after', 7, currentCompanyId()),
+            'enable_online_payments' => Setting::getForCompany('finance.invoice.enable_online_payments', true, currentCompanyId()),
+            'enable_partial_payments' => Setting::getForCompany('finance.invoice.enable_partial_payments', true, currentCompanyId()),
         ];
     }
 
@@ -272,17 +272,17 @@ class SetupController extends Controller
     private function getPaymentSettings(): array
     {
         return [
-            'enable_stripe' => Setting::get('finance.payment.enable_stripe', false),
-            'enable_paypal' => Setting::get('finance.payment.enable_paypal', false),
-            'enable_bank_transfer' => Setting::get('finance.payment.enable_bank_transfer', true),
-            'enable_cash_payments' => Setting::get('finance.payment.enable_cash_payments', true),
-            'enable_check_payments' => Setting::get('finance.payment.enable_check_payments', true),
-            'auto_reconcile_payments' => Setting::get('finance.payment.auto_reconcile_payments', false),
-            'payment_confirmation_required' => Setting::get('finance.payment.payment_confirmation_required', true),
-            'enable_payment_analytics' => Setting::get('finance.payment.enable_payment_analytics', true),
-            'default_payment_method' => Setting::get('finance.payment.default_payment_method', 'bank_transfer'),
-            'payment_processing_fee' => Setting::get('finance.payment.payment_processing_fee', 0),
-            'minimum_payment_amount' => Setting::get('finance.payment.minimum_payment_amount', 1),
+            'enable_stripe' => Setting::getForCompany('finance.payment.enable_stripe', false, currentCompanyId()),
+            'enable_paypal' => Setting::getForCompany('finance.payment.enable_paypal', false, currentCompanyId()),
+            'enable_bank_transfer' => Setting::getForCompany('finance.payment.enable_bank_transfer', true, currentCompanyId()),
+            'enable_cash_payments' => Setting::getForCompany('finance.payment.enable_cash_payments', true, currentCompanyId()),
+            'enable_check_payments' => Setting::getForCompany('finance.payment.enable_check_payments', true, currentCompanyId()),
+            'auto_reconcile_payments' => Setting::getForCompany('finance.payment.auto_reconcile_payments', false, currentCompanyId()),
+            'payment_confirmation_required' => Setting::getForCompany('finance.payment.payment_confirmation_required', true, currentCompanyId()),
+            'enable_payment_analytics' => Setting::getForCompany('finance.payment.enable_payment_analytics', true, currentCompanyId()),
+            'default_payment_method' => Setting::getForCompany('finance.payment.default_payment_method', 'bank_transfer', currentCompanyId()),
+            'payment_processing_fee' => Setting::getForCompany('finance.payment.payment_processing_fee', 0, currentCompanyId()),
+            'minimum_payment_amount' => Setting::getForCompany('finance.payment.minimum_payment_amount', 1, currentCompanyId()),
         ];
     }
 
@@ -292,14 +292,14 @@ class SetupController extends Controller
     private function getTaxSettings(): array
     {
         return [
-            'enable_tax_calculation' => Setting::get('finance.tax.enable_tax_calculation', true),
-            'default_tax_rate' => Setting::get('finance.tax.default_tax_rate', 10),
-            'tax_inclusive_pricing' => Setting::get('finance.tax.tax_inclusive_pricing', false),
-            'enable_multiple_tax_rates' => Setting::get('finance.tax.enable_multiple_tax_rates', false),
-            'enable_tax_exemptions' => Setting::get('finance.tax.enable_tax_exemptions', true),
-            'auto_calculate_tax' => Setting::get('finance.tax.auto_calculate_tax', true),
-            'tax_rounding_method' => Setting::get('finance.tax.tax_rounding_method', 'round'),
-            'enable_tax_reporting' => Setting::get('finance.tax.enable_tax_reporting', true),
+            'enable_tax_calculation' => Setting::getForCompany('finance.tax.enable_tax_calculation', true, currentCompanyId()),
+            'default_tax_rate' => Setting::getForCompany('finance.tax.default_tax_rate', 10, currentCompanyId()),
+            'tax_inclusive_pricing' => Setting::getForCompany('finance.tax.tax_inclusive_pricing', false, currentCompanyId()),
+            'enable_multiple_tax_rates' => Setting::getForCompany('finance.tax.enable_multiple_tax_rates', false, currentCompanyId()),
+            'enable_tax_exemptions' => Setting::getForCompany('finance.tax.enable_tax_exemptions', true, currentCompanyId()),
+            'auto_calculate_tax' => Setting::getForCompany('finance.tax.auto_calculate_tax', true, currentCompanyId()),
+            'tax_rounding_method' => Setting::getForCompany('finance.tax.tax_rounding_method', 'round', currentCompanyId()),
+            'enable_tax_reporting' => Setting::getForCompany('finance.tax.enable_tax_reporting', true, currentCompanyId()),
         ];
     }
 
@@ -309,14 +309,14 @@ class SetupController extends Controller
     private function getBudgetSettings(): array
     {
         return [
-            'enable_budget_management' => Setting::get('finance.budget.enable_budget_management', true),
-            'budget_period' => Setting::get('finance.budget.budget_period', 'monthly'),
-            'enable_budget_alerts' => Setting::get('finance.budget.enable_budget_alerts', true),
-            'budget_alert_threshold' => Setting::get('finance.budget.budget_alert_threshold', 80),
-            'enable_budget_approval' => Setting::get('finance.budget.enable_budget_approval', true),
-            'auto_create_budgets' => Setting::get('finance.budget.auto_create_budgets', false),
-            'enable_budget_forecasting' => Setting::get('finance.budget.enable_budget_forecasting', true),
-            'enable_variance_analysis' => Setting::get('finance.budget.enable_variance_analysis', true),
+            'enable_budget_management' => Setting::getForCompany('finance.budget.enable_budget_management', true, currentCompanyId()),
+            'budget_period' => Setting::getForCompany('finance.budget.budget_period', 'monthly', currentCompanyId()),
+            'enable_budget_alerts' => Setting::getForCompany('finance.budget.enable_budget_alerts', true, currentCompanyId()),
+            'budget_alert_threshold' => Setting::getForCompany('finance.budget.budget_alert_threshold', 80, currentCompanyId()),
+            'enable_budget_approval' => Setting::getForCompany('finance.budget.enable_budget_approval', true, currentCompanyId()),
+            'auto_create_budgets' => Setting::getForCompany('finance.budget.auto_create_budgets', false, currentCompanyId()),
+            'enable_budget_forecasting' => Setting::getForCompany('finance.budget.enable_budget_forecasting', true, currentCompanyId()),
+            'enable_variance_analysis' => Setting::getForCompany('finance.budget.enable_variance_analysis', true, currentCompanyId()),
         ];
     }
 
@@ -326,16 +326,16 @@ class SetupController extends Controller
     private function getReportingSettings(): array
     {
         return [
-            'enable_financial_reports' => Setting::get('finance.reporting.enable_financial_reports', true),
-            'auto_generate_reports' => Setting::get('finance.reporting.auto_generate_reports', false),
-            'report_frequency' => Setting::get('finance.reporting.report_frequency', 'monthly'),
-            'enable_profit_loss' => Setting::get('finance.reporting.enable_profit_loss', true),
-            'enable_balance_sheet' => Setting::get('finance.reporting.enable_balance_sheet', true),
-            'enable_cash_flow' => Setting::get('finance.reporting.enable_cash_flow', true),
-            'enable_expense_reports' => Setting::get('finance.reporting.enable_expense_reports', true),
-            'enable_revenue_reports' => Setting::get('finance.reporting.enable_revenue_reports', true),
-            'enable_tax_reports' => Setting::get('finance.reporting.enable_tax_reports', true),
-            'report_retention_months' => Setting::get('finance.reporting.report_retention_months', 24),
+            'enable_financial_reports' => Setting::getForCompany('finance.reporting.enable_financial_reports', true, currentCompanyId()),
+            'auto_generate_reports' => Setting::getForCompany('finance.reporting.auto_generate_reports', false, currentCompanyId()),
+            'report_frequency' => Setting::getForCompany('finance.reporting.report_frequency', 'monthly', currentCompanyId()),
+            'enable_profit_loss' => Setting::getForCompany('finance.reporting.enable_profit_loss', true, currentCompanyId()),
+            'enable_balance_sheet' => Setting::getForCompany('finance.reporting.enable_balance_sheet', true, currentCompanyId()),
+            'enable_cash_flow' => Setting::getForCompany('finance.reporting.enable_cash_flow', true, currentCompanyId()),
+            'enable_expense_reports' => Setting::getForCompany('finance.reporting.enable_expense_reports', true, currentCompanyId()),
+            'enable_revenue_reports' => Setting::getForCompany('finance.reporting.enable_revenue_reports', true, currentCompanyId()),
+            'enable_tax_reports' => Setting::getForCompany('finance.reporting.enable_tax_reports', true, currentCompanyId()),
+            'report_retention_months' => Setting::getForCompany('finance.reporting.report_retention_months', 24, currentCompanyId()),
         ];
     }
 }

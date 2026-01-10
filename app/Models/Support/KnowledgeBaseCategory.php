@@ -24,7 +24,8 @@ class KnowledgeBaseCategory extends Model
         'is_active',
         'sort_order',
         'parent_id',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -105,5 +106,16 @@ class KnowledgeBaseCategory extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('sort_order')->orderBy('name');
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

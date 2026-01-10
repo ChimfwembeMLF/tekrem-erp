@@ -14,7 +14,8 @@ class Epic extends Model
         'name',
         'description',
         'color',
-    ];
+        'company_id',
+];
 
     public function board()
     {
@@ -33,5 +34,16 @@ class Epic extends Model
     {
         return $this->belongsToMany(Release::class, 'epic_release')
             ->withTimestamps();
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

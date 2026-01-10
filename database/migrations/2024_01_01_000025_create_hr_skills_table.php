@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('name');
             $table->text('description')->nullable();
             $table->string('category')->nullable();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->string('type')->default('technical'); // technical, soft, language, certification
             $table->integer('proficiency_levels')->default(5); // Number of proficiency levels (1-5, 1-10, etc.)
             $table->json('level_descriptions')->nullable(); // Descriptions for each level

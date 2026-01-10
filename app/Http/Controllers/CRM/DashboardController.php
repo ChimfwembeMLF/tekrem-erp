@@ -16,23 +16,24 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        $totalClients = Client::count();
-        $totalLeads = Lead::count();
-        $recentClients = Client::latest()->take(5)->get();
-        $recentLeads = Lead::latest()->take(5)->get();
-        $recentCommunications = Communication::with('communicable', 'user')
+        $companyId = currentCompanyId();
+        $totalClients = Client::where('company_id', $companyId)->count();
+        $totalLeads = Lead::where('company_id', $companyId)->count();
+        $recentClients = Client::where('company_id', $companyId)->latest()->take(5)->get();
+        $recentLeads = Lead::where('company_id', $companyId)->latest()->take(5)->get();
+        $recentCommunications = Communication::where('company_id', $companyId)
+            ->with('communicable', 'user')
             ->latest()
             ->take(10)
             ->get();
-
-        $leadsByStatus = Lead::selectRaw('status, count(*) as count')
+        $leadsByStatus = Lead::where('company_id', $companyId)
+            ->selectRaw('status, count(*) as count')
             ->groupBy('status')
             ->get();
-
-        $clientsByStatus = Client::selectRaw('status, count(*) as count')
+        $clientsByStatus = Client::where('company_id', $companyId)
+            ->selectRaw('status, count(*) as count')
             ->groupBy('status')
             ->get();
-
         return Inertia::render('CRM/Dashboard', [
             'stats' => [
                 'totalClients' => $totalClients,

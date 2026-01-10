@@ -13,7 +13,19 @@ class WhatsAppAccount extends Model
         'access_token',
         'phone_number',
         'profile_image',
-    ];
+        'company_id',
+];
 
     protected $table = 'whatsapp_accounts';
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
+    }
 }

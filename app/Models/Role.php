@@ -22,11 +22,23 @@ class Role extends SpatieRole
     protected $fillable = [
         'name',
         'description',
-    ];
+        'company_id',
+];
 
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(\App\Models\User::class, 'model_has_roles', 'role_id', 'model_id')
             ->where('model_type', \App\Models\User::class);
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

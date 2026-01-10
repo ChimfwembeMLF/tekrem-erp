@@ -16,12 +16,19 @@ use Carbon\Carbon;
 
 class CategoryController extends Controller
 {
+    protected function getCompanyId()
+    {
+        return currentCompanyId();
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request): Response
     {
+        $companyId = $this->getCompanyId();
         $query = TicketCategory::query()
+            ->where('company_id', $companyId)
             ->withCount('tickets')
             ->when($request->search, function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%")
@@ -60,6 +67,7 @@ class CategoryController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $companyId = $this->getCompanyId();
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:ticket_categories,name'],
             'description' => ['nullable', 'string'],
@@ -71,7 +79,7 @@ class CategoryController extends Controller
             'default_sla_policy_id' => ['nullable', 'exists:s_l_a_s,id'],
             'auto_assign_to' => ['nullable', 'exists:users,id'],
         ]);
-
+        $validated['company_id'] = $companyId;
         $category = TicketCategory::create($validated);
 
         return redirect()->route('support.categories.index')
@@ -84,10 +92,15 @@ class CategoryController extends Controller
     
     public function show(TicketCategory $category): Response
     {
+        $companyId = $this->getCompanyId();
+        if ($category->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $category->load(['defaultSlaPolicy']);
         $category->loadCount('tickets');
 
         $recentTickets = $category->tickets()
+            ->where('company_id', $companyId)
             ->with(['assignedTo', 'createdBy', 'requester'])
             ->latest()
             ->take(10)
@@ -95,11 +108,11 @@ class CategoryController extends Controller
 
         // Ticket statistics (summary counts)
         $ticketStats = [
-            'total' => $category->tickets()->count(),
-            'open' => $category->tickets()->where('status', 'open')->count(),
-            'in_progress' => $category->tickets()->where('status', 'in_progress')->count(),
-            'resolved' => $category->tickets()->where('status', 'resolved')->count(),
-            'closed' => $category->tickets()->where('status', 'closed')->count(),
+            'total' => $category->tickets()->where('company_id', $companyId)->count(),
+            'open' => $category->tickets()->where('company_id', $companyId)->where('status', 'open')->count(),
+            'in_progress' => $category->tickets()->where('company_id', $companyId)->where('status', 'in_progress')->count(),
+            'resolved' => $category->tickets()->where('company_id', $companyId)->where('status', 'resolved')->count(),
+            'closed' => $category->tickets()->where('company_id', $companyId)->where('status', 'closed')->count(),
         ];
 
         // Monthly statistics (for last 6 months)
@@ -113,6 +126,7 @@ class CategoryController extends Controller
                 DB::raw('COUNT(*) as tickets')
             )
             ->where('category_id', $category->id)
+            ->where('company_id', $companyId)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->groupBy('month')
             ->orderBy('month')
@@ -126,6 +140,7 @@ class CategoryController extends Controller
                 DB::raw('COUNT(*) as resolved')
             )
             ->where('category_id', $category->id)
+            ->where('company_id', $companyId)
             ->where('status', 'resolved')
             ->whereBetween('updated_at', [$startDate, $endDate])
             ->groupBy('month')
@@ -145,8 +160,9 @@ class CategoryController extends Controller
         }
 
         $avgResolutionTime = $category->tickets()
-    ->whereNotNull('resolved_at') // assuming you have resolved_at timestamp
-    ->avg(DB::raw('TIMESTAMPDIFF(MINUTE, created_at, resolved_at)'));
+            ->where('company_id', $companyId)
+            ->whereNotNull('resolved_at')
+            ->avg(DB::raw('TIMESTAMPDIFF(MINUTE, created_at, resolved_at)'));
 
         return Inertia::render('Support/Categories/Show', [
             'category' => $category,
@@ -163,6 +179,10 @@ class CategoryController extends Controller
      */
     public function edit(TicketCategory $category): Response
     {
+        $companyId = $this->getCompanyId();
+        if ($category->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $slaOptions = SLA::active()->get(['id', 'name']);
         $users = User::whereHas('roles', function ($query) {
             $query->whereIn('name', ['super_user', 'admin', 'staff']);
@@ -180,6 +200,10 @@ class CategoryController extends Controller
      */
     public function update(Request $request, TicketCategory $category): RedirectResponse
     {
+        $companyId = $this->getCompanyId();
+        if ($category->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', Rule::unique('ticket_categories', 'name')->ignore($category->id)],
             'description' => ['nullable', 'string'],
@@ -203,12 +227,14 @@ class CategoryController extends Controller
      */
     public function destroy(TicketCategory $category): RedirectResponse
     {
-        // Check if category has tickets
-        if ($category->tickets()->count() > 0) {
+        $companyId = $this->getCompanyId();
+        if ($category->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
+        if ($category->tickets()->where('company_id', $companyId)->count() > 0) {
             return redirect()->route('support.categories.index')
                 ->with('error', 'Cannot delete category that has tickets. Please reassign tickets first.');
         }
-
         $category->delete();
 
         return redirect()->route('support.categories.index')

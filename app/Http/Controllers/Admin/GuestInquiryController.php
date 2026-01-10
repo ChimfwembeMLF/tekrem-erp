@@ -16,7 +16,8 @@ class GuestInquiryController extends Controller
      */
     public function index(Request $request): Response
     {
-        $query = GuestInquiry::with('assignedTo:id,name');
+        $companyId = currentCompanyId();
+        $query = GuestInquiry::with('assignedTo:id,name')->where('company_id', $companyId);
 
         // Apply filters
         if ($request->filled('search')) {
@@ -55,15 +56,16 @@ class GuestInquiryController extends Controller
             ->withQueryString();
 
         // Get filter options
-        $users = User::whereHas('roles', function($q) {
-            $q->whereIn('name', ['super_user', 'admin', 'staff', 'manager']);
-        })->select('id', 'name')->get();
+        $users = User::where('company_id', $companyId)
+            ->whereHas('roles', function($q) {
+                $q->whereIn('name', ['super_user', 'admin', 'staff', 'manager']);
+            })->select('id', 'name')->get();
 
         $stats = [
-            'total' => GuestInquiry::count(),
-            'new' => GuestInquiry::where('status', 'new')->count(),
-            'in_progress' => GuestInquiry::where('status', 'in_progress')->count(),
-            'unassigned' => GuestInquiry::whereNull('assigned_to')->count(),
+            'total' => GuestInquiry::where('company_id', $companyId)->count(),
+            'new' => GuestInquiry::where('company_id', $companyId)->where('status', 'new')->count(),
+            'in_progress' => GuestInquiry::where('company_id', $companyId)->where('status', 'in_progress')->count(),
+            'unassigned' => GuestInquiry::where('company_id', $companyId)->whereNull('assigned_to')->count(),
         ];
 
         return Inertia::render('Admin/GuestInquiries/Index', [
@@ -97,6 +99,10 @@ class GuestInquiryController extends Controller
      */
     public function show(GuestInquiry $guestInquiry): Response
     {
+        $companyId = currentCompanyId();
+        if ($guestInquiry->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $guestInquiry->load('assignedTo:id,name');
 
         return Inertia::render('Admin/GuestInquiries/Show', [
@@ -109,6 +115,10 @@ class GuestInquiryController extends Controller
      */
     public function update(Request $request, GuestInquiry $guestInquiry)
     {
+        $companyId = currentCompanyId();
+        if ($guestInquiry->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $request->validate([
             'status' => 'required|string|in:new,in_progress,resolved,closed',
             'assigned_to' => 'nullable|exists:users,id',
@@ -132,11 +142,15 @@ class GuestInquiryController extends Controller
      */
     public function assign(Request $request, GuestInquiry $guestInquiry)
     {
+        $companyId = currentCompanyId();
+        if ($guestInquiry->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $request->validate([
             'assigned_to' => 'required|exists:users,id',
         ]);
 
-        $user = User::findOrFail($request->assigned_to);
+        $user = User::where('company_id', $companyId)->findOrFail($request->assigned_to);
         $guestInquiry->assignTo($user);
 
         return redirect()->back()->with('success', "Inquiry assigned to {$user->name} successfully.");
@@ -147,6 +161,10 @@ class GuestInquiryController extends Controller
      */
     public function markResponded(GuestInquiry $guestInquiry)
     {
+        $companyId = currentCompanyId();
+        if ($guestInquiry->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $guestInquiry->markAsResponded();
 
         return redirect()->back()->with('success', 'Inquiry marked as responded.');
@@ -157,6 +175,7 @@ class GuestInquiryController extends Controller
      */
     public function bulkUpdate(Request $request)
     {
+        $companyId = currentCompanyId();
         $request->validate([
             'inquiry_ids' => 'required|array',
             'inquiry_ids.*' => 'exists:guest_inquiries,id',
@@ -165,11 +184,12 @@ class GuestInquiryController extends Controller
             'status' => 'required_if:action,status|nullable|string|in:new,in_progress,resolved,closed',
         ]);
 
-        $inquiries = GuestInquiry::whereIn('id', $request->inquiry_ids);
+        $inquiries = GuestInquiry::whereIn('id', $request->inquiry_ids)
+            ->where('company_id', $companyId);
 
         switch ($request->action) {
             case 'assign':
-                $user = User::findOrFail($request->assigned_to);
+                $user = User::where('company_id', $companyId)->findOrFail($request->assigned_to);
                 $inquiries->update([
                     'assigned_to' => $user->id,
                     'status' => 'in_progress'
@@ -200,6 +220,10 @@ class GuestInquiryController extends Controller
      */
     public function destroy(GuestInquiry $guestInquiry)
     {
+        $companyId = currentCompanyId();
+        if ($guestInquiry->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $guestInquiry->delete();
 
         return redirect()->route('admin.guest-inquiries.index')
@@ -211,7 +235,8 @@ class GuestInquiryController extends Controller
      */
     public function export(Request $request)
     {
-        $query = GuestInquiry::with('assignedTo:id,name');
+        $companyId = currentCompanyId();
+        $query = GuestInquiry::with('assignedTo:id,name')->where('company_id', $companyId);
 
         // Apply same filters as index
         if ($request->filled('search')) {

@@ -15,7 +15,8 @@ class BoardInvitation extends Model
         'token',
         'status',
         'invited_by',
-    ];
+        'company_id',
+];
 
     public function inviter()
     {
@@ -25,5 +26,16 @@ class BoardInvitation extends Model
     public function board()
     {
         return $this->belongsTo(Board::class);
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

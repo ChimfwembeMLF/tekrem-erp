@@ -17,6 +17,10 @@ class ProjectFileController extends Controller
      */
     public function index(Request $request, Project $project)
     {
+        $user = auth()->user();
+        if ($project->company_id !== $user->company_id) {
+            abort(404);
+        }
         // Check if file sharing is enabled
         if (!Setting::get('projects.collaboration.enable_file_sharing', true)) {
             return redirect()->route('projects.show', $project)
@@ -56,6 +60,10 @@ class ProjectFileController extends Controller
      */
     public function create(Project $project)
     {
+        $user = auth()->user();
+        if ($project->company_id !== $user->company_id) {
+            abort(404);
+        }
         // Check if file sharing is enabled
         if (!Setting::get('projects.collaboration.enable_file_sharing', true)) {
             return redirect()->route('projects.show', $project)
@@ -79,6 +87,10 @@ class ProjectFileController extends Controller
      */
     public function store(Request $request, Project $project)
     {
+        $user = auth()->user();
+        if ($project->company_id !== $user->company_id) {
+            abort(404);
+        }
         // Check if file sharing is enabled
         if (!Setting::get('projects.collaboration.enable_file_sharing', true)) {
             return back()->withErrors(['error' => 'File sharing is currently disabled.']);
@@ -122,7 +134,7 @@ class ProjectFileController extends Controller
             'file_size' => $file->getSize(),
             'category' => $validated['category'],
             'description' => $validated['description'],
-            'uploaded_by' => Auth::id(),
+            'uploaded_by' => auth()->id(),
             'access_level' => $validated['access_level'],
         ]);
 
@@ -135,6 +147,10 @@ class ProjectFileController extends Controller
      */
     public function show(Project $project, ProjectFile $file)
     {
+        $user = auth()->user();
+        if ($project->company_id !== $user->company_id || $file->company_id !== $user->company_id) {
+            abort(404);
+        }
         $file->load('uploader', 'milestone', 'versions');
 
         return Inertia::render('Projects/Files/Show', [
@@ -151,6 +167,10 @@ class ProjectFileController extends Controller
      */
     public function download(Project $project, ProjectFile $file)
     {
+        $user = auth()->user();
+        if ($project->company_id !== $user->company_id || $file->company_id !== $user->company_id) {
+            abort(404);
+        }
         if (!$file->can_access) {
             abort(403, 'You do not have permission to access this file.');
         }
@@ -163,6 +183,10 @@ class ProjectFileController extends Controller
      */
     public function destroy(Project $project, ProjectFile $file)
     {
+        $user = auth()->user();
+        if ($project->company_id !== $user->company_id || $file->company_id !== $user->company_id) {
+            abort(404);
+        }
         $file->delete(); // This will also delete the physical file via the model's boot method
 
         return redirect()->route('projects.files.index', $project)
@@ -174,6 +198,10 @@ class ProjectFileController extends Controller
      */
     public function newVersion(Request $request, Project $project, ProjectFile $file)
     {
+        $user = auth()->user();
+        if ($project->company_id !== $user->company_id || $file->company_id !== $user->company_id) {
+            abort(404);
+        }
         $validated = $request->validate([
             'file' => 'required|file|max:10240', // 10MB max
             'description' => 'nullable|string',

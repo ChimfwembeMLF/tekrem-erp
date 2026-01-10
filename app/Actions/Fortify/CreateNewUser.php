@@ -61,8 +61,24 @@ class CreateNewUser implements CreatesNewUsers
         // Notify all admins
         $admins = User::role('admin')->get();
         Notification::send($admins, new NewUserRegisteredAdmin($user));
-        // Assign the 'customer' role to the new user
-        $user->assignRole('customer');
+
+        // Assign the 'admin' role to the new user (first user/company owner)
+        $user->assignRole('admin');
+
+        // Create a company for the user
+        $company = \App\Models\Company::create([
+            'name' => $input['company_name'] ?? ($user->name . "'s Company"),
+            'owner_id' => $user->id,
+        ]);
+
+        // Associate user with company (if needed)
+        $user->company_id = $company->id;
+        $user->save();
+
+        // Trigger onboarding (if service exists)
+        if (class_exists('App\\Services\\CompanyOnboardingService')) {
+            \App\Services\CompanyOnboardingService::onboard($company, $user);
+        }
 
         return $user;
     }

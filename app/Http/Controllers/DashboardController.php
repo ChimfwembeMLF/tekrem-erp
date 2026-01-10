@@ -73,20 +73,21 @@ class DashboardController extends Controller
      */
     private function getOverviewStats(): array
     {
+        $cid = currentCompanyId();
         return [
-            'totalUsers' => User::count(),
-            'activeUsers' => User::where('last_login_at', '>=', Carbon::now()->subDays(30))->count(),
-            'totalClients' => Client::count(),
-            'totalLeads' => Lead::count(),
-            'totalProjects' => Project::count(),
-            'totalTickets' => Ticket::count(),
-            'totalInvoices' => Invoice::count(),
-            'totalRevenue' => Invoice::where('status', 'paid')->sum('total_amount'),
-            'monthlyRevenue' => Invoice::where('status', 'paid')
+            'totalUsers' => User::where('company_id', $cid)->count(),
+            'activeUsers' => User::where('company_id', $cid)->where('last_login_at', '>=', Carbon::now()->subDays(30))->count(),
+            'totalClients' => Client::where('company_id', $cid)->count(),
+            'totalLeads' => Lead::where('company_id', $cid)->count(),
+            'totalProjects' => Project::where('company_id', $cid)->count(),
+            'totalTickets' => Ticket::where('company_id', $cid)->count(),
+            'totalInvoices' => Invoice::where('company_id', $cid)->count(),
+            'totalRevenue' => Invoice::where('company_id', $cid)->where('status', 'paid')->sum('total_amount'),
+            'monthlyRevenue' => Invoice::where('company_id', $cid)->where('status', 'paid')
                 ->whereMonth('created_at', Carbon::now()->month)
                 ->sum('total_amount'),
-            'pendingTickets' => Ticket::where('status', 'open')->count(),
-            'activeProjects' => Project::where('status', 'active')->count(),
+            'pendingTickets' => Ticket::where('company_id', $cid)->where('status', 'open')->count(),
+            'activeProjects' => Project::where('company_id', $cid)->where('status', 'active')->count(),
         ];
     }
 
@@ -203,10 +204,11 @@ class DashboardController extends Controller
      */
     private function getRecentActivity(): array
     {
+        $cid = currentCompanyId();
         $activities = [];
 
         // Recent user registrations
-        $recentUsers = User::latest()->take(5)->get(['id', 'name', 'email', 'created_at']);
+        $recentUsers = User::where('company_id', $cid)->latest()->take(5)->get(['id', 'name', 'email', 'created_at']);
         foreach ($recentUsers as $user) {
             $activities[] = [
                 'type' => 'user_registered',
@@ -219,7 +221,7 @@ class DashboardController extends Controller
         }
 
         // Recent communications
-        $recentComms = Communication::with('user')->latest()->take(5)->get();
+        $recentComms = Communication::with('user')->where('company_id', $cid)->latest()->take(5)->get();
         foreach ($recentComms as $comm) {
             $activities[] = [
                 'type' => 'communication',
@@ -232,7 +234,7 @@ class DashboardController extends Controller
         }
 
         // Recent tickets
-        $recentTickets = Ticket::with('createdBy')->latest()->take(5)->get();
+        $recentTickets = Ticket::with('createdBy')->where('company_id', $cid)->latest()->take(5)->get();
         foreach ($recentTickets as $ticket) {
             $activities[] = [
                 'type' => 'ticket',
@@ -257,49 +259,49 @@ class DashboardController extends Controller
      */
     private function getModuleUsage(): array
     {
+        $cid = currentCompanyId();
         return [
             'crm' => [
-                'clients' => Client::count(),
-                'leads' => Lead::count(),
-                'communications' => Communication::count(),
-                'growth' => $this->getModuleGrowth('clients'),
+                'clients' => Client::where('company_id', $cid)->count(),
+                'leads' => Lead::where('company_id', $cid)->count(),
+                'communications' => Communication::where('company_id', $cid)->count(),
+                'growth' => $this->getModuleGrowth('clients', $cid),
             ],
             'finance' => [
-                'invoices' => Invoice::count(),
-                'transactions' => Transaction::count(),
-                'revenue' => Invoice::where('status', 'paid')->sum('total_amount'),
-                'growth' => $this->getModuleGrowth('invoices'),
+                'invoices' => Invoice::where('company_id', $cid)->count(),
+                'transactions' => Transaction::where('company_id', $cid)->count(),
+                'revenue' => Invoice::where('company_id', $cid)->where('status', 'paid')->sum('total_amount'),
+                'growth' => $this->getModuleGrowth('invoices', $cid),
             ],
             'projects' => [
-                'total' => Project::count(),
-                'active' => Project::where('status', 'active')->count(),
-                'completed' => Project::where('status', 'completed')->count(),
-                'growth' => $this->getModuleGrowth('projects'),
+                'total' => Project::where('company_id', $cid)->count(),
+                'active' => Project::where('company_id', $cid)->where('status', 'active')->count(),
+                'completed' => Project::where('company_id', $cid)->where('status', 'completed')->count(),
+                'growth' => $this->getModuleGrowth('projects', $cid),
             ],
             'hr' => [
-                'employees' => Employee::count(),
-                //'active' => Employee::where('status', 'active')->count(),
-                'active' => Employee::count(),
-                'departments' => Employee::distinct('department_id')->count(),
-                'growth' => $this->getModuleGrowth('employees'),
+                'employees' => Employee::where('company_id', $cid)->count(),
+                'active' => Employee::where('company_id', $cid)->count(),
+                'departments' => Employee::where('company_id', $cid)->distinct('department_id')->count(),
+                'growth' => $this->getModuleGrowth('employees', $cid),
             ],
             'support' => [
-                'tickets' => Ticket::count(),
-                'open' => Ticket::where('status', 'open')->count(),
-                'resolved' => Ticket::where('status', 'resolved')->count(),
-                'growth' => $this->getModuleGrowth('tickets'),
+                'tickets' => Ticket::where('company_id', $cid)->count(),
+                'open' => Ticket::where('company_id', $cid)->where('status', 'open')->count(),
+                'resolved' => Ticket::where('company_id', $cid)->where('status', 'resolved')->count(),
+                'growth' => $this->getModuleGrowth('tickets', $cid),
             ],
             'cms' => [
-                'pages' => Page::count(),
+                'pages' => Page::where('company_id', $cid)->count(),
                 'posts' => [],
                 'published' => [],
                 'growth' => [],
             ],
             'ai' => [
-                'services' => AIService::count(),
-                'conversations' => Conversation::count(),
-                'active_services' => AIService::where('is_enabled', true)->count(),
-                'growth' => $this->getModuleGrowth('ai_conversations'),
+                'services' => AIService::where('company_id', $cid)->count(),
+                'conversations' => Conversation::where('company_id', $cid)->count(),
+                'active_services' => AIService::where('company_id', $cid)->where('is_enabled', true)->count(),
+                'growth' => $this->getModuleGrowth('ai_conversations', $cid),
             ],
         ];
     }
@@ -309,27 +311,31 @@ class DashboardController extends Controller
      */
     private function getModuleGrowth(string $table): array
     {
+        return $this->getModuleGrowthWithCompany($table, currentCompanyId());
+    }
+
+    private function getModuleGrowthWithCompany(string $table, $companyId): array
+    {
         $currentMonth = Carbon::now()->startOfMonth();
         $lastMonth = Carbon::now()->subMonth()->startOfMonth();
 
-        // Map table names to actual table names
         $tableMap = [
             'clients' => 'clients',
             'invoices' => 'invoices',
             'projects' => 'projects',
             'employees' => 'hr_employees',
             'tickets' => 'tickets',
-            //'posts' => 'posts',
             'ai_conversations' => 'conversations',
         ];
-
         $actualTable = $tableMap[$table] ?? $table;
 
         $currentCount = DB::table($actualTable)
+            ->where('company_id', $companyId)
             ->where('created_at', '>=', $currentMonth)
             ->count();
 
         $lastCount = DB::table($actualTable)
+            ->where('company_id', $companyId)
             ->where('created_at', '>=', $lastMonth)
             ->where('created_at', '<', $currentMonth)
             ->count();
@@ -349,17 +355,19 @@ class DashboardController extends Controller
      */
     private function getUserManagementSummary(): array
     {
-        $roleDistribution = Role::withCount('users')->get()->mapWithKeys(function ($role) {
-            return [$role->name => $role->users_count];
+        $cid = currentCompanyId();
+        $roleDistribution = Role::with(['users' => function ($q) use ($cid) {
+            $q->where('company_id', $cid);
+        }])->get()->mapWithKeys(function ($role) {
+            return [$role->name => $role->users->count()];
         });
 
         return [
-            'totalUsers' => User::count(),
-            'activeUsers' => User::where('last_login_at', '>=', Carbon::now()->subDays(30))->count(),
-            'newUsersThisMonth' => User::whereMonth('created_at', Carbon::now()->month)->count(),
+            'totalUsers' => User::where('company_id', $cid)->count(),
+            'activeUsers' => User::where('company_id', $cid)->where('last_login_at', '>=', Carbon::now()->subDays(30))->count(),
+            'newUsersThisMonth' => User::where('company_id', $cid)->whereMonth('created_at', Carbon::now()->month)->count(),
             'roleDistribution' => $roleDistribution,
-            'recentRegistrations' => User::latest()->take(5)->get(['id', 'name', 'email', 'created_at']),
-            //'topPermissions' => Permission::withCount('users')->orderBy('users_count', 'desc')->take(5)->get(),
+            'recentRegistrations' => User::where('company_id', $cid)->latest()->take(5)->get(['id', 'name', 'email', 'created_at']),
         ];
     }
 
@@ -368,6 +376,7 @@ class DashboardController extends Controller
      */
     private function getQuickActions(): array
     {
+        // No company-specific logic needed for quick actions
         return [
             [
                 'title' => 'Create User',
@@ -432,6 +441,7 @@ class DashboardController extends Controller
      */
     private function getUserGrowthData(): array
     {
+        $cid = currentCompanyId();
         $months = [];
         $data = [];
 
@@ -439,7 +449,8 @@ class DashboardController extends Controller
             $date = Carbon::now()->subMonths($i);
             $months[] = $date->format('M Y');
 
-            $count = User::whereYear('created_at', $date->year)
+            $count = User::where('company_id', $cid)
+                        ->whereYear('created_at', $date->year)
                         ->whereMonth('created_at', $date->month)
                         ->count();
             $data[] = $count;
@@ -456,6 +467,7 @@ class DashboardController extends Controller
      */
     private function getRevenueGrowthData(): array
     {
+        $cid = currentCompanyId();
         $months = [];
         $data = [];
 
@@ -463,7 +475,8 @@ class DashboardController extends Controller
             $date = Carbon::now()->subMonths($i);
             $months[] = $date->format('M Y');
 
-            $revenue = Invoice::where('status', 'paid')
+            $revenue = Invoice::where('company_id', $cid)
+                            ->where('status', 'paid')
                             ->whereYear('created_at', $date->year)
                             ->whereMonth('created_at', $date->month)
                             ->sum('total_amount');
@@ -481,16 +494,17 @@ class DashboardController extends Controller
      */
     private function getModuleActivityData(): array
     {
+        $cid = currentCompanyId();
         return [
             'labels' => ['CRM', 'Finance', 'Projects', 'HR', 'Support', 'CMS', 'AI'],
             'data' => [
-                Client::count() + Lead::count(),
-                Invoice::count() + Transaction::count(),
-                Project::count(),
-                Employee::count(),
-                Ticket::count(),
-                Page::count(),
-                Conversation::count(),
+                Client::where('company_id', $cid)->count() + Lead::where('company_id', $cid)->count(),
+                Invoice::where('company_id', $cid)->count() + Transaction::where('company_id', $cid)->count(),
+                Project::where('company_id', $cid)->count(),
+                Employee::where('company_id', $cid)->count(),
+                Ticket::where('company_id', $cid)->count(),
+                Page::where('company_id', $cid)->count(),
+                Conversation::where('company_id', $cid)->count(),
             ],
         ];
     }
@@ -529,10 +543,11 @@ class DashboardController extends Controller
      */
     private function getSystemNotifications(): array
     {
+        $cid = currentCompanyId();
         $notifications = [];
 
         // Check for system issues
-        $pendingTickets = Ticket::where('status', 'open')->count();
+        $pendingTickets = Ticket::where('company_id', $cid)->where('status', 'open')->count();
         if ($pendingTickets > 10) {
             $notifications[] = [
                 'type' => 'warning',
@@ -544,7 +559,7 @@ class DashboardController extends Controller
         }
 
         // Check for overdue invoices
-        $overdueInvoices = Invoice::where('status', 'pending')
+        $overdueInvoices = Invoice::where('company_id', $cid)->where('status', 'pending')
             ->where('due_date', '<', Carbon::now())
             ->count();
         if ($overdueInvoices > 0) {

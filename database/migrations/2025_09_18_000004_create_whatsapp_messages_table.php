@@ -8,6 +8,7 @@ return new class extends Migration {
         Schema::create('whatsapp_messages', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('whatsapp_account_id');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->string('to');
             $table->text('content');
             $table->boolean('delivered')->default(false);

@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('card_id');
             $table->unsignedBigInteger('user_id')->nullable();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->string('action');
             $table->json('meta')->nullable();
             $table->timestamps();

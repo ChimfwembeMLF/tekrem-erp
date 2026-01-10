@@ -19,7 +19,9 @@ class PerformanceController extends Controller
      */
     public function index(Request $request): Response
     {
+        $companyId = currentCompanyId();
         $query = Performance::with(['employee.user', 'reviewer'])
+            ->where('company_id', $companyId)
             ->when($request->search, function ($query, $search) {
                 $query->whereHas('employee.user', function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%");
@@ -40,7 +42,7 @@ class PerformanceController extends Controller
 
         $performances = $query->latest()->paginate(15)->withQueryString();
 
-        $employees = Employee::with('user')->active()->get()->map(function ($employee) {
+        $employees = Employee::with('user')->active()->where('company_id', $companyId)->get()->map(function ($employee) {
             return [
                 'id' => $employee->id,
                 'name' => $employee->full_name,
@@ -64,7 +66,8 @@ class PerformanceController extends Controller
      */
     public function create(): Response
     {
-        $employees = Employee::with('user')->active()->get()->map(function ($employee) {
+        $companyId = currentCompanyId();
+        $employees = Employee::with('user')->active()->where('company_id', $companyId)->get()->map(function ($employee) {
             return [
                 'id' => $employee->id,
                 'name' => $employee->full_name,
@@ -87,6 +90,7 @@ class PerformanceController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $companyId = currentCompanyId();
         $validated = $request->validate([
             'employee_id' => 'required|exists:hr_employees,id',
             'reviewer_id' => 'required|exists:users,id',
@@ -97,9 +101,8 @@ class PerformanceController extends Controller
             'goals' => 'nullable|string',
             'is_self_review' => 'boolean',
         ]);
-
+        $validated['company_id'] = $companyId;
         $performance = Performance::create($validated);
-
         return redirect()->route('hr.performance.show', $performance)
             ->with('success', 'Performance review created successfully.');
     }
@@ -109,8 +112,11 @@ class PerformanceController extends Controller
      */
     public function show(Performance $performance): Response
     {
+        $companyId = currentCompanyId();
+        if ($performance->company_id !== $companyId) {
+            abort(403);
+        }
         $performance->load(['employee.user', 'reviewer']);
-
         return Inertia::render('HR/Performance/Show', [
             'performance' => $performance,
         ]);
@@ -121,16 +127,17 @@ class PerformanceController extends Controller
      */
     public function edit(Performance $performance): Response
     {
+        $companyId = currentCompanyId();
+        if ($performance->company_id !== $companyId) {
+            abort(403);
+        }
         if (!$performance->canBeEdited()) {
             return back()->withErrors(['performance' => 'This performance review cannot be edited.']);
         }
-
         $performance->load(['employee.user', 'reviewer']);
-
         $reviewers = User::whereHas('roles', function ($query) {
             $query->whereIn('name', ['super_user', 'admin', 'staff']);
         })->orderBy('name')->get(['id', 'name']);
-
         return Inertia::render('HR/Performance/Edit', [
             'performance' => $performance,
             'reviewers' => $reviewers,
@@ -142,10 +149,13 @@ class PerformanceController extends Controller
      */
     public function update(Request $request, Performance $performance): RedirectResponse
     {
+        $companyId = currentCompanyId();
+        if ($performance->company_id !== $companyId) {
+            abort(403);
+        }
         if (!$performance->canBeEdited()) {
             return back()->withErrors(['performance' => 'This performance review cannot be edited.']);
         }
-
         $validated = $request->validate([
             'reviewer_id' => 'required|exists:users,id',
             'review_period' => 'required|string|max:255',
@@ -162,9 +172,7 @@ class PerformanceController extends Controller
             'reviewer_comments' => 'nullable|string',
             'manager_comments' => 'nullable|string',
         ]);
-
         $performance->update($validated);
-
         return redirect()->route('hr.performance.show', $performance)
             ->with('success', 'Performance review updated successfully.');
     }
@@ -174,12 +182,14 @@ class PerformanceController extends Controller
      */
     public function destroy(Performance $performance): RedirectResponse
     {
+        $companyId = currentCompanyId();
+        if ($performance->company_id !== $companyId) {
+            abort(403);
+        }
         if ($performance->isCompleted()) {
             return back()->withErrors(['performance' => 'Cannot delete completed performance review.']);
         }
-
         $performance->delete();
-
         return redirect()->route('hr.performance.index')
             ->with('success', 'Performance review deleted successfully.');
     }
@@ -189,10 +199,13 @@ class PerformanceController extends Controller
      */
     public function submit(Performance $performance): RedirectResponse
     {
+        $companyId = currentCompanyId();
+        if ($performance->company_id !== $companyId) {
+            abort(403);
+        }
         if (!$performance->submit()) {
             return back()->withErrors(['performance' => 'Unable to submit this performance review.']);
         }
-
         return back()->with('success', 'Performance review submitted successfully.');
     }
 
@@ -201,10 +214,13 @@ class PerformanceController extends Controller
      */
     public function approve(Performance $performance): RedirectResponse
     {
+        $companyId = currentCompanyId();
+        if ($performance->company_id !== $companyId) {
+            abort(403);
+        }
         if (!$performance->complete()) {
             return back()->withErrors(['performance' => 'Unable to approve this performance review.']);
         }
-
         return back()->with('success', 'Performance review approved successfully.');
     }
 }

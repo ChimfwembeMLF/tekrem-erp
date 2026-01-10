@@ -25,8 +25,9 @@ class BankStatementController extends Controller
     public function index(Request $request): Response
     {
         $this->authorize('view finance');
-
+        $companyId = app('currentCompany')->id;
         $query = BankStatement::with(['account', 'importedBy'])
+            ->where('company_id', $companyId)
             ->latest('statement_date');
 
         // Apply filters
@@ -60,8 +61,7 @@ class BankStatementController extends Controller
         $statements = $query->paginate(20)->withQueryString();
 
         // Get accounts for filter dropdown
-        $company = app('currentCompany');
-        $accounts = Account::where('company_id', $company->id)
+        $accounts = Account::where('company_id', $companyId)
             ->where('is_active', true)
             ->whereIn('type', ['checking', 'savings', 'business', 'cash'])
             ->orderBy('name')
@@ -86,9 +86,8 @@ class BankStatementController extends Controller
     public function create(): Response
     {
         $this->authorize('create finance');
-
-        $company = app('currentCompany');
-        $accounts = Account::where('company_id', $company->id)
+        $companyId = app('currentCompany')->id;
+        $accounts = Account::where('company_id', $companyId)
             ->where('is_active', true)
             ->whereIn('type', ['checking', 'savings', 'business', 'cash'])
             ->orderBy('name')
@@ -111,7 +110,7 @@ class BankStatementController extends Controller
     public function store(Request $request)
     {
         $this->authorize('create finance');
-
+        $companyId = app('currentCompany')->id;
         $validated = $request->validate([
             'account_id' => 'required|exists:accounts,id',
             'statement_number' => 'required|string|max:100|unique:bank_statements,statement_number',
@@ -124,6 +123,7 @@ class BankStatementController extends Controller
 
         $statement = BankStatement::create([
             ...$validated,
+            'company_id' => $companyId,
             'import_method' => 'manual',
             'status' => 'completed',
             'imported_by' => auth()->id(),
@@ -141,7 +141,7 @@ class BankStatementController extends Controller
     public function import(Request $request)
     {
         $this->authorize('create finance');
-
+        $companyId = app('currentCompany')->id;
         $validated = $request->validate([
             'account_id' => 'required|exists:accounts,id',
             'file' => 'required|file|mimes:csv,xlsx,xls|max:10240', // 10MB max
@@ -159,6 +159,7 @@ class BankStatementController extends Controller
             'reference_column' => 'nullable|integer|min:0',
             'balance_column' => 'nullable|integer|min:0',
         ]);
+        $validated['company_id'] = $companyId;
 
         try {
             $statement = $this->importService->importFromFile(
@@ -179,6 +180,10 @@ class BankStatementController extends Controller
     public function show(BankStatement $bankStatement): Response
     {
         $this->authorize('view finance');
+        $companyId = app('currentCompany')->id;
+        if ($bankStatement->company_id !== $companyId) {
+            abort(403, 'Unauthorized access to this bank statement.');
+        }
 
         $bankStatement->load([
             'account',
@@ -206,13 +211,18 @@ class BankStatementController extends Controller
     public function edit(BankStatement $bankStatement): Response
     {
         $this->authorize('edit finance');
+        $companyId = app('currentCompany')->id;
+        if ($bankStatement->company_id !== $companyId) {
+            abort(403, 'Unauthorized access to this bank statement.');
+        }
 
         // Only allow editing of manual statements that haven't been reconciled
         if ($bankStatement->import_method !== 'manual' || $bankStatement->isReconciled()) {
             return back()->withErrors(['error' => 'Cannot edit this bank statement.']);
         }
 
-        $accounts = Account::where('is_active', true)
+        $accounts = Account::where('company_id', $companyId)
+            ->where('is_active', true)
             ->whereIn('type', ['checking', 'savings', 'business', 'cash'])
             ->orderBy('name')
             ->get(['id', 'name', 'account_code']);
@@ -229,6 +239,10 @@ class BankStatementController extends Controller
     public function update(Request $request, BankStatement $bankStatement)
     {
         $this->authorize('edit finance');
+        $companyId = app('currentCompany')->id;
+        if ($bankStatement->company_id !== $companyId) {
+            abort(403, 'Unauthorized access to this bank statement.');
+        }
 
         // Only allow editing of manual statements that haven't been reconciled
         if ($bankStatement->import_method !== 'manual' || $bankStatement->isReconciled()) {
@@ -256,6 +270,10 @@ class BankStatementController extends Controller
     public function destroy(BankStatement $bankStatement)
     {
         $this->authorize('delete finance');
+        $companyId = app('currentCompany')->id;
+        if ($bankStatement->company_id !== $companyId) {
+            abort(403, 'Unauthorized access to this bank statement.');
+        }
 
         // Check if statement has been reconciled
         if ($bankStatement->isReconciled()) {
@@ -279,6 +297,10 @@ class BankStatementController extends Controller
     public function downloadFile(BankStatement $bankStatement)
     {
         $this->authorize('view finance');
+        $companyId = app('currentCompany')->id;
+        if ($bankStatement->company_id !== $companyId) {
+            abort(403, 'Unauthorized access to this bank statement.');
+        }
 
         if (!$bankStatement->file_path || !file_exists(storage_path('app/' . $bankStatement->file_path))) {
             return back()->withErrors(['error' => 'File not found.']);
@@ -322,6 +344,10 @@ class BankStatementController extends Controller
     public function reprocess(BankStatement $bankStatement)
     {
         $this->authorize('edit finance');
+        $companyId = app('currentCompany')->id;
+        if ($bankStatement->company_id !== $companyId) {
+            abort(403, 'Unauthorized access to this bank statement.');
+        }
 
         if ($bankStatement->status !== 'failed') {
             return back()->withErrors(['error' => 'Can only reprocess failed imports.']);

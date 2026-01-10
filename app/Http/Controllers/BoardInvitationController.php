@@ -11,6 +11,9 @@ class BoardInvitationController extends Controller
 {
     public function index(Project $project, Board $board)
     {
+        if ($project->company_id !== currentCompanyId() || $board->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         return inertia('PM/Boards/Invitations/Index', [
             'project' => $project,
             'board' => $board,
@@ -19,6 +22,9 @@ class BoardInvitationController extends Controller
 
     public function create(Project $project, Board $board)
     {
+        if ($project->company_id !== currentCompanyId() || $board->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         return inertia('PM/Boards/Invitations/Create/Index', [
             'project' => $project,
             'board' => $board,
@@ -27,6 +33,9 @@ class BoardInvitationController extends Controller
 
     public function show(Project $project, Board $board, BoardInvitation $invitation)
     {
+        if ($project->company_id !== currentCompanyId() || $board->company_id !== currentCompanyId() || $invitation->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         return inertia('PM/Boards/Invitations/Show/Index', [
             'project' => $project,
             'board' => $board,
@@ -36,6 +45,9 @@ class BoardInvitationController extends Controller
 
     public function edit(Project $project, Board $board, BoardInvitation $invitation)
     {
+        if ($project->company_id !== currentCompanyId() || $board->company_id !== currentCompanyId() || $invitation->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         return inertia('PM/Boards/Invitations/Edit/Index', [
             'project' => $project,
             'board' => $board,
@@ -45,7 +57,13 @@ class BoardInvitationController extends Controller
 // removed extra brace
     public function accept(Board $board, $token)
     {
+        if ($board->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $invitation = BoardInvitation::where('board_id', $board->id)->where('token', $token)->firstOrFail();
+        if ($invitation->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $invitation->status = 'accepted';
         $invitation->save();
         // Add user to board logic here
@@ -54,7 +72,13 @@ class BoardInvitationController extends Controller
 
     public function decline(Board $board, $token)
     {
+        if ($board->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $invitation = BoardInvitation::where('board_id', $board->id)->where('token', $token)->firstOrFail();
+        if ($invitation->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $invitation->status = 'declined';
         $invitation->save();
         return redirect()->route('boards.index')->with('info', 'Invitation declined.');

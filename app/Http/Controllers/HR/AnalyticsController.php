@@ -21,22 +21,23 @@ class AnalyticsController extends Controller
      */
     public function index(Request $request): \Inertia\Response
     {
+        $companyId = currentCompanyId();
         $startDate = $request->start_date ?? now()->startOfYear()->format('Y-m-d');
         $endDate = $request->end_date ?? now()->endOfYear()->format('Y-m-d');
 
         // Employee Analytics
         $employeeStats = [
-            'total' => Employee::count(),
-            'active' => Employee::active()->count(),
-            'new_hires' => Employee::whereBetween('hire_date', [$startDate, $endDate])->count(),
-            'terminations' => Employee::whereBetween('termination_date', [$startDate, $endDate])->count(),
-            'turnover_rate' => $this->calculateTurnoverRate($startDate, $endDate),
+            'total' => Employee::where('company_id', $companyId)->count(),
+            'active' => Employee::where('company_id', $companyId)->active()->count(),
+            'new_hires' => Employee::where('company_id', $companyId)->whereBetween('hire_date', [$startDate, $endDate])->count(),
+            'terminations' => Employee::where('company_id', $companyId)->whereBetween('termination_date', [$startDate, $endDate])->count(),
+            'turnover_rate' => $this->calculateTurnoverRate($startDate, $endDate, $companyId),
         ];
 
         // Department Analytics
-        $departmentStats = Department::active()
-            ->withCount(['employees' => function ($query) {
-                $query->where('employment_status', 'active');
+        $departmentStats = Department::where('company_id', $companyId)->active()
+            ->withCount(['employees' => function ($query) use ($companyId) {
+                $query->where('employment_status', 'active')->where('company_id', $companyId);
             }])
             ->get()
             ->map(function ($dept) {
@@ -49,43 +50,43 @@ class AnalyticsController extends Controller
 
         // Leave Analytics
         $leaveStats = [
-            'total_requests' => Leave::whereBetween('start_date', [$startDate, $endDate])->count(),
-            'approved' => Leave::approved()->whereBetween('start_date', [$startDate, $endDate])->count(),
-            'pending' => Leave::pending()->count(),
-            'total_days_taken' => Leave::approved()->whereBetween('start_date', [$startDate, $endDate])->sum('days_requested'),
+            'total_requests' => Leave::where('company_id', $companyId)->whereBetween('start_date', [$startDate, $endDate])->count(),
+            'approved' => Leave::where('company_id', $companyId)->approved()->whereBetween('start_date', [$startDate, $endDate])->count(),
+            'pending' => Leave::where('company_id', $companyId)->pending()->count(),
+            'total_days_taken' => Leave::where('company_id', $companyId)->approved()->whereBetween('start_date', [$startDate, $endDate])->sum('days_requested'),
         ];
 
         // Attendance Analytics
         $attendanceStats = [
-            'average_attendance_rate' => $this->calculateAverageAttendanceRate($startDate, $endDate),
-            'total_late_arrivals' => Attendance::late()->whereBetween('date', [$startDate, $endDate])->count(),
-            'total_absences' => Attendance::absent()->whereBetween('date', [$startDate, $endDate])->count(),
-            'average_overtime_hours' => Attendance::whereBetween('date', [$startDate, $endDate])->avg('overtime_hours') ?? 0,
+            'average_attendance_rate' => $this->calculateAverageAttendanceRate($startDate, $endDate, $companyId),
+            'total_late_arrivals' => Attendance::where('company_id', $companyId)->late()->whereBetween('date', [$startDate, $endDate])->count(),
+            'total_absences' => Attendance::where('company_id', $companyId)->absent()->whereBetween('date', [$startDate, $endDate])->count(),
+            'average_overtime_hours' => Attendance::where('company_id', $companyId)->whereBetween('date', [$startDate, $endDate])->avg('overtime_hours') ?? 0,
         ];
 
         // Performance Analytics
         $performanceStats = [
-            'total_reviews' => Performance::whereBetween('review_start_date', [$startDate, $endDate])->count(),
-            'completed_reviews' => Performance::completed()->whereBetween('review_start_date', [$startDate, $endDate])->count(),
-            'overdue_reviews' => Performance::overdue()->count(),
-            'average_rating' => Performance::completed()->whereNotNull('overall_rating')->avg('overall_rating') ?? 0,
+            'total_reviews' => Performance::where('company_id', $companyId)->whereBetween('review_start_date', [$startDate, $endDate])->count(),
+            'completed_reviews' => Performance::where('company_id', $companyId)->completed()->whereBetween('review_start_date', [$startDate, $endDate])->count(),
+            'overdue_reviews' => Performance::where('company_id', $companyId)->overdue()->count(),
+            'average_rating' => Performance::where('company_id', $companyId)->completed()->whereNotNull('overall_rating')->avg('overall_rating') ?? 0,
         ];
 
         // Training Analytics
         $trainingStats = [
-            'total_programs' => Training::whereBetween('start_date', [$startDate, $endDate])->count(),
-            'completed_programs' => Training::completed()->whereBetween('start_date', [$startDate, $endDate])->count(),
-            'total_enrollments' => Training::whereBetween('start_date', [$startDate, $endDate])->sum('enrolled_count'),
-            'completion_rate' => $this->calculateTrainingCompletionRate($startDate, $endDate),
+            'total_programs' => Training::where('company_id', $companyId)->whereBetween('start_date', [$startDate, $endDate])->count(),
+            'completed_programs' => Training::where('company_id', $companyId)->completed()->whereBetween('start_date', [$startDate, $endDate])->count(),
+            'total_enrollments' => Training::where('company_id', $companyId)->whereBetween('start_date', [$startDate, $endDate])->sum('enrolled_count'),
+            'completion_rate' => $this->calculateTrainingCompletionRate($startDate, $endDate, $companyId),
         ];
 
         // Charts Data
         $charts = [
-            'employee_growth' => $this->getEmployeeGrowthChart($startDate, $endDate),
-            'leave_trends' => $this->getLeaveTrendsChart($startDate, $endDate),
-            'attendance_trends' => $this->getAttendanceTrendsChart($startDate, $endDate),
-            'performance_distribution' => $this->getPerformanceDistributionChart($startDate, $endDate),
-            'training_completion' => $this->getTrainingCompletionChart($startDate, $endDate),
+            'employee_growth' => $this->getEmployeeGrowthChart($startDate, $endDate, $companyId),
+            'leave_trends' => $this->getLeaveTrendsChart($startDate, $endDate, $companyId),
+            'attendance_trends' => $this->getAttendanceTrendsChart($startDate, $endDate, $companyId),
+            'performance_distribution' => $this->getPerformanceDistributionChart($startDate, $endDate, $companyId),
+            'training_completion' => $this->getTrainingCompletionChart($startDate, $endDate, $companyId),
         ];
 
         return Inertia::render('HR/Analytics/Dashboard', [
@@ -110,17 +111,18 @@ class AnalyticsController extends Controller
      */
     public function reports(Request $request): \Inertia\Response
     {
+        $companyId = currentCompanyId();
         $reportType = $request->type ?? 'employees';
         $startDate = $request->start_date ?? now()->startOfMonth()->format('Y-m-d');
         $endDate = $request->end_date ?? now()->endOfMonth()->format('Y-m-d');
 
         $reportData = match($reportType) {
-            'employees' => $this->getEmployeeReport($startDate, $endDate),
-            'attendance' => $this->getAttendanceReport($startDate, $endDate),
-            'leave' => $this->getLeaveReport($startDate, $endDate),
-            'performance' => $this->getPerformanceReport($startDate, $endDate),
-            'training' => $this->getTrainingReport($startDate, $endDate),
-            default => $this->getEmployeeReport($startDate, $endDate),
+            'employees' => $this->getEmployeeReport($startDate, $endDate, $companyId),
+            'attendance' => $this->getAttendanceReport($startDate, $endDate, $companyId),
+            'leave' => $this->getLeaveReport($startDate, $endDate, $companyId),
+            'performance' => $this->getPerformanceReport($startDate, $endDate, $companyId),
+            'training' => $this->getTrainingReport($startDate, $endDate, $companyId),
+            default => $this->getEmployeeReport($startDate, $endDate, $companyId),
         };
 
         return Inertia::render('HR/Analytics/Reports', [
@@ -158,10 +160,10 @@ class AnalyticsController extends Controller
     /**
      * Calculate turnover rate.
      */
-    private function calculateTurnoverRate(string $startDate, string $endDate): float
+    private function calculateTurnoverRate(string $startDate, string $endDate, $companyId): float
     {
-        $averageEmployees = Employee::whereBetween('hire_date', [$startDate, $endDate])->count();
-        $terminations = Employee::whereBetween('termination_date', [$startDate, $endDate])->count();
+        $averageEmployees = Employee::where('company_id', $companyId)->whereBetween('hire_date', [$startDate, $endDate])->count();
+        $terminations = Employee::where('company_id', $companyId)->whereBetween('termination_date', [$startDate, $endDate])->count();
 
         if ($averageEmployees === 0) {
             return 0;
@@ -173,10 +175,10 @@ class AnalyticsController extends Controller
     /**
      * Calculate average attendance rate.
      */
-    private function calculateAverageAttendanceRate(string $startDate, string $endDate): float
+    private function calculateAverageAttendanceRate(string $startDate, string $endDate, $companyId): float
     {
-        $totalRecords = Attendance::whereBetween('date', [$startDate, $endDate])->count();
-        $presentRecords = Attendance::whereIn('status', ['present', 'late'])
+        $totalRecords = Attendance::where('company_id', $companyId)->whereBetween('date', [$startDate, $endDate])->count();
+        $presentRecords = Attendance::where('company_id', $companyId)->whereIn('status', ['present', 'late'])
             ->whereBetween('date', [$startDate, $endDate])
             ->count();
 
@@ -190,12 +192,12 @@ class AnalyticsController extends Controller
     /**
      * Calculate training completion rate.
      */
-    private function calculateTrainingCompletionRate(string $startDate, string $endDate): float
+    private function calculateTrainingCompletionRate(string $startDate, string $endDate, $companyId): float
     {
-        $totalEnrollments = Training::whereBetween('start_date', [$startDate, $endDate])
+        $totalEnrollments = Training::where('company_id', $companyId)->whereBetween('start_date', [$startDate, $endDate])
             ->sum('enrolled_count');
 
-        $completedEnrollments = Training::whereBetween('start_date', [$startDate, $endDate])
+        $completedEnrollments = Training::where('company_id', $companyId)->whereBetween('start_date', [$startDate, $endDate])
             ->whereHas('enrollments', function ($query) {
                 $query->where('status', 'completed');
             })
@@ -215,7 +217,7 @@ class AnalyticsController extends Controller
     /**
      * Get employee growth chart data.
      */
-    private function getEmployeeGrowthChart(string $startDate, string $endDate): array
+    private function getEmployeeGrowthChart(string $startDate, string $endDate, $companyId): array
     {
         $data = [];
         $start = Carbon::parse($startDate);
@@ -225,8 +227,8 @@ class AnalyticsController extends Controller
             $monthStart = $start->copy()->startOfMonth();
             $monthEnd = $start->copy()->endOfMonth();
 
-            $hires = Employee::whereBetween('hire_date', [$monthStart, $monthEnd])->count();
-            $terminations = Employee::whereBetween('termination_date', [$monthStart, $monthEnd])->count();
+            $hires = Employee::where('company_id', $companyId)->whereBetween('hire_date', [$monthStart, $monthEnd])->count();
+            $terminations = Employee::where('company_id', $companyId)->whereBetween('termination_date', [$monthStart, $monthEnd])->count();
 
             $data[] = [
                 'month' => $start->format('M Y'),
@@ -244,9 +246,10 @@ class AnalyticsController extends Controller
     /**
      * Get leave trends chart data.
      */
-    private function getLeaveTrendsChart(string $startDate, string $endDate): array
+    private function getLeaveTrendsChart(string $startDate, string $endDate, $companyId): array
     {
         return Leave::join('hr_leave_types', 'hr_leaves.leave_type_id', '=', 'hr_leave_types.id')
+            ->where('hr_leaves.company_id', $companyId)
             ->whereBetween('hr_leaves.start_date', [$startDate, $endDate])
             ->selectRaw('hr_leave_types.name, COUNT(*) as count, SUM(hr_leaves.days_requested) as total_days')
             ->groupBy('hr_leave_types.id', 'hr_leave_types.name')
@@ -257,18 +260,18 @@ class AnalyticsController extends Controller
     /**
      * Get attendance trends chart data.
      */
-    private function getAttendanceTrendsChart(string $startDate, string $endDate): array
+    private function getAttendanceTrendsChart(string $startDate, string $endDate, $companyId): array
     {
         $data = [];
         $start = Carbon::parse($startDate);
         $end = Carbon::parse($endDate);
 
         while ($start->lte($end)) {
-            $present = Attendance::where('date', $start->format('Y-m-d'))
+            $present = Attendance::where('company_id', $companyId)->where('date', $start->format('Y-m-d'))
                 ->whereIn('status', ['present', 'late'])
                 ->count();
 
-            $absent = Attendance::where('date', $start->format('Y-m-d'))
+            $absent = Attendance::where('company_id', $companyId)->where('date', $start->format('Y-m-d'))
                 ->where('status', 'absent')
                 ->count();
 
@@ -287,9 +290,9 @@ class AnalyticsController extends Controller
     /**
      * Get performance distribution chart data.
      */
-    private function getPerformanceDistributionChart(string $startDate, string $endDate): array
+    private function getPerformanceDistributionChart(string $startDate, string $endDate, $companyId): array
     {
-        return Performance::completed()
+        return Performance::where('company_id', $companyId)->completed()
             ->whereBetween('review_start_date', [$startDate, $endDate])
             ->whereNotNull('overall_rating')
             ->selectRaw('
@@ -310,9 +313,9 @@ class AnalyticsController extends Controller
     /**
      * Get training completion chart data.
      */
-    private function getTrainingCompletionChart(string $startDate, string $endDate): array
+    private function getTrainingCompletionChart(string $startDate, string $endDate, $companyId): array
     {
-        return Training::whereBetween('start_date', [$startDate, $endDate])
+        return Training::where('company_id', $companyId)->whereBetween('start_date', [$startDate, $endDate])
             ->selectRaw('status, COUNT(*) as count')
             ->groupBy('status')
             ->get()
@@ -322,9 +325,9 @@ class AnalyticsController extends Controller
     /**
      * Get employee report data.
      */
-    private function getEmployeeReport(string $startDate, string $endDate): array
+    private function getEmployeeReport(string $startDate, string $endDate, $companyId): array
     {
-        return Employee::with(['user', 'department'])
+        return Employee::where('company_id', $companyId)->with(['user', 'department'])
             ->whereBetween('hire_date', [$startDate, $endDate])
             ->get()
             ->map(function ($employee) {
@@ -343,9 +346,9 @@ class AnalyticsController extends Controller
     /**
      * Get attendance report data.
      */
-    private function getAttendanceReport(string $startDate, string $endDate): array
+    private function getAttendanceReport(string $startDate, string $endDate, $companyId): array
     {
-        return Attendance::with(['employee.user'])
+        return Attendance::where('company_id', $companyId)->with(['employee.user'])
             ->whereBetween('date', [$startDate, $endDate])
             ->get()
             ->map(function ($attendance) {
@@ -364,9 +367,9 @@ class AnalyticsController extends Controller
     /**
      * Get leave report data.
      */
-    private function getLeaveReport(string $startDate, string $endDate): array
+    private function getLeaveReport(string $startDate, string $endDate, $companyId): array
     {
-        return Leave::with(['employee.user', 'leaveType'])
+        return Leave::where('company_id', $companyId)->with(['employee.user', 'leaveType'])
             ->whereBetween('start_date', [$startDate, $endDate])
             ->get()
             ->map(function ($leave) {
@@ -385,9 +388,9 @@ class AnalyticsController extends Controller
     /**
      * Get performance report data.
      */
-    private function getPerformanceReport(string $startDate, string $endDate): array
+    private function getPerformanceReport(string $startDate, string $endDate, $companyId): array
     {
-        return Performance::with(['employee.user', 'reviewer'])
+        return Performance::where('company_id', $companyId)->with(['employee.user', 'reviewer'])
             ->whereBetween('review_start_date', [$startDate, $endDate])
             ->get()
             ->map(function ($performance) {
@@ -405,9 +408,9 @@ class AnalyticsController extends Controller
     /**
      * Get training report data.
      */
-    private function getTrainingReport(string $startDate, string $endDate): array
+    private function getTrainingReport(string $startDate, string $endDate, $companyId): array
     {
-        return Training::with(['instructor'])
+        return Training::where('company_id', $companyId)->with(['instructor'])
             ->whereBetween('start_date', [$startDate, $endDate])
             ->get()
             ->map(function ($training) {

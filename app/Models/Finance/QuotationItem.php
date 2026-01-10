@@ -23,7 +23,8 @@ class QuotationItem extends Model
         'total_price',
         'tax_rate',
         'discount_rate',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -80,5 +81,16 @@ class QuotationItem extends Model
     public function getSubtotalAttribute()
     {
         return $this->quantity * $this->unit_price;
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

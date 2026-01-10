@@ -37,6 +37,8 @@ return new class extends Migration
             
             // Hierarchy
             $table->foreignId('parent_id')->nullable()->constrained('cms_pages')->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->integer('sort_order')->default(0);
             
             // Permissions and workflow

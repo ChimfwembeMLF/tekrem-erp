@@ -26,7 +26,8 @@ class ApprovalStep extends Model
         'completed_at',
         'comments',
         'step_data',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -142,5 +143,15 @@ class ApprovalStep extends Model
     public function scopeCurrent($query)
     {
         return $query->pending()->assigned();
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

@@ -35,7 +35,8 @@ class LinkedInLead extends Model
         'engagement_level',
         'last_activity_at',
         'is_processed',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'skills' => 'array',
@@ -276,5 +277,10 @@ class LinkedInLead extends Model
         }
 
         return $methods;
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

@@ -24,7 +24,8 @@ class ProjectTemplate extends Model
         'is_active',
         'created_by',
         'usage_count',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -124,5 +125,16 @@ class ProjectTemplate extends Model
     public function scopeMostUsed($query, $limit = 10)
     {
         return $query->orderBy('usage_count', 'desc')->limit($limit);
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

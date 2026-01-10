@@ -31,7 +31,8 @@ class Budget extends Model
         'account_id',
         'category_id',
         'user_id',
-    ];
+        'company_id',
+];
     /**
      * Get the company that owns the budget.
      */
@@ -150,4 +151,9 @@ class Budget extends Model
             ->sum('amount');
     }
 
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
+    }
 }

@@ -22,7 +22,8 @@ class Release extends Model
         'released_date',
         'status',
         'metadata',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'metadata' => 'array',
@@ -92,5 +93,16 @@ class Release extends Model
             'status' => 'released',
             'released_date' => now(),
         ]);
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

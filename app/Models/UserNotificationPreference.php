@@ -37,7 +37,8 @@ class UserNotificationPreference extends Model
         'quiet_hours_start',
         'quiet_hours_end',
         'custom_preferences',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -190,5 +191,15 @@ class UserNotificationPreference extends Model
 
         // Handle same-day quiet hours (e.g., 12:00 to 14:00)
         return $now >= $start && $now <= $end;
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

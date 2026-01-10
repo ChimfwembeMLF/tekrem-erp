@@ -54,7 +54,8 @@ class GuestProjectInquiry extends Model
         'ip_address',
         'user_agent',
         'internal_notes',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -269,5 +270,16 @@ class GuestProjectInquiry extends Model
             $score <= 9 => 'Complex',
             default => 'Very Complex'
         };
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

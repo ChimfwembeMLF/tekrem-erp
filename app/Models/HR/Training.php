@@ -39,7 +39,8 @@ class Training extends Model
         'requires_certification',
         'certification_validity_months',
         'attachments',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'start_date' => 'date',
@@ -328,5 +329,16 @@ class Training extends Model
                 }
             }
         });
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

@@ -502,9 +502,10 @@ class IntegrationVerificationController extends Controller
      */
     private function getFacebookConfigStatus(): array
     {
-        $appId = Setting::get('integration.facebook.app_id');
-        $appSecret = Setting::get('integration.facebook.app_secret');
-        $accessToken = Setting::get('integration.facebook.access_token');
+        $companyPrefix = 'company:' . currentCompanyId() . ':';
+        $appId = Setting::get($companyPrefix . 'integration.facebook.app_id') ?? Setting::get('integration.facebook.app_id');
+        $appSecret = Setting::get($companyPrefix . 'integration.facebook.app_secret') ?? Setting::get('integration.facebook.app_secret');
+        $accessToken = Setting::get($companyPrefix . 'integration.facebook.access_token') ?? Setting::get('integration.facebook.access_token');
 
         return [
             'configured' => !empty($appId) && !empty($appSecret) && !empty($accessToken),
@@ -518,7 +519,8 @@ class IntegrationVerificationController extends Controller
      */
     private function getInstagramConfigStatus(): array
     {
-        $accessToken = Setting::get('integration.instagram.access_token');
+        $companyPrefix = 'company:' . currentCompanyId() . ':';
+        $accessToken = Setting::get($companyPrefix . 'integration.instagram.access_token') ?? Setting::get('integration.instagram.access_token');
 
         return [
             'configured' => !empty($accessToken),
@@ -532,7 +534,8 @@ class IntegrationVerificationController extends Controller
      */
     private function getLinkedInConfigStatus(): array
     {
-        $accessToken = Setting::get('integration.linkedin.access_token');
+        $companyPrefix = 'company:' . currentCompanyId() . ':';
+        $accessToken = Setting::get($companyPrefix . 'integration.linkedin.access_token') ?? Setting::get('integration.linkedin.access_token');
 
         return [
             'configured' => !empty($accessToken),

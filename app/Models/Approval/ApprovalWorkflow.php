@@ -25,7 +25,8 @@ class ApprovalWorkflow extends Model
         'steps',
         'is_active',
         'created_by',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -223,5 +224,15 @@ class ApprovalWorkflow extends Model
             ->first(function ($workflow) use ($item) {
                 return $workflow->shouldTrigger($item);
             });
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

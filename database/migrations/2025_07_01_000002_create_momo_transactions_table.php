@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('transaction_number')->unique();
             $table->foreignId('momo_provider_id')->constrained()->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             
             // Transaction details
             $table->enum('type', ['payment', 'refund', 'payout', 'transfer']);

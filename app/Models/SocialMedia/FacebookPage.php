@@ -19,8 +19,9 @@ class FacebookPage extends Model
         'is_active',
         'webhook_subscribed',
         'last_sync_at',
-        'settings'
-    ];
+        'settings',
+        'company_id',
+];
 
     protected $casts = [
         'is_active' => 'boolean',
@@ -60,5 +61,16 @@ class FacebookPage extends Model
     public function scopeWebhookSubscribed($query)
     {
         return $query->where('webhook_subscribed', true);
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

@@ -23,8 +23,12 @@ class GuestChatController extends Controller
     public function initializeSession(Request $request): JsonResponse
     {
         $sessionId = $request->session()->getId();
+        $companyId = currentCompanyId();
 
-        $guestSession = GuestSession::getOrCreateBySessionId($sessionId);
+        $guestSession = GuestSession::getOrCreateBySessionId($sessionId, $companyId);
+        if ($guestSession->company_id !== $companyId) {
+            abort(404);
+        }
 
         // Get or create conversation for this guest session
         $conversation = $guestSession->conversation;
@@ -35,6 +39,7 @@ class GuestChatController extends Controller
 
         // Get messages in chronological order (oldest first) for proper chat display
         $messages = $conversation->messages()
+            ->where('company_id', $companyId)
             ->orderBy('created_at', 'asc')
             ->take(50)
             ->get()
@@ -70,7 +75,11 @@ class GuestChatController extends Controller
         }
 
         $sessionId = $request->session()->getId();
-        $guestSession = GuestSession::getOrCreateBySessionId($sessionId);
+        $companyId = currentCompanyId();
+        $guestSession = GuestSession::getOrCreateBySessionId($sessionId, $companyId);
+        if ($guestSession->company_id !== $companyId) {
+            abort(404);
+        }
 
         $guestSession->update($validator->validated());
         $guestSession->updateActivity();
@@ -95,12 +104,19 @@ class GuestChatController extends Controller
         }
 
         $sessionId = $request->session()->getId();
-        $guestSession = GuestSession::getOrCreateBySessionId($sessionId);
+        $companyId = currentCompanyId();
+        $guestSession = GuestSession::getOrCreateBySessionId($sessionId, $companyId);
+        if ($guestSession->company_id !== $companyId) {
+            abort(404);
+        }
         $guestSession->updateActivity();
 
         $conversation = $guestSession->conversation;
         if (!$conversation) {
             $conversation = $this->createGuestConversation($guestSession);
+        }
+        if ($conversation->company_id !== $companyId) {
+            abort(404);
         }
 
         // Handle file attachments (add id, url, mime_type, uploaded_at, etc.)
@@ -123,6 +139,7 @@ class GuestChatController extends Controller
         // Create message
         $message = Chat::create([
             'conversation_id' => $conversation->id,
+            'company_id' => $companyId,
             'message' => $request->message,
             'message_type' => $request->message_type ?? 'text',
             'attachments' => $attachments,
@@ -170,14 +187,19 @@ class GuestChatController extends Controller
     public function getMessages(Request $request): JsonResponse
     {
         $sessionId = $request->session()->getId();
-        $guestSession = GuestSession::where('session_id', $sessionId)->first();
+        $companyId = currentCompanyId();
+        $guestSession = GuestSession::where('session_id', $sessionId)->where('company_id', $companyId)->first();
 
-        if (!$guestSession || !$guestSession->conversation) {
+        if (!$guestSession || !$guestSession->conversation || $guestSession->company_id !== $companyId) {
             return response()->json(['messages' => []]);
         }
 
         $conversation = $guestSession->conversation;
+        if ($conversation->company_id !== $companyId) {
+            return response()->json(['messages' => []]);
+        }
         $messages = $conversation->messages()
+            ->where('company_id', $companyId)
             ->orderBy('created_at', 'asc')
             ->take(50)
             ->get()
@@ -203,9 +225,9 @@ class GuestChatController extends Controller
     private function createGuestConversation(GuestSession $guestSession): Conversation
     {
         $title = "Guest Chat - {$guestSession->display_name}";
-
         return Conversation::create([
             'title' => $title,
+            'company_id' => $guestSession->company_id,
             'conversable_type' => GuestSession::class,
             'conversable_id' => $guestSession->id,
             'created_by' => null, // No user for guest conversations
@@ -233,13 +255,15 @@ class GuestChatController extends Controller
     private function notifyAvailableStaff(Conversation $conversation, Chat $message, GuestSession $guestSession): void
     {
         // Get staff with admin or staff roles (simplified for now)
-        $availableStaff = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['super_user', 'admin', 'staff']);
-        })->get();
+        $companyId = $conversation->company_id;
+        $availableStaff = User::where('company_id', $companyId)
+            ->whereHas('roles', function ($query) {
+                $query->whereIn('name', ['super_user', 'admin', 'staff']);
+            })->get();
 
-        // If no users found, get all users (fallback)
+        // If no users found, get all users in company (fallback)
         if ($availableStaff->isEmpty()) {
-            $availableStaff = User::take(5)->get(); // Limit to first 5 users as fallback
+            $availableStaff = User::where('company_id', $companyId)->take(5)->get(); // Limit to first 5 users as fallback
         }
 
         foreach ($availableStaff as $staff) {
@@ -287,6 +311,7 @@ class GuestChatController extends Controller
         // Create AI response message (Remy branding)
         $aiMessage = Chat::create([
             'conversation_id' => $conversation->id,
+            'company_id' => $conversation->company_id,
             'message' => $aiResponseData['message'],
             'message_type' => 'text',
             'status' => 'sent',

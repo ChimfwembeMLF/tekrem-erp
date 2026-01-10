@@ -16,6 +16,7 @@ return new class extends Migration {
 
             $table->foreign('employee_id')->references('id')->on('hr_employees')->onDelete('cascade');
             $table->foreign('team_id')->references('id')->on('hr_teams')->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->unique(['employee_id', 'team_id']);
         });
     }

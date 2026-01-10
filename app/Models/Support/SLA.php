@@ -26,7 +26,8 @@ class SLA extends Model
         'is_default',
         'priority_levels',
         'conditions',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -161,5 +162,16 @@ class SLA extends Model
             ->count();
 
         return round(($compliantTickets / $totalTickets) * 100, 2);
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

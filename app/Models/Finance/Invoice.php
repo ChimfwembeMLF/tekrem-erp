@@ -36,7 +36,8 @@ class Invoice extends Model
         'billable_id',
         'billable_type',
         'user_id',
-    ];
+        'company_id',
+];
     /**
      * Get the company that owns the invoice.
      */
@@ -236,5 +237,10 @@ class Invoice extends Model
             'invoice_id' => $this->id,
             'status' => 'draft',
         ]);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

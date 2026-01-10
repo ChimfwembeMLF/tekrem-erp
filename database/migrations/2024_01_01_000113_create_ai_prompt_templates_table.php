@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('ai_prompt_templates', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->string('name');
             $table->string('slug')->unique();
             $table->string('category'); // crm, finance, support, general, etc.

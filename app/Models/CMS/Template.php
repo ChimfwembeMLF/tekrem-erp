@@ -27,7 +27,8 @@ class Template extends Model
         'is_active',
         'is_default',
         'created_by',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'fields' => 'array',
@@ -247,5 +248,16 @@ class Template extends Model
             'draft_pages' => $pagesCount - $publishedPagesCount,
             'last_used' => $this->pages()->latest('updated_at')->first()?->updated_at,
         ];
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

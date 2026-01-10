@@ -22,7 +22,8 @@ class Menu extends Model
         'location',
         'is_active',
         'created_by',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'is_active' => 'boolean',
@@ -135,7 +136,8 @@ class MenuItem extends Model
         'permissions',
         'require_auth',
         'is_active',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'attributes' => 'array',
@@ -313,4 +315,6 @@ class MenuItem extends Model
 
         return false;
     }
+
+    
 }

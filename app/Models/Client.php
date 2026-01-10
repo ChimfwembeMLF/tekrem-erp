@@ -31,7 +31,8 @@ class Client extends Model
         'status',
         'user_id',
         'converted_from_lead_id',
-    ];
+        'company_id',
+];
 
     /**
      * Get the user that owns the client.
@@ -71,5 +72,21 @@ class Client extends Model
     public function chats(): MorphMany
     {
         return $this->morphMany(Chat::class, 'chattable');
+    }
+
+    /**
+     * Get the company that owns the client.
+     */
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    /**
+     * Scope a query to only include clients for a specific company.
+     */
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

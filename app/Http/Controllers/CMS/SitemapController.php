@@ -18,7 +18,7 @@ class SitemapController extends Controller
     {
         $sitemapExists = Storage::disk('public')->exists('sitemap.xml');
         $lastGenerated = null;
-        $pageCount = Page::published()->count();
+        $pageCount = Page::published()->where('company_id', currentCompanyId())->count();
 
         if ($sitemapExists) {
             $lastGenerated = Storage::disk('public')->lastModified('sitemap.xml');
@@ -26,6 +26,7 @@ class SitemapController extends Controller
         }
 
         $pages = Page::published()
+            ->where('company_id', currentCompanyId())
             ->select('id', 'title', 'slug', 'updated_at', 'created_at')
             ->orderBy('updated_at', 'desc')
             ->limit(20)
@@ -54,7 +55,7 @@ class SitemapController extends Controller
             // Also save to public directory for direct access
             file_put_contents(public_path('sitemap.xml'), $xml);
 
-            $pageCount = Page::published()->count();
+            $pageCount = Page::published()->where('company_id', currentCompanyId())->count();
 
             return response()->json([
                 'success' => true,
@@ -97,6 +98,7 @@ class SitemapController extends Controller
     private function generateSitemapXML(): string
     {
         $pages = Page::published()
+            ->where('company_id', currentCompanyId())
             ->select('slug', 'updated_at', 'created_at')
             ->orderBy('updated_at', 'desc')
             ->get();

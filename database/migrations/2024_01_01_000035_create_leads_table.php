@@ -26,6 +26,8 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->string('source')->nullable();
             $table->string('status')->default('new');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
             $table->boolean('converted_to_client')->default(false);
             $table->foreignId('converted_to_client_id')->nullable()->constrained('clients')->onDelete('set null');

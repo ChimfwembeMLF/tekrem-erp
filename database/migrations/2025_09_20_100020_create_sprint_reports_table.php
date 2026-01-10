@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('sprint_id');
             $table->unsignedBigInteger('user_id');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->text('summary');
             $table->integer('completed_points')->default(0);
             $table->integer('incomplete_points')->default(0);

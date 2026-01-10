@@ -41,7 +41,8 @@ class Lead extends Model
         'facebook_campaign_id',
         'facebook_form_id',
         'facebook_created_time',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -100,5 +101,21 @@ class Lead extends Model
     public function facebookLead(): HasOne
     {
         return $this->hasOne(\App\Models\SocialMedia\FacebookLead::class);
+    }
+
+    /**
+     * Get the company that owns the lead.
+     */
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    /**
+     * Scope a query to only include leads for a specific company.
+     */
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

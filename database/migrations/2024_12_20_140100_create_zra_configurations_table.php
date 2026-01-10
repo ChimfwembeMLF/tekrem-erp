@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('zra_configurations', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->string('environment')->default('sandbox'); // sandbox, production
             $table->string('api_base_url');
             $table->string('api_version')->default('v1');

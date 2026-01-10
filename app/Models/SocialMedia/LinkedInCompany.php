@@ -25,7 +25,8 @@ class LinkedInCompany extends Model
         'access_token',
         'is_active',
         'last_sync_at',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'industries' => 'array',
@@ -210,5 +211,16 @@ class LinkedInCompany extends Model
         }
 
         return implode(', ', $parts);
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

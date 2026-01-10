@@ -16,6 +16,8 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('employee_id')->unique();
             $table->foreignId('department_id')->nullable()->constrained('hr_departments')->onDelete('set null');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->string('job_title');
             $table->string('employment_type')->default('full_time'); // full_time, part_time, contract, intern
             $table->string('employment_status')->default('active'); // active, inactive, terminated, on_leave

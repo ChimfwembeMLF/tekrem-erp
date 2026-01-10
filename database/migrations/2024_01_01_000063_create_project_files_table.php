@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('project_id')->constrained('projects')->onDelete('cascade');
             $table->foreignId('milestone_id')->nullable()->constrained('project_milestones')->onDelete('set null');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             
             // File information
             $table->string('name');
@@ -42,6 +44,7 @@ return new class extends Migration
             $table->timestamps();
             
             // Indexes
+            $table->index('company_id');
             $table->index(['project_id', 'category']);
             $table->index(['project_id', 'is_latest_version']);
             $table->index(['milestone_id', 'category']);

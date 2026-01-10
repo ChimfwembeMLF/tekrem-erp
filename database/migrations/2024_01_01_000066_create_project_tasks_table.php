@@ -15,6 +15,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('project_id')->constrained('projects')->onDelete('cascade');
             $table->foreignId('milestone_id')->nullable()->constrained('project_milestones')->onDelete('set null');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
+
             $table->string('title');
             $table->text('description')->nullable();
             $table->enum('type', ['task', 'issue', 'bug', 'feature', 'improvement'])->default('task');

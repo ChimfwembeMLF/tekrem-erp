@@ -18,6 +18,10 @@ class ProjectTaskController extends Controller
      */
     public function index(Request $request, Project $project)
     {
+        $user = auth()->user();
+        if ($project->company_id !== $user->company_id) {
+            abort(404);
+        }
         $query = $project->tasks()->with(['assignee', 'creator', 'milestone', 'tags']);
 
         // Apply filters
@@ -69,6 +73,10 @@ class ProjectTaskController extends Controller
      */
     public function create(Project $project)
     {
+        $user = auth()->user();
+        if ($project->company_id !== $user->company_id) {
+            abort(404);
+        }
         $milestones = $project->milestones()->select('id', 'name')->get();
         
         // Get staff users only (super user, admin and staff roles)
@@ -111,6 +119,10 @@ class ProjectTaskController extends Controller
      */
     public function store(Request $request, Project $project)
     {
+        $user = auth()->user();
+        if ($project->company_id !== $user->company_id) {
+            abort(404);
+        }
         // Check settings
         $enableDependencies = Setting::get('projects.tasks.enable_task_dependencies', true);
         $enableSubtasks = Setting::get('projects.tasks.enable_subtasks', true);
@@ -157,8 +169,8 @@ class ProjectTaskController extends Controller
 
         // Validate that assigned user is staff/admin
         if ($validated['assigned_to']) {
-            $user = User::find($validated['assigned_to']);
-            if (!$user->hasRole(['super_user', 'admin', 'staff'])) {
+            $assignedUser = User::find($validated['assigned_to']);
+            if (!$assignedUser->hasRole(['super_user', 'admin', 'staff'])) {
                 return back()->withErrors(['assigned_to' => 'Tasks can only be assigned to staff members or administrators.']);
             }
         }
@@ -166,7 +178,7 @@ class ProjectTaskController extends Controller
         // Set the order as the next in sequence
         $validated['order'] = $project->tasks()->max('order') + 1;
         $validated['project_id'] = $project->id;
-        $validated['created_by'] = Auth::id();
+        $validated['created_by'] = auth()->id();
 
         $task = ProjectTask::create($validated);
 
@@ -184,6 +196,10 @@ class ProjectTaskController extends Controller
      */
     public function show(Project $project, ProjectTask $task)
     {
+        $user = auth()->user();
+        if ($project->company_id !== $user->company_id || $task->company_id !== $user->company_id) {
+            abort(404);
+        }
         $task->load(['assignee', 'creator', 'milestone', 'parentTask', 'subtasks', 'tags', 'timeLogs.user']);
 
         return Inertia::render('Projects/Tasks/Show', [
@@ -205,6 +221,10 @@ class ProjectTaskController extends Controller
      */
     public function edit(Project $project, ProjectTask $task)
     {
+        $user = auth()->user();
+        if ($project->company_id !== $user->company_id || $task->company_id !== $user->company_id) {
+            abort(404);
+        }
         $task->load('tags');
         $milestones = $project->milestones()->select('id', 'name')->get();
         
@@ -247,6 +267,10 @@ class ProjectTaskController extends Controller
      */
     public function update(Request $request, Project $project, ProjectTask $task)
     {
+        $user = auth()->user();
+        if ($project->company_id !== $user->company_id || $task->company_id !== $user->company_id) {
+            abort(404);
+        }
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -269,8 +293,8 @@ class ProjectTaskController extends Controller
 
         // Validate that assigned user is staff/admin
         if ($validated['assigned_to']) {
-            $user = User::find($validated['assigned_to']);
-            if (!$user->hasRole(['super_user', 'admin', 'staff'])) {
+            $assignedUser = User::find($validated['assigned_to']);
+            if (!$assignedUser->hasRole(['super_user', 'admin', 'staff'])) {
                 return back()->withErrors(['assigned_to' => 'Tasks can only be assigned to staff members or administrators.']);
             }
         }
@@ -294,6 +318,10 @@ class ProjectTaskController extends Controller
      */
     public function destroy(Project $project, ProjectTask $task)
     {
+        $user = auth()->user();
+        if ($project->company_id !== $user->company_id || $task->company_id !== $user->company_id) {
+            abort(404);
+        }
         $task->delete();
 
         return redirect()->route('projects.tasks.index', $project)
@@ -305,6 +333,10 @@ class ProjectTaskController extends Controller
      */
     public function updateStatus(Request $request, Project $project, ProjectTask $task)
     {
+        $user = auth()->user();
+        if ($project->company_id !== $user->company_id || $task->company_id !== $user->company_id) {
+            abort(404);
+        }
         $validated = $request->validate([
             'status' => 'required|in:todo,in-progress,review,testing,done,cancelled',
             'progress' => 'nullable|integer|min:0|max:100',
@@ -326,9 +358,10 @@ class ProjectTaskController extends Controller
      */
     public function myTasks(Request $request)
     {
-        $user = Auth::user();        
+        $user = auth()->user();
         $query = ProjectTask::with(['project', 'milestone', 'tags'])
-            ->where('assigned_to', $user->id);
+            ->where('assigned_to', $user->id)
+            ->where('company_id', $user->company_id);
 
         // Apply filters
         if ($request->filled('status')) {
@@ -340,7 +373,6 @@ class ProjectTaskController extends Controller
         }
 
         $tasks = $query->orderBy('due_date')->paginate(15);
-        // dd($tasks);
 
         return Inertia::render('Projects/Tasks/MyTasks', [
             'tasks' => $tasks,

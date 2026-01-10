@@ -26,7 +26,8 @@ class GuestSession extends Model
         'inquiry_type',
         'metadata',
         'last_activity_at',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -115,5 +116,16 @@ class GuestSession extends Model
             'general' => 'General Inquiry',
             default => 'General Inquiry',
         };
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

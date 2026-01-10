@@ -12,7 +12,8 @@ class Team extends Model
     protected $fillable = [
         'name',
         'description',
-    ];
+        'company_id',
+];
 
     protected $table = 'hr_teams';
 
@@ -24,5 +25,16 @@ class Team extends Model
         return $this->belongsToMany(Employee::class, 'hr_employee_team', 'team_id', 'employee_id')
             ->withPivot('is_lead')
             ->withTimestamps();
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

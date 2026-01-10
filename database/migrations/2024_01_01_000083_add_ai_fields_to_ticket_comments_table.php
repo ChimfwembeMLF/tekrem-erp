@@ -17,6 +17,8 @@ return new class extends Migration
             
             // Add AI confidence score for generated responses
             $table->integer('ai_confidence')->nullable()->after('is_ai_generated');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             
             // Add AI intent detection
             $table->string('ai_detected_intent')->nullable()->after('ai_confidence');

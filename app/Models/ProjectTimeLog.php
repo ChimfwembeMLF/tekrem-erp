@@ -27,7 +27,8 @@ class ProjectTimeLog extends Model
         'hourly_rate',
         'status',
         'metadata',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -166,5 +167,16 @@ class ProjectTimeLog extends Model
             // Update project spent amount when time log is deleted
             $timeLog->project->updateSpentAmount();
         });
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

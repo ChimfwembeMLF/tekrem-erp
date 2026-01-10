@@ -28,7 +28,8 @@ class ApprovalRequest extends Model
         'completed_at',
         'notes',
         'current_step_data',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -295,5 +296,15 @@ class ApprovalRequest extends Model
                           ->orWhereNull('approver_id');
                     });
             });
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

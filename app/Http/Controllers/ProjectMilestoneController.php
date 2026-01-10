@@ -16,6 +16,10 @@ class ProjectMilestoneController extends Controller
      */
     public function index(Request $request, Project $project)
     {
+        $user = auth()->user();
+        if ($project->company_id !== $user->company_id) {
+            abort(404);
+        }
         $query = $project->milestones()->with('assignee');
 
         // Apply filters
@@ -53,6 +57,10 @@ class ProjectMilestoneController extends Controller
      */
     public function create(Project $project)
     {
+        $user = auth()->user();
+        if ($project->company_id !== $user->company_id) {
+            abort(404);
+        }
         // Check if milestones are enabled
         if (!Setting::get('projects.milestones.enable_milestones', true)) {
             return redirect()->route('projects.show', $project)
@@ -77,6 +85,10 @@ class ProjectMilestoneController extends Controller
      */
     public function store(Request $request, Project $project)
     {
+        $user = auth()->user();
+        if ($project->company_id !== $user->company_id) {
+            abort(404);
+        }
         // Check if milestones are enabled
         if (!Setting::get('projects.milestones.enable_milestones', true)) {
             return back()->withErrors(['error' => 'Milestones are currently disabled.']);
@@ -125,6 +137,10 @@ class ProjectMilestoneController extends Controller
      */
     public function show(Project $project, ProjectMilestone $milestone)
     {
+        $user = auth()->user();
+        if ($project->company_id !== $user->company_id || $milestone->company_id !== $user->company_id) {
+            abort(404);
+        }
         $milestone->load('assignee', 'files', 'timeLogs.user');
 
         return Inertia::render('Projects/Milestones/Show', [
@@ -143,6 +159,10 @@ class ProjectMilestoneController extends Controller
      */
     public function edit(Project $project, ProjectMilestone $milestone)
     {
+        $user = auth()->user();
+        if ($project->company_id !== $user->company_id || $milestone->company_id !== $user->company_id) {
+            abort(404);
+        }
         $users = User::select('id', 'name')->get();
         
         $enableDependencies = Setting::get('projects.milestones.enable_milestone_dependencies', true);
@@ -168,6 +188,10 @@ class ProjectMilestoneController extends Controller
      */
     public function update(Request $request, Project $project, ProjectMilestone $milestone)
     {
+        $user = auth()->user();
+        if ($project->company_id !== $user->company_id || $milestone->company_id !== $user->company_id) {
+            abort(404);
+        }
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -193,6 +217,10 @@ class ProjectMilestoneController extends Controller
      */
     public function destroy(Project $project, ProjectMilestone $milestone)
     {
+        $user = auth()->user();
+        if ($project->company_id !== $user->company_id || $milestone->company_id !== $user->company_id) {
+            abort(404);
+        }
         $milestone->delete();
 
         return redirect()->route('projects.milestones.index', $project)
@@ -204,6 +232,10 @@ class ProjectMilestoneController extends Controller
      */
     public function updateStatus(Request $request, Project $project, ProjectMilestone $milestone)
     {
+        $user = auth()->user();
+        if ($project->company_id !== $user->company_id || $milestone->company_id !== $user->company_id) {
+            abort(404);
+        }
         $validated = $request->validate([
             'status' => 'required|in:pending,in-progress,completed,overdue',
             'progress' => 'nullable|integer|min:0|max:100',

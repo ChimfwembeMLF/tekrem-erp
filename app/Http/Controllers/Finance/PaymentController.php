@@ -20,6 +20,7 @@ class PaymentController extends Controller
     public function index(Request $request)
     {
         $query = Payment::where('user_id', auth()->id())
+            ->where('company_id', currentCompanyId())
             ->with(['invoice.billable', 'account']);
 
         // Search functionality
@@ -86,6 +87,7 @@ class PaymentController extends Controller
     {
         // Get unpaid or partially paid invoices
         $invoices = Invoice::where('user_id', auth()->id())
+            ->where('company_id', currentCompanyId())
             ->whereIn('status', ['sent', 'overdue'])
             ->where('paid_amount', '<', DB::raw('total_amount'))
             ->with('billable')
@@ -94,6 +96,7 @@ class PaymentController extends Controller
 
         // Get active accounts
         $accounts = Account::where('user_id', auth()->id())
+            ->where('company_id', currentCompanyId())
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'currency']);
@@ -117,6 +120,7 @@ class PaymentController extends Controller
         $selectedInvoice = null;
         if ($request->filled('invoice')) {
             $selectedInvoice = Invoice::where('user_id', auth()->id())
+                ->where('company_id', currentCompanyId())
                 ->where('id', $request->invoice)
                 ->with('billable')
                 ->first();
@@ -154,10 +158,12 @@ class PaymentController extends Controller
         // Verify invoice and account ownership
         $invoice = Invoice::where('id', $request->invoice_id)
             ->where('user_id', auth()->id())
+            ->where('company_id', currentCompanyId())
             ->first();
 
         $account = Account::where('id', $request->account_id)
             ->where('user_id', auth()->id())
+            ->where('company_id', currentCompanyId())
             ->first();
 
         if (!$invoice || !$account) {
@@ -183,6 +189,7 @@ class PaymentController extends Controller
                 'status' => $request->status,
                 'notes' => $request->notes,
                 'user_id' => auth()->id(),
+                'company_id' => currentCompanyId(),
             ]);
 
             // Update invoice paid amount if payment is completed
@@ -223,8 +230,8 @@ class PaymentController extends Controller
      */
     public function show(Payment $payment)
     {
-        // Ensure user can only view their own payments
-        if ($payment->user_id !== auth()->id()) {
+        // Ensure user can only view their own payments and company
+        if ($payment->user_id !== auth()->id() || $payment->company_id !== currentCompanyId()) {
             abort(403);
         }
 
@@ -240,8 +247,8 @@ class PaymentController extends Controller
      */
     public function edit(Payment $payment)
     {
-        // Ensure user can only edit their own payments
-        if ($payment->user_id !== auth()->id()) {
+        // Ensure user can only edit their own payments and company
+        if ($payment->user_id !== auth()->id() || $payment->company_id !== currentCompanyId()) {
             abort(403);
         }
 
@@ -254,6 +261,7 @@ class PaymentController extends Controller
 
         // Get unpaid or partially paid invoices
         $invoices = Invoice::where('user_id', auth()->id())
+            ->where('company_id', currentCompanyId())
             ->whereIn('status', ['sent', 'overdue', 'partial'])
             ->where(function($query) use ($payment) {
                 $query->where('paid_amount', '<', DB::raw('total_amount'))
@@ -265,6 +273,7 @@ class PaymentController extends Controller
 
         // Get active accounts
         $accounts = Account::where('user_id', auth()->id())
+            ->where('company_id', currentCompanyId())
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'currency']);
@@ -299,8 +308,8 @@ class PaymentController extends Controller
      */
     public function update(Request $request, Payment $payment)
     {
-        // Ensure user can only update their own payments
-        if ($payment->user_id !== auth()->id()) {
+        // Ensure user can only update their own payments and company
+        if ($payment->user_id !== auth()->id() || $payment->company_id !== currentCompanyId()) {
             abort(403);
         }
 
@@ -327,10 +336,12 @@ class PaymentController extends Controller
         // Verify invoice and account ownership
         $invoice = Invoice::where('id', $request->invoice_id)
             ->where('user_id', auth()->id())
+            ->where('company_id', currentCompanyId())
             ->first();
 
         $account = Account::where('id', $request->account_id)
             ->where('user_id', auth()->id())
+            ->where('company_id', currentCompanyId())
             ->first();
 
         if (!$invoice || !$account) {
@@ -433,8 +444,8 @@ class PaymentController extends Controller
      */
     public function destroy(Payment $payment)
     {
-        // Ensure user can only delete their own payments
-        if ($payment->user_id !== auth()->id()) {
+        // Ensure user can only delete their own payments and company
+        if ($payment->user_id !== auth()->id() || $payment->company_id !== currentCompanyId()) {
             abort(403);
         }
 

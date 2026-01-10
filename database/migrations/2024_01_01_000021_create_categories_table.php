@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('type'); // income, expense, both
             $table->text('description')->nullable();
             $table->string('color')->default('#6B7280'); // For UI display
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->boolean('is_active')->default(true);
             $table->foreignId('parent_id')->nullable()->constrained('categories')->onDelete('cascade');
             $table->timestamps();

@@ -19,7 +19,9 @@ class LeaveController extends Controller
      */
     public function index(Request $request): Response
     {
+        $companyId = currentCompanyId();
         $query = Leave::with(['employee.user', 'leaveType', 'approver'])
+            ->where('company_id', $companyId)
             ->when($request->search, function ($query, $search) {
                 $query->whereHas('employee.user', function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%");
@@ -45,8 +47,8 @@ class LeaveController extends Controller
 
         $leaves = $query->latest()->paginate(15)->withQueryString();
 
-        $leaveTypes = LeaveType::active()->orderBy('name')->get(['id', 'name']);
-        $employees = Employee::with('user')->active()->get()->map(function ($employee) {
+        $leaveTypes = LeaveType::where('company_id', $companyId)->active()->orderBy('name')->get(['id', 'name']);
+        $employees = Employee::where('company_id', $companyId)->with('user')->active()->get()->map(function ($employee) {
             return [
                 'id' => $employee->id,
                 'name' => $employee->full_name,
@@ -66,8 +68,9 @@ class LeaveController extends Controller
      */
     public function create(): Response
     {
-        $leaveTypes = LeaveType::active()->orderBy('name')->get();
-        $employees = Employee::with('user')->active()->get()->map(function ($employee) {
+        $companyId = currentCompanyId();
+        $leaveTypes = LeaveType::where('company_id', $companyId)->active()->orderBy('name')->get();
+        $employees = Employee::where('company_id', $companyId)->with('user')->active()->get()->map(function ($employee) {
             return [
                 'id' => $employee->id,
                 'name' => $employee->full_name,
@@ -86,6 +89,7 @@ class LeaveController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $companyId = currentCompanyId();
         $validated = $request->validate([
             'employee_id' => 'required|exists:hr_employees,id',
             'leave_type_id' => 'required|exists:hr_leave_types,id',
@@ -97,8 +101,8 @@ class LeaveController extends Controller
             'attachments' => 'nullable|array',
         ]);
 
-        $employee = Employee::findOrFail($validated['employee_id']);
-        $leaveType = LeaveType::findOrFail($validated['leave_type_id']);
+        $employee = Employee::where('company_id', $companyId)->findOrFail($validated['employee_id']);
+        $leaveType = LeaveType::where('company_id', $companyId)->findOrFail($validated['leave_type_id']);
 
         // Calculate working days
         $workingDays = $this->calculateWorkingDays(
@@ -127,6 +131,7 @@ class LeaveController extends Controller
 
         $validated['days_requested'] = $workingDays;
         $validated['submitted_at'] = now();
+        $validated['company_id'] = $companyId;
 
         $leave = Leave::create($validated);
 
@@ -139,6 +144,10 @@ class LeaveController extends Controller
      */
     public function show(Leave $leave): Response
     {
+        $companyId = currentCompanyId();
+        if ($leave->company_id !== $companyId) {
+            abort(403);
+        }
         $leave->load(['employee.user', 'leaveType', 'approver']);
 
         // Get leave balance for the employee
@@ -155,13 +164,17 @@ class LeaveController extends Controller
      */
     public function edit(Leave $leave): Response
     {
+        $companyId = currentCompanyId();
+        if ($leave->company_id !== $companyId) {
+            abort(403);
+        }
         if (!$leave->canBeEdited()) {
             return back()->withErrors(['leave' => 'This leave request cannot be edited.']);
         }
 
         $leave->load(['employee.user', 'leaveType']);
 
-        $leaveTypes = LeaveType::active()->orderBy('name')->get();
+        $leaveTypes = LeaveType::where('company_id', $companyId)->active()->orderBy('name')->get();
 
         // Ensure all relevant fields are sent as an array
         $leaveData = [
@@ -199,6 +212,10 @@ class LeaveController extends Controller
      */
     public function update(Request $request, Leave $leave): RedirectResponse
     {
+        $companyId = currentCompanyId();
+        if ($leave->company_id !== $companyId) {
+            abort(403);
+        }
         if (!$leave->canBeEdited()) {
             return back()->withErrors(['leave' => 'This leave request cannot be edited.']);
         }
@@ -213,7 +230,7 @@ class LeaveController extends Controller
             'attachments' => 'nullable|array',
         ]);
 
-        $leaveType = LeaveType::findOrFail($validated['leave_type_id']);
+        $leaveType = LeaveType::where('company_id', $companyId)->findOrFail($validated['leave_type_id']);
 
         // Calculate working days
         $workingDays = $this->calculateWorkingDays(
@@ -235,6 +252,10 @@ class LeaveController extends Controller
      */
     public function destroy(Leave $leave): RedirectResponse
     {
+        $companyId = currentCompanyId();
+        if ($leave->company_id !== $companyId) {
+            abort(403);
+        }
         if (!$leave->canBeCancelled()) {
             return back()->withErrors(['leave' => 'This leave request cannot be cancelled.']);
         }
@@ -250,6 +271,10 @@ class LeaveController extends Controller
      */
     public function approve(Request $request, Leave $leave): RedirectResponse
     {
+        $companyId = currentCompanyId();
+        if ($leave->company_id !== $companyId) {
+            abort(403);
+        }
         $request->validate([
             'approval_notes' => 'nullable|string|max:1000',
         ]);
@@ -266,6 +291,10 @@ class LeaveController extends Controller
      */
     public function reject(Request $request, Leave $leave): RedirectResponse
     {
+        $companyId = currentCompanyId();
+        if ($leave->company_id !== $companyId) {
+            abort(403);
+        }
         $request->validate([
             'rejection_reason' => 'required|string|max:1000',
         ]);
@@ -282,7 +311,8 @@ class LeaveController extends Controller
      */
     public function leaveTypes(): Response
     {
-        $leaveTypes = LeaveType::orderBy('name')->paginate(15);
+        $companyId = currentCompanyId();
+        $leaveTypes = LeaveType::where('company_id', $companyId)->orderBy('name')->paginate(15);
 
         return Inertia::render('HR/Leave/Types', [
             'leaveTypes' => $leaveTypes,
@@ -294,6 +324,7 @@ class LeaveController extends Controller
      */
     public function storeLeaveType(Request $request): RedirectResponse
     {
+        $companyId = currentCompanyId();
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:10|unique:hr_leave_types,code',
@@ -308,6 +339,7 @@ class LeaveController extends Controller
             'color' => 'required|string|regex:/^#[0-9A-Fa-f]{6}$/',
             'is_active' => 'boolean',
         ]);
+        $validated['company_id'] = $companyId;
 
         LeaveType::create($validated);
 

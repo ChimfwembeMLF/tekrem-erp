@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('release_sprint', function (Blueprint $table) {
             $table->foreignId('release_id')->constrained('releases')->cascadeOnDelete();
             $table->foreignId('sprint_id')->constrained('sprints')->cascadeOnDelete();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->timestamps();
             
             $table->primary(['release_id', 'sprint_id']);

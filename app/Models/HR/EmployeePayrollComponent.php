@@ -14,7 +14,8 @@ class EmployeePayrollComponent extends Model
         'payroll_component_id',
         'amount',
         'period',
-    ];
+        'company_id',
+];
 
     public function employee()
     {
@@ -24,5 +25,16 @@ class EmployeePayrollComponent extends Model
     public function component()
     {
         return $this->belongsTo(PayrollComponent::class, 'payroll_component_id');
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

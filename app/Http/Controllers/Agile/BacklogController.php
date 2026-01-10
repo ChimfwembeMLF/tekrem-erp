@@ -10,17 +10,27 @@ use Inertia\Inertia;
 
 class BacklogController extends Controller
 {
+    protected function companyId(): int
+    {
+        $companyId = session('current_company_id');
+        abort_unless($companyId, 403, 'No active company');
+        return $companyId;
+    }
+
     public function index(Project $project)
     {
-        // $this->authorize('view', $project);
+        $companyId = $this->companyId();
+        abort_unless($project->company_id === $companyId, 403);
 
         $productBacklog = $project->productBacklog()
+            ->where('company_id', $companyId)
             ->with(['card', 'epic', 'sprint'])
             ->orderBy('priority', 'desc')
             ->orderBy('order', 'asc')
             ->get();
 
         $sprintBacklogs = $project->backlogs()
+            ->where('company_id', $companyId)
             ->where('type', 'sprint')
             ->with(['card', 'epic', 'sprint'])
             ->orderBy('priority', 'desc')
@@ -28,10 +38,13 @@ class BacklogController extends Controller
             ->get();
 
         $sprints = $project->sprints()
+            ->where('company_id', $companyId)
             ->where('status', '!=', 'completed')
             ->get();
 
-        $epics = $project->epics()->get();
+        $epics = $project->epics()
+            ->where('company_id', $companyId)
+            ->get();
 
         return Inertia::render('Agile/Backlog', [
             'project' => $project,
@@ -44,33 +57,42 @@ class BacklogController extends Controller
 
     public function store(Request $request, Project $project)
     {
-        // $this->authorize('update', $project);
+        $companyId = $this->companyId();
+        abort_unless($project->company_id === $companyId, 403);
 
         $validated = $request->validate([
-            'card_id' => 'nullable|exists:board_cards,id',
-            'epic_id' => 'nullable|exists:epics,id',
-            'sprint_id' => 'nullable|exists:sprints,id',
+            'card_id' => 'nullable|integer',
+            'epic_id' => 'nullable|integer',
+            'sprint_id' => 'nullable|integer',
             'type' => 'required|in:product,sprint',
             'priority' => 'required|in:low,medium,high,critical',
             'story_points' => 'nullable|integer|min:0',
             'status' => 'nullable|in:todo,in_progress,done',
         ]);
 
-        $validated['project_id'] = $project->id;
-        $validated['order'] = $project->backlogs()->where('type', $validated['type'])->max('order') + 1;
+        $maxOrder = $project->backlogs()
+            ->where('company_id', $companyId)
+            ->where('type', $validated['type'])
+            ->max('order');
 
-        $backlog = Backlog::create($validated);
+        Backlog::create([
+            ...$validated,
+            'project_id' => $project->id,
+            'company_id' => $companyId,
+            'order' => ($maxOrder ?? -1) + 1,
+        ]);
 
-        // return back()->with('success', 'Backlog item created successfully.');
+        return back()->with('success', 'Backlog item created successfully.');
     }
 
     public function update(Request $request, Backlog $backlog)
     {
-        // $this->authorize('update', $backlog->project);
+        $companyId = $this->companyId();
+        abort_unless($backlog->company_id === $companyId, 403);
 
         $validated = $request->validate([
-            'epic_id' => 'nullable|exists:epics,id',
-            'sprint_id' => 'nullable|exists:sprints,id',
+            'epic_id' => 'nullable|integer',
+            'sprint_id' => 'nullable|integer',
             'type' => 'sometimes|in:product,sprint',
             'priority' => 'sometimes|in:low,medium,high,critical',
             'story_points' => 'nullable|integer|min:0',
@@ -85,11 +107,12 @@ class BacklogController extends Controller
 
     public function move(Request $request, Backlog $backlog)
     {
-        // $this->authorize('update', $backlog->project);
+        $companyId = $this->companyId();
+        abort_unless($backlog->company_id === $companyId, 403);
 
         $validated = $request->validate([
             'type' => 'required|in:product,sprint',
-            'sprint_id' => 'nullable|exists:sprints,id',
+            'sprint_id' => 'nullable|integer',
             'order' => 'required|integer|min:0',
         ]);
 
@@ -100,7 +123,8 @@ class BacklogController extends Controller
 
     public function destroy(Backlog $backlog)
     {
-        // $this->authorize('update', $backlog->project);
+        $companyId = $this->companyId();
+        abort_unless($backlog->company_id === $companyId, 403);
 
         $backlog->delete();
 

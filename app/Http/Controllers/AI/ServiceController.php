@@ -17,7 +17,9 @@ class ServiceController extends Controller
      */
     public function index(Request $request)
     {
+        $companyId = session('current_company_id');
         $query = Service::query()
+            ->where('company_id', $companyId)
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('name', 'like', "%{$search}%")
@@ -38,7 +40,7 @@ class ServiceController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        $providers = Service::distinct()->pluck('provider')->sort()->values();
+        $providers = Service::where('company_id', $companyId)->distinct()->pluck('provider')->sort()->values();
 
         return Inertia::render('AI/Services/Index', [
             'services' => $services,
@@ -52,7 +54,10 @@ class ServiceController extends Controller
      */
     public function create()
     {
-        return Inertia::render('AI/Services/Create');
+        $companyId = session('current_company_id');
+        return Inertia::render('AI/Services/Create', [
+            'company_id' => $companyId
+        ]);
     }
 
     /**
@@ -60,6 +65,7 @@ class ServiceController extends Controller
      */
     public function store(Request $request)
     {
+        $companyId = session('current_company_id');
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'provider' => ['required', 'string', 'in:mistral,openai,anthropic'],
@@ -75,25 +81,18 @@ class ServiceController extends Controller
             'max_tokens_per_request' => ['nullable', 'integer', 'min:1'],
             'configuration' => ['array'],
         ]);
-
-        // Generate slug from name
         $validated['slug'] = Str::slug($validated['name']);
-
-        // Ensure slug is unique
+        $validated['company_id'] = $companyId;
         $originalSlug = $validated['slug'];
         $counter = 1;
-        while (Service::where('slug', $validated['slug'])->exists()) {
+        while (Service::where('slug', $validated['slug'])->where('company_id', $companyId)->exists()) {
             $validated['slug'] = $originalSlug . '-' . $counter;
             $counter++;
         }
-
         $service = Service::create($validated);
-
-        // If this is set as default, remove default from others
         if ($validated['is_default'] ?? false) {
             $service->setAsDefault();
         }
-
         return redirect()->route('ai.services.show', $service)
             ->with('success', 'AI service created successfully.');
     }
@@ -103,16 +102,15 @@ class ServiceController extends Controller
      */
     public function show(Service $service)
     {
+        $companyId = session('current_company_id');
+        if ($service->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $service->load(['models' => function ($query) {
             $query->orderBy('is_default', 'desc')->orderBy('name');
         }]);
-
-        // Get usage statistics
         $usageStats = $service->getUsageStats('30 days');
-
-        // Test connection status
         $connectionStatus = $service->testConnection();
-
         return Inertia::render('AI/Services/Show', [
             'service' => $service,
             'usageStats' => $usageStats,
@@ -125,6 +123,10 @@ class ServiceController extends Controller
      */
     public function edit(Service $service)
     {
+        $companyId = session('current_company_id');
+        if ($service->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         return Inertia::render('AI/Services/Edit', [
             'service' => $service,
         ]);
@@ -135,6 +137,10 @@ class ServiceController extends Controller
      */
     public function update(Request $request, Service $service)
     {
+        $companyId = session('current_company_id');
+        if ($service->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'provider' => ['required', 'string', 'in:mistral,openai,anthropic'],
@@ -150,29 +156,20 @@ class ServiceController extends Controller
             'max_tokens_per_request' => ['nullable', 'integer', 'min:1'],
             'configuration' => ['array'],
         ]);
-
-        // Update slug if name changed
         if ($validated['name'] !== $service->name) {
             $newSlug = Str::slug($validated['name']);
-            
-            // Ensure slug is unique (excluding current service)
             $originalSlug = $newSlug;
             $counter = 1;
-            while (Service::where('slug', $newSlug)->where('id', '!=', $service->id)->exists()) {
+            while (Service::where('slug', $newSlug).where('company_id', $companyId).where('id', '!=', $service->id).exists()) {
                 $newSlug = $originalSlug . '-' . $counter;
                 $counter++;
             }
-            
             $validated['slug'] = $newSlug;
         }
-
         $service->update($validated);
-
-        // If this is set as default, remove default from others
         if ($validated['is_default'] ?? false) {
             $service->setAsDefault();
         }
-
         return redirect()->route('ai.services.show', $service)
             ->with('success', 'AI service updated successfully.');
     }
@@ -182,14 +179,15 @@ class ServiceController extends Controller
      */
     public function destroy(Service $service)
     {
-        // Check if service has models
-        if ($service->models()->count() > 0) {
+        $companyId = session('current_company_id');
+        if ($service->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
+        if ($service->models()->where('company_id', $companyId)->count() > 0) {
             return redirect()->route('ai.services.index')
                 ->with('error', 'Cannot delete service that has associated models.');
         }
-
         $service->delete();
-
         return redirect()->route('ai.services.index')
             ->with('success', 'AI service deleted successfully.');
     }
@@ -199,8 +197,11 @@ class ServiceController extends Controller
      */
     public function testConnection(Service $service)
     {
+        $companyId = session('current_company_id');
+        if ($service->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $result = $service->testConnection();
-
         return response()->json($result);
     }
 
@@ -209,15 +210,20 @@ class ServiceController extends Controller
      */
     public function setDefault(Service $service)
     {
+        $companyId = session('current_company_id');
+        if ($service->company_id !== $companyId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized.'
+            ], 403);
+        }
         if (!$service->is_enabled) {
             return response()->json([
                 'success' => false,
                 'message' => 'Cannot set disabled service as default.'
             ], 400);
         }
-
         $service->setAsDefault();
-
         return response()->json([
             'success' => true,
             'message' => 'Service set as default successfully.'
@@ -229,23 +235,25 @@ class ServiceController extends Controller
      */
     public function toggleStatus(Service $service)
     {
+        $companyId = session('current_company_id');
+        if ($service->company_id !== $companyId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized.'
+            ], 403);
+        }
         $newStatus = !$service->is_enabled;
-        
-        // If disabling the default service, we need to set another as default
         if (!$newStatus && $service->is_default) {
             $alternativeService = Service::where('id', '!=', $service->id)
                 ->where('is_enabled', true)
+                ->where('company_id', $companyId)
                 ->first();
-                
             if ($alternativeService) {
                 $alternativeService->setAsDefault();
             }
         }
-
         $service->update(['is_enabled' => $newStatus]);
-
         $status = $newStatus ? 'enabled' : 'disabled';
-
         return response()->json([
             'success' => true,
             'message' => "Service {$status} successfully.",

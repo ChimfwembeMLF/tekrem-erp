@@ -46,7 +46,8 @@ class Employee extends Model
         'certifications',
         'documents',
         'metadata',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'hire_date' => 'date',
@@ -250,5 +251,16 @@ class Employee extends Model
                 $employee->department->updateEmployeeCount();
             }
         });
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

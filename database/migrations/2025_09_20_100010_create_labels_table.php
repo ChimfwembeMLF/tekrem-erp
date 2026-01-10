@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('labels', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('board_id');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->string('name');
             $table->string('color')->nullable();
             $table->timestamps();

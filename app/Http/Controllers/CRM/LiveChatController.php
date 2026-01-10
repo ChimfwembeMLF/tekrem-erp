@@ -33,12 +33,13 @@ class LiveChatController extends Controller
         $user = Auth::user();
 
         // Get conversations based on user role
+        $companyId = currentCompanyId();
         $conversationsQuery = Conversation::with([
             'conversable',
             'creator',
             'assignee',
             'latestMessage.user'
-        ]);
+        ])->where('company_id', $companyId);
 
         // Filter based on user role
         if ($user->hasRole('customer')) {
@@ -84,7 +85,8 @@ class LiveChatController extends Controller
             ->paginate(20);
 
         // Get unread count for current user
-        $unreadCount = Chat::whereHas('conversation', function ($query) use ($user) {
+        $unreadCount = Chat::whereHas('conversation', function ($query) use ($user, $companyId) {
+            $query->where('company_id', $companyId);
             if ($user->hasRole('customer')) {
                 $query->where('created_by', $user->id)
                       ->orWhereJsonContains('participants', $user->id);
@@ -108,7 +110,10 @@ class LiveChatController extends Controller
     public function show(Conversation $conversation): Response
     {
         $user = Auth::user();
-
+        $companyId = currentCompanyId();
+        if ($conversation->company_id !== $companyId) {
+            abort(403, 'Unauthorized access to this conversation.');
+        }
         // Check if user has access to this conversation
         if ($user->hasRole('customer')) {
             if ($conversation->created_by !== $user->id &&
@@ -137,15 +142,13 @@ class LiveChatController extends Controller
             ->limit(3)
             ->get();
 
-
-
         // Mark messages as read for current user
         $conversation->markAsReadFor($user);
 
         // Get available clients and leads for staff
-        $clients = $user->hasRole('customer') ? [] : Client::select('id', 'name', 'email')->get();
-        $leads = $user->hasRole('customer') ? [] : Lead::select('id', 'name', 'email')->get();
-        $staff = $user->hasRole('customer') ? [] : User::role(['admin', 'staff'])->select('id', 'name', 'email')->get();
+        $clients = $user->hasRole('customer') ? [] : Client::where('company_id', $companyId)->select('id', 'name', 'email')->get();
+        $leads = $user->hasRole('customer') ? [] : Lead::where('company_id', $companyId)->select('id', 'name', 'email')->get();
+        $staff = $user->hasRole('customer') ? [] : User::where('company_id', $companyId)->role(['admin', 'staff'])->select('id', 'name', 'email')->get();
 
         return Inertia::render('CRM/LiveChat/Conversation', [
             'conversation' => $conversation,
@@ -180,6 +183,7 @@ class LiveChatController extends Controller
 
         $user = Auth::user();
 
+        $companyId = currentCompanyId();
         // Create conversation
         $conversation = Conversation::create([
             'title' => $request->title,
@@ -194,6 +198,7 @@ class LiveChatController extends Controller
                 $request->participants ?? []
             )),
             'last_message_at' => now(),
+            'company_id' => $companyId,
         ]);
 
         // Create initial message
@@ -247,6 +252,10 @@ class LiveChatController extends Controller
 
         $user = Auth::user();
 
+        $companyId = currentCompanyId();
+        if ($conversation->company_id !== $companyId) {
+            return response()->json(['error' => 'Unauthorized access to this conversation.'], 403);
+        }
         // Check access
         if ($user->hasRole('customer')) {
             if ($conversation->created_by !== $user->id &&
@@ -321,6 +330,10 @@ class LiveChatController extends Controller
     public function markAsRead(Conversation $conversation): JsonResponse
     {
         $user = Auth::user();
+        $companyId = currentCompanyId();
+        if ($conversation->company_id !== $companyId) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized access to this conversation.'], 403);
+        }
         $conversation->markAsReadFor($user);
 
         return response()->json(['success' => true]);
@@ -332,6 +345,10 @@ class LiveChatController extends Controller
     public function typing(Request $request, Conversation $conversation): JsonResponse
     {
         $user = Auth::user();
+        $companyId = currentCompanyId();
+        if ($conversation->company_id !== $companyId) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized access to this conversation.'], 403);
+        }
 
         broadcast(new UserTyping($user, $conversation))->toOthers();
 
@@ -343,6 +360,10 @@ class LiveChatController extends Controller
      */
     public function archive(Conversation $conversation): JsonResponse
     {
+        $companyId = currentCompanyId();
+        if ($conversation->company_id !== $companyId) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized access to this conversation.'], 403);
+        }
         $conversation->update(['status' => 'archived']);
 
         return response()->json(['success' => true]);
@@ -353,6 +374,10 @@ class LiveChatController extends Controller
      */
     public function restore(Conversation $conversation): JsonResponse
     {
+        $companyId = currentCompanyId();
+        if ($conversation->company_id !== $companyId) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized access to this conversation.'], 403);
+        }
         $conversation->update(['status' => 'active']);
 
         return response()->json(['success' => true]);
@@ -376,16 +401,18 @@ class LiveChatController extends Controller
         $chattableType = $request->chattable_type;
         $chattableId = $request->chattable_id;
 
+        $companyId = currentCompanyId();
         // Find existing conversation for this entity
         $conversation = Conversation::where('conversable_type', $chattableType)
             ->where('conversable_id', $chattableId)
+            ->where('company_id', $companyId)
             ->where('status', '!=', 'archived')
             ->first();
 
         // If no conversation exists, create one
         if (!$conversation) {
             // Get the entity (Lead, Client, or Project)
-            $entity = $chattableType::find($chattableId);
+            $entity = $chattableType::where('company_id', $companyId)->find($chattableId);
 
             if (!$entity) {
                 return redirect()->back()->with('error', 'Entity not found.');
@@ -417,6 +444,7 @@ class LiveChatController extends Controller
                 'participants' => $participants,
                 'last_message_at' => now(),
                 'status' => 'active',
+                'company_id' => $companyId,
             ]);
 
             // Create initial system message
@@ -721,6 +749,10 @@ class LiveChatController extends Controller
     {
         $user = Auth::user();
 
+        $companyId = currentCompanyId();
+        if ($project->company_id !== $companyId) {
+            abort(403, 'Unauthorized access to project chat.');
+        }
         // Check if user has access to this project
         if (!$user->hasRole(['super_user', 'admin', 'staff']) &&
             $project->manager_id !== $user->id &&
@@ -731,6 +763,7 @@ class LiveChatController extends Controller
         // Find or create a conversation for this project
         $conversation = Conversation::where('conversable_type', Project::class)
             ->where('conversable_id', $project->id)
+            ->where('company_id', $companyId)
             ->where('status', '!=', 'archived')
             ->first();
 
@@ -751,6 +784,7 @@ class LiveChatController extends Controller
                 )),
                 'last_message_at' => now(),
                 'status' => 'active',
+                'company_id' => $companyId,
             ]);
 
             // Create initial system message
@@ -795,15 +829,16 @@ class LiveChatController extends Controller
         $conversation->markAsReadFor($user);
 
         // Get project team members for the sidebar
-        $teamMembers = User::whereIn('id', array_merge(
-            [$project->manager_id],
-            $project->team_members ?? []
-        ))->select('id', 'name', 'email')->get();
+        $teamMembers = User::where('company_id', $companyId)
+            ->whereIn('id', array_merge(
+                [$project->manager_id],
+                $project->team_members ?? []
+            ))->select('id', 'name', 'email')->get();
 
         // Get available clients and leads for staff (same as regular LiveChat)
-        $clients = $user->hasRole('customer') ? [] : Client::select('id', 'name', 'email')->get();
-        $leads = $user->hasRole('customer') ? [] : Lead::select('id', 'name', 'email')->get();
-        $staff = $user->hasRole('customer') ? [] : User::role(['admin', 'staff'])->select('id', 'name', 'email')->get();
+        $clients = $user->hasRole('customer') ? [] : Client::where('company_id', $companyId)->select('id', 'name', 'email')->get();
+        $leads = $user->hasRole('customer') ? [] : Lead::where('company_id', $companyId)->select('id', 'name', 'email')->get();
+        $staff = $user->hasRole('customer') ? [] : User::where('company_id', $companyId)->role(['admin', 'staff'])->select('id', 'name', 'email')->get();
 
         // Use the existing LiveChat Conversation component but with project context
         return Inertia::render('CRM/LiveChat/Conversation', [

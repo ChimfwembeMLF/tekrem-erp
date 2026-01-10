@@ -22,23 +22,32 @@ class InstagramController extends Controller
         $this->instagramService = $instagramService;
     }
 
+    protected function getCompanyId()
+    {
+        return currentCompanyId();
+    }
+
     /**
      * Display Instagram dashboard
      */
     public function index(): Response
     {
-        $accounts = InstagramAccount::with(['media' => function ($query) {
-            $query->orderBy('timestamp', 'desc')->limit(10);
-        }])->get();
+        $companyId = $this->getCompanyId();
+        $accounts = InstagramAccount::where('company_id', $companyId)
+            ->with(['media' => function ($query) {
+                $query->orderBy('timestamp', 'desc')->limit(10);
+            }])
+            ->get();
 
-        $recentMedia = InstagramMedia::with('account')
+        $recentMedia = InstagramMedia::where('company_id', $companyId)
+            ->with('account')
             ->orderBy('timestamp', 'desc')
             ->limit(20)
             ->get();
 
         $stats = [
             'total_accounts' => $accounts->count(),
-            'total_media' => InstagramMedia::count(),
+            'total_media' => InstagramMedia::where('company_id', $companyId)->count(),
             'total_followers' => $accounts->sum('followers_count'),
             'avg_engagement' => $accounts->avg('engagement_rate') ?? 0,
         ];
@@ -55,6 +64,7 @@ class InstagramController extends Controller
      */
     public function syncAccounts(Request $request): JsonResponse
     {
+        $companyId = $this->getCompanyId();
         try {
             $businessAccounts = $this->instagramService->getBusinessAccounts();
             $syncedCount = 0;
@@ -64,7 +74,7 @@ class InstagramController extends Controller
                 
                 if (!empty($accountInfo)) {
                     InstagramAccount::updateOrCreate(
-                        ['instagram_account_id' => $accountData['id']],
+                        ['instagram_account_id' => $accountData['id'], 'company_id' => $companyId],
                         [
                             'username' => $accountInfo['username'] ?? '',
                             'name' => $accountInfo['name'] ?? $accountData['name'],
@@ -75,6 +85,7 @@ class InstagramController extends Controller
                             'biography' => $accountInfo['biography'] ?? null,
                             'website' => $accountInfo['website'] ?? null,
                             'last_sync_at' => now(),
+                            'company_id' => $companyId
                         ]
                     );
                     $syncedCount++;
@@ -99,11 +110,16 @@ class InstagramController extends Controller
      */
     public function syncMedia(Request $request): JsonResponse
     {
+        $companyId = $this->getCompanyId();
         $request->validate([
             'account_id' => 'required|string'
         ]);
 
         try {
+            $account = InstagramAccount::where('instagram_account_id', $request->account_id)
+                ->where('company_id', $companyId)
+                ->firstOrFail();
+
             $syncedCount = $this->instagramService->syncMedia($request->account_id);
 
             return response()->json([
@@ -174,6 +190,7 @@ class InstagramController extends Controller
      */
     public function createPost(Request $request): JsonResponse
     {
+        $companyId = $this->getCompanyId();
         $request->validate([
             'account_id' => 'required|string',
             'caption' => 'required|string|max:2200',
@@ -183,9 +200,14 @@ class InstagramController extends Controller
         ]);
 
         try {
+            $account = InstagramAccount::where('instagram_account_id', $request->account_id)
+                ->where('company_id', $companyId)
+                ->firstOrFail();
+
             $post = SocialPost::create([
                 'platform' => 'instagram',
                 'platform_account_id' => $request->account_id,
+                'company_id' => $companyId,
                 'content' => $request->caption,
                 'media_urls' => [$request->media_url],
                 'media_type' => $request->media_type,
@@ -296,6 +318,7 @@ class InstagramController extends Controller
      */
     public function getInsights(Request $request): JsonResponse
     {
+        $companyId = $this->getCompanyId();
         $request->validate([
             'account_id' => 'required|string',
             'period' => 'nullable|in:day,week,month',
@@ -303,6 +326,10 @@ class InstagramController extends Controller
         ]);
 
         try {
+            $account = InstagramAccount::where('instagram_account_id', $request->account_id)
+                ->where('company_id', $companyId)
+                ->firstOrFail();
+
             $period = $request->period ?? 'week';
             $since = match($period) {
                 'day' => now()->subDay(),

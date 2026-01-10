@@ -19,10 +19,15 @@ class SLAController extends Controller
     public function index(Request $request): Response
     {
         $query = SLA::query()
-            ->withCount('tickets')
+            ->where('company_id', currentCompanyId())
+            ->withCount(['tickets' => function ($q) {
+                $q->where('company_id', currentCompanyId());
+            }])
             ->when($request->search, function ($query, $search) {
-                $query->where('name', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%");
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%");
+                });
             })
             ->when($request->active !== null, function ($query) use ($request) {
                 $query->where('is_active', $request->boolean('active'));
@@ -50,7 +55,7 @@ class SLAController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:s_l_a_s,name'],
+            'name' => ['required', 'string', 'max:255', Rule::unique('s_l_a_s', 'name')->where(fn($q) => $q->where('company_id', currentCompanyId()))],
             'description' => ['nullable', 'string'],
             'response_time_hours' => ['required', 'integer', 'min:1', 'max:168'], // Max 1 week
             'resolution_time_hours' => ['required', 'integer', 'min:1', 'max:720'], // Max 30 days
@@ -62,9 +67,13 @@ class SLAController extends Controller
             'conditions' => ['nullable', 'array'],
         ]);
 
-        // If this is set as default, unset other defaults
+        $validated['company_id'] = currentCompanyId();
+
+        // If this is set as default, unset other defaults for this company
         if ($validated['is_default']) {
-            SLA::where('is_default', true)->update(['is_default' => false]);
+            SLA::where('company_id', currentCompanyId())
+                ->where('is_default', true)
+                ->update(['is_default' => false]);
         }
 
         $sla = SLA::create($validated);
@@ -78,31 +87,42 @@ class SLAController extends Controller
      */
     public function show(SLA $policy): Response
     {
-        $policy->loadCount('tickets');
+        // Ensure SLA belongs to current company
+        if ($policy->company_id !== currentCompanyId()) {
+            abort(404);
+        }
+
+        $policy->loadCount(['tickets' => function ($q) {
+            $q->where('company_id', currentCompanyId());
+        }]);
 
         // Get compliance data for the last 30 days
         $startDate = now()->subDays(30);
         $endDate = now();
-        $compliance = $policy->getCompliancePercentage($startDate, $endDate);
+        $compliance = $policy->getCompliancePercentage($startDate, $endDate, currentCompanyId());
 
-        // Get recent tickets using this SLA
+        // Get recent tickets using this SLA for current company
         $recentTickets = $policy->tickets()
+            ->where('company_id', currentCompanyId())
             ->with(['category', 'assignedTo', 'createdBy', 'requester'])
             ->latest()
             ->take(10)
             ->get();
 
-        // Get SLA performance metrics
+        // Get SLA performance metrics for current company
         $metrics = [
-            'total_tickets' => $policy->tickets()->count(),
+            'total_tickets' => $policy->tickets()->where('company_id', currentCompanyId())->count(),
             'compliance_30_days' => $compliance,
             'avg_response_time' => $policy->tickets()
+                ->where('company_id', currentCompanyId())
                 ->whereNotNull('first_response_at')
                 ->avg('response_time_minutes'),
             'avg_resolution_time' => $policy->tickets()
+                ->where('company_id', currentCompanyId())
                 ->whereNotNull('resolved_at')
                 ->avg('resolution_time_minutes'),
             'breached_tickets' => $policy->tickets()
+                ->where('company_id', currentCompanyId())
                 ->where('created_at', '>=', $startDate)
                 ->get()
                 ->filter(function ($ticket) use ($policy) {
@@ -123,6 +143,10 @@ class SLAController extends Controller
      */
     public function edit(SLA $policy): Response
     {
+        // Ensure SLA belongs to current company
+        if ($policy->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         return Inertia::render('Support/SLA/Edit', [
             'sla' => $policy,
         ]);
@@ -133,8 +157,12 @@ class SLAController extends Controller
      */
     public function update(Request $request, SLA $policy): RedirectResponse
     {
+        // Ensure SLA belongs to current company
+        if ($policy->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', Rule::unique('s_l_a_s', 'name')->ignore($policy->id)],
+            'name' => ['required', 'string', 'max:255', Rule::unique('s_l_a_s', 'name')->ignore($policy->id)->where(fn($q) => $q->where('company_id', currentCompanyId()))],
             'description' => ['nullable', 'string'],
             'response_time_hours' => ['required', 'integer', 'min:1', 'max:168'],
             'resolution_time_hours' => ['required', 'integer', 'min:1', 'max:720'],
@@ -146,9 +174,11 @@ class SLAController extends Controller
             'conditions' => ['nullable', 'array'],
         ]);
 
-        // If this is set as default, unset other defaults
+        // If this is set as default, unset other defaults for this company
         if ($validated['is_default'] && !$policy->is_default) {
-            SLA::where('is_default', true)->update(['is_default' => false]);
+            SLA::where('company_id', currentCompanyId())
+                ->where('is_default', true)
+                ->update(['is_default' => false]);
         }
 
         $policy->update($validated);
@@ -162,8 +192,12 @@ class SLAController extends Controller
      */
     public function destroy(SLA $policy): RedirectResponse
     {
-        // Check if SLA has tickets
-        if ($policy->tickets()->count() > 0) {
+        // Ensure SLA belongs to current company
+        if ($policy->company_id !== currentCompanyId()) {
+            abort(404);
+        }
+        // Check if SLA has tickets for this company
+        if ($policy->tickets()->where('company_id', currentCompanyId())->count() > 0) {
             return redirect()->route('support.sla.policies.index')
                 ->with('error', 'Cannot delete SLA policy that has tickets. Please reassign tickets first.');
         }
@@ -185,6 +219,10 @@ class SLAController extends Controller
      */
     public function activate(SLA $policy): JsonResponse
     {
+        // Ensure SLA belongs to current company
+        if ($policy->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $policy->update(['is_active' => true]);
 
         return response()->json(['message' => 'SLA policy activated successfully.']);

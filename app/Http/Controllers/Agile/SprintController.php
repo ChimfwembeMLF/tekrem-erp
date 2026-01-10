@@ -10,37 +10,50 @@ use Inertia\Inertia;
 
 class SprintController extends Controller
 {
+    protected function companyId(): int
+    {
+        $companyId = session('current_company_id');
+        abort_unless($companyId, 403, 'No active company');
+        return $companyId;
+    }
+
     public function index(Project $project)
     {
+        $companyId = $this->companyId();
+        abort_unless($project->company_id === $companyId, 403);
+
         // $this->authorize('view', $project);
 
         $sprints = $project->sprints()
-            ->with('cards')
-            ->orderBy('start_date', 'desc')
+            ->where('company_id', $companyId)
+            ->with([
+                'cards' => fn ($q) => $q->where('company_id', $companyId),
+            ])
+            ->orderByDesc('start_date')
             ->get();
-
-        $activeSprint = $sprints->firstWhere('status', 'active');
-        $plannedSprints = $sprints->where('status', 'planning');
-        $completedSprints = $sprints->where('status', 'completed');
 
         return Inertia::render('Agile/Sprints', [
             'project' => $project,
             'sprints' => $sprints,
-            'activeSprint' => $activeSprint,
-            'plannedSprints' => $plannedSprints,
-            'completedSprints' => $completedSprints,
+            'activeSprint' => $sprints->firstWhere('status', 'active'),
+            'plannedSprints' => $sprints->where('status', 'planning'),
+            'completedSprints' => $sprints->where('status', 'completed'),
         ]);
     }
 
     public function show(Sprint $sprint)
     {
+        $companyId = $this->companyId();
+        abort_unless($sprint->company_id === $companyId, 403);
+
         // $this->authorize('view', $sprint->project);
 
         $sprint->load([
-            'cards.assignee',
-            'cards.column',
-            'backlogItems',
-            'project'
+            'project',
+            'cards' => fn ($q) => $q
+                ->where('company_id', $companyId)
+                ->with(['assignee', 'column']),
+            'backlogItems' => fn ($q) => $q->where('company_id', $companyId),
         ]);
 
         return Inertia::render('Agile/Sprints/Show', [
@@ -51,6 +64,9 @@ class SprintController extends Controller
 
     public function store(Request $request, Project $project)
     {
+        $companyId = $this->companyId();
+        abort_unless($project->company_id === $companyId, 403);
+
         // $this->authorize('update', $project);
 
         $validated = $request->validate([
@@ -61,17 +77,23 @@ class SprintController extends Controller
             'team_capacity' => 'nullable|integer|min:0',
         ]);
 
-        $validated['status'] = 'planning';
-        $validated['project_id'] = $project->id;
+        $sprint = Sprint::create([
+            ...$validated,
+            'status' => 'planning',
+            'project_id' => $project->id,
+            'company_id' => $companyId,
+        ]);
 
-        $sprint = Sprint::create($validated);
-
-        return redirect()->route('agile.sprints.show', $sprint)
+        return redirect()
+            ->route('agile.sprints.show', $sprint)
             ->with('success', 'Sprint created successfully.');
     }
 
     public function update(Request $request, Sprint $sprint)
     {
+        $companyId = $this->companyId();
+        abort_unless($sprint->company_id === $companyId, 403);
+
         // $this->authorize('update', $sprint->project);
 
         $validated = $request->validate([
@@ -89,12 +111,19 @@ class SprintController extends Controller
 
     public function start(Sprint $sprint)
     {
+        $companyId = $this->companyId();
+        abort_unless($sprint->company_id === $companyId, 403);
+
         // $this->authorize('update', $sprint->project);
 
-        // Check if another sprint is active
-        $activeSprint = $sprint->project->sprints()->where('status', 'active')->first();
+        $activeSprint = $sprint->project
+            ->sprints()
+            ->where('company_id', $companyId)
+            ->where('status', 'active')
+            ->first();
+
         if ($activeSprint) {
-            return back()->with('error', 'Another sprint is already active. Please complete it first.');
+            return back()->with('error', 'Another sprint is already active.');
         }
 
         $sprint->update([
@@ -107,9 +136,11 @@ class SprintController extends Controller
 
     public function complete(Sprint $sprint)
     {
+        $companyId = $this->companyId();
+        abort_unless($sprint->company_id === $companyId, 403);
+
         // $this->authorize('update', $sprint->project);
 
-        // Calculate final velocity
         $sprint->calculateVelocity();
 
         $sprint->update([
@@ -117,28 +148,33 @@ class SprintController extends Controller
             'end_date' => now(),
         ]);
 
-        // Move incomplete cards back to backlog
-        $sprint->cards()->where('status', '!=', 'done')->update([
-            'sprint_id' => null,
-        ]);
+        $sprint->cards()
+            ->where('company_id', $companyId)
+            ->where('status', '!=', 'done')
+            ->update(['sprint_id' => null]);
 
         return back()->with('success', 'Sprint completed successfully.');
     }
 
     public function destroy(Sprint $sprint)
     {
+        $companyId = $this->companyId();
+        abort_unless($sprint->company_id === $companyId, 403);
+
         // $this->authorize('update', $sprint->project);
 
         if ($sprint->status === 'active') {
-            return back()->with('error', 'Cannot delete an active sprint. Please complete it first.');
+            return back()->with('error', 'Cannot delete an active sprint.');
         }
 
-        // Remove sprint association from cards
-        $sprint->cards()->update(['sprint_id' => null]);
+        $sprint->cards()
+            ->where('company_id', $companyId)
+            ->update(['sprint_id' => null]);
 
         $sprint->delete();
 
-        return redirect()->route('agile.sprints.index', $sprint->project_id)
+        return redirect()
+            ->route('agile.sprints.index', $sprint->project_id)
             ->with('success', 'Sprint deleted successfully.');
     }
 }

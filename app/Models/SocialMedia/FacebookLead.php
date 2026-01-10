@@ -24,8 +24,9 @@ class FacebookLead extends Model
         'form_id',
         'field_data',
         'created_time',
-        'processed_at'
-    ];
+        'processed_at',
+        'company_id',
+];
 
     protected $casts = [
         'field_data' => 'array',
@@ -91,5 +92,16 @@ class FacebookLead extends Model
             $formatted[ucwords(str_replace('_', ' ', $key))] = $value;
         }
         return $formatted;
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

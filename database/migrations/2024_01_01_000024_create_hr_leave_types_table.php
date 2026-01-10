@@ -24,6 +24,8 @@ return new class extends Migration
             $table->boolean('carry_forward')->default(false);
             $table->integer('max_carry_forward_days')->nullable();
             $table->string('color', 7)->default('#3B82F6'); // Hex color for calendar display
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->boolean('is_active')->default(true);
             $table->json('rules')->nullable(); // Additional rules and conditions
             $table->timestamps();

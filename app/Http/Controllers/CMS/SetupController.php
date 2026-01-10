@@ -50,7 +50,7 @@ class SetupController extends Controller
         ]);
 
         foreach ($validated as $key => $value) {
-            Setting::set("cms.general.{$key}", $value);
+            Setting::set("company:" . currentCompanyId() . ".cms.general.{$key}", $value);
         }
 
         session()->flash('flash', [
@@ -84,7 +84,7 @@ class SetupController extends Controller
         ]);
 
         foreach ($validated as $key => $value) {
-            Setting::set("cms.content.{$key}", $value);
+            Setting::set("company:" . currentCompanyId() . ".cms.content.{$key}", $value);
         }
 
         session()->flash('flash', [
@@ -118,7 +118,7 @@ class SetupController extends Controller
         ]);
 
         foreach ($validated as $key => $value) {
-            Setting::set("cms.media.{$key}", $value);
+            Setting::set("company:" . currentCompanyId() . ".cms.media.{$key}", $value);
         }
 
         session()->flash('flash', [
@@ -152,7 +152,7 @@ class SetupController extends Controller
         ]);
 
         foreach ($validated as $key => $value) {
-            Setting::set("cms.seo.{$key}", $value);
+            Setting::set("company:" . currentCompanyId() . ".cms.seo.{$key}", $value);
         }
 
         session()->flash('flash', [
@@ -183,7 +183,7 @@ class SetupController extends Controller
         ]);
 
         foreach ($validated as $key => $value) {
-            Setting::set("cms.template.{$key}", $value);
+            Setting::set("company:" . currentCompanyId() . ".cms.template.{$key}", $value);
         }
 
         session()->flash('flash', [
@@ -214,7 +214,7 @@ class SetupController extends Controller
         ]);
 
         foreach ($validated as $key => $value) {
-            Setting::set("cms.cache.{$key}", $value);
+            Setting::set("company:" . currentCompanyId() . ".cms.cache.{$key}", $value);
         }
 
         session()->flash('flash', [
@@ -230,19 +230,20 @@ class SetupController extends Controller
      */
     private function getGeneralSettings(): array
     {
+        $prefix = "company:" . currentCompanyId() . ".cms.general.";
         return [
-            'site_name' => Setting::get('cms.general.site_name', 'TekRem ERP'),
-            'site_description' => Setting::get('cms.general.site_description', 'Technology Remedies Innovations'),
-            'site_keywords' => Setting::get('cms.general.site_keywords', 'ERP, Technology, Business Solutions'),
-            'default_language' => Setting::get('cms.general.default_language', 'en'),
-            'enable_multi_language' => Setting::get('cms.general.enable_multi_language', true),
-            'enable_versioning' => Setting::get('cms.general.enable_versioning', true),
-            'enable_comments' => Setting::get('cms.general.enable_comments', false),
-            'enable_ratings' => Setting::get('cms.general.enable_ratings', false),
-            'enable_social_sharing' => Setting::get('cms.general.enable_social_sharing', true),
-            'enable_search' => Setting::get('cms.general.enable_search', true),
-            'enable_analytics' => Setting::get('cms.general.enable_analytics', true),
-            'maintenance_mode' => Setting::get('cms.general.maintenance_mode', false),
+            'site_name' => Setting::get($prefix . 'site_name', 'TekRem ERP'),
+            'site_description' => Setting::get($prefix . 'site_description', 'Technology Remedies Innovations'),
+            'site_keywords' => Setting::get($prefix . 'site_keywords', 'ERP, Technology, Business Solutions'),
+            'default_language' => Setting::get($prefix . 'default_language', 'en'),
+            'enable_multi_language' => Setting::get($prefix . 'enable_multi_language', true),
+            'enable_versioning' => Setting::get($prefix . 'enable_versioning', true),
+            'enable_comments' => Setting::get($prefix . 'enable_comments', false),
+            'enable_ratings' => Setting::get($prefix . 'enable_ratings', false),
+            'enable_social_sharing' => Setting::get($prefix . 'enable_social_sharing', true),
+            'enable_search' => Setting::get($prefix . 'enable_search', true),
+            'enable_analytics' => Setting::get($prefix . 'enable_analytics', true),
+            'maintenance_mode' => Setting::get($prefix . 'maintenance_mode', false),
         ];
     }
 
@@ -251,19 +252,20 @@ class SetupController extends Controller
      */
     private function getContentSettings(): array
     {
+        $prefix = "company:" . currentCompanyId() . ".cms.content.";
         return [
-            'enable_rich_editor' => Setting::get('cms.content.enable_rich_editor', true),
-            'enable_code_editor' => Setting::get('cms.content.enable_code_editor', true),
-            'enable_markdown' => Setting::get('cms.content.enable_markdown', true),
-            'enable_auto_save' => Setting::get('cms.content.enable_auto_save', true),
-            'auto_save_interval' => Setting::get('cms.content.auto_save_interval', 60),
-            'enable_content_approval' => Setting::get('cms.content.enable_content_approval', false),
-            'enable_content_scheduling' => Setting::get('cms.content.enable_content_scheduling', true),
-            'enable_content_expiry' => Setting::get('cms.content.enable_content_expiry', false),
-            'enable_content_templates' => Setting::get('cms.content.enable_content_templates', true),
-            'enable_content_categories' => Setting::get('cms.content.enable_content_categories', true),
-            'enable_content_tags' => Setting::get('cms.content.enable_content_tags', true),
-            'max_revisions' => Setting::get('cms.content.max_revisions', 10),
+            'enable_rich_editor' => Setting::get($prefix . 'enable_rich_editor', true),
+            'enable_code_editor' => Setting::get($prefix . 'enable_code_editor', true),
+            'enable_markdown' => Setting::get($prefix . 'enable_markdown', true),
+            'enable_auto_save' => Setting::get($prefix . 'enable_auto_save', true),
+            'auto_save_interval' => Setting::get($prefix . 'auto_save_interval', 60),
+            'enable_content_approval' => Setting::get($prefix . 'enable_content_approval', false),
+            'enable_content_scheduling' => Setting::get($prefix . 'enable_content_scheduling', true),
+            'enable_content_expiry' => Setting::get($prefix . 'enable_content_expiry', false),
+            'enable_content_templates' => Setting::get($prefix . 'enable_content_templates', true),
+            'enable_content_categories' => Setting::get($prefix . 'enable_content_categories', true),
+            'enable_content_tags' => Setting::get($prefix . 'enable_content_tags', true),
+            'max_revisions' => Setting::get($prefix . 'max_revisions', 10),
         ];
     }
 
@@ -272,19 +274,20 @@ class SetupController extends Controller
      */
     private function getMediaSettings(): array
     {
+        $prefix = "company:" . currentCompanyId() . ".cms.media.";
         return [
-            'enable_media_library' => Setting::get('cms.media.enable_media_library', true),
-            'enable_image_optimization' => Setting::get('cms.media.enable_image_optimization', true),
-            'enable_thumbnail_generation' => Setting::get('cms.media.enable_thumbnail_generation', true),
-            'enable_image_resizing' => Setting::get('cms.media.enable_image_resizing', true),
-            'max_upload_size' => Setting::get('cms.media.max_upload_size', 10),
-            'allowed_file_types' => Setting::get('cms.media.allowed_file_types', ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx']),
-            'image_quality' => Setting::get('cms.media.image_quality', 85),
-            'thumbnail_sizes' => Setting::get('cms.media.thumbnail_sizes', ['150x150', '300x300', '600x400']),
-            'enable_cdn' => Setting::get('cms.media.enable_cdn', false),
-            'cdn_url' => Setting::get('cms.media.cdn_url', ''),
-            'enable_watermark' => Setting::get('cms.media.enable_watermark', false),
-            'watermark_position' => Setting::get('cms.media.watermark_position', 'bottom-right'),
+            'enable_media_library' => Setting::get($prefix . 'enable_media_library', true),
+            'enable_image_optimization' => Setting::get($prefix . 'enable_image_optimization', true),
+            'enable_thumbnail_generation' => Setting::get($prefix . 'enable_thumbnail_generation', true),
+            'enable_image_resizing' => Setting::get($prefix . 'enable_image_resizing', true),
+            'max_upload_size' => Setting::get($prefix . 'max_upload_size', 10),
+            'allowed_file_types' => Setting::get($prefix . 'allowed_file_types', ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx']),
+            'image_quality' => Setting::get($prefix . 'image_quality', 85),
+            'thumbnail_sizes' => Setting::get($prefix . 'thumbnail_sizes', ['150x150', '300x300', '600x400']),
+            'enable_cdn' => Setting::get($prefix . 'enable_cdn', false),
+            'cdn_url' => Setting::get($prefix . 'cdn_url', ''),
+            'enable_watermark' => Setting::get($prefix . 'enable_watermark', false),
+            'watermark_position' => Setting::get($prefix . 'watermark_position', 'bottom-right'),
         ];
     }
 
@@ -293,19 +296,20 @@ class SetupController extends Controller
      */
     private function getSEOSettings(): array
     {
+        $prefix = "company:" . currentCompanyId() . ".cms.seo.";
         return [
-            'enable_seo_analysis' => Setting::get('cms.seo.enable_seo_analysis', true),
-            'enable_meta_tags' => Setting::get('cms.seo.enable_meta_tags', true),
-            'enable_open_graph' => Setting::get('cms.seo.enable_open_graph', true),
-            'enable_twitter_cards' => Setting::get('cms.seo.enable_twitter_cards', true),
-            'enable_schema_markup' => Setting::get('cms.seo.enable_schema_markup', true),
-            'enable_sitemap' => Setting::get('cms.seo.enable_sitemap', true),
-            'enable_robots_txt' => Setting::get('cms.seo.enable_robots_txt', true),
-            'auto_generate_meta' => Setting::get('cms.seo.auto_generate_meta', true),
-            'meta_title_format' => Setting::get('cms.seo.meta_title_format', '{title} | {site_name}'),
-            'meta_description_format' => Setting::get('cms.seo.meta_description_format', '{excerpt}'),
-            'enable_breadcrumbs' => Setting::get('cms.seo.enable_breadcrumbs', true),
-            'enable_canonical_urls' => Setting::get('cms.seo.enable_canonical_urls', true),
+            'enable_seo_analysis' => Setting::get($prefix . 'enable_seo_analysis', true),
+            'enable_meta_tags' => Setting::get($prefix . 'enable_meta_tags', true),
+            'enable_open_graph' => Setting::get($prefix . 'enable_open_graph', true),
+            'enable_twitter_cards' => Setting::get($prefix . 'enable_twitter_cards', true),
+            'enable_schema_markup' => Setting::get($prefix . 'enable_schema_markup', true),
+            'enable_sitemap' => Setting::get($prefix . 'enable_sitemap', true),
+            'enable_robots_txt' => Setting::get($prefix . 'enable_robots_txt', true),
+            'auto_generate_meta' => Setting::get($prefix . 'auto_generate_meta', true),
+            'meta_title_format' => Setting::get($prefix . 'meta_title_format', '{title} | {site_name}'),
+            'meta_description_format' => Setting::get($prefix . 'meta_description_format', '{excerpt}'),
+            'enable_breadcrumbs' => Setting::get($prefix . 'enable_breadcrumbs', true),
+            'enable_canonical_urls' => Setting::get($prefix . 'enable_canonical_urls', true),
         ];
     }
 
@@ -314,16 +318,17 @@ class SetupController extends Controller
      */
     private function getTemplateSettings(): array
     {
+        $prefix = "company:" . currentCompanyId() . ".cms.template.";
         return [
-            'enable_custom_templates' => Setting::get('cms.template.enable_custom_templates', true),
-            'enable_template_inheritance' => Setting::get('cms.template.enable_template_inheritance', true),
-            'enable_template_caching' => Setting::get('cms.template.enable_template_caching', true),
-            'enable_template_minification' => Setting::get('cms.template.enable_template_minification', false),
-            'default_template' => Setting::get('cms.template.default_template', 'default'),
-            'enable_theme_customization' => Setting::get('cms.template.enable_theme_customization', true),
-            'enable_css_customization' => Setting::get('cms.template.enable_css_customization', true),
-            'enable_js_customization' => Setting::get('cms.template.enable_js_customization', true),
-            'template_cache_duration' => Setting::get('cms.template.template_cache_duration', 60),
+            'enable_custom_templates' => Setting::get($prefix . 'enable_custom_templates', true),
+            'enable_template_inheritance' => Setting::get($prefix . 'enable_template_inheritance', true),
+            'enable_template_caching' => Setting::get($prefix . 'enable_template_caching', true),
+            'enable_template_minification' => Setting::get($prefix . 'enable_template_minification', false),
+            'default_template' => Setting::get($prefix . 'default_template', 'default'),
+            'enable_theme_customization' => Setting::get($prefix . 'enable_theme_customization', true),
+            'enable_css_customization' => Setting::get($prefix . 'enable_css_customization', true),
+            'enable_js_customization' => Setting::get($prefix . 'enable_js_customization', true),
+            'template_cache_duration' => Setting::get($prefix . 'template_cache_duration', 60),
         ];
     }
 
@@ -332,16 +337,17 @@ class SetupController extends Controller
      */
     private function getCacheSettings(): array
     {
+        $prefix = "company:" . currentCompanyId() . ".cms.cache.";
         return [
-            'enable_page_caching' => Setting::get('cms.cache.enable_page_caching', true),
-            'enable_database_caching' => Setting::get('cms.cache.enable_database_caching', true),
-            'enable_asset_caching' => Setting::get('cms.cache.enable_asset_caching', true),
-            'cache_duration' => Setting::get('cms.cache.cache_duration', 60),
-            'enable_cache_compression' => Setting::get('cms.cache.enable_cache_compression', true),
-            'enable_browser_caching' => Setting::get('cms.cache.enable_browser_caching', true),
-            'browser_cache_duration' => Setting::get('cms.cache.browser_cache_duration', 24),
-            'enable_cache_purging' => Setting::get('cms.cache.enable_cache_purging', true),
-            'auto_purge_on_update' => Setting::get('cms.cache.auto_purge_on_update', true),
+            'enable_page_caching' => Setting::get($prefix . 'enable_page_caching', true),
+            'enable_database_caching' => Setting::get($prefix . 'enable_database_caching', true),
+            'enable_asset_caching' => Setting::get($prefix . 'enable_asset_caching', true),
+            'cache_duration' => Setting::get($prefix . 'cache_duration', 60),
+            'enable_cache_compression' => Setting::get($prefix . 'enable_cache_compression', true),
+            'enable_browser_caching' => Setting::get($prefix . 'enable_browser_caching', true),
+            'browser_cache_duration' => Setting::get($prefix . 'browser_cache_duration', 24),
+            'enable_cache_purging' => Setting::get($prefix . 'enable_cache_purging', true),
+            'auto_purge_on_update' => Setting::get($prefix . 'auto_purge_on_update', true),
         ];
     }
 }

@@ -18,7 +18,8 @@ class ModuleBilling extends Model
         'billing_date',
         'due_date',
         'payment_method',
-    ];
+        'company_id',
+];
 
     public function company()
     {

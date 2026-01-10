@@ -38,7 +38,8 @@ class Transaction extends Model
         'reconciliation_notes',
         'debit_account_code',
         'credit_account_code',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -241,5 +242,16 @@ class Transaction extends Model
             })
             ->orderByRaw('ABS(DATEDIFF(transaction_date, ?)) ASC', [$transactionDate])
             ->get();
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

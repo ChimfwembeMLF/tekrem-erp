@@ -16,7 +16,8 @@ class BoardColumn extends Model
         'order',
         'color',
         'is_done_column',
-    ];
+        'company_id',
+];
 
     /**
      * Get the company that owns the board column.
@@ -38,5 +39,10 @@ class BoardColumn extends Model
     public function cards()
     {
         return $this->hasMany(BoardCard::class, 'column_id');
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

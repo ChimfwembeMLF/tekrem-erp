@@ -46,25 +46,25 @@ class DashboardController extends Controller
     {
         return [
             'pages' => [
-                'total' => Page::count(),
-                'published' => Page::published()->count(),
-                'draft' => Page::draft()->count(),
-                'scheduled' => Page::scheduled()->count(),
+                'total' => Page::where('company_id', currentCompanyId())->count(),
+                'published' => Page::published()->where('company_id', currentCompanyId())->count(),
+                'draft' => Page::draft()->where('company_id', currentCompanyId())->count(),
+                'scheduled' => Page::scheduled()->where('company_id', currentCompanyId())->count(),
             ],
             'media' => [
-                'total' => Media::count(),
-                'total_size' => Media::sum('file_size'),
-                'images' => Media::images()->count(),
-                'documents' => Media::documents()->count(),
+                'total' => Media::where('company_id', currentCompanyId())->count(),
+                'total_size' => Media::where('company_id', currentCompanyId())->sum('file_size'),
+                'images' => Media::images()->where('company_id', currentCompanyId())->count(),
+                'documents' => Media::documents()->where('company_id', currentCompanyId())->count(),
             ],
             'templates' => [
-                'total' => Template::count(),
-                'active' => Template::active()->count(),
+                'total' => Template::where('company_id', currentCompanyId())->count(),
+                'active' => Template::active()->where('company_id', currentCompanyId())->count(),
             ],
             'redirects' => [
-                'total' => Redirect::count(),
-                'active' => Redirect::active()->count(),
-                'total_hits' => Redirect::sum('hit_count'),
+                'total' => Redirect::where('company_id', currentCompanyId())->count(),
+                'active' => Redirect::active()->where('company_id', currentCompanyId())->count(),
+                'total_hits' => Redirect::where('company_id', currentCompanyId())->sum('hit_count'),
             ],
         ];
     }
@@ -75,6 +75,7 @@ class DashboardController extends Controller
     private function getRecentActivity(): array
     {
         $recentPages = Page::with(['author'])
+            ->where('company_id', currentCompanyId())
             ->orderBy('updated_at', 'desc')
             ->limit(10)
             ->get()
@@ -90,6 +91,7 @@ class DashboardController extends Controller
             });
 
         $recentMedia = Media::with(['uploadedBy'])
+            ->where('company_id', currentCompanyId())
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get()
@@ -121,6 +123,7 @@ class DashboardController extends Controller
                 DB::raw('DATE(updated_at) as date'),
                 DB::raw('SUM(view_count) as views')
             )
+            ->where('company_id', currentCompanyId())
             ->where('updated_at', '>=', now()->subDays(30))
             ->groupBy('date')
             ->orderBy('date')
@@ -134,6 +137,7 @@ class DashboardController extends Controller
 
         // Top performing pages
         $topPages = Page::published()
+            ->where('company_id', currentCompanyId())
             ->orderBy('view_count', 'desc')
             ->limit(10)
             ->get(['id', 'title', 'slug', 'view_count'])
@@ -148,14 +152,15 @@ class DashboardController extends Controller
 
         // Content by status
         $contentByStatus = [
-            'published' => Page::published()->count(),
-            'draft' => Page::draft()->count(),
-            'scheduled' => Page::scheduled()->count(),
-            'archived' => Page::where('status', 'archived')->count(),
+            'published' => Page::published()->where('company_id', currentCompanyId())->count(),
+            'draft' => Page::draft()->where('company_id', currentCompanyId())->count(),
+            'scheduled' => Page::scheduled()->where('company_id', currentCompanyId())->count(),
+            'archived' => Page::where('status', 'archived')->where('company_id', currentCompanyId())->count(),
         ];
 
         // SEO scores distribution
         $seoScores = Page::whereNotNull('meta_title')
+            ->where('company_id', currentCompanyId())
             ->get()
             ->map(function ($page) {
                 // Calculate basic SEO score
@@ -254,7 +259,7 @@ class DashboardController extends Controller
         ];
 
         // Check storage space
-        $storageUsed = Media::sum('file_size');
+        $storageUsed = Media::where('company_id', currentCompanyId())->sum('file_size');
         $storageLimit = 1024 * 1024 * 1024 * 10; // 10GB limit
         $storagePercentage = ($storageUsed / $storageLimit) * 100;
 
@@ -267,6 +272,7 @@ class DashboardController extends Controller
 
         // Check for pages without SEO
         $pagesWithoutSEO = Page::published()
+            ->where('company_id', currentCompanyId())
             ->where(function ($query) {
                 $query->whereNull('meta_title')
                       ->orWhereNull('meta_description');
@@ -283,6 +289,7 @@ class DashboardController extends Controller
 
         // Check for broken redirects
         $brokenRedirects = Redirect::active()
+            ->where('company_id', currentCompanyId())
             ->where('hit_count', 0)
             ->where('created_at', '<', now()->subDays(30))
             ->count();
@@ -296,7 +303,8 @@ class DashboardController extends Controller
         ];
 
         // Check for large media files
-        $largeMediaFiles = Media::where('file_size', '>', 5 * 1024 * 1024)->count(); // > 5MB
+        $largeMediaFiles = Media::where('company_id', currentCompanyId())
+            ->where('file_size', '>', 5 * 1024 * 1024)->count(); // > 5MB
 
         $health['checks']['media'] = [
             'status' => $largeMediaFiles > 10 ? 'warning' : 'healthy',

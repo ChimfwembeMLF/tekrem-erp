@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('card_id');
             $table->unsignedBigInteger('user_id');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->tinyInteger('vote')->default(1); // 1 for upvote, -1 for downvote
             $table->timestamps();
 

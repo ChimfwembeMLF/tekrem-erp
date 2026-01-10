@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('communications', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('company_id')->nullable();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->string('type'); // email, call, meeting, note
             $table->text('content');
             $table->string('subject')->nullable();
@@ -23,8 +24,6 @@ return new class extends Migration
             $table->nullableMorphs('communicable'); // For client or lead
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
             $table->timestamps();
-
-            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
         });
     }
 

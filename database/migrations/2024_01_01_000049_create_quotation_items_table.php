@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('quotation_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('quotation_id')->constrained()->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->text('description');
             $table->integer('quantity')->default(1);
             $table->decimal('unit_price', 15, 2);

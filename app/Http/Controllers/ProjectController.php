@@ -24,22 +24,24 @@ class ProjectController extends Controller
     public function dashboard()
     {
         $user = Auth::user();
+        $companyId = $user->company_id;
 
         // Check if analytics is enabled
         $analyticsEnabled = Setting::get('projects.general.enable_project_analytics', true);
 
-        // Get analytics data
+        // Get analytics data scoped to company
         $analytics = $analyticsEnabled ? [
-            'total_projects' => Project::count(),
-            'active_projects' => Project::where('status', 'active')->count(),
-            'completed_projects' => Project::where('status', 'completed')->count(),
-            'overdue_projects' => Project::overdue()->count(),
-            'total_budget' => Project::sum('budget'),
-            'total_spent' => Project::sum('spent_amount'),
+            'total_projects' => Project::where('company_id', $companyId)->count(),
+            'active_projects' => Project::where('company_id', $companyId)->where('status', 'active')->count(),
+            'completed_projects' => Project::where('company_id', $companyId)->where('status', 'completed')->count(),
+            'overdue_projects' => Project::where('company_id', $companyId)->overdue()->count(),
+            'total_budget' => Project::where('company_id', $companyId)->sum('budget'),
+            'total_spent' => Project::where('company_id', $companyId)->sum('spent_amount'),
         ] : null;
 
         // Get recent projects
         $recentProjects = Project::with(['client', 'manager'])
+            ->where('company_id', $companyId)
             ->latest()
             ->limit(5)
             ->get()
@@ -53,6 +55,7 @@ class ProjectController extends Controller
 
         // Get overdue projects
         $overdueProjects = Project::with(['client', 'manager'])
+            ->where('company_id', $companyId)
             ->overdue()
             ->limit(5)
             ->get()
@@ -66,6 +69,7 @@ class ProjectController extends Controller
 
         // Get upcoming deadlines (next 30 days)
         $upcomingDeadlines = Project::with(['client', 'manager'])
+            ->where('company_id', $companyId)
             ->where('deadline', '>=', now())
             ->where('deadline', '<=', now()->addDays(30))
             ->whereNotIn('status', ['completed', 'cancelled'])
@@ -95,6 +99,10 @@ class ProjectController extends Controller
      */
     public function generateAIMilestonesApi(Project $project, AIService $aiService, Request $request): JsonResponse
     {
+        $user = Auth::user();
+        if ($project->company_id !== $user->company_id) {
+            abort(404);
+        }
         $promptData = [
             'name' => $project->name,
             'description' => $project->description,
@@ -175,7 +183,10 @@ class ProjectController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Project::with(['client', 'manager', 'milestones']);
+        $user = Auth::user();
+        $companyId = $user->company_id;
+        $query = Project::with(['client', 'manager', 'milestones'])
+            ->where('company_id', $companyId);
 
         // Apply filters
         if ($request->filled('search')) {
@@ -357,6 +368,10 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
+        $user = Auth::user();
+        if ($project->company_id !== $user->company_id) {
+            abort(404);
+        }
         $project->load([
             'client',
             'manager',
@@ -425,6 +440,10 @@ class ProjectController extends Controller
      */
     public function edit(Project $project)
     {
+        $user = Auth::user();
+        if ($project->company_id !== $user->company_id) {
+            abort(404);
+        }
         $project->load('projectTags');
         $clients = Client::select('id', 'name', 'company')->get();
 
@@ -475,6 +494,10 @@ class ProjectController extends Controller
      */
     public function update(Request $request, Project $project)
     {
+        $user = Auth::user();
+        if ($project->company_id !== $user->company_id) {
+            abort(404);
+        }
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -521,6 +544,10 @@ class ProjectController extends Controller
      */
     public function destroy(Project $project)
     {
+        $user = Auth::user();
+        if ($project->company_id !== $user->company_id) {
+            abort(404);
+        }
         $project->delete();
 
         return redirect()->route('projects.index')
@@ -532,6 +559,10 @@ class ProjectController extends Controller
      */
     public function kanban(Project $project)
     {
+        $user = Auth::user();
+        if ($project->company_id !== $user->company_id) {
+            abort(404);
+        }
         $project->load(['milestones.assignee']);
 
         return Inertia::render('Projects/Kanban', [

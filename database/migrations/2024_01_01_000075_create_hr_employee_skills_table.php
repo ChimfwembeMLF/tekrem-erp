@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('employee_id')->constrained('hr_employees')->onDelete('cascade');
             $table->foreignId('skill_id')->constrained('hr_skills')->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->integer('proficiency_level')->default(1); // 1-5 or based on skill configuration
             $table->date('acquired_date')->nullable();
             $table->date('last_assessed_date')->nullable();

@@ -26,6 +26,8 @@ class AIConversationExportController extends Controller
             abort(403, 'Unauthorized. Admin access required.');
         }
 
+        $companyId = currentCompanyId();
+
         $validator = Validator::make($request->all(), [
             'format' => 'string|in:json,csv,excel,ml-training',
             'date_from' => 'nullable|date',
@@ -45,7 +47,7 @@ class AIConversationExportController extends Controller
         $filters = $this->buildFilters($request);
         $dateRange = $this->getDateRange($request);
 
-        $conversations = $this->getAIConversations($dateRange, $filters);
+        $conversations = $this->getAIConversations($dateRange, $filters, null, $companyId);
 
         $format = $request->get('format', 'json');
         $filename = "ai_conversations_export_" . now()->format('Y-m-d_H-i-s');
@@ -67,15 +69,16 @@ class AIConversationExportController extends Controller
             abort(403, 'Unauthorized. Admin access required.');
         }
 
+        $companyId = currentCompanyId();
         $dateRange = $this->getDateRange($request);
 
         $stats = [
-            'total_ai_conversations' => $this->getTotalAIConversations($dateRange),
-            'ai_services_breakdown' => $this->getAIServicesBreakdown($dateRange),
-            'conversation_outcomes' => $this->getConversationOutcomes($dateRange),
-            'average_conversation_length' => $this->getAverageConversationLength($dateRange),
-            'most_active_periods' => $this->getMostActivePeriods($dateRange),
-            'ai_response_effectiveness' => $this->getAIResponseEffectiveness($dateRange),
+            'total_ai_conversations' => $this->getTotalAIConversations($dateRange, [], $companyId),
+            'ai_services_breakdown' => $this->getAIServicesBreakdown($dateRange, $companyId),
+            'conversation_outcomes' => $this->getConversationOutcomes($dateRange, $companyId),
+            'average_conversation_length' => $this->getAverageConversationLength($dateRange, $companyId),
+            'most_active_periods' => $this->getMostActivePeriods($dateRange, $companyId),
+            'ai_response_effectiveness' => $this->getAIResponseEffectiveness($dateRange, $companyId),
         ];
 
         return response()->json($stats);
@@ -90,14 +93,15 @@ class AIConversationExportController extends Controller
             abort(403, 'Unauthorized. Admin access required.');
         }
 
+        $companyId = currentCompanyId();
         $filters = $this->buildFilters($request);
         $dateRange = $this->getDateRange($request);
 
-        $conversations = $this->getAIConversations($dateRange, $filters, 5); // Limit to 5 for preview
+        $conversations = $this->getAIConversations($dateRange, $filters, 5, $companyId); // Limit to 5 for preview
 
         return response()->json([
             'preview_data' => $conversations,
-            'total_conversations' => $this->getTotalAIConversations($dateRange, $filters),
+            'total_conversations' => $this->getTotalAIConversations($dateRange, $filters, $companyId),
             'estimated_file_size' => $this->estimateFileSize($conversations),
         ]);
     }
@@ -136,12 +140,17 @@ class AIConversationExportController extends Controller
     /**
      * Get AI conversations with filters.
      */
-    private function getAIConversations(array $dateRange, array $filters, ?int $limit = null): array
+    private function getAIConversations(array $dateRange, array $filters, ?int $limit = null, $companyId = null): array
     {
         $query = Conversation::whereBetween('conversations.created_at', [$dateRange['start'], $dateRange['end']])
             ->with(['messages' => function ($query) {
                 $query->orderBy('created_at', 'asc');
             }, 'conversable']);
+
+        // Multi-tenancy: restrict to company_id
+        if ($companyId) {
+            $query->where('company_id', $companyId);
+        }
 
         // Filter for guest conversations that have AI responses
         $query->where('conversable_type', GuestSession::class)
@@ -410,13 +419,17 @@ class AIConversationExportController extends Controller
     /**
      * Get total AI conversations count.
      */
-    private function getTotalAIConversations(array $dateRange, array $filters = []): int
+    private function getTotalAIConversations(array $dateRange, array $filters = [], $companyId = null): int
     {
         $query = Conversation::whereBetween('conversations.created_at', [$dateRange['start'], $dateRange['end']])
             ->where('conversable_type', GuestSession::class)
             ->whereHas('messages', function ($q) {
                 $q->whereJsonContains('metadata->is_ai_response', true);
             });
+
+        if ($companyId) {
+            $query->where('company_id', $companyId);
+        }
 
         if (!empty($filters['ai_service'])) {
             $query->whereHas('messages', function ($q) use ($filters) {
@@ -430,11 +443,14 @@ class AIConversationExportController extends Controller
     /**
      * Get AI services breakdown.
      */
-    private function getAIServicesBreakdown(array $dateRange): array
+    private function getAIServicesBreakdown(array $dateRange, $companyId = null): array
     {
-        $messages = Chat::whereHas('conversation', function ($q) use ($dateRange) {
+        $messages = Chat::whereHas('conversation', function ($q) use ($dateRange, $companyId) {
             $q->whereBetween('created_at', [$dateRange['start'], $dateRange['end']])
               ->where('conversable_type', GuestSession::class);
+            if ($companyId) {
+                $q->where('company_id', $companyId);
+            }
         })
         ->whereJsonContains('metadata->is_ai_response', true)
         ->get();
@@ -451,14 +467,17 @@ class AIConversationExportController extends Controller
     /**
      * Get conversation outcomes.
      */
-    private function getConversationOutcomes(array $dateRange): array
+    private function getConversationOutcomes(array $dateRange, $companyId = null): array
     {
-        return Conversation::whereBetween('conversations.created_at', [$dateRange['start'], $dateRange['end']])
+        $query = Conversation::whereBetween('conversations.created_at', [$dateRange['start'], $dateRange['end']])
             ->where('conversable_type', GuestSession::class)
             ->whereHas('messages', function ($q) {
                 $q->whereJsonContains('metadata->is_ai_response', true);
-            })
-            ->selectRaw('status, COUNT(*) as count')
+            });
+        if ($companyId) {
+            $query->where('company_id', $companyId);
+        }
+        return $query->selectRaw('status, COUNT(*) as count')
             ->groupBy('status')
             ->pluck('count', 'status')
             ->toArray();
@@ -467,15 +486,17 @@ class AIConversationExportController extends Controller
     /**
      * Get average conversation length.
      */
-    private function getAverageConversationLength(array $dateRange): float
+    private function getAverageConversationLength(array $dateRange, $companyId = null): float
     {
-        $conversations = Conversation::whereBetween('conversations.created_at', [$dateRange['start'], $dateRange['end']])
+        $query = Conversation::whereBetween('conversations.created_at', [$dateRange['start'], $dateRange['end']])
             ->where('conversable_type', GuestSession::class)
             ->whereHas('messages', function ($q) {
                 $q->whereJsonContains('metadata->is_ai_response', true);
-            })
-            ->withCount('messages')
-            ->get();
+            });
+        if ($companyId) {
+            $query->where('company_id', $companyId);
+        }
+        $conversations = $query->withCount('messages')->get();
 
         return $conversations->avg('messages_count') ?? 0;
     }
@@ -483,14 +504,17 @@ class AIConversationExportController extends Controller
     /**
      * Get most active periods.
      */
-    private function getMostActivePeriods(array $dateRange): array
+    private function getMostActivePeriods(array $dateRange, $companyId = null): array
     {
-        $conversations = Conversation::whereBetween('conversations.created_at', [$dateRange['start'], $dateRange['end']])
+        $query = Conversation::whereBetween('conversations.created_at', [$dateRange['start'], $dateRange['end']])
             ->where('conversable_type', GuestSession::class)
             ->whereHas('messages', function ($q) {
                 $q->whereJsonContains('metadata->is_ai_response', true);
-            })
-            ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
+            });
+        if ($companyId) {
+            $query->where('company_id', $companyId);
+        }
+        $conversations = $query->selectRaw('DATE(created_at) as date, COUNT(*) as count')
             ->groupBy('date')
             ->orderBy('count', 'desc')
             ->limit(10)
@@ -503,17 +527,22 @@ class AIConversationExportController extends Controller
     /**
      * Get AI response effectiveness (placeholder).
      */
-    private function getAIResponseEffectiveness(array $dateRange): array
+    private function getAIResponseEffectiveness(array $dateRange, $companyId = null): array
     {
         // This would analyze conversation outcomes, response times, etc.
         // For now, return basic metrics
+        $totalAIResponses = Chat::whereHas('conversation', function ($q) use ($dateRange, $companyId) {
+            $q->whereBetween('created_at', [$dateRange['start'], $dateRange['end']])
+              ->where('conversable_type', GuestSession::class);
+            if ($companyId) {
+                $q->where('company_id', $companyId);
+            }
+        })
+        ->whereJsonContains('metadata->is_ai_response', true)
+        ->count();
+
         return [
-            'total_ai_responses' => Chat::whereHas('conversation', function ($q) use ($dateRange) {
-                $q->whereBetween('created_at', [$dateRange['start'], $dateRange['end']])
-                  ->where('conversable_type', GuestSession::class);
-            })
-            ->whereJsonContains('metadata->is_ai_response', true)
-            ->count(),
+            'total_ai_responses' => $totalAIResponses,
             'conversations_resolved_by_ai' => 0, // Would need additional tracking
             'average_response_time_seconds' => 0, // Would need response time tracking
         ];

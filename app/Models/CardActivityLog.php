@@ -14,7 +14,8 @@ class CardActivityLog extends Model
         'user_id',
         'action',
         'meta',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'meta' => 'array',
@@ -28,5 +29,16 @@ class CardActivityLog extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

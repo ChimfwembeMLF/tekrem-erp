@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('hr_payrolls', function (Blueprint $table) {
             $table->id();
             $table->foreignId('employee_id')->constrained('hr_employees')->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->string('period');
             $table->decimal('amount', 15, 2);
             $table->timestamps();

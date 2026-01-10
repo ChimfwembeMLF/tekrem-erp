@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('epic_id')->nullable()->constrained('epics')->nullOnDelete();
             $table->enum('type', ['product', 'sprint'])->default('product');
             $table->foreignId('sprint_id')->nullable()->constrained('sprints')->nullOnDelete();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->string('title');
             $table->text('description')->nullable();
             $table->integer('priority')->default(0); // Higher number = higher priority

@@ -14,8 +14,9 @@ return new class extends Migration
         Schema::create('linked_in_leads', function (Blueprint $table) {
             $table->id();
             $table->foreignId('lead_id')->constrained()->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->string('linkedin_profile_id')->unique();
-            $table->string('company_id')->nullable(); // LinkedIn company ID
+            $table->string('linkedin_company_id')->nullable(); // LinkedIn company ID
             $table->string('first_name');
             $table->string('last_name');
             $table->string('headline')->nullable();

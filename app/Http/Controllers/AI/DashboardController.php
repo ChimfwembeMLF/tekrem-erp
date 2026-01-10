@@ -18,31 +18,33 @@ class DashboardController extends Controller
      */
     public function index(Request $request)
     {
+        $companyId = session('current_company_id');
         // Get overview statistics
         $stats = [
-            'total_services' => Service::enabled()->count(),
-            'total_models' => AIModel::enabled()->count(),
-            'total_conversations' => Conversation::active()->count(),
-            'total_templates' => PromptTemplate::count(),
+            'total_services' => Service::enabled()->where('company_id', $companyId)->count(),
+            'total_models' => AIModel::enabled()->where('company_id', $companyId)->count(),
+            'total_conversations' => Conversation::active()->where('company_id', $companyId)->count(),
+            'total_templates' => PromptTemplate::where('company_id', $companyId)->count(),
         ];
 
         // Get recent usage statistics
-        $usageStats = UsageLog::getUsageStats('7 days');
+        $usageStats = UsageLog::getUsageStats('7 days', null, $companyId);
 
         // Get recent conversations
         $recentConversations = Conversation::with(['user', 'aiModel.service'])
             ->active()
+            ->where('company_id', $companyId)
             ->latest()
             ->limit(5)
             ->get();
 
         // Get popular templates
-        $popularTemplates = PromptTemplate::getPopular(5);
+        $popularTemplates = PromptTemplate::where('company_id', $companyId)->getPopular(5);
 
         // Get enabled services with their status and usage
-        $services = Service::enabled()->orderBy('priority')->get()->map(function ($service) {
+        $services = Service::enabled()->where('company_id', $companyId)->orderBy('priority')->get()->map(function ($service) use ($companyId) {
             $connectionTest = $service->testConnection();
-            $usageStats = $service->getUsageStats('24 hours');
+            $usageStats = $service->getUsageStats('24 hours', $companyId);
 
             return [
                 'id' => $service->id,
@@ -59,20 +61,20 @@ class DashboardController extends Controller
         });
 
         // Get daily usage for the last 7 days
-        $dailyUsage = UsageLog::getDailyUsage('7 days');
+        $dailyUsage = UsageLog::getDailyUsage('7 days', null, $companyId);
 
         // Get usage by operation type
-        $usageByOperation = UsageLog::getUsageByOperation('30 days');
+        $usageByOperation = UsageLog::getUsageByOperation('30 days', null, $companyId);
 
         // Get quick stats for today vs yesterday
-        $quickStats = $this->getQuickStatsData();
+        $quickStats = $this->getQuickStatsData($companyId);
 
         // Prepare analytics data structure
         $analytics = [
             'overview' => $usageStats,
             'daily_usage' => $dailyUsage,
             'usage_by_operation' => $usageByOperation->pluck('count', 'operation_type')->toArray(),
-            'usage_by_model' => UsageLog::getUsageByModel('30 days')->pluck('count', 'ai_model_id')->toArray(),
+            'usage_by_model' => UsageLog::getUsageByModel('30 days', null, $companyId)->pluck('count', 'ai_model_id')->toArray(),
         ];
 
         return Inertia::render('AI/Analytics/Dashboard', [
@@ -88,7 +90,8 @@ class DashboardController extends Controller
      */
     public function serviceStatus()
     {
-        $services = Service::enabled()->get();
+        $companyId = session('current_company_id');
+        $services = Service::enabled()->where('company_id', $companyId)->get();
         $status = [];
 
         foreach ($services as $service) {
@@ -98,7 +101,7 @@ class DashboardController extends Controller
                 'provider' => $service->provider,
                 'is_default' => $service->is_default,
                 'status' => $service->testConnection(),
-                'usage' => $service->getUsageStats('24 hours'),
+                'usage' => $service->getUsageStats('24 hours', $companyId),
             ];
         }
 
@@ -112,12 +115,13 @@ class DashboardController extends Controller
     {
         $period = $request->get('period', '30 days');
         $userId = $request->get('user_id');
+        $companyId = session('current_company_id');
 
         $data = [
-            'overview' => UsageLog::getUsageStats($period, $userId),
-            'daily_usage' => UsageLog::getDailyUsage($period, $userId),
-            'usage_by_operation' => UsageLog::getUsageByOperation($period, $userId),
-            'usage_by_model' => UsageLog::getUsageByModel($period, $userId),
+            'overview' => UsageLog::getUsageStats($period, $userId, $companyId),
+            'daily_usage' => UsageLog::getDailyUsage($period, $userId, $companyId),
+            'usage_by_operation' => UsageLog::getUsageByOperation($period, $userId, $companyId),
+            'usage_by_model' => UsageLog::getUsageByModel($period, $userId, $companyId),
         ];
 
         return response()->json($data);
@@ -131,8 +135,8 @@ class DashboardController extends Controller
         $request->validate([
             'service_id' => 'required|exists:ai_services,id'
         ]);
-
-        $service = Service::findOrFail($request->service_id);
+        $companyId = session('current_company_id');
+        $service = Service::where('company_id', $companyId)->findOrFail($request->service_id);
         $result = $service->testConnection();
 
         return response()->json($result);
@@ -141,13 +145,13 @@ class DashboardController extends Controller
     /**
      * Get quick stats data for dashboard.
      */
-    private function getQuickStatsData()
+    private function getQuickStatsData($companyId = null)
     {
         $today = now()->startOfDay();
         $yesterday = now()->subDay()->startOfDay();
 
-        $todayStats = UsageLog::where('created_at', '>=', $today)->get();
-        $yesterdayStats = UsageLog::whereBetween('created_at', [$yesterday, $today])->get();
+        $todayStats = UsageLog::where('created_at', '>=', $today)->where('company_id', $companyId)->get();
+        $yesterdayStats = UsageLog::whereBetween('created_at', [$yesterday, $today])->where('company_id', $companyId)->get();
 
         $stats = [
             'today' => [
@@ -184,7 +188,8 @@ class DashboardController extends Controller
      */
     public function quickStats()
     {
-        return response()->json($this->getQuickStatsData());
+        $companyId = session('current_company_id');
+        return response()->json($this->getQuickStatsData($companyId));
     }
 
     /**

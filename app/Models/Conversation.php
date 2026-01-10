@@ -32,7 +32,8 @@ class Conversation extends Model
         'unread_count',
         'is_internal',
         'metadata',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -244,5 +245,16 @@ class Conversation extends Model
             'urgent' => 'red',
             default => 'blue',
         };
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

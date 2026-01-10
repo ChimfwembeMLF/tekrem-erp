@@ -31,7 +31,8 @@ class Attendance extends Model
         'is_manual_entry',
         'approved_by',
         'approved_at',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'date' => 'date',
@@ -303,5 +304,16 @@ class Attendance extends Model
                 }
             }
         });
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

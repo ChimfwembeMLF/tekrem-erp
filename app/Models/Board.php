@@ -18,7 +18,8 @@ class Board extends Model
         'owner_id',
         'visibility',
         'settings',
-    ];
+        'company_id',
+];
 
     /**
      * Get the company that owns the board.
@@ -70,5 +71,10 @@ class Board extends Model
     public function invitations()
     {
         return $this->hasMany(BoardInvitation::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

@@ -11,7 +11,8 @@ class OnboardingController extends Controller
 {
     public function index()
     {
-        $onboardings = Onboarding::all();
+        $companyId = currentCompanyId();
+        $onboardings = Onboarding::where('company_id', $companyId)->get();
         return Inertia::render('HR/Onboarding/Index', [
             'onboardings' => $onboardings,
         ]);
@@ -19,7 +20,8 @@ class OnboardingController extends Controller
 
     public function create()
     {
-        $employees = \App\Models\HR\Employee::with('user')->get()->map(function ($employee) {
+        $companyId = currentCompanyId();
+        $employees = \App\Models\HR\Employee::with('user')->where('company_id', $companyId)->get()->map(function ($employee) {
             return [
                 'id' => $employee->id,
                 'employee_id' => $employee->employee_id,
@@ -34,17 +36,23 @@ class OnboardingController extends Controller
 
     public function store(Request $request)
     {
+        $companyId = currentCompanyId();
         $data = $request->validate([
             'employee_id' => 'required|integer',
             'start_date' => 'required|date',
             'status' => 'required|string',
         ]);
+        $data['company_id'] = $companyId;
         Onboarding::create($data);
         return redirect()->route('hr.onboarding.index')->with('success', 'Onboarding created.');
     }
 
     public function show(Onboarding $onboarding)
     {
+        $companyId = currentCompanyId();
+        if ($onboarding->company_id !== $companyId) {
+            abort(403);
+        }
         return Inertia::render('HR/Onboarding/Show', [
             'onboarding' => $onboarding,
         ]);
@@ -52,7 +60,11 @@ class OnboardingController extends Controller
 
     public function edit(Onboarding $onboarding)
     {
-        $employees = \App\Models\HR\Employee::with('user')->get()->map(function ($employee) {
+        $companyId = currentCompanyId();
+        if ($onboarding->company_id !== $companyId) {
+            abort(403);
+        }
+        $employees = \App\Models\HR\Employee::with('user')->where('company_id', $companyId)->get()->map(function ($employee) {
             return [
                 'id' => $employee->id,
                 'employee_id' => $employee->employee_id,
@@ -68,6 +80,10 @@ class OnboardingController extends Controller
 
     public function update(Request $request, Onboarding $onboarding)
     {
+        $companyId = currentCompanyId();
+        if ($onboarding->company_id !== $companyId) {
+            abort(403);
+        }
         $data = $request->validate([
             'employee_id' => 'required|integer',
             'start_date' => 'required|date',
@@ -79,6 +95,10 @@ class OnboardingController extends Controller
 
     public function destroy(Onboarding $onboarding)
     {
+        $companyId = currentCompanyId();
+        if ($onboarding->company_id !== $companyId) {
+            abort(403);
+        }
         $onboarding->delete();
         return redirect()->route('hr.onboarding.index')->with('success', 'Onboarding deleted.');
     }

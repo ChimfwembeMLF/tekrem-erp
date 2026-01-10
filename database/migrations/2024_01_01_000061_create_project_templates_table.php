@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('name');
             $table->text('description')->nullable();
             $table->string('category')->nullable();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             
             // Template configuration
             $table->json('template_data'); // Milestones, team roles, budget, etc.

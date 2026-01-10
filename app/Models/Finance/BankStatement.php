@@ -33,7 +33,8 @@ class BankStatement extends Model
         'imported_by',
         'imported_at',
         'user_id',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -204,5 +205,16 @@ class BankStatement extends Model
             (int) substr($lastStatement->statement_number, -3) + 1 : 1;
         
         return $prefix . '-' . $date . '-' . str_pad($sequence, 3, '0', STR_PAD_LEFT);
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

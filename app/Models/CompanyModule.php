@@ -16,7 +16,7 @@ class CompanyModule extends Model
         'expires_at',
         'status',
         'settings',
-    ];
+];
 
     protected $casts = [
         'settings' => 'array',
@@ -32,5 +32,10 @@ class CompanyModule extends Model
     public function module()
     {
         return $this->belongsTo(Module::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

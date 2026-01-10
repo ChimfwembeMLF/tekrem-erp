@@ -19,7 +19,8 @@ class TransactionController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Transaction::where('user_id', auth()->id())
+        $companyId = currentCompanyId();
+        $query = Transaction::where('company_id', $companyId)
             ->with(['account', 'category', 'transferToAccount', 'invoice', 'expense']);
 
         // Search functionality
@@ -62,12 +63,13 @@ class TransactionController extends Controller
         $transactions = $query->latest('transaction_date')->paginate(15)->withQueryString();
 
         // Get filter options
-        $accounts = Account::where('user_id', auth()->id())
+        $accounts = Account::where('company_id', $companyId)
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        $categories = Category::where('is_active', true)
+        $categories = Category::where('company_id', $companyId)
+            ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'type', 'color']);
 
@@ -98,12 +100,14 @@ class TransactionController extends Controller
      */
     public function create(Request $request)
     {
-        $accounts = Account::where('user_id', auth()->id())
+        $companyId = currentCompanyId();
+        $accounts = Account::where('company_id', $companyId)
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'currency']);
 
-        $categories = Category::where('is_active', true)
+        $categories = Category::where('company_id', $companyId)
+            ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'type', 'color']);
 
@@ -121,7 +125,7 @@ class TransactionController extends Controller
         // Pre-fill account if provided
         $selectedAccount = null;
         if ($request->filled('account')) {
-            $selectedAccount = Account::where('user_id', auth()->id())
+            $selectedAccount = Account::where('company_id', $companyId)
                 ->where('id', $request->account)
                 ->first();
         }
@@ -140,6 +144,7 @@ class TransactionController extends Controller
      */
     public function store(Request $request)
     {
+        $companyId = currentCompanyId();
         $validator = Validator::make($request->all(), [
             'type' => 'required|string|in:income,expense,transfer',
             'amount' => 'required|numeric|min:0.01',
@@ -165,19 +170,19 @@ class TransactionController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
-        // Verify account ownership
+        // Verify account ownership and company
         $account = Account::where('id', $request->account_id)
-            ->where('user_id', auth()->id())
+            ->where('company_id', $companyId)
             ->first();
 
         if (!$account) {
             return back()->with('error', 'Account not found or access denied.');
         }
 
-        // Verify transfer account ownership if applicable
+        // Verify transfer account ownership and company if applicable
         if ($request->transfer_to_account_id) {
             $transferAccount = Account::where('id', $request->transfer_to_account_id)
-                ->where('user_id', auth()->id())
+                ->where('company_id', $companyId)
                 ->first();
 
             if (!$transferAccount) {
@@ -185,7 +190,7 @@ class TransactionController extends Controller
             }
         }
 
-        DB::transaction(function () use ($request, $account) {
+        DB::transaction(function () use ($request, $account, $companyId) {
             // Create the transaction
             $transaction = Transaction::create([
                 'type' => $request->type,
@@ -198,6 +203,7 @@ class TransactionController extends Controller
                 'category_id' => $request->category_id,
                 'transfer_to_account_id' => $request->transfer_to_account_id,
                 'user_id' => auth()->id(),
+                'company_id' => $companyId,
             ]);
 
             // Update account balances if transaction is completed
@@ -220,8 +226,8 @@ class TransactionController extends Controller
      */
     public function show(Transaction $transaction)
     {
-        // Ensure user can only view their own transactions
-        if ($transaction->user_id !== auth()->id()) {
+        // Ensure user can only view their own transactions and company
+        if ($transaction->company_id !== currentCompanyId()) {
             abort(403);
         }
 
@@ -237,17 +243,19 @@ class TransactionController extends Controller
      */
     public function edit(Transaction $transaction)
     {
-        // Ensure user can only edit their own transactions
-        if ($transaction->user_id !== auth()->id()) {
+        // Ensure user can only edit their own transactions and company
+        if ($transaction->company_id !== currentCompanyId()) {
             abort(403);
         }
 
-        $accounts = Account::where('user_id', auth()->id())
+        $companyId = currentCompanyId();
+        $accounts = Account::where('company_id', $companyId)
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'currency']);
 
-        $categories = Category::where('is_active', true)
+        $categories = Category::where('company_id', $companyId)
+            ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'type', 'color']);
 
@@ -277,11 +285,12 @@ class TransactionController extends Controller
      */
     public function update(Request $request, Transaction $transaction)
     {
-        // Ensure user can only update their own transactions
-        if ($transaction->user_id !== auth()->id()) {
+        // Ensure user can only update their own transactions and company
+        if ($transaction->company_id !== currentCompanyId()) {
             abort(403);
         }
 
+        $companyId = currentCompanyId();
         $validator = Validator::make($request->all(), [
             'type' => 'required|string|in:income,expense,transfer',
             'amount' => 'required|numeric|min:0.01',
@@ -307,19 +316,19 @@ class TransactionController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
-        // Verify account ownership
+        // Verify account ownership and company
         $account = Account::where('id', $request->account_id)
-            ->where('user_id', auth()->id())
+            ->where('company_id', $companyId)
             ->first();
 
         if (!$account) {
             return back()->with('error', 'Account not found or access denied.');
         }
 
-        // Verify transfer account ownership if applicable
+        // Verify transfer account ownership and company if applicable
         if ($request->transfer_to_account_id) {
             $transferAccount = Account::where('id', $request->transfer_to_account_id)
-                ->where('user_id', auth()->id())
+                ->where('company_id', $companyId)
                 ->first();
 
             if (!$transferAccount) {
@@ -327,7 +336,7 @@ class TransactionController extends Controller
             }
         }
 
-        DB::transaction(function () use ($request, $transaction, $account) {
+        DB::transaction(function () use ($request, $transaction, $account, $companyId) {
             // Store old account IDs for balance updates
             $oldAccountId = $transaction->account_id;
             $oldTransferAccountId = $transaction->transfer_to_account_id;
@@ -344,6 +353,7 @@ class TransactionController extends Controller
                 'account_id' => $request->account_id,
                 'category_id' => $request->category_id,
                 'transfer_to_account_id' => $request->transfer_to_account_id,
+                'company_id' => $companyId,
             ]);
 
             // Update account balances
@@ -386,8 +396,8 @@ class TransactionController extends Controller
      */
     public function destroy(Transaction $transaction)
     {
-        // Ensure user can only delete their own transactions
-        if ($transaction->user_id !== auth()->id()) {
+        // Ensure user can only delete their own transactions and company
+        if ($transaction->company_id !== currentCompanyId()) {
             abort(403);
         }
 

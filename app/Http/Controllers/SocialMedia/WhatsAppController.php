@@ -18,11 +18,17 @@ class WhatsAppController extends Controller
         $this->whatsAppService = $whatsAppService;
     }
 
+    protected function getCompanyId()
+    {
+        return currentCompanyId();
+    }
+
     public function index(): Response
     {
-        $accounts = $this->whatsAppService->getAccounts();
-        $messages = $this->whatsAppService->getRecentMessages();
-        $stats = $this->whatsAppService->getStats();
+        $companyId = $this->getCompanyId();
+        $accounts = $this->whatsAppService->getAccounts($companyId);
+        $messages = $this->whatsAppService->getRecentMessages($companyId);
+        $stats = $this->whatsAppService->getStats($companyId);
         return Inertia::render('SocialMedia/WhatsApp/Index', [
             'accounts' => $accounts,
             'messages' => $messages,
@@ -32,25 +38,29 @@ class WhatsAppController extends Controller
 
     public function syncAccounts(Request $request): JsonResponse
     {
-        $result = $this->whatsAppService->syncAccounts();
+        $companyId = $this->getCompanyId();
+        $result = $this->whatsAppService->syncAccounts($companyId);
         return response()->json($result);
     }
 
     public function sendMessage(Request $request): JsonResponse
     {
-        $message = $this->whatsAppService->sendMessage($request->all());
+        $companyId = $this->getCompanyId();
+        $message = $this->whatsAppService->sendMessage(array_merge($request->all(), ['company_id' => $companyId]));
         return response()->json($message);
     }
 
     public function getAnalytics(): JsonResponse
     {
-        $analytics = $this->whatsAppService->getAnalytics();
+        $companyId = $this->getCompanyId();
+        $analytics = $this->whatsAppService->getAnalytics($companyId);
         return response()->json($analytics);
     }
 
     public function testConnection(): JsonResponse
     {
-        $result = $this->whatsAppService->testConnection();
+        $companyId = $this->getCompanyId();
+        $result = $this->whatsAppService->testConnection($companyId);
         return response()->json($result);
     }
 }

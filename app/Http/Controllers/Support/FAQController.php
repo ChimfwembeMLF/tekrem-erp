@@ -16,12 +16,18 @@ use Inertia\Response;
 
 class FAQController extends Controller
 {
+    protected function getCompanyId()
+    {
+        return currentCompanyId();
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request): Response
     {
-        $query = FAQ::query()
+        $companyId = $this->getCompanyId();
+        $query = FAQ::where('company_id', $companyId)
             ->with(['category', 'author'])
             ->when($request->search, function ($query, $search) {
                 $query->search($search);
@@ -38,7 +44,7 @@ class FAQController extends Controller
 
         $faqs = $query->ordered()->paginate(15)->withQueryString();
 
-        $categories = KnowledgeBaseCategory::active()->ordered()->get(['id', 'name']);
+        $categories = KnowledgeBaseCategory::where('company_id', $companyId)->active()->ordered()->get(['id', 'name']);
 
         return Inertia::render('Support/FAQ/Index', [
             'faqs' => $faqs,
@@ -52,7 +58,8 @@ class FAQController extends Controller
      */
     public function create(): Response
     {
-        $categories = KnowledgeBaseCategory::active()->ordered()->get();
+        $companyId = $this->getCompanyId();
+        $categories = KnowledgeBaseCategory::where('company_id', $companyId)->active()->ordered()->get();
 
         return Inertia::render('Support/FAQ/Create', [
             'categories' => $categories,
@@ -64,6 +71,7 @@ class FAQController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $companyId = $this->getCompanyId();
         $validated = $request->validate([
             'question' => ['required', 'string', 'max:500'],
             'answer' => ['required', 'string'],
@@ -75,6 +83,7 @@ class FAQController extends Controller
         ]);
 
         $validated['author_id'] = Auth::id();
+        $validated['company_id'] = $companyId;
 
         $faq = FAQ::create($validated);
 
@@ -96,6 +105,10 @@ class FAQController extends Controller
      */
     public function show(FAQ $faq): Response
     {
+        $companyId = $this->getCompanyId();
+        if ($faq->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $faq->load(['category', 'author']);
 
         // Increment view count
@@ -103,6 +116,7 @@ class FAQController extends Controller
 
         // Get related FAQs
         $relatedFAQs = FAQ::published()
+            ->where('company_id', $companyId)
             ->where('id', '!=', $faq->id)
             ->when($faq->category_id, function ($query) use ($faq) {
                 $query->where('category_id', $faq->category_id);
@@ -121,7 +135,11 @@ class FAQController extends Controller
      */
     public function edit(FAQ $faq): Response
     {
-        $categories = KnowledgeBaseCategory::active()->ordered()->get();
+        $companyId = $this->getCompanyId();
+        if ($faq->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
+        $categories = KnowledgeBaseCategory::where('company_id', $companyId)->active()->ordered()->get();
 
         return Inertia::render('Support/FAQ/Edit', [
             'faq' => $faq,
@@ -134,6 +152,10 @@ class FAQController extends Controller
      */
     public function update(Request $request, FAQ $faq): RedirectResponse
     {
+        $companyId = $this->getCompanyId();
+        if ($faq->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $validated = $request->validate([
             'question' => ['required', 'string', 'max:500'],
             'answer' => ['required', 'string'],
@@ -143,7 +165,6 @@ class FAQController extends Controller
             'tags' => ['nullable', 'array'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
         ]);
-
         $faq->update($validated);
 
         return redirect()->route('support.faq.show', $faq)
@@ -155,6 +176,10 @@ class FAQController extends Controller
      */
     public function destroy(FAQ $faq): RedirectResponse
     {
+        $companyId = $this->getCompanyId();
+        if ($faq->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $faq->delete();
 
         return redirect()->route('support.faq.index')
@@ -166,6 +191,10 @@ class FAQController extends Controller
      */
     public function publish(FAQ $faq): JsonResponse
     {
+        $companyId = $this->getCompanyId();
+        if ($faq->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $faq->update(['is_published' => true]);
 
         // Create notifications
@@ -183,6 +212,10 @@ class FAQController extends Controller
      */
     public function markHelpful(FAQ $faq): JsonResponse
     {
+        $companyId = $this->getCompanyId();
+        if ($faq->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $faq->markAsHelpful();
 
         return response()->json([
@@ -197,6 +230,10 @@ class FAQController extends Controller
      */
     public function markNotHelpful(FAQ $faq): JsonResponse
     {
+        $companyId = $this->getCompanyId();
+        if ($faq->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $faq->markAsNotHelpful();
 
         return response()->json([

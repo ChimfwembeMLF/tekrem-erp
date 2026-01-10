@@ -14,7 +14,8 @@ class BoardMember extends Model
         'user_id',
         'role',
         'joined_at',
-    ];
+        'company_id',
+];
 
     public function board()
     {
@@ -24,5 +25,16 @@ class BoardMember extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

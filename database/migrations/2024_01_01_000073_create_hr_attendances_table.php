@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('hr_attendances', function (Blueprint $table) {
             $table->id();
             $table->foreignId('employee_id')->constrained('hr_employees')->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->date('date');
             $table->time('clock_in')->nullable();
             $table->time('clock_out')->nullable();

@@ -36,7 +36,8 @@ class ZraSmartInvoice extends Model
         'last_submission_attempt',
         'is_test_mode',
         'notes',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -386,5 +387,16 @@ class ZraSmartInvoice extends Model
     public function isTestMode(): bool
     {
         return $this->is_test_mode;
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

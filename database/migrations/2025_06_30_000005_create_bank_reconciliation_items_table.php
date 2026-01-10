@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('bank_reconciliation_id')->constrained()->onDelete('cascade');
             $table->foreignId('bank_statement_transaction_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->foreignId('transaction_id')->nullable()->constrained()->onDelete('cascade'); // Link to internal transaction
             $table->string('match_type'); // matched, unmatched_bank, unmatched_book, manual_adjustment
             $table->string('match_method')->nullable(); // auto, manual, suggested

@@ -27,7 +27,8 @@ class Conversation extends Model
         'message_count',
         'last_message_at',
         'is_archived',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'messages' => 'array',
@@ -202,5 +203,15 @@ class Conversation extends Model
                     ->orderBy('last_message_at', 'desc')
                     ->limit($limit)
                     ->get();
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

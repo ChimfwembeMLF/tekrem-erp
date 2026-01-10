@@ -53,8 +53,9 @@ class AdvancedSettingsController extends Controller
                 ->withInput();
         }
 
+        $companyId = $this->getCompanyId();
         // Update system settings
-        $this->updateConfigSettings('system', $request->validated());
+        Setting::setForCompany($companyId, 'advanced_settings.system', $request->validated());
 
         session()->flash('flash', [
             'bannerStyle' => 'success',
@@ -91,8 +92,9 @@ class AdvancedSettingsController extends Controller
                 ->withInput();
         }
 
+        $companyId = $this->getCompanyId();
         // Update security settings
-        $this->updateConfigSettings('security', $request->validated());
+        Setting::setForCompany($companyId, 'advanced_settings.security', $request->validated());
 
         session()->flash('flash', [
             'bannerStyle' => 'success',
@@ -127,8 +129,9 @@ class AdvancedSettingsController extends Controller
                 ->withInput();
         }
 
+        $companyId = $this->getCompanyId();
         // Update performance settings
-        $this->updateConfigSettings('performance', $request->validated());
+        Setting::setForCompany($companyId, 'advanced_settings.performance', $request->validated());
 
         session()->flash('flash', [
             'bannerStyle' => 'success',
@@ -166,8 +169,9 @@ class AdvancedSettingsController extends Controller
                 ->withInput();
         }
 
+        $companyId = $this->getCompanyId();
         // Update integration settings
-        $this->updateConfigSettings('integrations', $request->validated());
+        Setting::setForCompany($companyId, 'advanced_settings.integrations', $request->validated());
 
         session()->flash('flash', [
             'bannerStyle' => 'success',
@@ -194,16 +198,17 @@ class AdvancedSettingsController extends Controller
                 ->withInput();
         }
 
+        $companyId = $this->getCompanyId();
         $platform = $request->input('platform');
         $enabled = $request->input('enabled', false);
         $settings = $request->input('settings', []);
 
         // Save the enabled status
-        Setting::set("integration.{$platform}.enabled", $enabled);
+        Setting::setForCompany($companyId, "integration.{$platform}.enabled", $enabled);
 
         // Save platform-specific settings
         foreach ($settings as $key => $value) {
-            Setting::set("integration.{$platform}.{$key}", $value);
+            Setting::setForCompany($companyId, "integration.{$platform}.{$key}", $value);
         }
 
         session()->flash('flash', [
@@ -231,16 +236,17 @@ class AdvancedSettingsController extends Controller
                 ->withInput();
         }
 
+        $companyId = $this->getCompanyId();
         $service = $request->input('service');
         $enabled = $request->input('enabled', false);
         $settings = $request->input('settings', []);
 
         // Save the enabled status
-        Setting::set("integration.{$service}.enabled", $enabled);
+        Setting::setForCompany($companyId, "integration.{$service}.enabled", $enabled);
 
         // Save service-specific settings
         foreach ($settings as $key => $value) {
-            Setting::set("integration.{$service}.{$key}", $value);
+            Setting::setForCompany($companyId, "integration.{$service}.{$key}", $value);
         }
 
         session()->flash('flash', [
@@ -541,6 +547,7 @@ class AdvancedSettingsController extends Controller
      */
     public function updateNotifications(Request $request): RedirectResponse
     {
+        $companyId = $this->getCompanyId();
         $validator = Validator::make($request->all(), [
             'email_notifications' => 'boolean',
             'push_notifications' => 'boolean',
@@ -566,9 +573,9 @@ class AdvancedSettingsController extends Controller
 
         $validated = $validator->validated();
 
-        // Save notification settings
+        // Save notification settings per company
         foreach ($validated as $key => $value) {
-            Setting::set("notifications.{$key}", $value);
+            Setting::setForCompany($companyId, "notifications.{$key}", $value);
         }
 
         session()->flash('flash', [
@@ -590,5 +597,10 @@ class AdvancedSettingsController extends Controller
 
         // You could also cache the settings for quick access
         Cache::put("advanced_settings_{$category}", $settings, 3600);
+    }
+
+    protected function getCompanyId()
+    {
+        return currentCompanyId();
     }
 }

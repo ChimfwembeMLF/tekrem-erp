@@ -13,7 +13,8 @@ class Label extends Model
         'board_id',
         'name',
         'color',
-    ];
+        'company_id',
+];
 
     public function board()
     {
@@ -23,5 +24,16 @@ class Label extends Model
     public function cards()
     {
         return $this->belongsToMany(BoardCard::class, 'card_label', 'label_id', 'card_id');
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

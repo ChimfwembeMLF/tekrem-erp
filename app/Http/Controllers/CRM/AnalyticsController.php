@@ -22,17 +22,18 @@ class AnalyticsController extends Controller
      */
     public function index(Request $request): Response
     {
+        $companyId = currentCompanyId();
         $dateRange = $this->getDateRange($request);
 
         return Inertia::render('CRM/Analytics/Dashboard', [
-            'overview' => $this->getOverviewMetrics($dateRange),
-            'leadMetrics' => $this->getLeadMetrics($dateRange),
-            'clientMetrics' => $this->getClientMetrics($dateRange),
-            'communicationMetrics' => $this->getCommunicationMetrics($dateRange),
-            'liveChatMetrics' => $this->getLiveChatMetrics($dateRange),
-            'conversionFunnel' => $this->getConversionFunnel($dateRange),
-            'timeSeriesData' => $this->getTimeSeriesData($dateRange),
-            'topPerformers' => $this->getTopPerformers($dateRange),
+            'overview' => $this->getOverviewMetrics($dateRange, $companyId),
+            'leadMetrics' => $this->getLeadMetrics($dateRange, $companyId),
+            'clientMetrics' => $this->getClientMetrics($dateRange, $companyId),
+            'communicationMetrics' => $this->getCommunicationMetrics($dateRange, $companyId),
+            'liveChatMetrics' => $this->getLiveChatMetrics($dateRange, $companyId),
+            'conversionFunnel' => $this->getConversionFunnel($dateRange, $companyId),
+            'timeSeriesData' => $this->getTimeSeriesData($dateRange, $companyId),
+            'topPerformers' => $this->getTopPerformers($dateRange, $companyId),
             'dateRange' => $dateRange,
         ]);
     }
@@ -50,6 +51,7 @@ class AnalyticsController extends Controller
      */
     public function generateReport(Request $request): JsonResponse
     {
+        $companyId = currentCompanyId();
         $validator = Validator::make($request->all(), [
             'reportType' => 'required|string|in:overview,leads,clients,communications,livechat,performance,conversion,revenue',
             'format' => 'required|string|in:pdf,excel,csv,json',
@@ -69,7 +71,7 @@ class AnalyticsController extends Controller
             'end' => Carbon::parse($request->input('dateRange.to'))->endOfDay(),
         ];
 
-        $reportData = $this->generateReportData($request->reportType, $dateRange, $request->all());
+        $reportData = $this->generateReportData($request->reportType, $dateRange, $request->all(), $companyId);
 
         $filename = "crm_{$request->reportType}_report_" . now()->format('Y-m-d_H-i-s');
 
@@ -93,17 +95,18 @@ class AnalyticsController extends Controller
      */
     public function export(Request $request)
     {
+        $companyId = currentCompanyId();
         $format = $request->get('format', 'csv');
         $type = $request->get('type', 'overview');
         $dateRange = $this->getDateRange($request);
 
         $data = match($type) {
-            'leads' => $this->getLeadExportData($dateRange),
-            'clients' => $this->getClientExportData($dateRange),
-            'communications' => $this->getCommunicationExportData($dateRange),
-            'livechat' => $this->getLiveChatExportData($dateRange),
-            'ai-conversations' => $this->getAIConversationExportData($dateRange, $this->getAIExportFilters($request)),
-            default => $this->getOverviewExportData($dateRange),
+            'leads' => $this->getLeadExportData($dateRange, $companyId),
+            'clients' => $this->getClientExportData($dateRange, $companyId),
+            'communications' => $this->getCommunicationExportData($dateRange, $companyId),
+            'livechat' => $this->getLiveChatExportData($dateRange, $companyId),
+            'ai-conversations' => $this->getAIConversationExportData($dateRange, $this->getAIExportFilters($request), $companyId),
+            default => $this->getOverviewExportData($dateRange, $companyId),
         };
 
         $filename = "crm_{$type}_analytics_" . now()->format('Y-m-d_H-i-s') . ".{$format}";
@@ -114,8 +117,7 @@ class AnalyticsController extends Controller
         }
 
         // Convert to CSV
-          // Convert to CSV
-          \Log::info('Export data:', $data); // This will log the array properly          
+        \Log::info('Export data:', $data); // This will log the array properly          
         $csv = $this->arrayToCsv($data);
 
         return response($csv)
@@ -144,24 +146,27 @@ class AnalyticsController extends Controller
         ];
     }
 
+    // Enforce multi-tenancy in all metrics, exports, and report methods
+    // All queries must be scoped to company_id
+
     /**
      * Get overview metrics.
      */
-    private function getOverviewMetrics(array $dateRange): array
+    private function getOverviewMetrics(array $dateRange, $companyId): array
     {
-        $totalLeads = Lead::whereBetween('created_at', [$dateRange['start'], $dateRange['end']])->count();
-        $totalClients = Client::whereBetween('created_at', [$dateRange['start'], $dateRange['end']])->count();
-        $totalCommunications = Communication::whereBetween('created_at', [$dateRange['start'], $dateRange['end']])->count();
-        $totalConversations = Conversation::whereBetween('created_at', [$dateRange['start'], $dateRange['end']])->count();
+        $totalLeads = Lead::where('company_id', $companyId)->whereBetween('created_at', [$dateRange['start'], $dateRange['end']])->count();
+        $totalClients = Client::where('company_id', $companyId)->whereBetween('created_at', [$dateRange['start'], $dateRange['end']])->count();
+        $totalCommunications = Communication::where('company_id', $companyId)->whereBetween('created_at', [$dateRange['start'], $dateRange['end']])->count();
+        $totalConversations = Conversation::where('company_id', $companyId)->whereBetween('created_at', [$dateRange['start'], $dateRange['end']])->count();
 
         // Previous period for comparison
         $previousStart = $dateRange['start']->copy()->subDays($dateRange['start']->diffInDays($dateRange['end']));
         $previousEnd = $dateRange['start']->copy()->subSecond();
 
-        $previousLeads = Lead::whereBetween('created_at', [$previousStart, $previousEnd])->count();
-        $previousClients = Client::whereBetween('created_at', [$previousStart, $previousEnd])->count();
-        $previousCommunications = Communication::whereBetween('created_at', [$previousStart, $previousEnd])->count();
-        $previousConversations = Conversation::whereBetween('created_at', [$previousStart, $previousEnd])->count();
+        $previousLeads = Lead::where('company_id', $companyId)->whereBetween('created_at', [$previousStart, $previousEnd])->count();
+        $previousClients = Client::where('company_id', $companyId)->whereBetween('created_at', [$previousStart, $previousEnd])->count();
+        $previousCommunications = Communication::where('company_id', $companyId)->whereBetween('created_at', [$previousStart, $previousEnd])->count();
+        $previousConversations = Conversation::where('companyId', $companyId)->whereBetween('created_at', [$previousStart, $previousEnd])->count();
 
         return [
             'totalLeads' => $totalLeads,
@@ -178,9 +183,9 @@ class AnalyticsController extends Controller
     /**
      * Get lead metrics.
      */
-    private function getLeadMetrics(array $dateRange): array
+    private function getLeadMetrics(array $dateRange, $companyId): array
     {
-        $leads = Lead::whereBetween('created_at', [$dateRange['start'], $dateRange['end']]);
+        $leads = Lead::where('company_id', $companyId)->whereBetween('created_at', [$dateRange['start'], $dateRange['end']]);
 
         $leadsByStatus = $leads->clone()
             ->select('status', DB::raw('count(*) as count'))
@@ -192,22 +197,22 @@ class AnalyticsController extends Controller
             ->groupBy('source')
             ->get();
 
-        $conversionRate = $this->getConversionRate($dateRange);
+        $conversionRate = $this->getConversionRate($dateRange, $companyId);
 
         return [
             'leadsByStatus' => $leadsByStatus,
             'leadsBySource' => $leadsBySource,
             'conversionRate' => $conversionRate,
-            'averageTimeToConversion' => $this->getAverageTimeToConversion($dateRange),
+            'averageTimeToConversion' => $this->getAverageTimeToConversion($dateRange, $companyId),
         ];
     }
 
     /**
      * Get client metrics.
      */
-    private function getClientMetrics(array $dateRange): array
+    private function getClientMetrics(array $dateRange, $companyId): array
     {
-        $clients = Client::whereBetween('created_at', [$dateRange['start'], $dateRange['end']]);
+        $clients = Client::where('company_id', $companyId)->whereBetween('created_at', [$dateRange['start'], $dateRange['end']]);
 
         $clientsByStatus = $clients->clone()
             ->select('status', DB::raw('count(*) as count'))
@@ -216,17 +221,17 @@ class AnalyticsController extends Controller
 
         return [
             'clientsByStatus' => $clientsByStatus,
-            'clientRetentionRate' => $this->getClientRetentionRate($dateRange),
-            'averageClientValue' => $this->getAverageClientValue($dateRange),
+            'clientRetentionRate' => $this->getClientRetentionRate($dateRange, $companyId),
+            'averageClientValue' => $this->getAverageClientValue($dateRange, $companyId),
         ];
     }
 
     /**
      * Get communication metrics.
      */
-    private function getCommunicationMetrics(array $dateRange): array
+    private function getCommunicationMetrics(array $dateRange, $companyId): array
     {
-        $communications = Communication::whereBetween('communications.created_at', [$dateRange['start'], $dateRange['end']]);
+        $communications = Communication::where('company_id', $companyId)->whereBetween('communications.created_at', [$dateRange['start'], $dateRange['end']]);
 
         $communicationsByType = $communications->clone()
             ->select('type', DB::raw('count(*) as count'))
@@ -244,17 +249,17 @@ class AnalyticsController extends Controller
         return [
             'communicationsByType' => $communicationsByType,
             'communicationsByUser' => $communicationsByUser,
-            'averageResponseTime' => $this->getAverageResponseTime($dateRange),
+            'averageResponseTime' => $this->getAverageResponseTime($dateRange, $companyId),
         ];
     }
 
     /**
      * Get LiveChat metrics.
      */
-    private function getLiveChatMetrics(array $dateRange): array
+    private function getLiveChatMetrics(array $dateRange, $companyId): array
     {
-        $conversations = Conversation::whereBetween('conversations.created_at', [$dateRange['start'], $dateRange['end']]);
-        $messages = Chat::whereBetween('chats.created_at', [$dateRange['start'], $dateRange['end']]);
+        $conversations = Conversation::where('company_id', $companyId)->whereBetween('conversations.created_at', [$dateRange['start'], $dateRange['end']]);
+        $messages = Chat::where('company_id', $companyId)->whereBetween('chats.created_at', [$dateRange['start'], $dateRange['end']]);
 
         $conversationsByStatus = $conversations->clone()
             ->select('status', DB::raw('count(*) as count'))
@@ -269,22 +274,22 @@ class AnalyticsController extends Controller
         return [
             'conversationsByStatus' => $conversationsByStatus,
             'messagesByType' => $messagesByType,
-            'averageConversationLength' => $this->getAverageConversationLength($dateRange),
-            'customerSatisfactionScore' => $this->getCustomerSatisfactionScore($dateRange),
+            'averageConversationLength' => $this->getAverageConversationLength($dateRange, $companyId),
+            'customerSatisfactionScore' => $this->getCustomerSatisfactionScore($dateRange, $companyId),
         ];
     }
 
     /**
      * Get conversion funnel data.
      */
-    private function getConversionFunnel(array $dateRange): array
+    private function getConversionFunnel(array $dateRange, $companyId): array
     {
-        $totalLeads = Lead::whereBetween('leads.created_at', [$dateRange['start'], $dateRange['end']])->count();
-        $qualifiedLeads = Lead::whereBetween('leads.created_at', [$dateRange['start'], $dateRange['end']])
+        $totalLeads = Lead::where('company_id', $companyId)->whereBetween('leads.created_at', [$dateRange['start'], $dateRange['end']])->count();
+        $qualifiedLeads = Lead::where('company_id', $companyId)->whereBetween('leads.created_at', [$dateRange['start'], $dateRange['end']])
             ->where('status', 'qualified')->count();
-        $convertedLeads = Lead::whereBetween('leads.created_at', [$dateRange['start'], $dateRange['end']])
+        $convertedLeads = Lead::where('company_id', $companyId)->whereBetween('leads.created_at', [$dateRange['start'], $dateRange['end']])
             ->whereNotNull('converted_to_client')->count();
-        $activeClients = Client::whereBetween('clients.created_at', [$dateRange['start'], $dateRange['end']])
+        $activeClients = Client::where('company_id', $companyId)->whereBetween('clients.created_at', [$dateRange['start'], $dateRange['end']])
             ->where('status', 'active')->count();
 
         return [
@@ -298,7 +303,7 @@ class AnalyticsController extends Controller
     /**
      * Get time series data for charts.
      */
-    private function getTimeSeriesData(array $dateRange): array
+    private function getTimeSeriesData(array $dateRange, $companyId): array
     {
         $days = [];
         $current = $dateRange['start']->copy();
@@ -309,10 +314,10 @@ class AnalyticsController extends Controller
 
             $days[] = [
                 'date' => $current->format('Y-m-d'),
-                'leads' => Lead::whereBetween('leads.created_at', [$dayStart, $dayEnd])->count(),
-                'clients' => Client::whereBetween('clients.created_at', [$dayStart, $dayEnd])->count(),
-                'communications' => Communication::whereBetween('communications.created_at', [$dayStart, $dayEnd])->count(),
-                'conversations' => Conversation::whereBetween('conversations.created_at', [$dayStart, $dayEnd])->count(),
+                'leads' => Lead::where('company_id', $companyId)->whereBetween('leads.created_at', [$dayStart, $dayEnd])->count(),
+                'clients' => Client::where('company_id', $companyId)->whereBetween('clients.created_at', [$dayStart, $dayEnd])->count(),
+                'communications' => Communication::where('company_id', $companyId)->whereBetween('communications.created_at', [$dayStart, $dayEnd])->count(),
+                'conversations' => Conversation::where('company_id', $companyId)->whereBetween('conversations.created_at', [$dayStart, $dayEnd])->count(),
             ];
 
             $current->addDay();
@@ -324,9 +329,9 @@ class AnalyticsController extends Controller
     /**
      * Get top performers.
      */
-    private function getTopPerformers(array $dateRange): array
+    private function getTopPerformers(array $dateRange, $companyId): array
     {
-        $topSalesUsers = Communication::whereBetween('communications.created_at', [$dateRange['start'], $dateRange['end']])
+        $topSalesUsers = Communication::where('company_id', $companyId)->whereBetween('communications.created_at', [$dateRange['start'], $dateRange['end']])
             ->join('users', 'communications.user_id', '=', 'users.id')
             ->select('users.name', DB::raw('count(*) as communications_count'))
             ->groupBy('users.id', 'users.name')
@@ -348,18 +353,18 @@ class AnalyticsController extends Controller
         return round((($current - $previous) / $previous) * 100, 2);
     }
 
-    private function getConversionRate(array $dateRange): float
+    private function getConversionRate(array $dateRange, $companyId): float
     {
-        $totalLeads = Lead::whereBetween('leads.created_at', [$dateRange['start'], $dateRange['end']])->count();
-        $convertedLeads = Lead::whereBetween('leads.created_at', [$dateRange['start'], $dateRange['end']])
+        $totalLeads = Lead::where('company_id', $companyId)->whereBetween('leads.created_at', [$dateRange['start'], $dateRange['end']])->count();
+        $convertedLeads = Lead::where('company_id', $companyId)->whereBetween('leads.created_at', [$dateRange['start'], $dateRange['end']])
             ->whereNotNull('converted_to_client')->count();
 
         return $totalLeads > 0 ? round(($convertedLeads / $totalLeads) * 100, 2) : 0;
     }
 
-    private function getAverageTimeToConversion(array $dateRange): float
+    private function getAverageTimeToConversion(array $dateRange, $companyId): float
     {
-        $convertedLeads = Lead::whereBetween('leads.created_at', [$dateRange['start'], $dateRange['end']])
+        $convertedLeads = Lead::where('company_id', $companyId)->whereBetween('leads.created_at', [$dateRange['start'], $dateRange['end']])
             ->whereNotNull('converted_to_client')
             ->whereNotNull('converted_at')
             ->get();
@@ -375,33 +380,33 @@ class AnalyticsController extends Controller
         return round($totalDays / $convertedLeads->count(), 2);
     }
 
-    private function getClientRetentionRate(array $dateRange): float
+    private function getClientRetentionRate(array $dateRange, $companyId): float
     {
         // This is a simplified calculation - you might want to implement more sophisticated retention logic
-        $totalClients = Client::where('created_at', '<', $dateRange['start'])->count();
-        $activeClients = Client::where('created_at', '<', $dateRange['start'])
+        $totalClients = Client::where('company_id', $companyId)->where('created_at', '<', $dateRange['start'])->count();
+        $activeClients = Client::where('company_id', $companyId)->where('created_at', '<', $dateRange['start'])
             ->where('status', 'active')->count();
 
         return $totalClients > 0 ? round(($activeClients / $totalClients) * 100, 2) : 0;
     }
 
-    private function getAverageClientValue(array $dateRange): float
+    private function getAverageClientValue(array $dateRange, $companyId): float
     {
         // This would typically come from your billing/finance module
         // For now, return a placeholder value
         return 0;
     }
 
-    private function getAverageResponseTime(array $dateRange): float
+    private function getAverageResponseTime(array $dateRange, $companyId): float
     {
         // This would require more sophisticated tracking of response times
         // For now, return a placeholder value
         return 0;
     }
 
-    private function getAverageConversationLength(array $dateRange): float
+    private function getAverageConversationLength(array $dateRange, $companyId): float
     {
-        $conversations = Conversation::whereBetween('conversations.created_at', [$dateRange['start'], $dateRange['end']])
+        $conversations = Conversation::where('company_id', $companyId)->whereBetween('conversations.created_at', [$dateRange['start'], $dateRange['end']])
             ->with('messages')
             ->get();
 
@@ -416,7 +421,7 @@ class AnalyticsController extends Controller
         return round($totalMessages / $conversations->count(), 2);
     }
 
-    private function getCustomerSatisfactionScore(array $dateRange): float
+    private function getCustomerSatisfactionScore(array $dateRange, $companyId): float
     {
         // This would typically come from customer feedback/ratings
         // For now, return a placeholder value
@@ -424,38 +429,38 @@ class AnalyticsController extends Controller
     }
 
     // Export helper methods
-    private function getOverviewExportData(array $dateRange): array
+    private function getOverviewExportData(array $dateRange, $companyId): array
     {
-        return $this->getOverviewMetrics($dateRange);
+        return $this->getOverviewMetrics($dateRange, $companyId);
     }
 
-    private function getLeadExportData(array $dateRange): array
+    private function getLeadExportData(array $dateRange, $companyId): array
     {
-        return Lead::whereBetween('leads.created_at', [$dateRange['start'], $dateRange['end']])
+        return Lead::where('company_id', $companyId)->whereBetween('leads.created_at', [$dateRange['start'], $dateRange['end']])
             ->with('user')
             ->get()
             ->toArray();
     }
 
-    private function getClientExportData(array $dateRange): array
+    private function getClientExportData(array $dateRange, $companyId): array
     {
-        return Client::whereBetween('clients.created_at', [$dateRange['start'], $dateRange['end']])
+        return Client::where('company_id', $companyId)->whereBetween('clients.created_at', [$dateRange['start'], $dateRange['end']])
             ->with('user')
             ->get()
             ->toArray();
     }
 
-    private function getCommunicationExportData(array $dateRange): array
+    private function getCommunicationExportData(array $dateRange, $companyId): array
     {
-        return Communication::whereBetween('communications.created_at', [$dateRange['start'], $dateRange['end']])
+        return Communication::where('company_id', $companyId)->whereBetween('communications.created_at', [$dateRange['start'], $dateRange['end']])
             ->with(['user', 'communicable'])
             ->get()
             ->toArray();
     }
 
-    private function getLiveChatExportData(array $dateRange): array
+    private function getLiveChatExportData(array $dateRange, $companyId): array
     {
-        return Conversation::whereBetween('conversations.created_at', [$dateRange['start'], $dateRange['end']])
+        return Conversation::where('company_id', $companyId)->whereBetween('conversations.created_at', [$dateRange['start'], $dateRange['end']])
             ->with(['messages', 'creator', 'assignee'])
             ->get()
             ->toArray();
@@ -464,9 +469,9 @@ class AnalyticsController extends Controller
     /**
      * Get AI conversation export data for ML training.
      */
-    private function getAIConversationExportData(array $dateRange, array $filters = []): array
+    private function getAIConversationExportData(array $dateRange, array $filters = [], $companyId = null): array
     {
-        $query = Conversation::whereBetween('conversations.created_at', [$dateRange['start'], $dateRange['end']])
+        $query = Conversation::where('company_id', $companyId)->whereBetween('conversations.created_at', [$dateRange['start'], $dateRange['end']])
             ->with(['messages' => function ($query) {
                 $query->orderBy('created_at', 'asc');
             }, 'conversable']);

@@ -13,6 +13,7 @@ return new class extends Migration
             $table->string('title');
             $table->string('file_path');
             $table->text('description')->nullable();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->timestamps();
         });
     }

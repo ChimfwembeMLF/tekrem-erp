@@ -40,32 +40,35 @@ class MomoController extends Controller
         $thisMonth = Carbon::now()->startOfMonth();
 
         // Get basic statistics
+        $companyId = currentCompanyId();
         $stats = [
             'today' => [
-                'transactions' => MomoTransaction::whereDate('created_at', $today)->count(),
-                'amount' => MomoTransaction::whereDate('created_at', $today)->sum('amount'),
-                'successful' => MomoTransaction::whereDate('created_at', $today)->where('status', 'completed')->count(),
+                'transactions' => MomoTransaction::where('company_id', $companyId)->whereDate('created_at', $today)->count(),
+                'amount' => MomoTransaction::where('company_id', $companyId)->whereDate('created_at', $today)->sum('amount'),
+                'successful' => MomoTransaction::where('company_id', $companyId)->whereDate('created_at', $today)->where('status', 'completed')->count(),
             ],
             'this_week' => [
-                'transactions' => MomoTransaction::where('created_at', '>=', $thisWeek)->count(),
-                'amount' => MomoTransaction::where('created_at', '>=', $thisWeek)->sum('amount'),
-                'successful' => MomoTransaction::where('created_at', '>=', $thisWeek)->where('status', 'completed')->count(),
+                'transactions' => MomoTransaction::where('company_id', $companyId)->where('created_at', '>=', $thisWeek)->count(),
+                'amount' => MomoTransaction::where('company_id', $companyId)->where('created_at', '>=', $thisWeek)->sum('amount'),
+                'successful' => MomoTransaction::where('company_id', $companyId)->where('created_at', '>=', $thisWeek)->where('status', 'completed')->count(),
             ],
             'this_month' => [
-                'transactions' => MomoTransaction::where('created_at', '>=', $thisMonth)->count(),
-                'amount' => MomoTransaction::where('created_at', '>=', $thisMonth)->sum('amount'),
-                'successful' => MomoTransaction::where('created_at', '>=', $thisMonth)->where('status', 'completed')->count(),
+                'transactions' => MomoTransaction::where('company_id', $companyId)->where('created_at', '>=', $thisMonth)->count(),
+                'amount' => MomoTransaction::where('company_id', $companyId)->where('created_at', '>=', $thisMonth)->sum('amount'),
+                'successful' => MomoTransaction::where('company_id', $companyId)->where('created_at', '>=', $thisMonth)->where('status', 'completed')->count(),
             ],
         ];
 
         // Get recent transactions
         $recentTransactions = MomoTransaction::with(['provider', 'user'])
+            ->where('company_id', $companyId)
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
 
         // Get provider statistics
         $providerStats = MomoTransaction::with('provider')
+            ->where('company_id', $companyId)
             ->where('created_at', '>=', $thisMonth)
             ->get()
             ->groupBy('provider.code')
@@ -82,6 +85,7 @@ class MomoController extends Controller
 
         // Get pending transactions that need attention
         $pendingTransactions = MomoTransaction::with(['provider', 'user'])
+            ->where('company_id', $companyId)
             ->whereIn('status', ['pending', 'processing'])
             ->orderBy('created_at', 'desc')
             ->limit(5)
@@ -100,7 +104,9 @@ class MomoController extends Controller
      */
     public function index(Request $request)
     {
+        $companyId = currentCompanyId();
         $query = MomoTransaction::with(['provider', 'user', 'invoice'])
+            ->where('company_id', $companyId)
             ->orderBy('created_at', 'desc');
 
         // Apply filters
@@ -135,7 +141,7 @@ class MomoController extends Controller
 
         $transactions = $query->paginate(20)->withQueryString();
 
-        $providers = MomoProvider::where('is_active', true)->get();
+        $providers = MomoProvider::where('company_id', $companyId)->where('is_active', true)->get();
 
         return Inertia::render('Finance/MoMo/Index', [
             'transactions' => $transactions,
@@ -149,6 +155,9 @@ class MomoController extends Controller
      */
     public function show(MomoTransaction $transaction)
     {
+        if ($transaction->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $transaction->load(['provider', 'user', 'invoice', 'webhooks']);
 
         return Inertia::render('Finance/MoMo/Show', [
@@ -161,11 +170,12 @@ class MomoController extends Controller
      */
     public function create(Request $request)
     {
-        $providers = MomoProvider::where('is_active', true)->get();
+        $companyId = currentCompanyId();
+        $providers = MomoProvider::where('company_id', $companyId)->where('is_active', true)->get();
         $invoice = null;
 
         if ($request->filled('invoice_id')) {
-            $invoice = Invoice::findOrFail($request->invoice_id);
+            $invoice = Invoice::where('company_id', $companyId)->findOrFail($request->invoice_id);
         }
 
         return Inertia::render('Finance/MoMo/Create', [
@@ -196,6 +206,7 @@ class MomoController extends Controller
         ]);
 
         $data['user_id'] = auth()->id();
+        $data['company_id'] = currentCompanyId();
 
         $result = $this->transactionService->initiatePayment($data);
 
@@ -229,6 +240,7 @@ class MomoController extends Controller
         ]);
 
         $data['user_id'] = auth()->id();
+        $data['company_id'] = currentCompanyId();
 
         $result = $this->transactionService->processPayout($data);
 
@@ -247,6 +259,9 @@ class MomoController extends Controller
      */
     public function checkStatus(MomoTransaction $transaction)
     {
+        if ($transaction->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $result = $this->transactionService->checkTransactionStatus($transaction);
 
         if ($result['success']) {
@@ -268,7 +283,8 @@ class MomoController extends Controller
      */
     public function reconciliation(Request $request)
     {
-        $providers = MomoProvider::where('is_active', true)->get();
+        $companyId = currentCompanyId();
+        $providers = MomoProvider::where('company_id', $companyId)->where('is_active', true)->get();
         $selectedProvider = null;
         $reconciliationData = null;
 
@@ -309,7 +325,7 @@ class MomoController extends Controller
             'end_date' => 'required|date|after_or_equal:start_date',
         ]);
 
-        $provider = MomoProvider::findOrFail($request->provider_id);
+        $provider = MomoProvider::where('company_id', currentCompanyId())->findOrFail($request->provider_id);
         $startDate = Carbon::parse($request->start_date);
         $endDate = Carbon::parse($request->end_date);
 
@@ -341,8 +357,13 @@ class MomoController extends Controller
             'action' => 'required|in:mark_reconciled,mark_unreconciled,check_status',
         ]);
 
+        $companyId = currentCompanyId();
+        $transactionIds = MomoTransaction::where('company_id', $companyId)
+            ->whereIn('id', $request->transaction_ids)
+            ->pluck('id')
+            ->toArray();
         $result = $this->reconciliationService->manualReconcile(
-            $request->transaction_ids,
+            $transactionIds,
             $request->action
         );
 
@@ -370,7 +391,8 @@ class MomoController extends Controller
         $auditReport = $this->auditService->generateAuditReport($filters);
         $webhookReport = $this->auditService->generateWebhookAuditReport($filters);
 
-        $providers = MomoProvider::where('is_active', true)->get();
+        $companyId = currentCompanyId();
+        $providers = MomoProvider::where('company_id', $companyId)->where('is_active', true)->get();
 
         return Inertia::render('Finance/MoMo/Audit', [
             'auditReport' => $auditReport,
@@ -398,7 +420,9 @@ class MomoController extends Controller
      */
     public function providers()
     {
+        $companyId = currentCompanyId();
         $providers = MomoProvider::with('cashAccount', 'feeAccount', 'receivableAccount')
+            ->where('company_id', $companyId)
             ->orderBy('display_name')
             ->get();
 
@@ -420,7 +444,9 @@ class MomoController extends Controller
             ? Carbon::parse($request->end_date) 
             : Carbon::now();
 
+        $companyId = currentCompanyId();
         $query = MomoTransaction::with('provider')
+            ->where('company_id', $companyId)
             ->whereBetween('created_at', [$startDate, $endDate]);
 
         $transactions = $query->get();

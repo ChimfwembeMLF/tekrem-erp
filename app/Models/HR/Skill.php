@@ -20,7 +20,8 @@ class Skill extends Model
         'proficiency_levels',
         'level_descriptions',
         'is_active',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'level_descriptions' => 'array',
@@ -296,5 +297,16 @@ class Skill extends Model
             ->where('id', '!=', $this->id)
             ->where('is_active', true)
             ->get();
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

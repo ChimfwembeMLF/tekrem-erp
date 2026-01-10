@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('zra_audit_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('zra_smart_invoice_id')->nullable()->constrained('zra_smart_invoices')->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->string('action'); // submit, approve, reject, cancel, retry, validate
             $table->string('status'); // success, failed, pending
             $table->json('request_data')->nullable();

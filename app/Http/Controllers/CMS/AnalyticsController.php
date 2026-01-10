@@ -72,15 +72,15 @@ class AnalyticsController extends Controller
     private function getOverviewStats(array $dateRange): array
     {
         return [
-            'total_pages' => Page::count(),
-            'published_pages' => Page::published()->count(),
-            'total_views' => Page::sum('view_count'),
-            'total_media' => Media::count(),
-            'media_size' => Media::sum('file_size'),
-            'active_redirects' => Redirect::active()->count(),
-            'redirect_hits' => Redirect::sum('hit_count'),
-            'new_pages' => Page::where('created_at', '>=', $dateRange['start'])->count(),
-            'updated_pages' => Page::where('updated_at', '>=', $dateRange['start'])
+            'total_pages' => Page::where('company_id', currentCompanyId())->count(),
+            'published_pages' => Page::published()->where('company_id', currentCompanyId())->count(),
+            'total_views' => Page::where('company_id', currentCompanyId())->sum('view_count'),
+            'total_media' => Media::where('company_id', currentCompanyId())->count(),
+            'media_size' => Media::where('company_id', currentCompanyId())->sum('file_size'),
+            'active_redirects' => Redirect::active()->where('company_id', currentCompanyId())->count(),
+            'redirect_hits' => Redirect::where('company_id', currentCompanyId())->sum('hit_count'),
+            'new_pages' => Page::where('company_id', currentCompanyId())->where('created_at', '>=', $dateRange['start'])->count(),
+            'updated_pages' => Page::where('company_id', currentCompanyId())->where('updated_at', '>=', $dateRange['start'])
                 ->where('updated_at', '!=', DB::raw('created_at'))
                 ->count(),
         ];
@@ -93,14 +93,15 @@ class AnalyticsController extends Controller
     {
         // Content by status
         $contentByStatus = [
-            'published' => Page::published()->count(),
-            'draft' => Page::draft()->count(),
-            'scheduled' => Page::scheduled()->count(),
-            'archived' => Page::where('status', 'archived')->count(),
+            'published' => Page::published()->where('company_id', currentCompanyId())->count(),
+            'draft' => Page::draft()->where('company_id', currentCompanyId())->count(),
+            'scheduled' => Page::scheduled()->where('company_id', currentCompanyId())->count(),
+            'archived' => Page::where('status', 'archived')->where('company_id', currentCompanyId())->count(),
         ];
 
         // Content by template
-        $contentByTemplate = Page::select('template', DB::raw('count(*) as count'))
+        $contentByTemplate = Page::where('company_id', currentCompanyId())
+            ->select('template', DB::raw('count(*) as count'))
             ->groupBy('template')
             ->orderBy('count', 'desc')
             ->get()
@@ -108,7 +109,8 @@ class AnalyticsController extends Controller
             ->toArray();
 
         // Content by language
-        $contentByLanguage = Page::select('language', DB::raw('count(*) as count'))
+        $contentByLanguage = Page::where('company_id', currentCompanyId())
+            ->select('language', DB::raw('count(*) as count'))
             ->groupBy('language')
             ->orderBy('count', 'desc')
             ->get()
@@ -116,7 +118,8 @@ class AnalyticsController extends Controller
             ->toArray();
 
         // Content creation over time
-        $contentCreation = Page::select(
+        $contentCreation = Page::where('company_id', currentCompanyId())
+            ->select(
                 DB::raw('DATE(created_at) as date'),
                 DB::raw('count(*) as count')
             )
@@ -146,6 +149,7 @@ class AnalyticsController extends Controller
     {
         // Top pages by views
         $topPages = Page::published()
+            ->where('company_id', currentCompanyId())
             ->orderBy('view_count', 'desc')
             ->limit(10)
             ->get(['id', 'title', 'slug', 'view_count', 'updated_at'])
@@ -160,11 +164,13 @@ class AnalyticsController extends Controller
 
         // Pages with no views
         $pagesWithoutViews = Page::published()
+            ->where('company_id', currentCompanyId())
             ->where('view_count', 0)
             ->count();
 
         // Average content length
         $avgContentLength = Page::published()
+            ->where('company_id', currentCompanyId())
             ->get()
             ->map(function ($page) {
                 return strlen(strip_tags($page->content));
@@ -192,7 +198,7 @@ class AnalyticsController extends Controller
      */
     private function getSEOAnalytics(): array
     {
-        $pages = Page::published()->get();
+        $pages = Page::published()->where('company_id', currentCompanyId())->get();
         
         $seoIssues = [
             'missing_meta_title' => 0,
@@ -279,10 +285,11 @@ class AnalyticsController extends Controller
     {
         // Redirect analytics
        $redirectStats = [
-            'total_redirects' => Redirect::count(),
-            'active_redirects' => Redirect::active()->count(),
-            'total_hits' => Redirect::sum('hit_count'),
-            'top_redirects' => Redirect::orderBy('hit_count', 'desc')
+            'total_redirects' => Redirect::where('company_id', currentCompanyId())->count(),
+            'active_redirects' => Redirect::active()->where('company_id', currentCompanyId())->count(),
+            'total_hits' => Redirect::where('company_id', currentCompanyId())->sum('hit_count'),
+            'top_redirects' => Redirect::where('company_id', currentCompanyId())
+                ->orderBy('hit_count', 'desc')
                 ->limit(10)
                 ->get(['from_url', 'to_url', 'hit_count'])
                 ->toArray(),
@@ -307,29 +314,28 @@ class AnalyticsController extends Controller
      */
     private function getMediaAnalytics(): array
     {
-        $totalSize = Media::sum('file_size');
-        
+        $totalSize = Media::where('company_id', currentCompanyId())->sum('file_size');
         // Media by type
         $mediaByType = [
-            'images' => Media::images()->count(),
-            'videos' => Media::videos()->count(),
-            'documents' => Media::documents()->count(),
+            'images' => Media::images()->where('company_id', currentCompanyId())->count(),
+            'videos' => Media::videos()->where('company_id', currentCompanyId())->count(),
+            'documents' => Media::documents()->where('company_id', currentCompanyId())->count(),
         ];
-
         // Storage usage
+        $mediaCount = Media::where('company_id', currentCompanyId())->count();
         $storageUsage = [
-            'total_files' => Media::count(),
+            'total_files' => $mediaCount,
             'total_size' => $totalSize,
-            'average_size' => Media::count() > 0 ? $totalSize / Media::count() : 0,
-            'largest_files' => Media::orderBy('file_size', 'desc')
+            'average_size' => $mediaCount > 0 ? $totalSize / $mediaCount : 0,
+            'largest_files' => Media::where('company_id', currentCompanyId())
+                ->orderBy('file_size', 'desc')
                 ->limit(10)
                 ->get(['name', 'file_size', 'mime_type'])
                 ->toArray(),
         ];
-
         // Media usage
-        $unusedMedia = Media::whereDoesntHave('pages')->count();
-
+        $unusedMedia = Media::where('company_id', currentCompanyId())
+            ->whereDoesntHave('pages')->count();
         return [
             'by_type' => $mediaByType,
             'storage' => $storageUsage,
@@ -369,18 +375,19 @@ class AnalyticsController extends Controller
         fputcsv($handle, ['Page Analytics']);
         fputcsv($handle, ['Title', 'Slug', 'Status', 'Views', 'Created', 'Updated']);
         
-        Page::chunk(1000, function ($pages) use ($handle) {
-            foreach ($pages as $page) {
-                fputcsv($handle, [
-                    $page->title,
-                    $page->slug,
-                    $page->status,
-                    $page->view_count,
-                    $page->created_at->toDateString(),
-                    $page->updated_at->toDateString(),
-                ]);
-            }
-        });
+        Page::where('company_id', currentCompanyId())
+            ->chunk(1000, function ($pages) use ($handle) {
+                foreach ($pages as $page) {
+                    fputcsv($handle, [
+                        $page->title,
+                        $page->slug,
+                        $page->status,
+                        $page->view_count,
+                        $page->created_at->toDateString(),
+                        $page->updated_at->toDateString(),
+                    ]);
+                }
+            });
 
         fclose($handle);
     }

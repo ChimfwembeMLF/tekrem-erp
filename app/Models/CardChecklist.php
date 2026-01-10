@@ -12,7 +12,8 @@ class CardChecklist extends Model
     protected $fillable = [
         'card_id',
         'title',
-    ];
+        'company_id',
+];
 
     public function card()
     {
@@ -22,5 +23,16 @@ class CardChecklist extends Model
     public function items()
     {
         return $this->hasMany(CardChecklistItem::class, 'checklist_id');
+    }
+
+    
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

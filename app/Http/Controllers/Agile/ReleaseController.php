@@ -10,34 +10,52 @@ use Inertia\Inertia;
 
 class ReleaseController extends Controller
 {
+    protected function companyId(): int
+    {
+        $companyId = session('current_company_id');
+        abort_unless($companyId, 403, 'No active company');
+        return $companyId;
+    }
+
     public function index(Project $project)
     {
+        $companyId = $this->companyId();
+        abort_unless($project->company_id === $companyId, 403);
+
         // $this->authorize('view', $project);
 
         $releases = $project->releases()
-            ->with(['sprints', 'epics'])
-            ->orderBy('planned_date', 'desc')
+            ->where('company_id', $companyId)
+            ->with([
+                'sprints' => fn ($q) => $q->where('company_id', $companyId),
+                'epics' => fn ($q) => $q->where('company_id', $companyId),
+            ])
+            ->orderByDesc('planned_date')
             ->get();
-
-        $upcomingReleases = $releases->whereIn('status', ['planned', 'in_progress']);
-        $releasedVersions = $releases->where('status', 'released');
 
         return Inertia::render('Agile/Releases', [
             'project' => $project,
             'releases' => $releases,
-            'upcomingReleases' => $upcomingReleases,
-            'releasedVersions' => $releasedVersions,
+            'upcomingReleases' => $releases->whereIn('status', ['planned', 'in_progress']),
+            'releasedVersions' => $releases->where('status', 'released'),
         ]);
     }
 
     public function show(Release $release)
     {
+        $companyId = $this->companyId();
+        abort_unless($release->company_id === $companyId, 403);
+
         // $this->authorize('view', $release->project);
 
         $release->load([
-            'sprints.cards',
-            'epics.cards',
-            'project'
+            'project',
+            'sprints' => fn ($q) => $q
+                ->where('company_id', $companyId)
+                ->with(['cards' => fn ($c) => $c->where('company_id', $companyId)]),
+            'epics' => fn ($q) => $q
+                ->where('company_id', $companyId)
+                ->with(['cards' => fn ($c) => $c->where('company_id', $companyId)]),
         ]);
 
         return Inertia::render('Agile/Releases/Show', [
@@ -48,20 +66,23 @@ class ReleaseController extends Controller
 
     public function create(Project $project)
     {
-        // $this->authorize('update', $project);
+        $companyId = $this->companyId();
+        abort_unless($project->company_id === $companyId, 403);
 
-        $sprints = $project->sprints()->get();
-        $epics = $project->epics()->get();
+        // $this->authorize('update', $project);
 
         return Inertia::render('Agile/Releases/Create', [
             'project' => $project,
-            'sprints' => $sprints,
-            'epics' => $epics,
+            'sprints' => $project->sprints()->where('company_id', $companyId)->get(),
+            'epics' => $project->epics()->where('company_id', $companyId)->get(),
         ]);
     }
 
     public function store(Request $request, Project $project)
     {
+        $companyId = $this->companyId();
+        abort_unless($project->company_id === $companyId, 403);
+
         // $this->authorize('update', $project);
 
         $validated = $request->validate([
@@ -81,41 +102,46 @@ class ReleaseController extends Controller
         $epicIds = $validated['epic_ids'] ?? [];
         unset($validated['sprint_ids'], $validated['epic_ids']);
 
-        $validated['project_id'] = $project->id;
+        $release = Release::create([
+            ...$validated,
+            'project_id' => $project->id,
+            'company_id' => $companyId,
+        ]);
 
-        $release = Release::create($validated);
-
-        // Attach sprints and epics
-        if (!empty($sprintIds)) {
-            $release->sprints()->attach($sprintIds);
+        if ($sprintIds) {
+            $release->sprints()->sync($sprintIds);
         }
-        if (!empty($epicIds)) {
-            $release->epics()->attach($epicIds);
+        if ($epicIds) {
+            $release->epics()->sync($epicIds);
         }
 
-        return redirect()->route('agile.releases.show', $release)
+        return redirect()
+            ->route('agile.releases.show', $release)
             ->with('success', 'Release created successfully.');
     }
 
     public function edit(Release $release)
     {
+        $companyId = $this->companyId();
+        abort_unless($release->company_id === $companyId, 403);
+
         // $this->authorize('update', $release->project);
 
         $release->load(['sprints', 'epics']);
 
-        $sprints = $release->project->sprints()->get();
-        $epics = $release->project->epics()->get();
-
         return Inertia::render('Agile/Releases/Edit', [
             'release' => $release,
             'project' => $release->project,
-            'sprints' => $sprints,
-            'epics' => $epics,
+            'sprints' => $release->project->sprints()->where('company_id', $companyId)->get(),
+            'epics' => $release->project->epics()->where('company_id', $companyId)->get(),
         ]);
     }
 
     public function update(Request $request, Release $release)
     {
+        $companyId = $this->companyId();
+        abort_unless($release->company_id === $companyId, 403);
+
         // $this->authorize('update', $release->project);
 
         $validated = $request->validate([
@@ -137,7 +163,6 @@ class ReleaseController extends Controller
 
         $release->update($validated);
 
-        // Sync sprints and epics if provided
         if ($sprintIds !== null) {
             $release->sprints()->sync($sprintIds);
         }
@@ -150,6 +175,9 @@ class ReleaseController extends Controller
 
     public function publish(Release $release)
     {
+        $companyId = $this->companyId();
+        abort_unless($release->company_id === $companyId, 403);
+
         // $this->authorize('update', $release->project);
 
         $release->markAsReleased();
@@ -159,11 +187,15 @@ class ReleaseController extends Controller
 
     public function destroy(Release $release)
     {
+        $companyId = $this->companyId();
+        abort_unless($release->company_id === $companyId, 403);
+
         // $this->authorize('update', $release->project);
 
         $release->delete();
 
-        return redirect()->route('agile.releases.index', $release->project_id)
+        return redirect()
+            ->route('agile.releases.index', $release->project_id)
             ->with('success', 'Release deleted successfully.');
     }
 }

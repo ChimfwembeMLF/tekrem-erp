@@ -23,7 +23,8 @@ class Category extends Model
         'color',
         'is_active',
         'parent_id',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -89,4 +90,16 @@ class Category extends Model
     {
         return $query->where('type', $type);
     }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
+    }
+    
 }

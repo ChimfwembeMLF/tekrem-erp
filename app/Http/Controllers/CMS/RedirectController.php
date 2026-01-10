@@ -19,10 +19,13 @@ class RedirectController extends Controller
     public function index(Request $request): Response
     {
         $query = Redirect::with(['createdBy'])
+            ->where('company_id', currentCompanyId())
             ->when($request->search, function ($q, $search) {
-                $q->where('from_url', 'like', "%{$search}%")
-                  ->orWhere('to_url', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                $q->where(function ($subQ) use ($search) {
+                    $subQ->where('from_url', 'like', "%{$search}%")
+                          ->orWhere('to_url', 'like', "%{$search}%")
+                          ->orWhere('description', 'like', "%{$search}%");
+                });
             })
             ->when($request->status_code, function ($q, $statusCode) {
                 $q->where('status_code', $statusCode);
@@ -90,6 +93,7 @@ class RedirectController extends Controller
         }
 
         $validated['created_by'] = Auth::id();
+        $validated['company_id'] = currentCompanyId();
 
         $redirect = Redirect::create($validated);
 
@@ -110,6 +114,9 @@ class RedirectController extends Controller
      */
     public function show(Redirect $redirect): Response
     {
+        if ($redirect->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $redirect->load(['createdBy']);
         $stats = $redirect->getStats();
         $chain = $redirect->getChain();
@@ -126,6 +133,9 @@ class RedirectController extends Controller
      */
     public function edit(Redirect $redirect): Response
     {
+        if ($redirect->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $statusCodes = Redirect::getStatusCodes();
 
         return Inertia::render('CMS/Redirects/Edit', [
@@ -139,6 +149,9 @@ class RedirectController extends Controller
      */
     public function update(Request $request, Redirect $redirect): RedirectResponse
     {
+        if ($redirect->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $validated = $request->validate([
             'from_url' => ['required', 'string', 'max:255', 'unique:cms_redirects,from_url,' . $redirect->id],
             'to_url' => ['required', 'string', 'max:255'],
@@ -178,6 +191,9 @@ class RedirectController extends Controller
      */
     public function destroy(Redirect $redirect): RedirectResponse
     {
+        if ($redirect->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $redirect->delete();
 
         return redirect()->route('cms.redirects.index')
@@ -197,22 +213,28 @@ class RedirectController extends Controller
 
         $processed = 0;
 
+        // Only process redirects belonging to the current company
+        $redirects = Redirect::whereIn('id', $validated['redirect_ids'])
+            ->where('company_id', currentCompanyId())
+            ->get();
+        $redirectIds = $redirects->pluck('id')->toArray();
+
         switch ($validated['action']) {
             case 'activate':
-                Redirect::whereIn('id', $validated['redirect_ids'])
+                Redirect::whereIn('id', $redirectIds)
                     ->update(['is_active' => true]);
-                $processed = count($validated['redirect_ids']);
+                $processed = count($redirectIds);
                 break;
 
             case 'deactivate':
-                Redirect::whereIn('id', $validated['redirect_ids'])
+                Redirect::whereIn('id', $redirectIds)
                     ->update(['is_active' => false]);
-                $processed = count($validated['redirect_ids']);
+                $processed = count($redirectIds);
                 break;
 
             case 'delete':
-                $processed = Redirect::whereIn('id', $validated['redirect_ids'])->count();
-                Redirect::whereIn('id', $validated['redirect_ids'])->delete();
+                $processed = Redirect::whereIn('id', $redirectIds)->count();
+                Redirect::whereIn('id', $redirectIds)->delete();
                 break;
         }
 
@@ -229,12 +251,12 @@ class RedirectController extends Controller
     public function statistics(): JsonResponse
     {
         $stats = [
-            'total' => Redirect::count(),
-            'active' => Redirect::active()->count(),
-            'inactive' => Redirect::where('is_active', false)->count(),
-            'used' => Redirect::withHits()->count(),
-            'unused' => Redirect::unused()->count(),
-            'total_hits' => Redirect::sum('hit_count'),
+            'total' => Redirect::where('company_id', currentCompanyId()).count(),
+            'active' => Redirect::active()->where('company_id', currentCompanyId()).count(),
+            'inactive' => Redirect::where('is_active', false)->where('company_id', currentCompanyId()).count(),
+            'used' => Redirect::withHits()->where('company_id', currentCompanyId()).count(),
+            'unused' => Redirect::unused()->where('company_id', currentCompanyId()).count(),
+            'total_hits' => Redirect::where('company_id', currentCompanyId()).sum('hit_count'),
             'by_status_code' => [],
             'top_redirects' => [],
             'recent_hits' => [],
@@ -243,13 +265,14 @@ class RedirectController extends Controller
         // Stats by status code
         foreach (Redirect::getStatusCodes() as $code => $description) {
             $stats['by_status_code'][$code] = [
-                'count' => Redirect::where('status_code', $code)->count(),
+                'count' => Redirect::where('status_code', $code)->where('company_id', currentCompanyId()).count(),
                 'description' => $description,
             ];
         }
 
         // Top redirects by hits
         $stats['top_redirects'] = Redirect::withHits()
+            ->where('company_id', currentCompanyId())
             ->orderBy('hit_count', 'desc')
             ->limit(10)
             ->get(['from_url', 'to_url', 'hit_count', 'last_hit_at'])
@@ -257,6 +280,7 @@ class RedirectController extends Controller
 
         // Recent hits
         $stats['recent_hits'] = Redirect::whereNotNull('last_hit_at')
+            ->where('company_id', currentCompanyId())
             ->orderBy('last_hit_at', 'desc')
             ->limit(10)
             ->get(['from_url', 'to_url', 'hit_count', 'last_hit_at'])
@@ -307,7 +331,7 @@ class RedirectController extends Controller
 
             fclose($handle);
 
-            $result = Redirect::bulkImport($redirects, Auth::id());
+            $result = Redirect::bulkImport($redirects, Auth::id(), currentCompanyId());
 
             $message = "Import completed. {$result['imported']} redirects imported.";
             if (!empty($result['errors'])) {
@@ -333,7 +357,6 @@ class RedirectController extends Controller
 
         return response()->streamDownload(function () {
             $handle = fopen('php://output', 'w');
-            
             // Add headers
             fputcsv($handle, [
                 'From URL',
@@ -345,23 +368,22 @@ class RedirectController extends Controller
                 'Last Hit',
                 'Created At',
             ]);
-
             // Add data
-            Redirect::chunk(1000, function ($redirects) use ($handle) {
-                foreach ($redirects as $redirect) {
-                    fputcsv($handle, [
-                        $redirect->from_url,
-                        $redirect->to_url,
-                        $redirect->status_code,
-                        $redirect->description,
-                        $redirect->is_active ? 'Yes' : 'No',
-                        $redirect->hit_count,
-                        $redirect->last_hit_at?->toDateTimeString(),
-                        $redirect->created_at->toDateTimeString(),
-                    ]);
-                }
-            });
-
+            Redirect::where('company_id', currentCompanyId())
+                ->chunk(1000, function ($redirects) use ($handle) {
+                    foreach ($redirects as $redirect) {
+                        fputcsv($handle, [
+                            $redirect->from_url,
+                            $redirect->to_url,
+                            $redirect->status_code,
+                            $redirect->description,
+                            $redirect->is_active ? 'Yes' : 'No',
+                            $redirect->hit_count,
+                            $redirect->last_hit_at?->toDateTimeString(),
+                            $redirect->created_at->toDateTimeString(),
+                        ]);
+                    }
+                });
             fclose($handle);
         }, $filename, [
             'Content-Type' => 'text/csv',
@@ -377,7 +399,8 @@ class RedirectController extends Controller
             'url' => ['required', 'string'],
         ]);
 
-        $redirect = Redirect::findByFromUrl($validated['url']);
+        $redirect = Redirect::where('company_id', currentCompanyId())
+            ->findByFromUrl($validated['url']);
 
         if (!$redirect) {
             return response()->json([

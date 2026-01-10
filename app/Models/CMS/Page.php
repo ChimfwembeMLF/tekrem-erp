@@ -49,7 +49,8 @@ class Page extends Model
         'settings',
         'view_count',
         'last_viewed_at',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'content_blocks' => 'array',
@@ -419,5 +420,16 @@ class Page extends Model
             'og:url' => $this->url,
             'canonical' => $this->canonical_url ?: $this->url,
         ];
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

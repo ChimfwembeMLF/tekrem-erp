@@ -38,7 +38,8 @@ class Account extends Model
         'is_active',
         'user_id',
         'company_id',
-    ];
+        'company_id',
+];
 
     /**
      * Get the company that owns the account.
@@ -384,5 +385,10 @@ class Account extends Model
         }
 
         return $baseCode;
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

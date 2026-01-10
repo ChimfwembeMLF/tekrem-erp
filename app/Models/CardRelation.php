@@ -13,7 +13,8 @@ class CardRelation extends Model
         'card_id',
         'related_card_id',
         'type',
-    ];
+        'company_id',
+];
 
     public function card()
     {
@@ -23,5 +24,16 @@ class CardRelation extends Model
     public function relatedCard()
     {
         return $this->belongsTo(BoardCard::class, 'related_card_id');
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

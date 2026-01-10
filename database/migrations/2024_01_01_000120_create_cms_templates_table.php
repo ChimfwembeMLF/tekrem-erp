@@ -24,6 +24,8 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->boolean('is_default')->default(false);
             $table->foreignId('created_by')->constrained('users');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->timestamps();
             
             $table->index(['category', 'is_active']);

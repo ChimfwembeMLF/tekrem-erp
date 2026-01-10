@@ -27,7 +27,8 @@ class BankStatementTransaction extends Model
         'running_balance',
         'transaction_code',
         'raw_data',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -202,5 +203,16 @@ class BankStatementTransaction extends Model
         }
 
         return min($score, $maxScore);
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

@@ -32,7 +32,8 @@ class PageRevision extends Model
         'revision_notes',
         'is_current',
         'is_published',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'content_blocks' => 'array',
@@ -119,5 +120,16 @@ class PageRevision extends Model
         }
 
         return empty($changes) ? 'No changes detected' : implode(', ', $changes);
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

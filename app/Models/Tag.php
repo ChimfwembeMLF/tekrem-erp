@@ -25,7 +25,8 @@ class Tag extends Model
         'type',
         'is_active',
         'created_by',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -131,5 +132,21 @@ class Tag extends Model
     public function getUsageCountAttribute()
     {
     return $this->tasks()->count();
+    }
+
+    /**
+     * Get the company that owns the tag.
+     */
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    /**
+     * Scope a query to only include tags for a specific company.
+     */
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

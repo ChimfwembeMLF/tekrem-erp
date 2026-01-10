@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('name');
             $table->enum('type', ['allowance', 'deduction', 'tax']);
             $table->decimal('default_amount', 15, 2)->nullable();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->boolean('is_statutory')->default(false);
             $table->timestamps();
         });
@@ -32,6 +33,7 @@ return new class extends Migration
         Schema::create('employee_payroll_components', function (Blueprint $table) {
             $table->id();
             $table->foreignId('employee_id')->constrained('hr_employees')->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->foreignId('payroll_component_id')->constrained('payroll_components')->onDelete('cascade');
             $table->decimal('amount', 15, 2);
             $table->string('period');
@@ -42,6 +44,7 @@ return new class extends Migration
         Schema::create('payroll_audits', function (Blueprint $table) {
             $table->id();
             $table->foreignId('payroll_id')->constrained('hr_payrolls')->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('action');
             $table->json('changes')->nullable();

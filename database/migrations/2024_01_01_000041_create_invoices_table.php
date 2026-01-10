@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('company_id')->nullable();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->string('invoice_number')->unique();
             $table->string('status')->default('draft'); // draft, sent, paid, overdue, cancelled
             $table->date('issue_date');
@@ -29,8 +30,6 @@ return new class extends Migration
             $table->nullableMorphs('billable'); // For client or lead
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->timestamps();
-
-            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
         });
     }
 

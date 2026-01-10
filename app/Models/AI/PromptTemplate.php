@@ -28,7 +28,8 @@ class PromptTemplate extends Model
         'usage_count',
         'avg_rating',
         'tags',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'variables' => 'array',

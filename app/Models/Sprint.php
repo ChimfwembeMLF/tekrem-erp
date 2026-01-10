@@ -22,7 +22,7 @@ class Sprint extends Model
         'start_date',
         'end_date',
         'status',
-    ];
+];
 
     /**
      * Get the company that owns the sprint.

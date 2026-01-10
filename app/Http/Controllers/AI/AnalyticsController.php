@@ -21,17 +21,18 @@ class AnalyticsController extends Controller
     {
         $period = $request->get('period', '30 days');
         $startDate = now()->sub($period);
+        $companyId = session('current_company_id');
 
         // Overview statistics
         $stats = [
-            'total_requests' => UsageLog::where('created_at', '>=', $startDate)->count(),
-            'successful_requests' => UsageLog::where('created_at', '>=', $startDate)->where('status', 'success')->count(),
-            'total_tokens' => UsageLog::where('created_at', '>=', $startDate)->sum('total_tokens'),
-            'total_cost' => UsageLog::where('created_at', '>=', $startDate)->sum('cost'),
-            'avg_response_time' => UsageLog::where('created_at', '>=', $startDate)->avg('response_time_ms'),
-            'active_conversations' => Conversation::where('last_message_at', '>=', $startDate)->count(),
-            'new_conversations' => Conversation::where('created_at', '>=', $startDate)->count(),
-            'template_usage' => PromptTemplate::where('updated_at', '>=', $startDate)->sum('usage_count'),
+            'total_requests' => UsageLog::where('created_at', '>=', $startDate)->where('company_id', $companyId)->count(),
+            'successful_requests' => UsageLog::where('created_at', '>=', $startDate)->where('company_id', $companyId)->where('status', 'success')->count(),
+            'total_tokens' => UsageLog::where('created_at', '>=', $startDate)->where('company_id', $companyId)->sum('total_tokens'),
+            'total_cost' => UsageLog::where('created_at', '>=', $startDate)->where('company_id', $companyId)->sum('cost'),
+            'avg_response_time' => UsageLog::where('created_at', '>=', $startDate)->where('company_id', $companyId)->avg('response_time_ms'),
+            'active_conversations' => Conversation::where('last_message_at', '>=', $startDate)->where('company_id', $companyId)->count(),
+            'new_conversations' => Conversation::where('created_at', '>=', $startDate)->where('company_id', $companyId)->count(),
+            'template_usage' => PromptTemplate::where('updated_at', '>=', $startDate)->where('company_id', $companyId)->sum('usage_count'),
         ];
 
         // Calculate success rate
@@ -41,6 +42,7 @@ class AnalyticsController extends Controller
 
         // Daily usage trends
         $dailyUsage = UsageLog::where('created_at', '>=', $startDate)
+            ->where('company_id', $companyId)
             ->groupBy(DB::raw('DATE(created_at)'))
             ->selectRaw('DATE(created_at) as date, count(*) as requests, sum(total_tokens) as tokens, sum(cost) as cost, avg(response_time_ms) as avg_response_time')
             ->orderBy('date')
@@ -48,6 +50,7 @@ class AnalyticsController extends Controller
 
         // Usage by operation type
         $usageByOperation = UsageLog::where('created_at', '>=', $startDate)
+            ->where('company_id', $companyId)
             ->groupBy('operation_type')
             ->selectRaw('operation_type, count(*) as count, sum(total_tokens) as tokens, sum(cost) as cost')
             ->get();
@@ -55,6 +58,7 @@ class AnalyticsController extends Controller
         // Usage by model
         $usageByModel = UsageLog::with('aiModel')
             ->where('created_at', '>=', $startDate)
+            ->where('company_id', $companyId)
             ->groupBy('ai_model_id')
             ->selectRaw('ai_model_id, count(*) as count, sum(total_tokens) as tokens, sum(cost) as cost')
             ->get()
@@ -69,6 +73,7 @@ class AnalyticsController extends Controller
 
         // Usage by context
         $usageByContext = UsageLog::where('created_at', '>=', $startDate)
+            ->where('company_id', $companyId)
             ->whereNotNull('context_type')
             ->groupBy('context_type')
             ->selectRaw('context_type, count(*) as count, sum(total_tokens) as tokens, sum(cost) as cost')
@@ -77,6 +82,7 @@ class AnalyticsController extends Controller
         // Top users
         $topUsers = UsageLog::with('user')
             ->where('created_at', '>=', $startDate)
+            ->where('company_id', $companyId)
             ->groupBy('user_id')
             ->selectRaw('user_id, count(*) as requests, sum(total_tokens) as tokens, sum(cost) as cost')
             ->orderBy('requests', 'desc')
@@ -93,6 +99,7 @@ class AnalyticsController extends Controller
 
         // Error analysis
         $errorStats = UsageLog::where('created_at', '>=', $startDate)
+            ->where('company_id', $companyId)
             ->where('status', '!=', 'success')
             ->groupBy('status')
             ->selectRaw('status, count(*) as count')
@@ -119,6 +126,7 @@ class AnalyticsController extends Controller
         $period = $request->get('period', '30 days');
         $groupBy = $request->get('group_by', 'day'); // day, week, month
         $startDate = now()->sub($period);
+        $companyId = session('current_company_id');
 
         $dateFormat = match($groupBy) {
             'week' => 'YEARWEEK(created_at)',
@@ -127,6 +135,7 @@ class AnalyticsController extends Controller
         };
 
         $usage = UsageLog::where('created_at', '>=', $startDate)
+            ->where('company_id', $companyId)
             ->groupBy(DB::raw($dateFormat))
             ->selectRaw("
                 {$dateFormat} as period,
@@ -151,10 +160,12 @@ class AnalyticsController extends Controller
     {
         $period = $request->get('period', '30 days');
         $startDate = now()->sub($period);
+        $companyId = session('current_company_id');
 
         // Cost breakdown by service
         $costByService = UsageLog::with('aiModel.service')
             ->where('created_at', '>=', $startDate)
+            ->where('company_id', $companyId)
             ->get()
             ->groupBy(function ($item) {
                 return $item->aiModel->service->name ?? 'Unknown';
@@ -173,6 +184,7 @@ class AnalyticsController extends Controller
         // Cost breakdown by model
         $costByModel = UsageLog::with('aiModel')
             ->where('created_at', '>=', $startDate)
+            ->where('company_id', $companyId)
             ->groupBy('ai_model_id')
             ->selectRaw('ai_model_id, sum(cost) as total_cost, sum(total_tokens) as total_tokens, count(*) as requests')
             ->get()
@@ -188,6 +200,7 @@ class AnalyticsController extends Controller
 
         // Cost trends
         $costTrends = UsageLog::where('created_at', '>=', $startDate)
+            ->where('company_id', $companyId)
             ->groupBy(DB::raw('DATE(created_at)'))
             ->selectRaw('DATE(created_at) as date, sum(cost) as daily_cost, sum(total_tokens) as daily_tokens')
             ->orderBy('date')
@@ -195,6 +208,7 @@ class AnalyticsController extends Controller
 
         // Cost by operation type
         $costByOperation = UsageLog::where('created_at', '>=', $startDate)
+            ->where('company_id', $companyId)
             ->groupBy('operation_type')
             ->selectRaw('operation_type, sum(cost) as total_cost, count(*) as requests, avg(cost) as avg_cost')
             ->get();
@@ -214,9 +228,11 @@ class AnalyticsController extends Controller
     {
         $period = $request->get('period', '30 days');
         $startDate = now()->sub($period);
+        $companyId = session('current_company_id');
 
         // Response time statistics
         $responseTimeStats = UsageLog::where('created_at', '>=', $startDate)
+            ->where('company_id', $companyId)
             ->whereNotNull('response_time_ms')
             ->selectRaw('
                 avg(response_time_ms) as avg_response_time,
@@ -229,6 +245,7 @@ class AnalyticsController extends Controller
         // Performance by model
         $performanceByModel = UsageLog::with('aiModel')
             ->where('created_at', '>=', $startDate)
+            ->where('company_id', $companyId)
             ->whereNotNull('response_time_ms')
             ->groupBy('ai_model_id')
             ->selectRaw('
@@ -249,6 +266,7 @@ class AnalyticsController extends Controller
 
         // Error rates
         $errorRates = UsageLog::where('created_at', '>=', $startDate)
+            ->where('company_id', $companyId)
             ->groupBy('status')
             ->selectRaw('status, count(*) as count')
             ->get()
@@ -256,6 +274,7 @@ class AnalyticsController extends Controller
 
         // Performance trends
         $performanceTrends = UsageLog::where('created_at', '>=', $startDate)
+            ->where('company_id', $companyId)
             ->whereNotNull('response_time_ms')
             ->groupBy(DB::raw('DATE(created_at)'))
             ->selectRaw('
@@ -288,11 +307,12 @@ class AnalyticsController extends Controller
         $period = $request->get('period', '30 days');
         $type = $request->get('type', 'usage'); // usage, costs, performance
         $startDate = now()->sub($period);
+        $companyId = session('current_company_id');
 
         $data = match($type) {
-            'costs' => $this->getCostData($startDate),
-            'performance' => $this->getPerformanceData($startDate),
-            default => $this->getUsageData($startDate),
+            'costs' => $this->getCostData($startDate, $companyId),
+            'performance' => $this->getPerformanceData($startDate, $companyId),
+            default => $this->getUsageData($startDate, $companyId),
         };
 
         $filename = "ai_analytics_{$type}_" . now()->format('Y-m-d_H-i-s');
@@ -310,20 +330,22 @@ class AnalyticsController extends Controller
     /**
      * Get usage data for export.
      */
-    private function getUsageData($startDate)
+    private function getUsageData($startDate, $companyId)
     {
         return UsageLog::with(['user', 'aiModel.service'])
             ->where('created_at', '>=', $startDate)
+            ->where('company_id', $companyId)
             ->get();
     }
 
     /**
      * Get cost data for export.
      */
-    private function getCostData($startDate)
+    private function getCostData($startDate, $companyId)
     {
         return UsageLog::with(['user', 'aiModel.service'])
             ->where('created_at', '>=', $startDate)
+            ->where('company_id', $companyId)
             ->selectRaw('*, (input_tokens * cost_per_input_token + output_tokens * cost_per_output_token) as calculated_cost')
             ->get();
     }
@@ -331,10 +353,11 @@ class AnalyticsController extends Controller
     /**
      * Get performance data for export.
      */
-    private function getPerformanceData($startDate)
+    private function getPerformanceData($startDate, $companyId)
     {
         return UsageLog::with(['user', 'aiModel.service'])
             ->where('created_at', '>=', $startDate)
+            ->where('company_id', $companyId)
             ->whereNotNull('response_time_ms')
             ->get();
     }

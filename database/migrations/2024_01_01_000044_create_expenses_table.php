@@ -23,6 +23,8 @@ return new class extends Migration
             $table->boolean('is_billable')->default(false);
             $table->boolean('is_reimbursable')->default(false);
             $table->foreignId('category_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->foreignId('account_id')->nullable()->constrained()->onDelete('set null');
             $table->nullableMorphs('expensable'); // For client or project
             $table->foreignId('user_id')->constrained()->onDelete('cascade');

@@ -23,7 +23,8 @@ class ReportController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Report::with('createdBy');
+        $query = Report::with('createdBy')
+            ->where('company_id', currentCompanyId());
 
         // Apply filters
         if ($request->filled('search')) {
@@ -105,6 +106,7 @@ class ReportController extends Controller
                 'date_to' => $request->date_to,
             ],
             'created_by' => auth()->id(),
+            'company_id' => currentCompanyId(),
         ]);
 
         // Queue the report generation job
@@ -119,6 +121,9 @@ class ReportController extends Controller
      */
     public function show(Report $report)
     {
+        if ($report->company_id !== currentCompanyId()) {
+            abort(403);
+        }
         $report->load('createdBy');
 
         return Inertia::render('Finance/Reports/Show', [
@@ -147,6 +152,9 @@ class ReportController extends Controller
      */
     public function edit(Report $report)
     {
+        if ($report->company_id !== currentCompanyId()) {
+            abort(403);
+        }
         return Inertia::render('Finance/Reports/Edit', [
             'report' => [
                 'id' => $report->id,
@@ -164,6 +172,9 @@ class ReportController extends Controller
      */
     public function update(Request $request, Report $report)
     {
+        if ($report->company_id !== currentCompanyId()) {
+            abort(403);
+        }
         $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|string|in:' . implode(',', array_keys(Report::TYPES)),
@@ -185,6 +196,9 @@ class ReportController extends Controller
      */
     public function destroy(Report $report)
     {
+        if ($report->company_id !== currentCompanyId()) {
+            abort(403);
+        }
         // Delete the file if it exists
         if ($report->file_path && file_exists(storage_path('app/' . $report->file_path))) {
             unlink(storage_path('app/' . $report->file_path));
@@ -201,6 +215,9 @@ class ReportController extends Controller
      */
     public function download(Report $report)
     {
+        if ($report->company_id !== currentCompanyId()) {
+            abort(403);
+        }
         if (!$report->isAvailable() || empty($report->file_path) || !file_exists(storage_path('app/' . $report->file_path))) {
             // If not available or file missing, queue generation and notify user
             if ($report->status !== 'processing' && $report->status !== 'pending') {
@@ -235,6 +252,7 @@ class ReportController extends Controller
 
         // Get Chart of Accounts data
         $accounts = \App\Models\Finance\ChartOfAccount::query()
+            ->where('company_id', currentCompanyId())
             ->when(!$request->boolean('include_inactive'), function ($query) {
                 $query->where('is_active', true);
             })
@@ -293,6 +311,7 @@ class ReportController extends Controller
 
         // Get accounts with balances
         $accounts = \App\Models\Finance\ChartOfAccount::query()
+            ->where('company_id', currentCompanyId())
             ->where('is_active', true)
             ->when(!$request->boolean('include_zero_balances'), function ($query) {
                 $query->where('balance', '!=', 0);
@@ -343,6 +362,7 @@ class ReportController extends Controller
         ]);
 
         $query = \App\Models\Finance\BankReconciliation::query()
+            ->where('company_id', currentCompanyId())
             ->with(['account', 'bankStatement', 'reconciledBy', 'approvedBy'])
             ->when($request->filled('date_from'), function ($query) use ($request) {
                 $query->where('reconciliation_date', '>=', $request->date_from);

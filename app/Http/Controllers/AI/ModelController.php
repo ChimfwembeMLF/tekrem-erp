@@ -17,8 +17,10 @@ class ModelController extends Controller
      */
     public function index(Request $request)
     {
+        $companyId = session('current_company_id');
         $query = AIModel::query()
             ->with('service')
+            ->where('company_id', $companyId)
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('name', 'like', "%{$search}%")
@@ -41,8 +43,8 @@ class ModelController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        $services = Service::enabled()->orderBy('name')->get(['id', 'name']);
-        $types = AIModel::distinct()->pluck('type')->sort()->values();
+        $services = Service::enabled()->where('company_id', $companyId)->orderBy('name')->get(['id', 'name']);
+        $types = AIModel::where('company_id', $companyId)->distinct()->pluck('type')->sort()->values();
 
         return Inertia::render('AI/Models/Index', [
             'models' => $models,
@@ -57,7 +59,8 @@ class ModelController extends Controller
      */
     public function create()
     {
-        $services = Service::enabled()->orderBy('name')->get(['id', 'name']);
+        $companyId = session('current_company_id');
+        $services = Service::enabled()->where('company_id', $companyId)->orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('AI/Models/Create', [
             'services' => $services,
@@ -69,6 +72,7 @@ class ModelController extends Controller
      */
     public function store(Request $request)
     {
+        $companyId = session('current_company_id');
         $validated = $request->validate([
             'ai_service_id' => ['required', 'exists:ai_services,id'],
             'name' => ['required', 'string', 'max:255'],
@@ -90,11 +94,12 @@ class ModelController extends Controller
 
         // Generate slug from name
         $validated['slug'] = Str::slug($validated['name']);
+        $validated['company_id'] = $companyId;
 
         // Ensure slug is unique
         $originalSlug = $validated['slug'];
         $counter = 1;
-        while (AIModel::where('slug', $validated['slug'])->exists()) {
+        while (AIModel::where('slug', $validated['slug'])->where('company_id', $companyId)->exists()) {
             $validated['slug'] = $originalSlug . '-' . $counter;
             $counter++;
         }
@@ -115,6 +120,10 @@ class ModelController extends Controller
      */
     public function show(AIModel $model)
     {
+        $companyId = session('current_company_id');
+        if ($model->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $model->load('service');
 
         // Get usage statistics
@@ -131,8 +140,12 @@ class ModelController extends Controller
      */
     public function edit(AIModel $model)
     {
+        $companyId = session('current_company_id');
+        if ($model->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $model->load('service');
-        $services = Service::enabled()->orderBy('name')->get(['id', 'name']);
+        $services = Service::enabled()->where('company_id', $companyId)->orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('AI/Models/Edit', [
             'model' => $model,
@@ -145,6 +158,10 @@ class ModelController extends Controller
      */
     public function update(Request $request, AIModel $model)
     {
+        $companyId = session('current_company_id');
+        if ($model->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $validated = $request->validate([
             'ai_service_id' => ['required', 'exists:ai_services,id'],
             'name' => ['required', 'string', 'max:255'],
@@ -167,15 +184,13 @@ class ModelController extends Controller
         // Update slug if name changed
         if ($validated['name'] !== $model->name) {
             $newSlug = Str::slug($validated['name']);
-            
             // Ensure slug is unique (excluding current model)
             $originalSlug = $newSlug;
             $counter = 1;
-            while (AIModel::where('slug', $newSlug)->where('id', '!=', $model->id)->exists()) {
+            while (AIModel::where('slug', $newSlug)->where('company_id', $companyId)->where('id', '!=', $model->id)->exists()) {
                 $newSlug = $originalSlug . '-' . $counter;
                 $counter++;
             }
-            
             $validated['slug'] = $newSlug;
         }
 
@@ -195,8 +210,12 @@ class ModelController extends Controller
      */
     public function destroy(AIModel $model)
     {
+        $companyId = session('current_company_id');
+        if ($model->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         // Check if model has conversations
-        if ($model->conversations()->count() > 0) {
+        if ($model->conversations()->where('company_id', $companyId)->count() > 0) {
             return redirect()->route('ai.models.index')
                 ->with('error', 'Cannot delete model that has associated conversations.');
         }
@@ -212,6 +231,13 @@ class ModelController extends Controller
      */
     public function setDefault(AIModel $model)
     {
+        $companyId = session('current_company_id');
+        if ($model->company_id !== $companyId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized.'
+            ], 403);
+        }
         if (!$model->is_enabled) {
             return response()->json([
                 'success' => false,
@@ -232,15 +258,21 @@ class ModelController extends Controller
      */
     public function toggleStatus(AIModel $model)
     {
+        $companyId = session('current_company_id');
+        if ($model->company_id !== $companyId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized.'
+            ], 403);
+        }
         $newStatus = !$model->is_enabled;
-        
         // If disabling the default model, we need to set another as default
         if (!$newStatus && $model->is_default) {
             $alternativeModel = AIModel::where('id', '!=', $model->id)
                 ->where('type', $model->type)
                 ->where('is_enabled', true)
+                ->where('company_id', $companyId)
                 ->first();
-                
             if ($alternativeModel) {
                 $alternativeModel->setAsDefault();
             }

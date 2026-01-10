@@ -16,12 +16,18 @@ use Inertia\Response;
 
 class KnowledgeBaseController extends Controller
 {
+    protected function getCompanyId()
+    {
+        return currentCompanyId();
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request): Response
     {
-        $query = KnowledgeBaseArticle::query()
+        $companyId = $this->getCompanyId();
+        $query = KnowledgeBaseArticle::where('company_id', $companyId)
             ->with(['category', 'author'])
             ->when($request->search, function ($query, $search) {
                 $query->search($search);
@@ -38,7 +44,7 @@ class KnowledgeBaseController extends Controller
 
         $articles = $query->latest()->paginate(15)->withQueryString();
 
-        $categories = KnowledgeBaseCategory::active()->ordered()->get(['id', 'name']);
+        $categories = KnowledgeBaseCategory::where('company_id', $companyId)->active()->ordered()->get(['id', 'name']);
 
         return Inertia::render('Support/KnowledgeBase/Index', [
             'articles' => $articles,
@@ -52,7 +58,8 @@ class KnowledgeBaseController extends Controller
      */
     public function create(): Response
     {
-        $categories = KnowledgeBaseCategory::active()->ordered()->get();
+        $companyId = $this->getCompanyId();
+        $categories = KnowledgeBaseCategory::where('company_id', $companyId)->active()->ordered()->get();
 
         return Inertia::render('Support/KnowledgeBase/Create', [
             'categories' => $categories,
@@ -64,6 +71,7 @@ class KnowledgeBaseController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $companyId = $this->getCompanyId();
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255', 'unique:knowledge_base_articles,slug'],
@@ -77,24 +85,18 @@ class KnowledgeBaseController extends Controller
             'meta_description' => ['nullable', 'string', 'max:500'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
         ]);
-
         $validated['author_id'] = Auth::id();
-
+        $validated['company_id'] = $companyId;
         if ($validated['status'] === 'published' && !isset($validated['published_at'])) {
             $validated['published_at'] = now();
         }
-
         $article = KnowledgeBaseArticle::create($validated);
-
-        // Create notifications for published articles
         if ($validated['status'] === 'published') {
             $notifiableUsers = NotificationService::getNotifiableUsers($article, Auth::user());
             $message = Auth::user()->name . " published a new knowledge base article: '{$article->title}'";
             $link = route('support.knowledge-base.show', $article->id);
-
             NotificationService::notifyUsers($notifiableUsers, 'knowledge_base', $message, $link, $article);
         }
-
         return redirect()->route('support.knowledge-base.show', $article)
             ->with('success', 'Article created successfully.');
     }
@@ -104,20 +106,20 @@ class KnowledgeBaseController extends Controller
      */
     public function show(KnowledgeBaseArticle $knowledgeBase): Response
     {
+        $companyId = $this->getCompanyId();
+        if ($knowledgeBase->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $knowledgeBase->load(['category', 'author']);
-
-        // Increment view count
         $knowledgeBase->incrementViewCount();
-
-        // Get related articles
         $relatedArticles = KnowledgeBaseArticle::published()
+            ->where('company_id', $companyId)
             ->where('id', '!=', $knowledgeBase->id)
             ->when($knowledgeBase->category_id, function ($query) use ($knowledgeBase) {
                 $query->where('category_id', $knowledgeBase->category_id);
             })
             ->take(5)
             ->get(['id', 'title', 'excerpt', 'view_count']);
-
         return Inertia::render('Support/KnowledgeBase/Show', [
             'article' => $knowledgeBase,
             'relatedArticles' => $relatedArticles,
@@ -129,8 +131,11 @@ class KnowledgeBaseController extends Controller
      */
     public function edit(KnowledgeBaseArticle $knowledgeBase): Response
     {
-        $categories = KnowledgeBaseCategory::active()->ordered()->get();
-
+        $companyId = $this->getCompanyId();
+        if ($knowledgeBase->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
+        $categories = KnowledgeBaseCategory::where('company_id', $companyId)->active()->ordered()->get();
         return Inertia::render('Support/KnowledgeBase/Edit', [
             'article' => $knowledgeBase,
             'categories' => $categories,
@@ -142,6 +147,10 @@ class KnowledgeBaseController extends Controller
      */
     public function update(Request $request, KnowledgeBaseArticle $knowledgeBase): RedirectResponse
     {
+        $companyId = $this->getCompanyId();
+        if ($knowledgeBase->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255', Rule::unique('knowledge_base_articles', 'slug')->ignore($knowledgeBase->id)],
@@ -155,14 +164,10 @@ class KnowledgeBaseController extends Controller
             'meta_description' => ['nullable', 'string', 'max:500'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
         ]);
-
-        // Set published_at if status changed to published
         if ($validated['status'] === 'published' && $knowledgeBase->status !== 'published') {
             $validated['published_at'] = now();
         }
-
         $knowledgeBase->update($validated);
-
         return redirect()->route('support.knowledge-base.show', $knowledgeBase)
             ->with('success', 'Article updated successfully.');
     }
@@ -172,8 +177,11 @@ class KnowledgeBaseController extends Controller
      */
     public function destroy(KnowledgeBaseArticle $knowledgeBase): RedirectResponse
     {
+        $companyId = $this->getCompanyId();
+        if ($knowledgeBase->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $knowledgeBase->delete();
-
         return redirect()->route('support.knowledge-base.index')
             ->with('success', 'Article deleted successfully.');
     }
@@ -183,18 +191,18 @@ class KnowledgeBaseController extends Controller
      */
     public function publish(KnowledgeBaseArticle $knowledgeBase): JsonResponse
     {
+        $companyId = $this->getCompanyId();
+        if ($knowledgeBase->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $knowledgeBase->update([
             'status' => 'published',
             'published_at' => now(),
         ]);
-
-        // Create notifications
         $notifiableUsers = NotificationService::getNotifiableUsers($knowledgeBase, Auth::user());
         $message = Auth::user()->name . " published knowledge base article: '{$knowledgeBase->title}'";
         $link = route('support.knowledge-base.show', $knowledgeBase->id);
-
         NotificationService::notifyUsers($notifiableUsers, 'knowledge_base', $message, $link, $knowledgeBase);
-
         return response()->json(['message' => 'Article published successfully.']);
     }
 
@@ -203,11 +211,14 @@ class KnowledgeBaseController extends Controller
      */
     public function unpublish(KnowledgeBaseArticle $knowledgeBase): JsonResponse
     {
+        $companyId = $this->getCompanyId();
+        if ($knowledgeBase->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $knowledgeBase->update([
             'status' => 'draft',
             'published_at' => null,
         ]);
-
         return response()->json(['message' => 'Article unpublished successfully.']);
     }
 
@@ -216,8 +227,11 @@ class KnowledgeBaseController extends Controller
      */
     public function markHelpful(KnowledgeBaseArticle $knowledgeBase): JsonResponse
     {
+        $companyId = $this->getCompanyId();
+        if ($knowledgeBase->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $knowledgeBase->markAsHelpful();
-
         return response()->json([
             'success' => true,
             'helpful_count' => $knowledgeBase->helpful_count,
@@ -230,8 +244,11 @@ class KnowledgeBaseController extends Controller
      */
     public function markNotHelpful(KnowledgeBaseArticle $knowledgeBase): JsonResponse
     {
+        $companyId = $this->getCompanyId();
+        if ($knowledgeBase->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $knowledgeBase->markAsNotHelpful();
-
         return response()->json([
             'success' => true,
             'not_helpful_count' => $knowledgeBase->not_helpful_count,

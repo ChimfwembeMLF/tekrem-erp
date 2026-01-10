@@ -31,7 +31,8 @@ class Payment extends Model
         'payable_type',
         'user_id',
         'metadata',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -107,5 +108,16 @@ class Payment extends Model
         $sequence = $lastPayment ? (int) substr($lastPayment->payment_number, -4) + 1 : 1;
 
         return 'PAY-' . $year . $month . '-' . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

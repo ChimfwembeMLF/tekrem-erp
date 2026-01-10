@@ -19,7 +19,8 @@ class NotificationPreferenceController extends Controller
     public function show(): Response
     {
         $user = Auth::user();
-        $preferences = $user->getNotificationPreferences();
+        $companyId = currentCompanyId();
+        $preferences = $user->getNotificationPreferencesForCompany($companyId);
 
         return Inertia::render('Profile/Partials/NotificationSettings', [
             'preferences' => $preferences,
@@ -31,6 +32,7 @@ class NotificationPreferenceController extends Controller
      */
     public function update(Request $request): RedirectResponse
     {
+        $companyId = currentCompanyId();
         $validator = Validator::make($request->all(), [
             'email_notifications' => 'boolean',
             'push_notifications' => 'boolean',
@@ -56,7 +58,7 @@ class NotificationPreferenceController extends Controller
         }
 
         $user = Auth::user();
-        $preferences = $user->getNotificationPreferences();
+        $preferences = $user->getNotificationPreferencesForCompany($companyId);
 
         // Update preferences
         $preferences->update($validator->validated());
@@ -75,7 +77,8 @@ class NotificationPreferenceController extends Controller
     public function reset(): RedirectResponse
     {
         $user = Auth::user();
-        $preferences = $user->getNotificationPreferences();
+        $companyId = currentCompanyId();
+        $preferences = $user->getNotificationPreferencesForCompany($companyId);
 
         // Reset to default values
         $preferences->update([
@@ -110,7 +113,8 @@ class NotificationPreferenceController extends Controller
     public function getPreferences()
     {
         $user = Auth::user();
-        $preferences = $user->getNotificationPreferences();
+        $companyId = currentCompanyId();
+        $preferences = $user->getNotificationPreferencesForCompany($companyId);
 
         return response()->json([
             'preferences' => $preferences,

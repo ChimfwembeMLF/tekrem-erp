@@ -19,7 +19,8 @@ class Payroll extends Model
         'approved_at',
         'rejected_reason',
         'payslip_file_path',
-    ];
+        'company_id',
+];
 
     protected $table = 'hr_payrolls';
 
@@ -46,5 +47,16 @@ class Payroll extends Model
     {
         return $this->hasMany(EmployeePayrollComponent::class, 'employee_id', 'employee_id')
             ->where('period', $this->period);
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

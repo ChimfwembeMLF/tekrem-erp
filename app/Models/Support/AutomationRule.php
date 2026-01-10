@@ -21,7 +21,8 @@ class AutomationRule extends Model
         'priority',
         'created_by',
         'updated_by',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'is_active' => 'boolean',
@@ -349,5 +350,16 @@ class AutomationRule extends Model
         $ticket->update(['escalation_level' => $level]);
         
         return true;
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

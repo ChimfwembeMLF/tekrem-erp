@@ -30,7 +30,8 @@ class ProjectMilestone extends Model
         'dependencies',
         'order',
         'metadata',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -248,5 +249,16 @@ class ProjectMilestone extends Model
             $q->whereNull('dependencies')
               ->orWhere('dependencies', '[]');
         });
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

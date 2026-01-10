@@ -25,7 +25,8 @@ class Notification extends Model
         'is_read',
         'notifiable_id',
         'notifiable_type',
-    ];
+        'company_id',
+];
 
     /**
      * Get the company that owns the notification.
@@ -74,5 +75,10 @@ class Notification extends Model
     public function scopeUnread($query)
     {
         return $query->where('is_read', false);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

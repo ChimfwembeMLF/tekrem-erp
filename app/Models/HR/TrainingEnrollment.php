@@ -27,7 +27,8 @@ class TrainingEnrollment extends Model
         'certificate_issued',
         'certificate_number',
         'certificate_expiry',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'enrolled_at' => 'datetime',
@@ -342,5 +343,16 @@ class TrainingEnrollment extends Model
             'failed' => 'red',
             default => 'gray'
         };
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

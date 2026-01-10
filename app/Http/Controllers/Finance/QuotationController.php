@@ -20,7 +20,7 @@ class QuotationController extends Controller
     public function index(Request $request)
     {
         $query = Quotation::with(['lead', 'user'])
-            ->where('user_id', auth()->id())
+            ->where('company_id', currentCompanyId())
             ->orderBy('created_at', 'desc');
 
         // Apply filters
@@ -52,14 +52,15 @@ class QuotationController extends Controller
         }
 
         // Check for expired quotations and update status
-        Quotation::where('expiry_date', '<', now())
+        Quotation::where('company_id', currentCompanyId())
+            ->where('expiry_date', '<', now())
             ->whereIn('status', ['draft', 'sent'])
             ->update(['status' => 'expired']);
 
         $quotations = $query->paginate(15)->withQueryString();
 
         // Get filter options
-        $leads = Lead::where('user_id', auth()->id())
+        $leads = Lead::where('company_id', currentCompanyId())
             ->orderBy('name')
             ->get(['id', 'name', 'company']);
 
@@ -85,7 +86,7 @@ class QuotationController extends Controller
     public function create(Request $request)
     {
         // Get leads that are not converted to clients yet
-        $leads = Lead::where('user_id', auth()->id())
+        $leads = Lead::where('company_id', currentCompanyId())
             ->where('converted_to_client', false)
             ->orderBy('name')
             ->get(['id', 'name', 'email', 'company']);
@@ -108,7 +109,7 @@ class QuotationController extends Controller
         // Pre-select lead if provided
         $selectedLead = null;
         if ($request->filled('lead')) {
-            $selectedLead = Lead::where('user_id', auth()->id())
+            $selectedLead = Lead::where('company_id', currentCompanyId())
                 ->where('id', $request->lead)
                 ->first();
         }
@@ -146,9 +147,9 @@ class QuotationController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
-        // Verify lead belongs to authenticated user
+        // Verify lead belongs to authenticated company
         $lead = Lead::where('id', $request->lead_id)
-            ->where('user_id', auth()->id())
+            ->where('company_id', currentCompanyId())
             ->first();
 
         if (!$lead) {
@@ -179,6 +180,7 @@ class QuotationController extends Controller
                 'terms' => $request->terms,
                 'lead_id' => $request->lead_id,
                 'user_id' => auth()->id(),
+                'company_id' => currentCompanyId(),
             ]);
 
             // Create quotation items
@@ -202,7 +204,7 @@ class QuotationController extends Controller
     public function show(Quotation $quotation)
     {
         // Ensure user can only view their own quotations
-        if ($quotation->user_id !== auth()->id()) {
+        if ($quotation->company_id !== currentCompanyId()) {
             abort(403);
         }
 
@@ -222,7 +224,7 @@ class QuotationController extends Controller
     public function edit(Quotation $quotation)
     {
         // Ensure user can only edit their own quotations
-        if ($quotation->user_id !== auth()->id()) {
+        if ($quotation->company_id !== currentCompanyId()) {
             abort(403);
         }
 
@@ -235,7 +237,7 @@ class QuotationController extends Controller
         $quotation->load(['lead', 'items']);
 
         // Get leads that are not converted to clients yet
-        $leads = Lead::where('user_id', auth()->id())
+        $leads = Lead::where('company_id', currentCompanyId())
             ->where('converted_to_client', false)
             ->orderBy('name')
             ->get(['id', 'name', 'email', 'company']);
@@ -269,7 +271,7 @@ class QuotationController extends Controller
     public function update(Request $request, Quotation $quotation)
     {
         // Ensure user can only update their own quotations
-        if ($quotation->user_id !== auth()->id()) {
+        if ($quotation->company_id !== currentCompanyId()) {
             abort(403);
         }
 
@@ -298,9 +300,9 @@ class QuotationController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
-        // Verify lead belongs to authenticated user
+        // Verify lead belongs to authenticated company
         $lead = Lead::where('id', $request->lead_id)
-            ->where('user_id', auth()->id())
+            ->where('company_id', currentCompanyId())
             ->first();
 
         if (!$lead) {
@@ -354,7 +356,7 @@ class QuotationController extends Controller
     public function destroy(Quotation $quotation)
     {
         // Ensure user can only delete their own quotations
-        if ($quotation->user_id !== auth()->id()) {
+        if ($quotation->company_id !== currentCompanyId()) {
             abort(403);
         }
 
@@ -375,7 +377,7 @@ class QuotationController extends Controller
     public function send(Quotation $quotation)
     {
         // Ensure user can only send their own quotations
-        if ($quotation->user_id !== auth()->id()) {
+        if ($quotation->company_id !== currentCompanyId()) {
             abort(403);
         }
 
@@ -398,7 +400,7 @@ class QuotationController extends Controller
     public function accept(Quotation $quotation)
     {
         // Ensure user can only accept their own quotations
-        if ($quotation->user_id !== auth()->id()) {
+        if ($quotation->company_id !== currentCompanyId()) {
             abort(403);
         }
 
@@ -418,7 +420,7 @@ class QuotationController extends Controller
     public function reject(Quotation $quotation)
     {
         // Ensure user can only reject their own quotations
-        if ($quotation->user_id !== auth()->id()) {
+        if ($quotation->company_id !== currentCompanyId()) {
             abort(403);
         }
 
@@ -438,7 +440,7 @@ class QuotationController extends Controller
     public function convertToInvoice(Quotation $quotation)
     {
         // Ensure user can only convert their own quotations
-        if ($quotation->user_id !== auth()->id()) {
+        if ($quotation->company_id !== currentCompanyId()) {
             abort(403);
         }
 
@@ -462,7 +464,7 @@ class QuotationController extends Controller
     public function pdf(Quotation $quotation, PdfService $pdfService)
     {
         // Ensure user can only view their own quotations
-        if ($quotation->user_id !== auth()->id()) {
+        if ($quotation->company_id !== currentCompanyId()) {
             abort(403);
         }
 

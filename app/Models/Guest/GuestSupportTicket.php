@@ -48,7 +48,8 @@ class GuestSupportTicket extends Model
         'ip_address',
         'user_agent',
         'internal_notes',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -278,5 +279,16 @@ class GuestSupportTicket extends Model
         }
 
         return $this->created_at->diffInHours($this->resolved_at);
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

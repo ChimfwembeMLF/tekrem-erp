@@ -21,18 +21,20 @@ class DashboardController extends Controller
      */
     public function index(Request $request): Response
     {
+        $companyId = currentCompanyId();
         // Employee Statistics
-        $totalEmployees = Employee::count();
-        $activeEmployees = Employee::active()->count();
-        $newEmployeesThisMonth = Employee::whereMonth('hire_date', now()->month)
+        $totalEmployees = Employee::where('company_id', $companyId)->count();
+        $activeEmployees = Employee::where('company_id', $companyId)->active()->count();
+        $newEmployeesThisMonth = Employee::where('company_id', $companyId)
+            ->whereMonth('hire_date', now()->month)
             ->whereYear('hire_date', now()->year)
             ->count();
 
         // Department Statistics
-        $totalDepartments = Department::active()->count();
-        $departmentStats = Department::active()
-            ->withCount(['employees' => function ($query) {
-                $query->where('employment_status', 'active');
+        $totalDepartments = Department::where('company_id', $companyId)->active()->count();
+        $departmentStats = Department::where('company_id', $companyId)->active()
+            ->withCount(['employees' => function ($query) use ($companyId) {
+                $query->where('employment_status', 'active')->where('company_id', $companyId);
             }])
             ->get()
             ->map(function ($dept) {
@@ -44,8 +46,8 @@ class DashboardController extends Controller
             });
 
         // Leave Statistics
-        $pendingLeaves = Leave::pending()->count();
-        $leavesToday = Leave::approved()
+        $pendingLeaves = Leave::where('company_id', $companyId)->pending()->count();
+        $leavesToday = Leave::where('company_id', $companyId)->approved()
             ->whereDate('start_date', '<=', today())
             ->whereDate('end_date', '>=', today())
             ->count();
@@ -53,15 +55,15 @@ class DashboardController extends Controller
         $leaveStats = [
             'pending' => $pendingLeaves,
             'approved_today' => $leavesToday,
-            'this_month' => Leave::approved()
+            'this_month' => Leave::where('company_id', $companyId)->approved()
                 ->whereMonth('start_date', now()->month)
                 ->count(),
         ];
 
         // Attendance Statistics
-        $attendanceToday = Attendance::forDate(today())->count();
-        $presentToday = Attendance::forDate(today())->present()->count();
-        $lateToday = Attendance::forDate(today())->late()->count();
+        $attendanceToday = Attendance::where('company_id', $companyId)->forDate(today())->count();
+        $presentToday = Attendance::where('company_id', $companyId)->forDate(today())->present()->count();
+        $lateToday = Attendance::where('company_id', $companyId)->forDate(today())->late()->count();
 
         $attendanceStats = [
             'total_today' => $attendanceToday,
@@ -71,8 +73,8 @@ class DashboardController extends Controller
         ];
 
         // Performance Statistics
-        $overdueReviews = Performance::overdue()->count();
-        $completedReviewsThisQuarter = Performance::completed()
+        $overdueReviews = Performance::where('company_id', $companyId)->overdue()->count();
+        $completedReviewsThisQuarter = Performance::where('company_id', $companyId)->completed()
             ->whereBetween('completed_at', [
                 now()->startOfQuarter(),
                 now()->endOfQuarter()
@@ -82,19 +84,19 @@ class DashboardController extends Controller
         $performanceStats = [
             'overdue_reviews' => $overdueReviews,
             'completed_this_quarter' => $completedReviewsThisQuarter,
-            'average_rating' => Performance::completed()
+            'average_rating' => Performance::where('company_id', $companyId)->completed()
                 ->whereNotNull('overall_rating')
                 ->avg('overall_rating') ?? 0,
         ];
 
         // Training Statistics
-        $upcomingTrainings = Training::scheduled()
+        $upcomingTrainings = Training::where('company_id', $companyId)->scheduled()
             ->where('start_date', '>=', today())
             ->where('start_date', '<=', today()->addDays(30))
             ->count();
 
-        $ongoingTrainings = Training::ongoing()->count();
-        $mandatoryTrainings = Training::mandatory()->scheduled()->count();
+        $ongoingTrainings = Training::where('company_id', $companyId)->ongoing()->count();
+        $mandatoryTrainings = Training::where('company_id', $companyId)->mandatory()->scheduled()->count();
 
         $trainingStats = [
             'upcoming' => $upcomingTrainings,
@@ -103,7 +105,7 @@ class DashboardController extends Controller
         ];
 
         // Recent Activities
-        $recentLeaves = Leave::with(['employee.user', 'leaveType'])
+        $recentLeaves = Leave::where('company_id', $companyId)->with(['employee.user', 'leaveType'])
             ->latest()
             ->limit(5)
             ->get()
@@ -119,7 +121,7 @@ class DashboardController extends Controller
                 ];
             });
 
-        $recentHires = Employee::with(['user', 'department'])
+        $recentHires = Employee::where('company_id', $companyId)->with(['user', 'department'])
             ->where('hire_date', '>=', now()->subDays(30))
             ->latest('hire_date')
             ->limit(5)
@@ -135,9 +137,9 @@ class DashboardController extends Controller
             });
 
         // Charts Data
-        $employeeGrowthChart = $this->getEmployeeGrowthData();
-        $attendanceChart = $this->getAttendanceChartData();
-        $leaveTypesChart = $this->getLeaveTypesChartData();
+        $employeeGrowthChart = $this->getEmployeeGrowthData($companyId);
+        $attendanceChart = $this->getAttendanceChartData($companyId);
+        $leaveTypesChart = $this->getLeaveTypesChartData($companyId);
 
         return Inertia::render('HR/Dashboard', [
             'stats' => [
@@ -170,17 +172,19 @@ class DashboardController extends Controller
     /**
      * Get employee growth data for the last 12 months.
      */
-    private function getEmployeeGrowthData(): array
+    private function getEmployeeGrowthData($companyId): array
     {
         $data = [];
         
         for ($i = 11; $i >= 0; $i--) {
             $date = now()->subMonths($i);
-            $hires = Employee::whereYear('hire_date', $date->year)
+            $hires = Employee::where('company_id', $companyId)
+                ->whereYear('hire_date', $date->year)
                 ->whereMonth('hire_date', $date->month)
                 ->count();
             
-            $terminations = Employee::whereYear('termination_date', $date->year)
+            $terminations = Employee::where('company_id', $companyId)
+                ->whereYear('termination_date', $date->year)
                 ->whereMonth('termination_date', $date->month)
                 ->count();
 
@@ -198,15 +202,15 @@ class DashboardController extends Controller
     /**
      * Get attendance chart data for the last 7 days.
      */
-    private function getAttendanceChartData(): array
+    private function getAttendanceChartData($companyId): array
     {
         $data = [];
         
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i);
-            $present = Attendance::forDate($date)->present()->count();
-            $late = Attendance::forDate($date)->late()->count();
-            $absent = Attendance::forDate($date)->absent()->count();
+            $present = Attendance::where('company_id', $companyId)->forDate($date)->present()->count();
+            $late = Attendance::where('company_id', $companyId)->forDate($date)->late()->count();
+            $absent = Attendance::where('company_id', $companyId)->forDate($date)->absent()->count();
 
             $data[] = [
                 'date' => $date->format('M d'),
@@ -222,9 +226,9 @@ class DashboardController extends Controller
     /**
      * Get leave types chart data for current year.
      */
-    private function getLeaveTypesChartData(): array
+    private function getLeaveTypesChartData($companyId): array
     {
-        return Leave::approved()
+        return Leave::where('company_id', $companyId)->approved()
             ->whereYear('start_date', now()->year)
             ->join('hr_leave_types', 'hr_leaves.leave_type_id', '=', 'hr_leave_types.id')
             ->selectRaw('hr_leave_types.name, COUNT(*) as count, SUM(hr_leaves.days_requested) as total_days')

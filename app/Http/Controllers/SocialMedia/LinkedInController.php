@@ -23,27 +23,36 @@ class LinkedInController extends Controller
         $this->linkedInService = $linkedInService;
     }
 
+    protected function getCompanyId()
+    {
+        return currentCompanyId();
+    }
+
     /**
      * Display LinkedIn dashboard
      */
     public function index(): Response
     {
-        $companies = LinkedInCompany::with(['socialPosts' => function ($query) {
-            $query->orderBy('created_at', 'desc')->limit(5);
-        }])->get();
+        $companyId = $this->getCompanyId();
+        $companies = LinkedInCompany::where('company_id', $companyId)
+            ->with(['socialPosts' => function ($query) {
+                $query->orderBy('created_at', 'desc')->limit(5);
+            }])
+            ->get();
 
-        $recentLeads = LinkedInLead::with('lead')
+        $recentLeads = LinkedInLead::where('company_id', $companyId)
+            ->with('lead')
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
 
         $stats = [
             'total_companies' => $companies->count(),
-            'total_leads' => LinkedInLead::count(),
+            'total_leads' => LinkedInLead::where('company_id', $companyId)->count(),
             'total_followers' => $companies->sum('follower_count'),
             'avg_engagement' => $companies->avg('engagement_rate') ?? 0,
-            'unprocessed_leads' => LinkedInLead::unprocessed()->count(),
-            'high_value_leads' => LinkedInLead::highValue()->count(),
+            'unprocessed_leads' => LinkedInLead::where('company_id', $companyId)->unprocessed()->count(),
+            'high_value_leads' => LinkedInLead::where('company_id', $companyId)->highValue()->count(),
         ];
 
         return Inertia::render('SocialMedia/LinkedIn/Index', [
@@ -58,6 +67,7 @@ class LinkedInController extends Controller
      */
     public function syncCompanies(Request $request): JsonResponse
     {
+        $companyId = $this->getCompanyId();
         try {
             $companyPages = $this->linkedInService->getCompanyPages();
             $syncedCount = 0;
@@ -67,7 +77,7 @@ class LinkedInController extends Controller
                 
                 if (!empty($companyInfo)) {
                     LinkedInCompany::updateOrCreate(
-                        ['linkedin_company_id' => $companyData['id']],
+                        ['linkedin_company_id' => $companyData['id'], 'company_id' => $companyId],
                         [
                             'name' => $companyInfo['localizedName'] ?? $companyData['name'],
                             'description' => $companyInfo['localizedDescription'] ?? null,
@@ -78,6 +88,7 @@ class LinkedInController extends Controller
                             'founded_on' => isset($companyInfo['foundedOn']) ? Carbon::createFromFormat('Y', $companyInfo['foundedOn']['year']) : null,
                             'locations' => $companyInfo['locations'] ?? [],
                             'last_sync_at' => now(),
+                            'company_id' => $companyId
                         ]
                     );
                     $syncedCount++;
@@ -138,6 +149,7 @@ class LinkedInController extends Controller
      */
     public function importLead(Request $request): JsonResponse
     {
+        $companyId = $this->getCompanyId();
         $request->validate([
             'linkedin_profile_id' => 'required|string',
             'first_name' => 'required|string',
@@ -162,6 +174,7 @@ class LinkedInController extends Controller
                 'source' => 'linkedin',
                 'status' => 'new',
                 'assigned_to' => auth()->id(),
+                'company_id' => $companyId
             ]);
 
             // Create LinkedIn lead record
@@ -180,6 +193,7 @@ class LinkedInController extends Controller
                 ],
                 'lead_source' => 'search',
                 'engagement_level' => 'low',
+                'company_id' => $companyId
             ]);
 
             // Calculate and update lead score
@@ -204,6 +218,7 @@ class LinkedInController extends Controller
      */
     public function createPost(Request $request): JsonResponse
     {
+        $companyId = $this->getCompanyId();
         $request->validate([
             'company_id' => 'required|string',
             'content' => 'required|string|max:3000',
@@ -214,9 +229,14 @@ class LinkedInController extends Controller
         ]);
 
         try {
+            $company = LinkedInCompany::where('linkedin_company_id', $request->company_id)
+                ->where('company_id', $companyId)
+                ->firstOrFail();
+
             $post = SocialPost::create([
                 'platform' => 'linkedin',
                 'platform_account_id' => $request->company_id,
+                'company_id' => $companyId,
                 'content' => $request->content,
                 'media_urls' => $request->media_urls ?? [],
                 'media_type' => !empty($request->media_urls) ? 'image' : 'text',
@@ -336,12 +356,17 @@ class LinkedInController extends Controller
      */
     public function getAnalytics(Request $request): JsonResponse
     {
+        $companyId = $this->getCompanyId();
         $request->validate([
             'company_id' => 'required|string',
             'period' => 'nullable|in:day,week,month',
         ]);
 
         try {
+            $company = LinkedInCompany::where('linkedin_company_id', $request->company_id)
+                ->where('company_id', $companyId)
+                ->firstOrFail();
+
             $period = $request->period ?? 'week';
             $endDate = now();
             $startDate = match($period) {

@@ -24,8 +24,9 @@ class SocialPost extends Model
         'scheduled_at',
         'published_at',
         'engagement_stats',
-        'error_message'
-    ];
+        'error_message',
+        'company_id',
+];
 
     protected $casts = [
         'media_urls' => 'array',

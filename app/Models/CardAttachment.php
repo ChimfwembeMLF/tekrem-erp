@@ -16,7 +16,8 @@ class CardAttachment extends Model
         'path',
         'mime_type',
         'size',
-    ];
+        'company_id',
+];
 
     public function card()
     {
@@ -26,5 +27,16 @@ class CardAttachment extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

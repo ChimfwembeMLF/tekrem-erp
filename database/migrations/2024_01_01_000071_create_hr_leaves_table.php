@@ -21,6 +21,8 @@ return new class extends Migration
             $table->text('reason');
             $table->string('status')->default('pending'); // pending, approved, rejected, cancelled
             $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->timestamp('approved_at')->nullable();
             $table->text('approval_notes')->nullable();
             $table->text('rejection_reason')->nullable();

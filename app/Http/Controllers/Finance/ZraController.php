@@ -31,19 +31,20 @@ class ZraController extends Controller
     {
         // Get recent ZRA invoices
         $recentInvoices = ZraSmartInvoice::with(['invoice', 'submittedBy'])
+            ->where('company_id', currentCompanyId())
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
 
         // Get comprehensive statistics
         $stats = [
-            'total' => ZraSmartInvoice::count(),
-            'pending' => ZraSmartInvoice::pending()->count(),
-            'submitted' => ZraSmartInvoice::submitted()->count(),
-            'approved' => ZraSmartInvoice::approved()->count(),
-            'rejected' => ZraSmartInvoice::rejected()->count(),
-            'submitted_today' => ZraSmartInvoice::whereDate('submitted_at', today())->count(),
-            'approved_this_month' => ZraSmartInvoice::approved()
+            'total' => ZraSmartInvoice::where('company_id', currentCompanyId())->count(),
+            'pending' => ZraSmartInvoice::where('company_id', currentCompanyId())->pending()->count(),
+            'submitted' => ZraSmartInvoice::where('company_id', currentCompanyId())->submitted()->count(),
+            'approved' => ZraSmartInvoice::where('company_id', currentCompanyId())->approved()->count(),
+            'rejected' => ZraSmartInvoice::where('company_id', currentCompanyId())->rejected()->count(),
+            'submitted_today' => ZraSmartInvoice::where('company_id', currentCompanyId())->whereDate('submitted_at', today())->count(),
+            'approved_this_month' => ZraSmartInvoice::where('company_id', currentCompanyId())->approved()
                 ->whereMonth('approved_at', now()->month)
                 ->count(),
             'rejection_rate' => $this->calculateRejectionRate(),
@@ -52,6 +53,7 @@ class ZraController extends Controller
 
         // Get monthly submission trends
         $monthlyTrends = ZraSmartInvoice::selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, COUNT(*) as count')
+            ->where('company_id', currentCompanyId())
             ->groupBy('month')
             ->orderBy('month', 'desc')
             ->limit(6)
@@ -65,7 +67,7 @@ class ZraController extends Controller
             'recentInvoices' => $recentInvoices,
             'monthlyTrends' => $monthlyTrends,
             'apiHealth' => $apiHealth,
-            'configuration' => ZraConfiguration::active()->first(),
+            'configuration' => ZraConfiguration::active()->where('company_id', currentCompanyId())->first(),
         ]);
     }
 
@@ -75,6 +77,7 @@ class ZraController extends Controller
     public function index(Request $request)
     {
         $query = ZraSmartInvoice::with(['invoice', 'submittedBy'])
+            ->where('company_id', currentCompanyId())
             ->orderBy('created_at', 'desc');
 
         // Apply filters
@@ -102,11 +105,11 @@ class ZraController extends Controller
 
         // Get statistics
         $stats = [
-            'total' => ZraSmartInvoice::count(),
-            'pending' => ZraSmartInvoice::pending()->count(),
-            'submitted' => ZraSmartInvoice::submitted()->count(),
-            'approved' => ZraSmartInvoice::approved()->count(),
-            'rejected' => ZraSmartInvoice::rejected()->count(),
+            'total' => ZraSmartInvoice::where('company_id', currentCompanyId())->count(),
+            'pending' => ZraSmartInvoice::where('company_id', currentCompanyId())->pending()->count(),
+            'submitted' => ZraSmartInvoice::where('company_id', currentCompanyId())->submitted()->count(),
+            'approved' => ZraSmartInvoice::where('company_id', currentCompanyId())->approved()->count(),
+            'rejected' => ZraSmartInvoice::where('company_id', currentCompanyId())->rejected()->count(),
         ];
 
         return Inertia::render('Finance/ZRA/Index', [
@@ -121,6 +124,9 @@ class ZraController extends Controller
      */
     public function show(ZraSmartInvoice $zraInvoice)
     {
+        if ($zraInvoice->company_id !== currentCompanyId()) {
+            abort(403);
+        }
         $zraInvoice->load(['invoice.items', 'submittedBy', 'auditLogs.user']);
 
         return Inertia::render('Finance/ZRA/Show', [
@@ -133,6 +139,9 @@ class ZraController extends Controller
      */
     public function submit(Request $request, Invoice $invoice)
     {
+        if ($invoice->company_id !== currentCompanyId()) {
+            abort(403);
+        }
         $request->validate([
             'auto_approve' => 'boolean',
         ]);
@@ -155,6 +164,9 @@ class ZraController extends Controller
      */
     public function checkStatus(ZraSmartInvoice $zraInvoice)
     {
+        if ($zraInvoice->company_id !== currentCompanyId()) {
+            abort(403);
+        }
         $result = $this->zraService->checkInvoiceStatus($zraInvoice);
 
         if ($result['success']) {
@@ -169,6 +181,9 @@ class ZraController extends Controller
      */
     public function cancel(Request $request, ZraSmartInvoice $zraInvoice)
     {
+        if ($zraInvoice->company_id !== currentCompanyId()) {
+            abort(403);
+        }
         $request->validate([
             'reason' => 'required|string|max:500',
         ]);
@@ -187,6 +202,9 @@ class ZraController extends Controller
      */
     public function retry(ZraSmartInvoice $zraInvoice)
     {
+        if ($zraInvoice->company_id !== currentCompanyId()) {
+            abort(403);
+        }
         $result = $this->zraService->retrySubmission($zraInvoice);
 
         if ($result['success']) {
@@ -201,6 +219,9 @@ class ZraController extends Controller
      */
     public function downloadQrCode(ZraSmartInvoice $zraInvoice)
     {
+        if ($zraInvoice->company_id !== currentCompanyId()) {
+            abort(403, 'QR code not available');
+        }
         if (!$zraInvoice->isApproved() || !$zraInvoice->qr_code) {
             abort(404, 'QR code not available');
         }
@@ -218,7 +239,7 @@ class ZraController extends Controller
      */
     public function configuration()
     {
-        $config = ZraConfiguration::active()->first();
+        $config = ZraConfiguration::active()->where('company_id', currentCompanyId())->first();
 
         return Inertia::render('Finance/ZRA/Configuration', [
             'configuration' => $config,
@@ -254,10 +275,11 @@ class ZraController extends Controller
 
         try {
             // Deactivate existing configurations
-            ZraConfiguration::where('is_active', true)->update(['is_active' => false]);
+            ZraConfiguration::where('company_id', currentCompanyId())->where('is_active', true)->update(['is_active' => false]);
 
             // Create or update configuration
             $config = ZraConfiguration::create(array_merge($request->validated(), [
+                'company_id' => currentCompanyId(),
                 'is_active' => true,
                 'health_status' => 'unknown',
             ]));
@@ -303,6 +325,7 @@ class ZraController extends Controller
     public function auditLogs(Request $request)
     {
         $query = ZraAuditLog::with(['zraSmartInvoice.invoice', 'user'])
+            ->where('company_id', currentCompanyId())
             ->orderBy('executed_at', 'desc');
 
         // Apply filters
@@ -336,6 +359,7 @@ class ZraController extends Controller
     public function exportAuditLogs(Request $request)
     {
         $query = ZraAuditLog::with(['zraSmartInvoice.invoice', 'user'])
+            ->where('company_id', currentCompanyId())
             ->orderBy('executed_at', 'desc');
 
         // Apply same filters as audit logs index
@@ -407,10 +431,10 @@ class ZraController extends Controller
     public function statistics()
     {
         $stats = [
-            'total_invoices' => ZraSmartInvoice::count(),
-            'pending_submissions' => ZraSmartInvoice::pending()->count(),
-            'submitted_today' => ZraSmartInvoice::whereDate('submitted_at', today())->count(),
-            'approved_this_month' => ZraSmartInvoice::approved()
+            'total_invoices' => ZraSmartInvoice::where('company_id', currentCompanyId())->count(),
+            'pending_submissions' => ZraSmartInvoice::where('company_id', currentCompanyId())->pending()->count(),
+            'submitted_today' => ZraSmartInvoice::where('company_id', currentCompanyId())->whereDate('submitted_at', today())->count(),
+            'approved_this_month' => ZraSmartInvoice::where('company_id', currentCompanyId())->approved()
                 ->whereMonth('approved_at', now()->month)
                 ->count(),
             'rejection_rate' => $this->calculateRejectionRate(),
@@ -425,13 +449,14 @@ class ZraController extends Controller
      */
     protected function calculateRejectionRate(): float
     {
-        $total = ZraSmartInvoice::whereIn('submission_status', ['approved', 'rejected'])->count();
+        $total = ZraSmartInvoice::where('company_id', currentCompanyId())
+            ->whereIn('submission_status', ['approved', 'rejected'])->count();
         
         if ($total === 0) {
             return 0;
         }
 
-        $rejected = ZraSmartInvoice::rejected()->count();
+        $rejected = ZraSmartInvoice::where('company_id', currentCompanyId())->rejected()->count();
         
         return round(($rejected / $total) * 100, 2);
     }
@@ -441,7 +466,8 @@ class ZraController extends Controller
      */
     protected function calculateAverageProcessingTime(): float
     {
-        $approvedInvoices = ZraSmartInvoice::approved()
+        $approvedInvoices = ZraSmartInvoice::where('company_id', currentCompanyId())
+            ->approved()
             ->whereNotNull('submitted_at')
             ->whereNotNull('approved_at')
             ->get();

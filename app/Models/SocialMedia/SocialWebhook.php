@@ -16,7 +16,8 @@ class SocialWebhook extends Model
         'processed',
         'processed_at',
         'error_message',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'payload' => 'array',
@@ -151,5 +152,16 @@ class SocialWebhook extends Model
         }
 
         return !empty($summary) ? implode(', ', $summary) : 'Webhook data received';
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

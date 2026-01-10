@@ -58,6 +58,7 @@ class ChartOfAccountsController extends Controller
         // Get account categories for filter dropdown
         $categories = Account::select('account_category')
             ->distinct()
+            ->where('company_id', $company->id)
             ->whereNotNull('account_category')
             ->pluck('account_category')
             ->sort()
@@ -66,6 +67,7 @@ class ChartOfAccountsController extends Controller
         // Get account types for filter dropdown
         $types = Account::select('type')
             ->distinct()
+            ->where('company_id', $company->id)
             ->whereNotNull('type')
             ->pluck('type')
             ->sort()
@@ -86,12 +88,12 @@ class ChartOfAccountsController extends Controller
     {
 
         $parentAccount = null;
+        $company = app('currentCompany');
         if ($request->filled('parent_id')) {
-            $parentAccount = Account::find($request->parent_id);
+            $parentAccount = Account::where('company_id', $company->id)->find($request->parent_id);
         }
 
         // Get potential parent accounts (only those that allow child accounts)
-        $company = app('currentCompany');
         $parentAccounts = Account::where('company_id', $company->id)
             ->where(function($q){
                 $q->where('allow_manual_entries', false)
@@ -170,7 +172,8 @@ class ChartOfAccountsController extends Controller
         // Determine level based on parent
         $level = 0;
         if ($validated['parent_account_id']) {
-            $parent = Account::find($validated['parent_account_id']);
+            $company = app('currentCompany');
+            $parent = Account::where('company_id', $company->id)->find($validated['parent_account_id']);
             $level = $parent ? $parent->level + 1 : 0;
         }
 
@@ -194,6 +197,10 @@ class ChartOfAccountsController extends Controller
     public function show(Account $account): Response
     {
 
+        $company = app('currentCompany');
+        if ($account->company_id !== $company->id) {
+            abort(404);
+        }
         $account->load([
             'parentAccount',
             'childAccounts' => function ($query) {
@@ -228,8 +235,11 @@ class ChartOfAccountsController extends Controller
     public function edit(Account $account): Response
     {
 
-        // Get potential parent accounts (excluding self and descendants)
         $company = app('currentCompany');
+        if ($account->company_id !== $company->id) {
+            abort(404);
+        }
+        // Get potential parent accounts (excluding self and descendants)
         $parentAccounts = Account::where('company_id', $company->id)
             ->where('id', '!=', $account->id)
             ->where(function ($query) use ($account) {
@@ -321,6 +331,10 @@ class ChartOfAccountsController extends Controller
             $validated['level'] = $level;
         }
 
+        $company = app('currentCompany');
+        if ($account->company_id !== $company->id) {
+            abort(404);
+        }
         $account->update($validated);
 
         return redirect()->route('finance.chart-of-accounts.index')
@@ -333,6 +347,10 @@ class ChartOfAccountsController extends Controller
     public function destroy(Account $account)
     {
 
+        $company = app('currentCompany');
+        if ($account->company_id !== $company->id) {
+            abort(404);
+        }
         // Check if account has child accounts
         if ($account->childAccounts()->count() > 0) {
             return back()->withErrors(['error' => 'Cannot delete account with child accounts.']);
@@ -355,9 +373,11 @@ class ChartOfAccountsController extends Controller
     public function tree(): Response
     {
 
+        $company = app('currentCompany');
         $accounts = Account::with(['childAccounts' => function ($query) {
             $query->orderBy('account_code');
         }])
+        ->where('company_id', $company->id)
         ->whereNull('parent_account_id')
         ->orderBy('account_code')
         ->get();

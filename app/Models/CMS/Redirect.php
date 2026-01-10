@@ -22,7 +22,8 @@ class Redirect extends Model
         'last_hit_at',
         'description',
         'created_by',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'is_active' => 'boolean',
@@ -127,5 +128,16 @@ class Redirect extends Model
                 ->limit(10)
                 ->get(),
         ];
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

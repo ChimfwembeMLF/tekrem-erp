@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('facebook_leads', function (Blueprint $table) {
             $table->id();
             $table->foreignId('lead_id')->constrained('leads')->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->string('facebook_lead_id')->unique();
             $table->string('page_id')->nullable();
             $table->string('ad_id')->nullable();

@@ -22,7 +22,8 @@ class MediaFolder extends Model
         'parent_id',
         'sort_order',
         'created_by',
-    ];
+        'company_id',
+];
 
     /**
      * Get the user who created this folder.
@@ -194,5 +195,15 @@ class MediaFolder extends Model
 
         // Delete the folder itself
         return $this->delete();
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

@@ -32,7 +32,8 @@ class MomoWebhook extends Model
         'last_retry_at',
         'signature_verified',
         'is_duplicate',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -199,5 +200,16 @@ class MomoWebhook extends Model
     public function getRawPayloadAttribute(): string
     {
         return json_encode($this->payload, JSON_PRETTY_PRINT);
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

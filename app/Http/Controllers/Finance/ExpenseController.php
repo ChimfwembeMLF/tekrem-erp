@@ -19,6 +19,7 @@ class ExpenseController extends Controller
     public function index(Request $request)
     {
         $query = Expense::where('user_id', auth()->id())
+            ->where('company_id', currentCompanyId())
             ->with(['account', 'category']);
 
         // Search functionality
@@ -52,8 +53,10 @@ class ExpenseController extends Controller
 
         $expenses = $query->orderBy('expense_date', 'desc')->paginate(15);
 
-        $categories = Category::where('type', 'expense')
-            ->orWhere('type', 'both')
+        $categories = Category::where('company_id', currentCompanyId())
+            ->where(function($q){
+                $q->where('type', 'expense')->orWhere('type', 'both');
+            })
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'color']);
@@ -79,12 +82,15 @@ class ExpenseController extends Controller
     public function create()
     {
         $accounts = Account::where('user_id', auth()->id())
+            ->where('company_id', currentCompanyId())
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'currency']);
 
-        $categories = Category::where('type', 'expense')
-            ->orWhere('type', 'both')
+        $categories = Category::where('company_id', currentCompanyId())
+            ->where(function($q){
+                $q->where('type', 'expense')->orWhere('type', 'both');
+            })
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'color']);
@@ -139,6 +145,7 @@ class ExpenseController extends Controller
             'category_id' => $request->category_id,
             'account_id' => $request->account_id,
             'user_id' => auth()->id(),
+            'company_id' => currentCompanyId(),
         ]);
 
         return redirect()->route('finance.expenses.index')
@@ -150,8 +157,8 @@ class ExpenseController extends Controller
      */
     public function show(Expense $expense)
     {
-        // Ensure user can only view their own expenses
-        if ($expense->user_id !== auth()->id()) {
+        // Ensure user can only view their own expenses and company
+        if ($expense->user_id !== auth()->id() || $expense->company_id !== currentCompanyId()) {
             abort(403);
         }
 
@@ -167,18 +174,21 @@ class ExpenseController extends Controller
      */
     public function edit(Expense $expense)
     {
-        // Ensure user can only edit their own expenses
-        if ($expense->user_id !== auth()->id()) {
+        // Ensure user can only edit their own expenses and company
+        if ($expense->user_id !== auth()->id() || $expense->company_id !== currentCompanyId()) {
             abort(403);
         }
 
         $accounts = Account::where('user_id', auth()->id())
+            ->where('company_id', currentCompanyId())
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'currency']);
 
-        $categories = Category::where('type', 'expense')
-            ->orWhere('type', 'both')
+        $categories = Category::where('company_id', currentCompanyId())
+            ->where(function($q){
+                $q->where('type', 'expense')->orWhere('type', 'both');
+            })
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'color']);
@@ -203,8 +213,8 @@ class ExpenseController extends Controller
      */
     public function update(Request $request, Expense $expense)
     {
-        // Ensure user can only update their own expenses
-        if ($expense->user_id !== auth()->id()) {
+        // Ensure user can only update their own expenses and company
+        if ($expense->user_id !== auth()->id() || $expense->company_id !== currentCompanyId()) {
             abort(403);
         }
 
@@ -249,8 +259,8 @@ class ExpenseController extends Controller
      */
     public function destroy(Expense $expense)
     {
-        // Ensure user can only delete their own expenses
-        if ($expense->user_id !== auth()->id()) {
+        // Ensure user can only delete their own expenses and company
+        if ($expense->user_id !== auth()->id() || $expense->company_id !== currentCompanyId()) {
             abort(403);
         }
 
@@ -299,7 +309,7 @@ class ExpenseController extends Controller
     public function approve(Expense $expense)
     {
         // Optional: Check if user is authorized to approve
-        if ($expense->user_id !== auth()->id()) {
+        if ($expense->user_id !== auth()->id() || $expense->company_id !== currentCompanyId()) {
             abort(403);
         }
 

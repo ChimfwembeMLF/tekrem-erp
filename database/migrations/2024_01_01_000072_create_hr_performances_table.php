@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('employee_id')->constrained('hr_employees')->onDelete('cascade');
             $table->foreignId('reviewer_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->string('review_period'); // Q1 2024, Annual 2024, etc.
             $table->date('review_start_date');
             $table->date('review_end_date');

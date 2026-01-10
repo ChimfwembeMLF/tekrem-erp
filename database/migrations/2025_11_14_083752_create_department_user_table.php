@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('department_id')->constrained('hr_departments')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->timestamps();
             $table->unique(['department_id', 'user_id']);
         });

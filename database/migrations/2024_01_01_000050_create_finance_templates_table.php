@@ -20,6 +20,8 @@ return new class extends Migration
             $table->boolean('is_default')->default(false);
             $table->boolean('is_active')->default(true);
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->timestamps();
 
             $table->index(['type', 'is_active']);

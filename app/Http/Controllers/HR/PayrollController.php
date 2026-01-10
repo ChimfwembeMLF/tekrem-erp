@@ -15,7 +15,8 @@ class PayrollController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Payroll::query()->with(['employee.user']);
+        $companyId = currentCompanyId();
+        $query = Payroll::query()->with(['employee.user'])->where('company_id', $companyId);
 
         // Filtering by employee name
         if ($request->filled('employee')) {
@@ -49,7 +50,8 @@ class PayrollController extends Controller
 
     public function create()
     {
-        $employees = \App\Models\HR\Employee::with('user')->get()->map(function ($employee) {
+        $companyId = currentCompanyId();
+        $employees = \App\Models\HR\Employee::with('user')->where('company_id', $companyId)->get()->map(function ($employee) {
             return [
                 'id' => $employee->id,
                 'employee_id' => $employee->employee_id,
@@ -64,18 +66,25 @@ class PayrollController extends Controller
 
     public function store(Request $request)
     {
+        $companyId = currentCompanyId();
         $data = $request->validate([
             'employee_id' => 'required|integer',
             'period' => 'required|string',
         ]);
-        $employee = Employee::findOrFail($data['employee_id']);
+        $employee = Employee::where('company_id', $companyId)->findOrFail($data['employee_id']);
         $service = new PayrollService();
         $payroll = $service->processPayroll($employee, $data['period']);
+        $payroll->company_id = $companyId;
+        $payroll->save();
         return redirect()->route('hr.payroll.index')->with('success', 'Payroll processed and posted to finance.');
     }
 
     public function show(Payroll $payroll)
     {
+        $companyId = currentCompanyId();
+        if ($payroll->company_id !== $companyId) {
+            abort(403);
+        }
         return Inertia::render('HR/Payroll/Show', [
             'payroll' => $payroll,
         ]);
@@ -83,7 +92,11 @@ class PayrollController extends Controller
 
     public function edit(Payroll $payroll)
     {
-        $employees = \App\Models\HR\Employee::with('user')->get()->map(function ($employee) {
+        $companyId = currentCompanyId();
+        if ($payroll->company_id !== $companyId) {
+            abort(403);
+        }
+        $employees = \App\Models\HR\Employee::with('user')->where('company_id', $companyId)->get()->map(function ($employee) {
             return [
                 'id' => $employee->id,
                 'employee_id' => $employee->employee_id,
@@ -99,6 +112,10 @@ class PayrollController extends Controller
 
     public function update(Request $request, Payroll $payroll)
     {
+        $companyId = currentCompanyId();
+        if ($payroll->company_id !== $companyId) {
+            abort(403);
+        }
         $data = $request->validate([
             'employee_id' => 'required|integer',
             'period' => 'required|string',
@@ -110,12 +127,20 @@ class PayrollController extends Controller
 
     public function destroy(Payroll $payroll)
     {
+        $companyId = currentCompanyId();
+        if ($payroll->company_id !== $companyId) {
+            abort(403);
+        }
         $payroll->delete();
         return redirect()->route('hr.payroll.index')->with('success', 'Payroll record deleted.');
     }
 
-     public function approve(Payroll $payroll)
+    public function approve(Payroll $payroll)
     {
+        $companyId = currentCompanyId();
+        if ($payroll->company_id !== $companyId) {
+            abort(403);
+        }
         $payroll->status = 'approved';
         $payroll->approved_by = Auth::id();
         $payroll->approved_at = Carbon::now();
@@ -132,6 +157,10 @@ class PayrollController extends Controller
 
     public function reject(Request $request, Payroll $payroll)
     {
+        $companyId = currentCompanyId();
+        if ($payroll->company_id !== $companyId) {
+            abort(403);
+        }
         $data = $request->validate([
             'reason' => 'required|string',
         ]);

@@ -25,7 +25,9 @@ class DepartmentController extends Controller
      */
     public function index(Request $request): Response
     {
-        $query = Department::with(['manager', 'parentDepartment', 'employees'])
+        $companyId = currentCompanyId();
+        $query = Department::where('company_id', $companyId)
+            ->with(['manager', 'parentDepartment', 'employees'])
             ->withCount(['employees' => function ($query) {
                 $query->where('employment_status', 'active');
             }])
@@ -47,7 +49,7 @@ class DepartmentController extends Controller
 
         $departments = $query->orderBy('name')->paginate(15)->withQueryString();
 
-        $parentDepartments = Department::active()
+        $parentDepartments = Department::where('company_id', $companyId)->active()
             ->whereNull('parent_department_id')
             ->orderBy('name')
             ->get(['id', 'name']);
@@ -64,11 +66,12 @@ class DepartmentController extends Controller
      */
     public function create(): Response
     {
+        $companyId = currentCompanyId();
         $managers = User::whereHas('roles', function ($query) {
             $query->whereIn('name', ['super_user', 'admin', 'staff']);
         })->orderBy('name')->get(['id', 'name']);
 
-        $parentDepartments = Department::active()
+        $parentDepartments = Department::where('company_id', $companyId)->active()
             ->orderBy('name')
             ->get(['id', 'name']);
 
@@ -83,6 +86,7 @@ class DepartmentController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $companyId = currentCompanyId();
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:10|unique:hr_departments,code',
@@ -94,6 +98,7 @@ class DepartmentController extends Controller
             'is_active' => 'boolean',
             'metadata' => 'nullable|array',
         ]);
+        $validated['company_id'] = $companyId;
 
         $department = Department::create($validated);
 
@@ -106,6 +111,10 @@ class DepartmentController extends Controller
      */
     public function show(Department $department): Response
     {
+        $companyId = currentCompanyId();
+        if ($department->company_id !== $companyId) {
+            abort(403);
+        }
         $department->load([
             'manager',
             'parentDepartment',
@@ -144,13 +153,17 @@ class DepartmentController extends Controller
      */
     public function edit(Department $department): Response
     {
+        $companyId = currentCompanyId();
+        if ($department->company_id !== $companyId) {
+            abort(403);
+        }
         $department->load(['manager', 'parentDepartment']);
 
         $managers = User::whereHas('roles', function ($query) {
             $query->whereIn('name', ['super_user', 'admin', 'staff']);
         })->orderBy('name')->get(['id', 'name']);
 
-        $parentDepartments = Department::active()
+        $parentDepartments = Department::where('company_id', $companyId)->active()
             ->where('id', '!=', $department->id)
             ->orderBy('name')
             ->get(['id', 'name']);
@@ -167,6 +180,10 @@ class DepartmentController extends Controller
      */
     public function update(Request $request, Department $department): RedirectResponse
     {
+        $companyId = currentCompanyId();
+        if ($department->company_id !== $companyId) {
+            abort(403);
+        }
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => [
@@ -209,6 +226,10 @@ class DepartmentController extends Controller
      */
     public function destroy(Department $department): RedirectResponse
     {
+        $companyId = currentCompanyId();
+        if ($department->company_id !== $companyId) {
+            abort(403);
+        }
         // Check if department has employees
         if ($department->employees()->where('employment_status', 'active')->exists()) {
             return back()->withErrors([
@@ -234,6 +255,10 @@ class DepartmentController extends Controller
      */
     public function activate(Department $department): RedirectResponse
     {
+        $companyId = currentCompanyId();
+        if ($department->company_id !== $companyId) {
+            abort(403);
+        }
         $department->update(['is_active' => true]);
 
         return back()->with('success', 'Department activated successfully.');
@@ -244,6 +269,10 @@ class DepartmentController extends Controller
      */
     public function deactivate(Department $department): RedirectResponse
     {
+        $companyId = currentCompanyId();
+        if ($department->company_id !== $companyId) {
+            abort(403);
+        }
         // Check if department has active employees
         if ($department->employees()->where('employment_status', 'active')->exists()) {
             return back()->withErrors([

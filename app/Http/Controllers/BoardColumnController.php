@@ -10,6 +10,10 @@ class BoardColumnController extends Controller
 {
     public function index(Project $project, Board $board)
     {
+        // Multi-tenancy enforcement
+        if ($project->company_id !== currentCompanyId() || $board->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         return inertia('PM/Boards/Columns/Index', [
             'project' => $project,
             'board' => $board,
@@ -18,6 +22,9 @@ class BoardColumnController extends Controller
 
     public function create(Project $project, Board $board)
     {
+        if ($project->company_id !== currentCompanyId() || $board->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         return inertia('PM/Boards/Columns/Create/Index', [
             'project' => $project,
             'board' => $board,
@@ -26,6 +33,9 @@ class BoardColumnController extends Controller
 
     public function show(Project $project, Board $board, BoardColumn $column)
     {
+        if ($project->company_id !== currentCompanyId() || $board->company_id !== currentCompanyId() || $column->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         return inertia('PM/Boards/Columns/Show/Index', [
             'project' => $project,
             'board' => $board,
@@ -35,6 +45,9 @@ class BoardColumnController extends Controller
 
     public function edit(Project $project, Board $board, BoardColumn $column)
     {
+        if ($project->company_id !== currentCompanyId() || $board->company_id !== currentCompanyId() || $column->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         return inertia('PM/Boards/Columns/Edit/Index', [
             'project' => $project,
             'board' => $board,
@@ -43,6 +56,9 @@ class BoardColumnController extends Controller
     }
     public function store(Request $request, Project $project, Board $board)
     {
+        if ($project->company_id !== currentCompanyId() || $board->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'order' => 'required|integer',
@@ -50,12 +66,16 @@ class BoardColumnController extends Controller
             'is_done_column' => 'boolean',
         ]);
         $data['board_id'] = $board->id;
+        $data['company_id'] = currentCompanyId();
         BoardColumn::create($data);
         return redirect()->route('pm.projects.boards.show', [$project, $board]);
     }
 
     public function update(Request $request, BoardColumn $column)
     {
+        if ($column->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'order' => 'required|integer',
@@ -69,6 +89,9 @@ class BoardColumnController extends Controller
 
     public function destroy(BoardColumn $column)
     {
+        if ($column->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $column->load('board.project');
         $project = $column->board->project;
         $board = $column->board;

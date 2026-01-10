@@ -45,7 +45,8 @@ class BankReconciliation extends Model
         'approved_by',
         'approved_at',
         'user_id',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -302,5 +303,16 @@ class BankReconciliation extends Model
             (int) substr($lastReconciliation->reconciliation_number, -3) + 1 : 1;
         
         return $prefix . '-REC-' . $date . '-' . str_pad($sequence, 3, '0', STR_PAD_LEFT);
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

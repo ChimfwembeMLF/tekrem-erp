@@ -22,6 +22,8 @@ class ProjectPlanningController extends Controller
      */
     public function generateMilestones(Request $request)
     {
+        $companyId = session('current_company_id');
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -44,6 +46,7 @@ class ProjectPlanningController extends Controller
 
         try {
             $projectData = $validator->validated();
+            $projectData['company_id'] = $companyId;
             $milestones = $this->planningService->generateMilestones($projectData);
 
             return response()->json([
@@ -70,6 +73,8 @@ class ProjectPlanningController extends Controller
      */
     public function generateTasks(Request $request)
     {
+        $companyId = session('current_company_id');
+
         $validator = Validator::make($request->all(), [
             'description' => 'required|string|min:10',
             'project_name' => 'nullable|string|max:255',
@@ -92,6 +97,7 @@ class ProjectPlanningController extends Controller
                 'milestone' => $request->input('milestone'),
                 'team_size' => $request->input('team_size'),
                 'description' => $description,
+                'company_id' => $companyId,
             ];
 
             $tasks = $this->planningService->generateTasks($description, $context);
@@ -120,6 +126,8 @@ class ProjectPlanningController extends Controller
      */
     public function estimateTimeline(Request $request)
     {
+        $companyId = session('current_company_id');
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -137,6 +145,7 @@ class ProjectPlanningController extends Controller
 
         try {
             $projectData = $validator->validated();
+            $projectData['company_id'] = $companyId;
             $timeline = $this->planningService->estimateTimeline($projectData);
 
             return response()->json([
@@ -160,6 +169,8 @@ class ProjectPlanningController extends Controller
      */
     public function recommendResources(Request $request)
     {
+        $companyId = session('current_company_id');
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -177,6 +188,7 @@ class ProjectPlanningController extends Controller
 
         try {
             $projectData = $validator->validated();
+            $projectData['company_id'] = $companyId;
             $resources = $this->planningService->recommendResources($projectData);
 
             return response()->json([
@@ -200,6 +212,8 @@ class ProjectPlanningController extends Controller
      */
     public function prioritizeTasks(Request $request)
     {
+        $companyId = session('current_company_id');
+
         $validator = Validator::make($request->all(), [
             'tasks' => 'required|array|min:1',
             'tasks.*.title' => 'required|string|max:255',
@@ -223,6 +237,7 @@ class ProjectPlanningController extends Controller
                 'deadline' => $request->input('deadline'),
                 'team_capacity' => $request->input('team_capacity'),
                 'goals' => $request->input('goals'),
+                'company_id' => $companyId,
             ];
 
             $priorities = $this->planningService->prioritizeTasks($tasks, $context);
@@ -251,6 +266,8 @@ class ProjectPlanningController extends Controller
      */
     public function generateComprehensivePlan(Request $request)
     {
+        $companyId = session('current_company_id');
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -273,6 +290,7 @@ class ProjectPlanningController extends Controller
 
         try {
             $projectData = $validator->validated();
+            $projectData['company_id'] = $companyId;
 
             // Generate all AI recommendations
             $milestones = $this->planningService->generateMilestones($projectData);

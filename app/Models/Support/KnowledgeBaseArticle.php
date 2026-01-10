@@ -33,7 +33,8 @@ class KnowledgeBaseArticle extends Model
         'meta_description',
         'published_at',
         'sort_order',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -168,5 +169,16 @@ class KnowledgeBaseArticle extends Model
     {
         $wordCount = str_word_count(strip_tags($this->content));
         return max(1, ceil($wordCount / 200)); // Assuming 200 words per minute
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

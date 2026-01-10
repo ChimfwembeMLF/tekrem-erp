@@ -41,7 +41,8 @@ class ZraConfiguration extends Model
         'last_health_check',
         'health_status',
         'health_details',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -359,5 +360,16 @@ class ZraConfiguration extends Model
         }
 
         return $missing;
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

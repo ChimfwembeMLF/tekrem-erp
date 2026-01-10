@@ -27,8 +27,9 @@ class BankReconciliationController extends Controller
      */
     public function index(Request $request): Response
     {
-
+        $companyId = app('currentCompany')->id;
         $query = BankReconciliation::with(['account', 'bankStatement', 'reconciledBy'])
+            ->where('company_id', $companyId)
             ->latest('reconciliation_date');
 
         // Apply filters
@@ -62,7 +63,8 @@ class BankReconciliationController extends Controller
         $reconciliations = $query->paginate(20)->withQueryString();
 
         // Get accounts for filter dropdown
-        $accounts = Account::where('is_active', true)
+        $accounts = Account::where('company_id', $companyId)
+            ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'account_code']);
 
@@ -84,8 +86,9 @@ class BankReconciliationController extends Controller
      */
     public function create(Request $request): Response
     {
-
-        $accounts = Account::where('is_active', true)
+        $companyId = app('currentCompany')->id;
+        $accounts = Account::where('company_id', $companyId)
+            ->where('is_active', true)
             ->whereIn('type', ['checking', 'savings', 'business', 'cash'])
             ->orderBy('name')
             ->get(['id', 'name', 'account_code', 'balance']);
@@ -94,8 +97,9 @@ class BankReconciliationController extends Controller
         $bankStatements = collect();
 
         if ($request->filled('account_id')) {
-            $selectedAccount = Account::find($request->account_id);
-            $bankStatements = BankStatement::where('account_id', $request->account_id)
+            $selectedAccount = Account::where('company_id', $companyId)->find($request->account_id);
+            $bankStatements = BankStatement::where('company_id', $companyId)
+                ->where('account_id', $request->account_id)
                 ->where('status', 'completed')
                 ->whereDoesntHave('reconciliations', function ($query) {
                     $query->where('status', 'completed');
@@ -116,7 +120,7 @@ class BankReconciliationController extends Controller
      */
     public function store(Request $request)
     {
-
+        $companyId = app('currentCompany')->id;
         $validated = $request->validate([
             'account_id' => 'required|exists:accounts,id',
             'bank_statement_id' => 'required|exists:bank_statements,id',
@@ -129,6 +133,7 @@ class BankReconciliationController extends Controller
             'book_closing_balance' => 'required|numeric',
             'notes' => 'nullable|string|max:1000',
         ]);
+        $validated['company_id'] = $companyId;
 
         $reconciliation = $this->reconciliationService->createReconciliation($validated);
 
@@ -141,6 +146,10 @@ class BankReconciliationController extends Controller
      */
     public function show(BankReconciliation $bankReconciliation): Response
     {
+        $companyId = app('currentCompany')->id;
+        if ($bankReconciliation->company_id !== $companyId) {
+            abort(403, 'Unauthorized access to this reconciliation.');
+        }
 
         $bankReconciliation->load([
             'account',
@@ -161,6 +170,7 @@ class BankReconciliationController extends Controller
 
         // Get unmatched book transactions
         $unmatchedBookTransactions = Transaction::where('account_id', $bankReconciliation->account_id)
+            ->where('company_id', $companyId)
             ->where('is_reconciled', false)
             ->where('status', 'completed')
             ->whereBetween('transaction_date', [
@@ -191,6 +201,10 @@ class BankReconciliationController extends Controller
      */
     public function autoMatch(BankReconciliation $bankReconciliation)
     {
+        $companyId = app('currentCompany')->id;
+        if ($bankReconciliation->company_id !== $companyId) {
+            abort(403, 'Unauthorized access to this reconciliation.');
+        }
 
         $matches = $this->reconciliationService->autoMatchTransactions($bankReconciliation);
 
@@ -202,6 +216,10 @@ class BankReconciliationController extends Controller
      */
     public function manualMatch(Request $request, BankReconciliation $bankReconciliation)
     {
+        $companyId = app('currentCompany')->id;
+        if ($bankReconciliation->company_id !== $companyId) {
+            abort(403, 'Unauthorized access to this reconciliation.');
+        }
 
         $validated = $request->validate([
             'bank_statement_transaction_id' => 'required|exists:bank_statement_transactions,id',
@@ -224,6 +242,10 @@ class BankReconciliationController extends Controller
      */
     public function unmatch(Request $request, BankReconciliation $bankReconciliation)
     {
+        $companyId = app('currentCompany')->id;
+        if ($bankReconciliation->company_id !== $companyId) {
+            abort(403, 'Unauthorized access to this reconciliation.');
+        }
 
         $validated = $request->validate([
             'reconciliation_item_id' => 'required|exists:bank_reconciliation_items,id',
@@ -242,6 +264,10 @@ class BankReconciliationController extends Controller
      */
     public function complete(BankReconciliation $bankReconciliation)
     {
+        $companyId = app('currentCompany')->id;
+        if ($bankReconciliation->company_id !== $companyId) {
+            abort(403, 'Unauthorized access to this reconciliation.');
+        }
 
         if (!$bankReconciliation->isBalanced()) {
             return back()->withErrors(['error' => 'Cannot complete reconciliation. The reconciliation is not balanced.']);
@@ -257,6 +283,10 @@ class BankReconciliationController extends Controller
      */
     public function review(BankReconciliation $bankReconciliation)
     {
+        $companyId = app('currentCompany')->id;
+        if ($bankReconciliation->company_id !== $companyId) {
+            abort(403, 'Unauthorized access to this reconciliation.');
+        }
 
         if ($bankReconciliation->status !== 'completed') {
             return back()->withErrors(['error' => 'Can only review completed reconciliations.']);
@@ -272,6 +302,10 @@ class BankReconciliationController extends Controller
      */
     public function approve(BankReconciliation $bankReconciliation)
     {
+        $companyId = app('currentCompany')->id;
+        if ($bankReconciliation->company_id !== $companyId) {
+            abort(403, 'Unauthorized access to this reconciliation.');
+        }
 
         if ($bankReconciliation->status !== 'reviewed') {
             return back()->withErrors(['error' => 'Can only approve reviewed reconciliations.']);
@@ -287,6 +321,10 @@ class BankReconciliationController extends Controller
      */
     public function destroy(BankReconciliation $bankReconciliation)
     {
+        $companyId = app('currentCompany')->id;
+        if ($bankReconciliation->company_id !== $companyId) {
+            abort(403, 'Unauthorized access to this reconciliation.');
+        }
 
         if ($bankReconciliation->status === 'approved') {
             return back()->withErrors(['error' => 'Cannot delete approved reconciliations.']);
@@ -304,6 +342,10 @@ class BankReconciliationController extends Controller
      */
     public function getSuggestedMatches(Request $request, BankReconciliation $bankReconciliation)
     {
+        $companyId = app('currentCompany')->id;
+        if ($bankReconciliation->company_id !== $companyId) {
+            abort(403, 'Unauthorized access to this reconciliation.');
+        }
 
         $validated = $request->validate([
             'bank_statement_transaction_id' => 'required|exists:bank_statement_transactions,id',
@@ -320,6 +362,10 @@ class BankReconciliationController extends Controller
      */
     public function export(BankReconciliation $bankReconciliation)
     {
+        $companyId = app('currentCompany')->id;
+        if ($bankReconciliation->company_id !== $companyId) {
+            abort(403, 'Unauthorized access to this reconciliation.');
+        }
 
         // This would typically generate a PDF or Excel export
         // For now, return the data that would be exported

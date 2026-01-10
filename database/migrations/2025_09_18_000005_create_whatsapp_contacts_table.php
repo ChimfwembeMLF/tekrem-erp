@@ -11,6 +11,7 @@ return new class extends Migration {
             $table->string('name');
             $table->string('phone_number');
             $table->string('profile_image')->nullable();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->string('status')->nullable();
             $table->timestamps();
         });

@@ -45,6 +45,7 @@ return new class extends Migration
             $table->foreignId('cash_account_id')->nullable()->constrained('accounts')->onDelete('set null');
             $table->foreignId('fee_account_id')->nullable()->constrained('accounts')->onDelete('set null');
             $table->foreignId('receivable_account_id')->nullable()->constrained('accounts')->onDelete('set null');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             
             $table->timestamps();
             

@@ -13,6 +13,7 @@ return new class extends Migration
             $table->foreignId('employee_id')->constrained('hr_employees')->onDelete('cascade');
             $table->date('start_date');
             $table->string('status');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->timestamps();
         });
     }

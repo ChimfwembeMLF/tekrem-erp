@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('training_id')->constrained('hr_trainings')->onDelete('cascade');
             $table->foreignId('employee_id')->constrained('hr_employees')->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->timestamp('enrolled_at');
             $table->string('status')->default('enrolled'); // enrolled, in_progress, completed, dropped, failed
             $table->integer('progress_percentage')->default(0);

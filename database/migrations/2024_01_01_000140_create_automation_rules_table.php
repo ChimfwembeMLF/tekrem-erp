@@ -22,6 +22,8 @@ return new class extends Migration
             $table->integer('priority')->default(0); // Higher priority rules execute first
             $table->foreignId('created_by')->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->timestamps();
             $table->softDeletes();
 

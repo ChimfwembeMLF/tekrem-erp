@@ -46,7 +46,8 @@ class MomoProvider extends Model
 	    'last_health_check',
 	    'supported_currencies',
 	    'fee_structure',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -243,5 +244,16 @@ class MomoProvider extends Model
             'is_sandbox' => $this->is_sandbox,
             'settings' => $this->provider_settings ?? [],
         ];
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

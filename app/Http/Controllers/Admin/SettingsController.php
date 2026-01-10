@@ -19,7 +19,29 @@ class SettingsController extends Controller
     {
         //$this->authorize('view settings');
 
-        $settings = Setting::orderBy('group')->orderBy('order')->get();
+        // Get all global settings
+        $globalSettings = Setting::whereNull('company_id')
+            ->orderBy('group')->orderBy('order')->get();
+        // Get all company-specific settings
+        $companySettings = Setting::where('company_id', currentCompanyId())
+            ->orderBy('group')->orderBy('order')->get();
+
+        // Merge: use company value if set, otherwise fallback to global
+        $settings = $globalSettings->map(function ($global) use ($companySettings) {
+            $company = $companySettings->firstWhere('key', $global->key);
+            $value = $company ? $company->value : $global->value;
+            $setting = clone $global;
+            $setting->value = $value;
+            $setting->company_id = $company ? $company->company_id : null;
+            return $setting;
+        });
+
+        // Add any company-only settings not present in global
+        $companyOnly = $companySettings->filter(function ($company) use ($globalSettings) {
+            return !$globalSettings->contains('key', $company->key);
+        });
+        $settings = $settings->concat($companyOnly)->sortBy(['group', 'order']);
+
         $groups = $settings->pluck('group')->unique();
 
         return Inertia::render('Admin/Settings/Index', [
@@ -45,11 +67,11 @@ class SettingsController extends Controller
         ]);
 
         foreach ($validated['settings'] as $setting) {
-            Setting::set($setting['key'], $setting['value']);
+            Setting::set('company:' . currentCompanyId() . ':' . $setting['key'], $setting['value']);
         }
 
-        // Clear the settings cache
-        Cache::forget('settings');
+        // Clear the settings cache for this company
+        Cache::forget('settings:' . currentCompanyId());
 
         return redirect()->route('admin.settings.index')->with('success', 'Settings updated successfully.');
     }

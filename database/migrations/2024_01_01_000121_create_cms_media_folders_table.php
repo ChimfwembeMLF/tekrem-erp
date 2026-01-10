@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('cms_media_folders', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('company_id')->nullable()->constrained()->onDelete('cascade');
             $table->string('name');
             $table->string('slug');
             $table->text('description')->nullable();

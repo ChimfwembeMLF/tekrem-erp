@@ -29,7 +29,9 @@ class EmployeeController extends Controller
      */
     public function index(Request $request): Response
     {
-        $query = Employee::with(['user', 'department', 'manager.user'])
+        $companyId = currentCompanyId();
+        $query = Employee::where('company_id', $companyId)
+            ->with(['user', 'department', 'manager.user'])
             ->when($request->search, function ($query, $search) {
                 $query->whereHas('user', function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -49,7 +51,7 @@ class EmployeeController extends Controller
 
         $employees = $query->latest()->paginate(15)->withQueryString();
 
-        $departments = Department::active()->orderBy('name')->get(['id', 'name']);
+        $departments = Department::where('company_id', $companyId)->active()->orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('HR/Employees/Index', [
             'employees' => $employees,
@@ -63,8 +65,10 @@ class EmployeeController extends Controller
      */
     public function create(): Response
     {
-        $departments = Department::active()->orderBy('name')->get(['id', 'name']);
-        $managers = Employee::with('user')
+        $companyId = currentCompanyId();
+        $departments = Department::where('company_id', $companyId)->active()->orderBy('name')->get(['id', 'name']);
+        $managers = Employee::where('company_id', $companyId)
+            ->with('user')
             ->whereHas('user')
             ->get()
             ->map(function ($employee) {
@@ -91,6 +95,7 @@ class EmployeeController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $companyId = currentCompanyId();
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id|unique:hr_employees,user_id',
             'department_id' => 'nullable|exists:hr_departments,id',
@@ -116,6 +121,7 @@ class EmployeeController extends Controller
             'passport_number' => 'nullable|string|max:50',
             'tax_id' => 'nullable|string|max:50',
         ]);
+        $validated['company_id'] = $companyId;
 
         $employee = Employee::create($validated);
 
@@ -128,6 +134,10 @@ class EmployeeController extends Controller
      */
     public function show(Employee $employee): Response
     {
+        $companyId = currentCompanyId();
+        if ($employee->company_id !== $companyId) {
+            abort(403);
+        }
         $employee->load([
             'user',
             'department',
@@ -170,11 +180,16 @@ class EmployeeController extends Controller
      */
     public function edit(Employee $employee): Response
     {
+        $companyId = currentCompanyId();
+        if ($employee->company_id !== $companyId) {
+            abort(403);
+        }
         $employee->load(['user', 'department', 'manager']);
 
-        $departments = Department::active()->orderBy('name')->get(['id', 'name']);
-        $managers = Employee::with('user')
+        $departments = Department::where('company_id', $companyId)->active()->orderBy('name')->get(['id', 'name']);
+        $managers = Employee::where('company_id', $companyId)
             ->where('id', '!=', $employee->id)
+            ->with('user')
             ->whereHas('user')
             ->get()
             ->map(function ($emp) {
@@ -197,6 +212,10 @@ class EmployeeController extends Controller
      */
     public function update(Request $request, Employee $employee): RedirectResponse
     {
+        $companyId = currentCompanyId();
+        if ($employee->company_id !== $companyId) {
+            abort(403);
+        }
         $validated = $request->validate([
             'department_id' => 'nullable|exists:hr_departments,id',
             'job_title' => 'required|string|max:255',
@@ -250,6 +269,10 @@ class EmployeeController extends Controller
      */
     public function destroy(Employee $employee): RedirectResponse
     {
+        $companyId = currentCompanyId();
+        if ($employee->company_id !== $companyId) {
+            abort(403);
+        }
         // Soft delete by setting employment status to terminated
         $employee->update([
             'employment_status' => 'terminated',
@@ -265,6 +288,10 @@ class EmployeeController extends Controller
      */
     public function activate(Employee $employee): RedirectResponse
     {
+        $companyId = currentCompanyId();
+        if ($employee->company_id !== $companyId) {
+            abort(403);
+        }
         $employee->update([
             'employment_status' => 'active',
             'termination_date' => null,
@@ -279,6 +306,10 @@ class EmployeeController extends Controller
      */
     public function deactivate(Employee $employee): RedirectResponse
     {
+        $companyId = currentCompanyId();
+        if ($employee->company_id !== $companyId) {
+            abort(403);
+        }
         $employee->update(['employment_status' => 'inactive']);
 
         return back()->with('success', 'Employee deactivated successfully.');

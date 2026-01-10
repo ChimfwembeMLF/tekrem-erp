@@ -18,7 +18,7 @@ class Company extends Model
         'timezone',
         'locale',
         'settings',
-    ];
+];
 
     protected $casts = [
         'settings' => 'array',
@@ -69,5 +69,16 @@ class Company extends Model
             if (is_null($company->notifications_enabled)) $company->notifications_enabled = true;
             if (is_null($company->modules_auto_renew)) $company->modules_auto_renew = false;
         });
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

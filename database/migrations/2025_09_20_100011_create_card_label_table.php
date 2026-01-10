@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('card_id');
             $table->unsignedBigInteger('label_id');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->timestamps();
 
             $table->foreign('card_id')->references('id')->on('board_cards')->onDelete('cascade');

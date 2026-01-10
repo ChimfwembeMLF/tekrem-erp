@@ -31,7 +31,8 @@ class AIModel extends Model
         'cost_per_input_token',
         'cost_per_output_token',
         'configuration',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'capabilities' => 'array',
@@ -140,5 +141,15 @@ class AIModel extends Model
     public function supportsCapability($capability): bool
     {
         return in_array($capability, $this->capabilities ?? []);
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

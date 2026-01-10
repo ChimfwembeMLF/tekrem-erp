@@ -15,22 +15,13 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    // public function __construct()
-    // {
-    //     $this->middleware(['auth', 'verified', 'permission:view users'])->only(['index', 'show']);
-    //     $this->middleware(['auth', 'verified', 'permission:create users'])->only(['create', 'store']);
-    //     $this->middleware(['auth', 'verified', 'permission:edit users'])->only(['edit', 'update']);
-    //     $this->middleware(['auth', 'verified', 'permission:delete users'])->only(['destroy']);
-    //     $this->middleware(['auth', 'verified', 'permission:manage user roles'])->only(['updateRoles']);
-    //     $this->middleware(['auth', 'verified', 'permission:manage user permissions'])->only(['updatePermissions']);
-    // }
 
     /**
      * Display a listing of users.
      */
     public function index(Request $request): Response
     {
-        $query = User::with(['roles', 'permissions']);
+        $query = User::with(['roles', 'permissions'])->where('company_id', currentCompanyId());
 
         // Search functionality
         if ($request->has('search') && $request->search) {
@@ -141,8 +132,10 @@ class UserController extends Controller
      */
     public function show(User $user): Response
     {
+        if ($user->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $user->load(['roles', 'permissions']);
-
         return Inertia::render('Admin/Users/Show', [
             'user' => [
                 'id' => $user->id,
@@ -182,6 +175,9 @@ class UserController extends Controller
      */
     public function edit(User $user): Response
     {
+        if ($user->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $roles = Role::orderBy('name')->get(['id', 'name', 'description']);
         $permissions = Permission::orderBy('name')->get(['id', 'name', 'description']);
 
@@ -205,6 +201,9 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user): RedirectResponse
     {
+        if ($user->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
@@ -255,6 +254,9 @@ class UserController extends Controller
      */
     public function destroy(User $user): RedirectResponse
     {
+        if ($user->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         // Prevent deletion of current user
         if ($user->id === auth()->id()) {
             return redirect()->back()
@@ -262,7 +264,7 @@ class UserController extends Controller
         }
 
         // Prevent deletion of admin users (optional safety measure)
-        if ($user->hasRole('admin') && User::role('admin')->count() <= 1) {
+        if ($user->hasRole('admin') && User::role('admin')->where('company_id', currentCompanyId())->count() <= 1) {
             return redirect()->back()
                 ->with('error', 'Cannot delete the last admin user.');
         }

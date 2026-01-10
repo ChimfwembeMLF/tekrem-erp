@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('account_id')->constrained()->onDelete('cascade');
             $table->foreignId('bank_statement_id')->constrained()->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->string('reconciliation_number')->unique();
             $table->date('reconciliation_date');
             $table->date('period_start');

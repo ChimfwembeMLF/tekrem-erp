@@ -12,13 +12,16 @@ class TeamController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Team::with('employees.user');
+        $companyId = currentCompanyId();
+        $query = Team::with('employees.user')->where('company_id', $companyId);
 
         // Optional search filter
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where('name', 'like', "%{$search}%")
-                ->orWhere('description', 'like', "%{$search}%");
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
         }
 
         // Pagination
@@ -47,7 +50,8 @@ class TeamController extends Controller
 
     public function create()
     {
-        $employees = Employee::with('user')->get()->map(fn($e) => [
+        $companyId = currentCompanyId();
+        $employees = Employee::with('user')->where('company_id', $companyId)->get()->map(fn($e) => [
             'id' => $e->id,
             'name' => $e->user->name ?? '',
         ]);
@@ -58,6 +62,7 @@ class TeamController extends Controller
 
     public function store(Request $request)
     {
+        $companyId = currentCompanyId();
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -65,6 +70,7 @@ class TeamController extends Controller
             'members.*' => 'exists:hr_employees,id',
             'lead' => 'nullable|integer|exists:hr_employees,id',
         ]);
+        $data['company_id'] = $companyId;
         $team = Team::create($data);
         $sync = [];
         foreach ($data['members'] ?? [] as $id) {
@@ -76,6 +82,10 @@ class TeamController extends Controller
 
     public function show(Team $team)
     {
+        $companyId = currentCompanyId();
+        if ($team->company_id !== $companyId) {
+            abort(403);
+        }
         $team->load('employees.user');
         $lead = $team->employees->first(fn($e) => $e->pivot->is_lead);
         return Inertia::render('HR/Team/Show', [
@@ -94,8 +104,12 @@ class TeamController extends Controller
 
     public function edit(Team $team)
     {
+        $companyId = currentCompanyId();
+        if ($team->company_id !== $companyId) {
+            abort(403);
+        }
         $team->load('employees.user');
-        $employees = Employee::with('user')->get()->map(fn($e) => [
+        $employees = Employee::with('user')->where('company_id', $companyId)->get()->map(fn($e) => [
             'id' => $e->id,
             'name' => $e->user->name ?? '',
         ]);
@@ -117,6 +131,10 @@ class TeamController extends Controller
 
     public function update(Request $request, Team $team)
     {
+        $companyId = currentCompanyId();
+        if ($team->company_id !== $companyId) {
+            abort(403);
+        }
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -135,6 +153,10 @@ class TeamController extends Controller
 
     public function destroy(Team $team)
     {
+        $companyId = currentCompanyId();
+        if ($team->company_id !== $companyId) {
+            abort(403);
+        }
         $team->delete();
         return redirect()->route('hr.teams.index')->with('success', 'Team deleted.');
     }

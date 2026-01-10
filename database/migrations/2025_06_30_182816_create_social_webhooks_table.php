@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('social_webhooks', function (Blueprint $table) {
             $table->id();
             $table->enum('platform', ['facebook', 'instagram', 'linkedin']);
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->string('event_type');
             $table->json('payload');
             $table->boolean('processed')->default(false);

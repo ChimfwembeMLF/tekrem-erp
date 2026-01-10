@@ -10,42 +10,44 @@ use App\Models\HR\Skill;
 class SkillController extends Controller
 {
   public function index(Request $request)
-{
-    $query = Skill::query();
+  {
+      $companyId = currentCompanyId();
+      $query = Skill::query()->where('company_id', $companyId);
 
-    // Filter by name
-    if ($request->filled('search')) {
-        $search = $request->search;
-        $query->where('name', 'like', "%{$search}%")
-              ->orWhere('description', 'like', "%{$search}%");
-    }
+      // Filter by name
+      if ($request->filled('search')) {
+          $search = $request->search;
+          $query->where(function($q) use ($search) {
+              $q->where('name', 'like', "%{$search}%")
+                ->orWhere('description', 'like', "%{$search}%");
+          });
+      }
 
-    // Filter by category
-    if ($request->filled('category')) {
-        $query->where('category', $request->category);
-    }
+      // Filter by category
+      if ($request->filled('category')) {
+          $query->where('category', $request->category);
+      }
 
-    // Filter by type
-    if ($request->filled('type')) {
-        $query->where('type', $request->type);
-    }
+      // Filter by type
+      if ($request->filled('type')) {
+          $query->where('type', $request->type);
+      }
 
-    // Optionally include active/inactive filter
-    if ($request->filled('status')) {
-        $query->where('is_active', $request->status === 'active');
-    }
+      // Optionally include active/inactive filter
+      if ($request->filled('status')) {
+          $query->where('is_active', $request->status === 'active');
+      }
 
-    // Pagination
-    $skills = $query->orderBy('name')->paginate(10)->withQueryString();
-    $categories = Skill::select('category')->distinct()->pluck('category');
+      // Pagination
+      $skills = $query->orderBy('name')->paginate(10)->withQueryString();
+      $categories = Skill::where('company_id', $companyId)->select('category')->distinct()->pluck('category');
 
-    return Inertia::render('HR/Skills/Index', [
-        'skills' => $skills,
-        'filters' => $request->only(['search', 'category', 'type', 'status']),
-        'categories' => $categories,
-    ]);
-}
-
+      return Inertia::render('HR/Skills/Index', [
+          'skills' => $skills,
+          'filters' => $request->only(['search', 'category', 'type', 'status']),
+          'categories' => $categories,
+      ]);
+  }
 
     public function create()
     {
@@ -54,16 +56,22 @@ class SkillController extends Controller
 
     public function store(Request $request)
     {
+        $companyId = currentCompanyId();
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
         ]);
+        $data['company_id'] = $companyId;
         Skill::create($data);
         return redirect()->route('hr.skills.index')->with('success', 'Skill created.');
     }
 
     public function show(Skill $skill)
     {
+        $companyId = currentCompanyId();
+        if ($skill->company_id !== $companyId) {
+            abort(403);
+        }
         return Inertia::render('HR/Skills/Show', [
             'skill' => $skill,
         ]);
@@ -71,6 +79,10 @@ class SkillController extends Controller
 
     public function edit(Skill $skill)
     {
+        $companyId = currentCompanyId();
+        if ($skill->company_id !== $companyId) {
+            abort(403);
+        }
         return Inertia::render('HR/Skills/Edit', [
             'skill' => $skill,
         ]);
@@ -78,6 +90,10 @@ class SkillController extends Controller
 
     public function update(Request $request, Skill $skill)
     {
+        $companyId = currentCompanyId();
+        if ($skill->company_id !== $companyId) {
+            abort(403);
+        }
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -88,6 +104,10 @@ class SkillController extends Controller
 
     public function destroy(Skill $skill)
     {
+        $companyId = currentCompanyId();
+        if ($skill->company_id !== $companyId) {
+            abort(403);
+        }
         $skill->delete();
         return redirect()->route('hr.skills.index')->with('success', 'Skill deleted.');
     }

@@ -18,13 +18,19 @@ class TwitterController extends Controller
         $this->twitterService = $twitterService;
     }
 
+    protected function getCompanyId()
+    {
+        return currentCompanyId();
+    }
+
     /**
      * Display Twitter dashboard
      */
     public function index(): Response
     {
-        $tweets = $this->twitterService->getRecentTweets();
-        $stats = $this->twitterService->getStats();
+        $companyId = $this->getCompanyId();
+        $tweets = $this->twitterService->getRecentTweets($companyId);
+        $stats = $this->twitterService->getStats($companyId);
         return Inertia::render('SocialMedia/Twitter/Index', [
             'tweets' => $tweets,
             'stats' => $stats,
@@ -36,7 +42,8 @@ class TwitterController extends Controller
      */
     public function syncAccounts(Request $request): JsonResponse
     {
-        $result = $this->twitterService->syncAccounts();
+        $companyId = $this->getCompanyId();
+        $result = $this->twitterService->syncAccounts($companyId);
         return response()->json($result);
     }
 
@@ -45,7 +52,8 @@ class TwitterController extends Controller
      */
     public function createTweet(Request $request): JsonResponse
     {
-        $tweet = $this->twitterService->createTweet($request->all());
+        $companyId = $this->getCompanyId();
+        $tweet = $this->twitterService->createTweet(array_merge($request->all(), ['company_id' => $companyId]));
         return response()->json($tweet);
     }
 
@@ -54,7 +62,8 @@ class TwitterController extends Controller
      */
     public function publishTweet($tweetId): JsonResponse
     {
-        $result = $this->twitterService->publishTweet($tweetId);
+        $companyId = $this->getCompanyId();
+        $result = $this->twitterService->publishTweet($tweetId, $companyId);
         return response()->json($result);
     }
 
@@ -63,7 +72,8 @@ class TwitterController extends Controller
      */
     public function getAnalytics(): JsonResponse
     {
-        $analytics = $this->twitterService->getAnalytics();
+        $companyId = $this->getCompanyId();
+        $analytics = $this->twitterService->getAnalytics($companyId);
         return response()->json($analytics);
     }
 

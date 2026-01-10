@@ -99,8 +99,14 @@ class ChatbotController extends Controller
     /**
      * Create ticket from chatbot conversation.
      */
+    protected function getCompanyId()
+    {
+        return currentCompanyId();
+    }
+
     public function createTicketFromChat(Request $request): JsonResponse
     {
+        $companyId = $this->getCompanyId();
         $validated = $request->validate([
             'conversation_id' => ['required', 'string'],
             'title' => ['required', 'string', 'max:255'],
@@ -140,6 +146,7 @@ class ChatbotController extends Controller
             'requester_id' => $user->id,
             'requester_email' => $user->email,
             'created_by' => $user->id,
+            'company_id' => $companyId,
             'metadata' => [
                 'created_from_chat' => true,
                 'conversation_id' => $validated['conversation_id'],
@@ -355,11 +362,13 @@ class ChatbotController extends Controller
      */
     private function findRelevantContent(string $message, string $intent): array
     {
+        $companyId = $this->getCompanyId();
         $keywords = explode(' ', strtolower($message));
         $content = [];
 
         // Search FAQs
         $faqs = FAQ::published()
+            ->where('company_id', $companyId)
             ->where(function ($query) use ($keywords) {
                 foreach ($keywords as $keyword) {
                     if (strlen($keyword) > 3) {
@@ -381,6 +390,7 @@ class ChatbotController extends Controller
 
         // Search knowledge base
         $articles = KnowledgeBaseArticle::published()
+            ->where('company_id', $companyId)
             ->where(function ($query) use ($keywords) {
                 foreach ($keywords as $keyword) {
                     if (strlen($keyword) > 3) {

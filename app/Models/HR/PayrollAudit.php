@@ -14,7 +14,8 @@ class PayrollAudit extends Model
         'user_id',
         'action',
         'changes',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'changes' => 'array',
@@ -28,5 +29,16 @@ class PayrollAudit extends Model
     public function user()
     {
         return $this->belongsTo(\App\Models\User::class);
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

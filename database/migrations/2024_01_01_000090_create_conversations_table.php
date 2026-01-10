@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('title')->nullable(); // Conversation title
             $table->nullableMorphs('conversable'); // Client, Lead, or other entities
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
             $table->foreignId('assigned_to')->nullable()->constrained('users')->onDelete('set null');
             $table->string('status')->default('active'); // active, archived, closed

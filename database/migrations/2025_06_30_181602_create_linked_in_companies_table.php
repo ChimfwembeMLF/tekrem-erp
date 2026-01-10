@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('linked_in_companies', function (Blueprint $table) {
             $table->id();
             $table->string('linkedin_company_id')->unique();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->string('name');
             $table->text('description')->nullable();
             $table->text('logo_url')->nullable();

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('card_checklists', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('card_id');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->string('title');
             $table->timestamps();
 

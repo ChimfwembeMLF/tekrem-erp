@@ -14,7 +14,8 @@ class CardReminder extends Model
         'user_id',
         'remind_at',
         'note',
-    ];
+        'company_id',
+];
 
     public function card()
     {
@@ -24,5 +25,16 @@ class CardReminder extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

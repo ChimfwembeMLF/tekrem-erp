@@ -41,7 +41,8 @@ class Chat extends Model
         'original_message',
         'edit_history',
         'reactions',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -486,5 +487,16 @@ class Chat extends Model
     public function scopeEdited($query)
     {
         return $query->where('is_edited', true);
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

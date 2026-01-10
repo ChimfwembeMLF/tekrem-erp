@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('zra_smart_invoices', function (Blueprint $table) {
             $table->id();
             $table->foreignId('invoice_id')->constrained('invoices')->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->string('zra_invoice_number')->nullable()->unique();
             $table->string('qr_code')->nullable();
             $table->string('verification_url')->nullable();

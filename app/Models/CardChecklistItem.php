@@ -14,10 +14,22 @@ class CardChecklistItem extends Model
         'card_checklist_id',
         'title',
         'is_completed',
-    ];
+        'company_id',
+];
 
     public function checklist()
     {
         return $this->belongsTo(CardChecklist::class, 'card_checklist_id');
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

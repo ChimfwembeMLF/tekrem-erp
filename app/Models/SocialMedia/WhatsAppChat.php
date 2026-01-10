@@ -12,7 +12,8 @@ class WhatsAppChat extends Model
         'is_group',
         'group_name',
         'group_image',
-    ];
+        'company_id',
+];
 
     protected $table = 'whatsapp_chats';
 
@@ -24,5 +25,16 @@ class WhatsAppChat extends Model
     }
     public function messages() {
         return $this->hasMany(WhatsAppMessage::class, 'chat_id');
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

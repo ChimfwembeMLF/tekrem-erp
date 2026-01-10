@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('projects', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('company_id')->nullable();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->string('name');
             $table->text('description')->nullable();
             $table->enum('status', ['draft', 'active', 'on-hold', 'completed', 'cancelled'])->default('draft');
@@ -40,8 +41,6 @@ return new class extends Migration
             $table->json('metadata')->nullable(); // Additional project data
             
             $table->timestamps();
-
-            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
             
             // Indexes
             $table->index(['status', 'priority']);

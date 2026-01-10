@@ -21,6 +21,8 @@ return new class extends Migration
             $table->timestamp('last_hit_at')->nullable();
             $table->text('description')->nullable();
             $table->foreignId('created_by')->constrained('users');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->timestamps();
             
             $table->index(['from_url', 'is_active']);

@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::create('bank_statements', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('account_id')->constrained()->onDelete('cascade');
+            $table->foreignId('account_id')->constrained('companies')->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->string('statement_number')->nullable();
             $table->date('statement_date');
             $table->date('period_start');

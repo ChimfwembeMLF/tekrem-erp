@@ -34,7 +34,8 @@ class Performance extends Model
         'submitted_at',
         'completed_at',
         'attachments',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'review_start_date' => 'date',
@@ -287,5 +288,16 @@ class Performance extends Model
                 $performance->overall_rating = $performance->calculateOverallRating();
             }
         });
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

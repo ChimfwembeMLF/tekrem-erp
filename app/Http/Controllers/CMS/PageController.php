@@ -116,12 +116,13 @@ class PageController extends Controller
      */
     public function show(Page $page): Response
     {
+        if ($page->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $page->load(['author', 'editor', 'approvedBy', 'parent', 'children', 'revisions.createdBy']);
-
         $analytics = $this->pageService->getPageAnalytics($page);
         $seoAnalysis = $this->pageService->getSEOAnalysis($page);
         $relatedPages = $this->pageService->getRelatedPages($page);
-
         return Inertia::render('CMS/Pages/Show', [
             'page' => $page,
             'analytics' => $analytics,
@@ -135,15 +136,15 @@ class PageController extends Controller
      */
     public function edit(Page $page): Response
     {
-        if (!$page->canEdit(Auth::user())) {
+        if ($page->company_id !== currentCompanyId() || !$page->canEdit(Auth::user())) {
             abort(403);
         }
-
         $page->load(['revisions.createdBy']);
-        $templates = Template::active()->get();
-        $pages = Page::where('id', '!=', $page->id)->published()->get(['id', 'title', 'slug']);
+        $templates = Template::active()->where('company_id', currentCompanyId())->get();
+        $pages = Page::where('id', '!=', $page->id)
+            ->where('company_id', currentCompanyId())
+            ->published()->get(['id', 'title', 'slug']);
         $languages = config('cms.languages', ['en' => 'English']);
-
         return Inertia::render('CMS/Pages/Edit', [
             'page' => $page,
             'templates' => $templates,
@@ -157,10 +158,9 @@ class PageController extends Controller
      */
     public function update(Request $request, Page $page): RedirectResponse
     {
-        if (!$page->canEdit(Auth::user())) {
+        if ($page->company_id !== currentCompanyId() || !$page->canEdit(Auth::user())) {
             abort(403);
         }
-
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9-]+$/'],
@@ -203,12 +203,10 @@ class PageController extends Controller
      */
     public function destroy(Page $page): RedirectResponse
     {
-        if (!$page->canEdit(Auth::user())) {
+        if ($page->company_id !== currentCompanyId() || !$page->canEdit(Auth::user())) {
             abort(403);
         }
-
         $this->pageService->deletePage($page);
-
         return redirect()->route('cms.pages.index')
             ->with('success', 'Page deleted successfully.');
     }
@@ -218,12 +216,10 @@ class PageController extends Controller
      */
     public function publish(Page $page): JsonResponse
     {
-        if (!$page->canEdit(Auth::user())) {
+        if ($page->company_id !== currentCompanyId() || !$page->canEdit(Auth::user())) {
             abort(403);
         }
-
         $success = $this->pageService->publishPage($page, Auth::user());
-
         return response()->json([
             'success' => $success,
             'message' => $success ? 'Page published successfully.' : 'Failed to publish page.',
@@ -236,12 +232,10 @@ class PageController extends Controller
      */
     public function unpublish(Page $page): JsonResponse
     {
-        if (!$page->canEdit(Auth::user())) {
+        if ($page->company_id !== currentCompanyId() || !$page->canEdit(Auth::user())) {
             abort(403);
         }
-
         $success = $this->pageService->unpublishPage($page);
-
         return response()->json([
             'success' => $success,
             'message' => $success ? 'Page unpublished successfully.' : 'Failed to unpublish page.',
@@ -254,10 +248,9 @@ class PageController extends Controller
      */
     public function schedule(Request $request, Page $page): JsonResponse
     {
-        if (!$page->canEdit(Auth::user())) {
+        if ($page->company_id !== currentCompanyId() || !$page->canEdit(Auth::user())) {
             abort(403);
         }
-
         $validated = $request->validate([
             'scheduled_at' => ['required', 'date', 'after:now'],
         ]);
@@ -277,17 +270,17 @@ class PageController extends Controller
      */
     public function duplicate(Request $request, Page $page): RedirectResponse
     {
+        if ($page->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $validated = $request->validate([
             'title' => ['nullable', 'string', 'max:255'],
         ]);
-
         $overrides = [];
         if (!empty($validated['title'])) {
             $overrides['title'] = $validated['title'];
         }
-
         $duplicatedPage = $this->pageService->duplicatePage($page, Auth::user(), $overrides);
-
         return redirect()->route('cms.pages.edit', $duplicatedPage)
             ->with('success', 'Page duplicated successfully.');
     }
@@ -297,10 +290,9 @@ class PageController extends Controller
      */
     public function restoreRevision(Request $request, Page $page): JsonResponse
     {
-        if (!$page->canEdit(Auth::user())) {
+        if ($page->company_id !== currentCompanyId() || !$page->canEdit(Auth::user())) {
             abort(403);
         }
-
         $validated = $request->validate([
             'revision_id' => ['required', 'exists:cms_page_revisions,id'],
         ]);
@@ -319,8 +311,10 @@ class PageController extends Controller
      */
     public function preview(Page $page): Response
     {
+        if ($page->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $page->incrementViews();
-
         return Inertia::render('CMS/Pages/Preview', [
             'page' => $page,
         ]);
@@ -331,8 +325,10 @@ class PageController extends Controller
      */
     public function seoAnalysis(Page $page): JsonResponse
     {
+        if ($page->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $analysis = $this->pageService->getSEOAnalysis($page);
-
         return response()->json($analysis);
     }
 
@@ -366,15 +362,14 @@ class PageController extends Controller
             'page_ids' => ['required', 'array'],
             'page_ids.*' => ['exists:cms_pages,id'],
         ]);
-
-        $pages = Page::whereIn('id', $validated['page_ids'])->get();
+        $pages = Page::whereIn('id', $validated['page_ids'])
+            ->where('company_id', currentCompanyId())
+            ->get();
         $processed = 0;
-
         foreach ($pages as $page) {
             if (!$page->canEdit(Auth::user())) {
                 continue;
             }
-
             switch ($validated['action']) {
                 case 'publish':
                     if ($this->pageService->publishPage($page, Auth::user())) {
@@ -398,7 +393,6 @@ class PageController extends Controller
                     break;
             }
         }
-
         return response()->json([
             'success' => true,
             'message' => "Successfully processed {$processed} pages.",

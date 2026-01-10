@@ -30,6 +30,8 @@ class RecaptchaController extends Controller
      */
     public function update(Request $request)
     {
+        $companyId = $this->getCompanyId();
+
         // $this->authorize('manage-system-settings');
 
         $validator = Validator::make($request->all(), [
@@ -54,9 +56,7 @@ class RecaptchaController extends Controller
         $validated = $validator->validated();
 
         // Save settings
-        foreach ($validated as $key => $value) {
-            Setting::set("recaptcha.{$key}", $value);
-        }
+        Setting::setForCompany($companyId, 'recaptcha_settings', $validated);
 
         return redirect()->back()->with('success', 'reCAPTCHA settings updated successfully.');
     }
@@ -91,8 +91,9 @@ class RecaptchaController extends Controller
         $token = $request->input('token');
         $action = $request->input('action', 'submit');
         
-        $secretKey = Setting::get('recaptcha.recaptcha_secret_key');
-        $version = Setting::get('recaptcha.recaptcha_version', 'v2');
+        $companyId = $this->getCompanyId();
+        $secretKey = Setting::getForCompany($companyId, 'recaptcha_secret_key');
+        $version = Setting::getForCompany($companyId, 'recaptcha_version', 'v2');
         
         if (!$secretKey) {
             return response()->json([
@@ -120,7 +121,7 @@ class RecaptchaController extends Controller
 
             // For reCAPTCHA v3, check score
             if ($version === 'v3') {
-                $scoreThreshold = (float) Setting::get('recaptcha.recaptcha_score_threshold', 0.5);
+                $scoreThreshold = (float) Setting::getForCompany($companyId, 'recaptcha_score_threshold', 0.5);
                 $score = $result['score'] ?? 0;
 
                 if ($score < $scoreThreshold) {
@@ -197,19 +198,26 @@ class RecaptchaController extends Controller
      */
     private function getRecaptchaSettings(): array
     {
+        $companyId = $this->getCompanyId();
+
         return [
-            'recaptcha_enabled' => Setting::get('recaptcha.recaptcha_enabled', false),
-            'recaptcha_site_key' => Setting::get('recaptcha.recaptcha_site_key', ''),
-            'recaptcha_secret_key' => Setting::get('recaptcha.recaptcha_secret_key', ''),
-            'recaptcha_version' => Setting::get('recaptcha.recaptcha_version', 'v2'),
-            'recaptcha_theme' => Setting::get('recaptcha.recaptcha_theme', 'light'),
-            'recaptcha_size' => Setting::get('recaptcha.recaptcha_size', 'normal'),
-            'recaptcha_score_threshold' => Setting::get('recaptcha.recaptcha_score_threshold', 0.5),
-            'recaptcha_on_login' => Setting::get('recaptcha.recaptcha_on_login', true),
-            'recaptcha_on_register' => Setting::get('recaptcha.recaptcha_on_register', true),
-            'recaptcha_on_forgot_password' => Setting::get('recaptcha.recaptcha_on_forgot_password', true),
-            'recaptcha_on_contact_form' => Setting::get('recaptcha.recaptcha_on_contact_form', true),
-            'recaptcha_on_guest_chat' => Setting::get('recaptcha.recaptcha_on_guest_chat', false),
+            'recaptcha_enabled' => Setting::getForCompany($companyId, 'recaptcha_enabled', false),
+            'recaptcha_site_key' => Setting::getForCompany($companyId, 'recaptcha_site_key', ''),
+            'recaptcha_secret_key' => Setting::getForCompany($companyId, 'recaptcha_secret_key', ''),
+            'recaptcha_version' => Setting::getForCompany($companyId, 'recaptcha_version', 'v2'),
+            'recaptcha_theme' => Setting::getForCompany($companyId, 'recaptcha_theme', 'light'),
+            'recaptcha_size' => Setting::getForCompany($companyId, 'recaptcha_size', 'normal'),
+            'recaptcha_score_threshold' => Setting::getForCompany($companyId, 'recaptcha_score_threshold', 0.5),
+            'recaptcha_on_login' => Setting::getForCompany($companyId, 'recaptcha_on_login', true),
+            'recaptcha_on_register' => Setting::getForCompany($companyId, 'recaptcha_on_register', true),
+            'recaptcha_on_forgot_password' => Setting::getForCompany($companyId, 'recaptcha_on_forgot_password', true),
+            'recaptcha_on_contact_form' => Setting::getForCompany($companyId, 'recaptcha_on_contact_form', true),
+            'recaptcha_on_guest_chat' => Setting::getForCompany($companyId, 'recaptcha_on_guest_chat', false),
         ];
+    }
+
+    protected function getCompanyId()
+    {
+        return currentCompanyId();
     }
 }

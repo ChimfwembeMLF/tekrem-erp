@@ -34,7 +34,8 @@ class Expense extends Model
         'expensable_type',
         'user_id',
         'attachments',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -119,5 +120,16 @@ class Expense extends Model
     public function scopeDateRange($query, $startDate, $endDate)
     {
         return $query->whereBetween('expense_date', [$startDate, $endDate]);
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

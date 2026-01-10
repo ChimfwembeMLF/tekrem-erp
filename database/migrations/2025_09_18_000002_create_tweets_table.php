@@ -8,6 +8,7 @@ return new class extends Migration {
         Schema::create('tweets', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('twitter_account_id');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->string('tweet_id')->nullable();
             $table->text('text');
             $table->string('media_url')->nullable();

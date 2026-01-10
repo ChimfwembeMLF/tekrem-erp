@@ -25,7 +25,8 @@ class TicketComment extends Model
         'attachments',
         'metadata',
         'time_spent_minutes',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -78,5 +79,16 @@ class TicketComment extends Model
     public function scopeSolution($query)
     {
         return $query->where('is_solution', true);
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

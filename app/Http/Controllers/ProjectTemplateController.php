@@ -14,7 +14,8 @@ class ProjectTemplateController extends Controller
      */
     public function index(Request $request)
     {
-        $query = ProjectTemplate::with('creator');
+        $query = ProjectTemplate::with('creator')
+            ->where('company_id', currentCompanyId());
 
         // Apply filters
         if ($request->filled('search')) {
@@ -70,6 +71,7 @@ class ProjectTemplateController extends Controller
         ]);
 
         $validated['created_by'] = Auth::id();
+        $validated['company_id'] = currentCompanyId();
 
         $template = ProjectTemplate::create($validated);
 
@@ -82,6 +84,9 @@ class ProjectTemplateController extends Controller
      */
     public function show(ProjectTemplate $template)
     {
+        if ($template->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $template->load('creator', 'projects');
 
         return Inertia::render('Projects/Templates/Show', [
@@ -94,6 +99,9 @@ class ProjectTemplateController extends Controller
      */
     public function edit(ProjectTemplate $template)
     {
+        if ($template->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         return Inertia::render('Projects/Templates/Edit', [
             'template' => $template,
         ]);
@@ -104,6 +112,9 @@ class ProjectTemplateController extends Controller
      */
     public function update(Request $request, ProjectTemplate $template)
     {
+        if ($template->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -129,6 +140,9 @@ class ProjectTemplateController extends Controller
      */
     public function destroy(ProjectTemplate $template)
     {
+        if ($template->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $template->delete();
 
         return redirect()->route('projects.templates.index')
@@ -140,10 +154,14 @@ class ProjectTemplateController extends Controller
      */
     public function duplicate(ProjectTemplate $template)
     {
+        if ($template->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $newTemplate = $template->replicate();
         $newTemplate->name = $template->name . ' (Copy)';
         $newTemplate->usage_count = 0;
         $newTemplate->created_by = Auth::id();
+        $newTemplate->company_id = currentCompanyId();
         $newTemplate->save();
 
         return redirect()->route('projects.templates.edit', $newTemplate)

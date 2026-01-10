@@ -18,6 +18,13 @@ class MenuItemController extends Controller
      */
     public function store(Request $request, Menu $menu): JsonResponse
     {
+        // Enforce company scoping
+        if ($menu->company_id !== currentCompanyId()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Menu not found.',
+            ], 404);
+        }
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'url' => ['nullable', 'string', 'max:255'],
@@ -85,8 +92,8 @@ class MenuItemController extends Controller
      */
     public function update(Request $request, Menu $menu, MenuItem $item): JsonResponse
     {
-        // Ensure item belongs to menu
-        if ($item->menu_id !== $menu->id) {
+        // Ensure item belongs to menu and menu belongs to current company
+        if ($item->menu_id !== $menu->id || $menu->company_id !== currentCompanyId()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Menu item not found.',
@@ -160,8 +167,8 @@ class MenuItemController extends Controller
      */
     public function destroy(Menu $menu, MenuItem $item): JsonResponse
     {
-        // Ensure item belongs to menu
-        if ($item->menu_id !== $menu->id) {
+        // Ensure item belongs to menu and menu belongs to current company
+        if ($item->menu_id !== $menu->id || $menu->company_id !== currentCompanyId()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Menu item not found.',
@@ -184,6 +191,14 @@ class MenuItemController extends Controller
      */
     public function move(Request $request, MenuItem $item): JsonResponse
     {
+        // Enforce company scoping
+        $menu = $item->menu;
+        if ($menu->company_id !== currentCompanyId()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Menu item not found.',
+            ], 404);
+        }
         $validated = $request->validate([
             'parent_id' => ['nullable', 'exists:cms_menu_items,id'],
             'sort_order' => ['required', 'integer', 'min:0'],
@@ -273,20 +288,21 @@ class MenuItemController extends Controller
         DB::transaction(function () use ($validated) {
             foreach ($validated['items'] as $itemData) {
                 $item = MenuItem::find($itemData['id']);
-                
+                $menu = $item ? $item->menu : null;
+                if (!$menu || $menu->company_id !== currentCompanyId()) {
+                    continue; // Skip items not in current company
+                }
                 // Validate parent belongs to same menu
                 if (!empty($itemData['parent_id'])) {
                     $parent = MenuItem::find($itemData['parent_id']);
                     if (!$parent || $parent->menu_id !== $item->menu_id) {
                         continue; // Skip invalid items
                     }
-
                     // Check for circular reference
                     if ($this->wouldCreateCircularReference($item, $itemData['parent_id'])) {
                         continue; // Skip items that would create circular reference
                     }
                 }
-
                 $item->update([
                     'parent_id' => $itemData['parent_id'] ?? null,
                     'sort_order' => $itemData['sort_order'],
@@ -339,30 +355,36 @@ class MenuItemController extends Controller
 
         $processed = 0;
 
+        // Only process items belonging to menus in the current company
+        $items = MenuItem::whereIn('id', $validated['item_ids'])
+            ->whereHas('menu', function ($q) {
+                $q->where('company_id', currentCompanyId());
+            })->get();
+        $itemIds = $items->pluck('id')->toArray();
+
         switch ($validated['action']) {
             case 'activate':
-                MenuItem::whereIn('id', $validated['item_ids'])
+                MenuItem::whereIn('id', $itemIds)
                     ->update(['is_active' => true]);
-                $processed = count($validated['item_ids']);
+                $processed = count($itemIds);
                 break;
 
             case 'deactivate':
-                MenuItem::whereIn('id', $validated['item_ids'])
+                MenuItem::whereIn('id', $itemIds)
                     ->update(['is_active' => false]);
-                $processed = count($validated['item_ids']);
+                $processed = count($itemIds);
                 break;
 
             case 'delete':
                 // Move children to parent level before deleting
-                foreach ($validated['item_ids'] as $itemId) {
+                foreach ($itemIds as $itemId) {
                     $item = MenuItem::find($itemId);
                     if ($item) {
                         $item->children()->update(['parent_id' => $item->parent_id]);
                     }
                 }
-                
-                $processed = MenuItem::whereIn('id', $validated['item_ids'])->count();
-                MenuItem::whereIn('id', $validated['item_ids'])->delete();
+                $processed = MenuItem::whereIn('id', $itemIds)->count();
+                MenuItem::whereIn('id', $itemIds)->delete();
                 break;
         }
 

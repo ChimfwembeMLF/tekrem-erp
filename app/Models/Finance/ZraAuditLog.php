@@ -33,7 +33,8 @@ class ZraAuditLog extends Model
         'user_agent',
         'user_id',
         'executed_at',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -303,5 +304,16 @@ class ZraAuditLog extends Model
             'poor' => 'red',
             default => 'gray',
         };
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('cms_page_revisions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('page_id')->constrained('cms_pages')->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->integer('revision_number');
             $table->string('title');
             $table->text('excerpt')->nullable();

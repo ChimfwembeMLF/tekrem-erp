@@ -23,7 +23,8 @@ class InstagramAccount extends Model
         'access_token',
         'is_active',
         'last_sync_at',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'is_active' => 'boolean',
@@ -102,5 +103,16 @@ class InstagramAccount extends Model
             'avg_comments' => $recentMedia->avg('comments_count'),
             'engagement_rate' => $this->engagement_rate,
         ];
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

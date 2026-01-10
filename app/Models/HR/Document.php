@@ -14,7 +14,19 @@ class Document extends Model
         'file_path',
         'description',
         'owner_id',
-    ];
+        'company_id',
+];
 
     protected $table = 'hr_documents';
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
+    }
 }

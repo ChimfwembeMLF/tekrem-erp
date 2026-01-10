@@ -12,6 +12,9 @@ class BoardMemberController extends Controller
 {
     public function index(Project $project, Board $board)
     {
+        if ($project->company_id !== currentCompanyId() || $board->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         return inertia('PM/Boards/Members/Index', [
             'project' => $project,
             'board' => $board,
@@ -20,6 +23,9 @@ class BoardMemberController extends Controller
 
     public function create(Project $project, Board $board)
     {
+        if ($project->company_id !== currentCompanyId() || $board->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         return inertia('PM/Boards/Members/Create/Index', [
             'project' => $project,
             'board' => $board,
@@ -28,6 +34,9 @@ class BoardMemberController extends Controller
 
     public function show(Project $project, Board $board, BoardMember $member)
     {
+        if ($project->company_id !== currentCompanyId() || $board->company_id !== currentCompanyId() || $member->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         return inertia('PM/Boards/Members/Show/Index', [
             'project' => $project,
             'board' => $board,
@@ -37,6 +46,9 @@ class BoardMemberController extends Controller
 
     public function edit(Project $project, Board $board, BoardMember $member)
     {
+        if ($project->company_id !== currentCompanyId() || $board->company_id !== currentCompanyId() || $member->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         return inertia('PM/Boards/Members/Edit/Index', [
             'project' => $project,
             'board' => $board,
@@ -46,17 +58,24 @@ class BoardMemberController extends Controller
 // removed extra brace
     public function store(Request $request, Project $project, Board $board)
     {
+        if ($project->company_id !== currentCompanyId() || $board->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $data = $request->validate([
             'user_id' => 'required|exists:users,id',
             'role' => 'required|in:admin,member,viewer',
         ]);
         $data['board_id'] = $board->id;
+        $data['company_id'] = currentCompanyId();
         BoardMember::create($data);
         return redirect()->route('projects.boards.show', [$project, $board]);
     }
 
     public function update(Request $request, Project $project, Board $board, BoardMember $member)
     {
+        if ($project->company_id !== currentCompanyId() || $board->company_id !== currentCompanyId() || $member->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $data = $request->validate([
             'role' => 'required|in:admin,member,viewer',
         ]);
@@ -66,6 +85,9 @@ class BoardMemberController extends Controller
 
     public function destroy(Project $project, Board $board, BoardMember $member)
     {
+        if ($project->company_id !== currentCompanyId() || $board->company_id !== currentCompanyId() || $member->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $member->delete();
         return redirect()->route('projects.boards.show', [$project, $board]);
     }

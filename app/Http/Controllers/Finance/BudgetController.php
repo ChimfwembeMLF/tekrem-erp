@@ -159,8 +159,9 @@ class BudgetController extends Controller
      */
     public function show(Budget $budget)
     {
-        // Ensure user can only view their own budgets
-        if ($budget->user_id !== auth()->id()) {
+        $companyId = app('currentCompany')->id;
+        // Ensure user can only view their own budgets and company
+        if ($budget->user_id !== auth()->id() || $budget->company_id !== $companyId) {
             abort(403);
         }
 
@@ -199,13 +200,13 @@ class BudgetController extends Controller
      */
     public function edit(Budget $budget)
     {
-        // Ensure user can only edit their own budgets
-        if ($budget->user_id !== auth()->id()) {
+        $companyId = app('currentCompany')->id;
+        // Ensure user can only edit their own budgets and company
+        if ($budget->user_id !== auth()->id() || $budget->company_id !== $companyId) {
             abort(403);
         }
 
-        $company = app('currentCompany');
-        $accounts = Account::where('company_id', $company->id)
+        $accounts = Account::where('company_id', $companyId)
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'type', 'currency']);
@@ -241,8 +242,9 @@ class BudgetController extends Controller
      */
     public function update(Request $request, Budget $budget)
     {
-        // Ensure user can only update their own budgets
-        if ($budget->user_id !== auth()->id()) {
+        $companyId = app('currentCompany')->id;
+        // Ensure user can only update their own budgets and company
+        if ($budget->user_id !== auth()->id() || $budget->company_id !== $companyId) {
             abort(403);
         }
 
@@ -283,8 +285,9 @@ class BudgetController extends Controller
      */
     public function destroy(Budget $budget)
     {
-        // Ensure user can only delete their own budgets
-        if ($budget->user_id !== auth()->id()) {
+        $companyId = app('currentCompany')->id;
+        // Ensure user can only delete their own budgets and company
+        if ($budget->user_id !== auth()->id() || $budget->company_id !== $companyId) {
             abort(403);
         }
 

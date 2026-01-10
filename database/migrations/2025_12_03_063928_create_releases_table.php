@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('releases', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained('projects')->cascadeOnDelete();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->string('name');
             $table->string('version_number');
             $table->text('description')->nullable();

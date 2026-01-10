@@ -29,14 +29,12 @@ class MediaController extends Controller
         $folder = $folderId ? MediaFolder::findOrFail($folderId) : null;
 
         // Get media in current folder with filters
-        $query = Media::query();
-
+        $query = Media::query()->where('company_id', currentCompanyId());
         if ($folder) {
             $query->where('folder_id', $folder->id);
         } else {
             $query->whereNull('folder_id');
         }
-
         // Apply filters
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -45,7 +43,6 @@ class MediaController extends Controller
                   ->orWhere('alt_text', 'like', '%' . $request->search . '%');
             });
         }
-
         if ($request->filled('type')) {
             switch ($request->type) {
                 case 'image':
@@ -60,7 +57,6 @@ class MediaController extends Controller
                     break;
             }
         }
-
         $media = $query->with(['uploadedBy', 'folder'])
                       ->orderBy('created_at', 'desc')
                       ->paginate(24);
@@ -132,9 +128,11 @@ class MediaController extends Controller
      */
     public function show(Media $media): Response
     {
+        if ($media->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $media->load(['uploadedBy', 'folder']);
         $media->incrementUsage();
-
         return Inertia::render('CMS/Media/Show', [
             'media' => $media,
         ]);
@@ -145,10 +143,12 @@ class MediaController extends Controller
      */
     public function download(Media $media)
     {
+        if ($media->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         if (!Storage::exists($media->file_path)) {
             abort(404, 'File not found');
         }
-
         return Storage::download($media->file_path, $media->original_name);
     }
 
@@ -179,6 +179,9 @@ class MediaController extends Controller
      */
     public function update(Request $request, Media $media): JsonResponse
     {
+        if ($media->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'alt_text' => ['nullable', 'string', 'max:255'],
@@ -186,9 +189,7 @@ class MediaController extends Controller
             'tags' => ['nullable', 'array'],
             'folder_id' => ['nullable', 'exists:cms_media_folders,id'],
         ]);
-
         $media->update($validated);
-
         return response()->json([
             'success' => true,
             'message' => 'Media updated successfully.',
@@ -201,8 +202,10 @@ class MediaController extends Controller
      */
     public function destroy(Media $media): JsonResponse
     {
+        if ($media->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $success = $this->mediaService->deleteMedia($media);
-
         return response()->json([
             'success' => $success,
             'message' => $success ? 'Media deleted successfully.' : 'Failed to delete media.',
@@ -323,34 +326,32 @@ class MediaController extends Controller
             'tags' => ['nullable', 'array'],
         ]);
 
+        $mediaIds = $validated['media_ids'];
+        $mediaItems = Media::whereIn('id', $mediaIds)
+            ->where('company_id', currentCompanyId())
+            ->get();
         $processed = 0;
-
         switch ($validated['action']) {
             case 'move':
                 $folder = $validated['folder_id'] ? MediaFolder::find($validated['folder_id']) : null;
-                $processed = $this->mediaService->bulkMoveMedia($validated['media_ids'], $folder);
+                $processed = $this->mediaService->bulkMoveMedia($mediaItems->pluck('id')->toArray(), $folder);
                 break;
-
             case 'tag':
                 if (!empty($validated['tags'])) {
-                    $processed = $this->mediaService->bulkTagMedia($validated['media_ids'], $validated['tags']);
+                    $processed = $this->mediaService->bulkTagMedia($mediaItems->pluck('id')->toArray(), $validated['tags']);
                 }
                 break;
-
             case 'delete':
-                $processed = $this->mediaService->bulkDeleteMedia($validated['media_ids']);
+                $processed = $this->mediaService->bulkDeleteMedia($mediaItems->pluck('id')->toArray());
                 break;
-
             case 'optimize':
-                foreach ($validated['media_ids'] as $mediaId) {
-                    $media = Media::find($mediaId);
-                    if ($media && $this->mediaService->optimizeMedia($media)) {
+                foreach ($mediaItems as $media) {
+                    if ($this->mediaService->optimizeMedia($media)) {
                         $processed++;
                     }
                 }
                 break;
         }
-
         return response()->json([
             'success' => true,
             'message' => "Successfully processed {$processed} items.",
@@ -404,8 +405,7 @@ class MediaController extends Controller
             'limit' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
 
-        $query = Media::query();
-
+        $query = Media::query()->where('company_id', currentCompanyId());
         if (!empty($validated['type'])) {
             switch ($validated['type']) {
                 case 'image':
@@ -419,17 +419,14 @@ class MediaController extends Controller
                     break;
             }
         }
-
         if (!empty($validated['folder_id'])) {
             $query->inFolder($validated['folder_id']);
         }
-
         $media = $query->orderBy('created_at', 'desc')
             ->limit($validated['limit'] ?? 20)
             ->get();
-
-        $folders = MediaFolder::orderBy('name')->get(['id', 'name', 'parent_id']);
-
+        $folders = MediaFolder::where('company_id', currentCompanyId())
+            ->orderBy('name')->get(['id', 'name', 'parent_id']);
         return response()->json([
             'media' => $media,
             'folders' => $folders,

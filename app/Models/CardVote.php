@@ -13,7 +13,8 @@ class CardVote extends Model
         'card_id',
         'user_id',
         'vote',
-    ];
+        'company_id',
+];
 
     public function card()
     {
@@ -23,5 +24,16 @@ class CardVote extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

@@ -24,7 +24,8 @@ class Backlog extends Model
         'assigned_to',
         'order',
         'metadata',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'metadata' => 'array',
@@ -109,5 +110,16 @@ class Backlog extends Model
     public function scopeByPriority($query)
     {
         return $query->orderBy('priority', 'desc')->orderBy('order');
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

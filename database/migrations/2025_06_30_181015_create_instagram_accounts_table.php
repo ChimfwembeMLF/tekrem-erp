@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('instagram_accounts', function (Blueprint $table) {
             $table->id();
             $table->string('instagram_account_id')->unique();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->string('username');
             $table->string('name');
             $table->text('profile_picture_url')->nullable();

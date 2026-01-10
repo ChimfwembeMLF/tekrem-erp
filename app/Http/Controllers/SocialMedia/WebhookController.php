@@ -46,30 +46,27 @@ class WebhookController extends Controller
      */
     public function handleFacebookWebhook(Request $request): JsonResponse
     {
+        $companyId = $this->getCompanyId();
         try {
             $data = $request->all();
-            
-            // Log the webhook for debugging
             SocialWebhook::create([
                 'platform' => 'facebook',
                 'event_type' => $data['object'] ?? 'unknown',
                 'payload' => $data,
                 'processed' => false,
+                'company_id' => $companyId,
             ]);
-
             if (isset($data['object']) && $data['object'] === 'page') {
                 foreach ($data['entry'] ?? [] as $entry) {
-                    $this->processFacebookPageEntry($entry);
+                    $this->processFacebookPageEntry($entry, $companyId);
                 }
             }
-
             return response()->json(['status' => 'success']);
         } catch (\Exception $e) {
             Log::error('Facebook webhook processing failed', [
                 'error' => $e->getMessage(),
                 'data' => $request->all()
             ]);
-
             return response()->json(['status' => 'error'], 500);
         }
     }
@@ -103,30 +100,27 @@ class WebhookController extends Controller
      */
     public function handleInstagramWebhook(Request $request): JsonResponse
     {
+        $companyId = $this->getCompanyId();
         try {
             $data = $request->all();
-            
-            // Log the webhook for debugging
             SocialWebhook::create([
                 'platform' => 'instagram',
                 'event_type' => $data['object'] ?? 'unknown',
                 'payload' => $data,
                 'processed' => false,
+                'company_id' => $companyId,
             ]);
-
             if (isset($data['object']) && $data['object'] === 'instagram') {
                 foreach ($data['entry'] ?? [] as $entry) {
-                    $this->processInstagramEntry($entry);
+                    $this->processInstagramEntry($entry, $companyId);
                 }
             }
-
             return response()->json(['status' => 'success']);
         } catch (\Exception $e) {
             Log::error('Instagram webhook processing failed', [
                 'error' => $e->getMessage(),
                 'data' => $request->all()
             ]);
-
             return response()->json(['status' => 'error'], 500);
         }
     }
@@ -160,34 +154,36 @@ class WebhookController extends Controller
      */
     public function handleLinkedInWebhook(Request $request): JsonResponse
     {
+        $companyId = $this->getCompanyId();
         try {
             $data = $request->all();
-            
-            // Log the webhook for debugging
             SocialWebhook::create([
                 'platform' => 'linkedin',
                 'event_type' => $data['eventType'] ?? 'unknown',
                 'payload' => $data,
                 'processed' => false,
+                'company_id' => $companyId,
             ]);
-
-            $this->processLinkedInEvent($data);
-
+            $this->processLinkedInEvent($data, $companyId);
             return response()->json(['status' => 'success']);
         } catch (\Exception $e) {
             Log::error('LinkedIn webhook processing failed', [
                 'error' => $e->getMessage(),
                 'data' => $request->all()
             ]);
-
             return response()->json(['status' => 'error'], 500);
         }
+    }
+
+    protected function getCompanyId()
+    {
+        return currentCompanyId();
     }
 
     /**
      * Process Facebook page entry
      */
-    private function processFacebookPageEntry(array $entry): void
+    private function processFacebookPageEntry(array $entry, $companyId = null): void
     {
         $pageId = $entry['id'] ?? null;
         $changes = $entry['changes'] ?? [];
@@ -198,13 +194,13 @@ class WebhookController extends Controller
 
             switch ($field) {
                 case 'leadgen':
-                    $this->processFacebookLead($pageId, $value);
+                    $this->processFacebookLead($pageId, $value, $companyId);
                     break;
                 case 'feed':
-                    $this->processFacebookFeedUpdate($pageId, $value);
+                    $this->processFacebookFeedUpdate($pageId, $value, $companyId);
                     break;
                 case 'messages':
-                    $this->processFacebookMessage($pageId, $value);
+                    $this->processFacebookMessage($pageId, $value, $companyId);
                     break;
                 default:
                     Log::info('Unhandled Facebook webhook field', ['field' => $field, 'value' => $value]);
@@ -215,7 +211,7 @@ class WebhookController extends Controller
     /**
      * Process Facebook lead
      */
-    private function processFacebookLead(string $pageId, array $leadData): void
+    private function processFacebookLead(string $pageId, array $leadData, $companyId = null): void
     {
         try {
             $leadgenId = $leadData['leadgen_id'] ?? null;
@@ -237,6 +233,7 @@ class WebhookController extends Controller
                 'created_time' => $createdTime ? Carbon::parse($createdTime) : now(),
                 'raw_data' => $leadData,
                 'is_processed' => false,
+                'company_id' => $companyId
             ]);
 
             // Create CRM lead
@@ -247,12 +244,13 @@ class WebhookController extends Controller
                 'facebook_ad_id' => $adId,
                 'facebook_form_id' => $formId,
                 'facebook_created_time' => $createdTime ? Carbon::parse($createdTime) : now(),
+                'company_id' => $companyId
             ]);
 
             $facebookLead->update(['lead_id' => $lead->id]);
 
             // Notify relevant users
-            $this->notifyNewLead($lead, 'facebook');
+            $this->notifyNewLead($lead, 'facebook', $companyId);
 
             Log::info('Facebook lead processed successfully', [
                 'facebook_lead_id' => $facebookLead->id,
@@ -269,33 +267,33 @@ class WebhookController extends Controller
     /**
      * Process Facebook feed update
      */
-    private function processFacebookFeedUpdate(string $pageId, array $feedData): void
+    private function processFacebookFeedUpdate(string $pageId, array $feedData, $companyId = null): void
     {
         $verb = $feedData['verb'] ?? null;
         $postId = $feedData['post_id'] ?? null;
 
         if ($verb === 'add' && $postId) {
             // New post published
-            $this->notifyPostPublished($pageId, $postId, 'facebook');
+            $this->notifyPostPublished($pageId, $postId, 'facebook', $companyId);
         } elseif ($verb === 'edited' && $postId) {
             // Post edited
-            $this->notifyPostEdited($pageId, $postId, 'facebook');
+            $this->notifyPostEdited($pageId, $postId, 'facebook', $companyId);
         }
     }
 
     /**
      * Process Facebook message
      */
-    private function processFacebookMessage(string $pageId, array $messageData): void
+    private function processFacebookMessage(string $pageId, array $messageData, $companyId = null): void
     {
         // Handle new messages - could integrate with LiveChat system
-        $this->notifyNewMessage($pageId, $messageData, 'facebook');
+        $this->notifyNewMessage($pageId, $messageData, 'facebook', $companyId);
     }
 
     /**
      * Process Instagram entry
      */
-    private function processInstagramEntry(array $entry): void
+    private function processInstagramEntry(array $entry, $companyId = null): void
     {
         $instagramId = $entry['id'] ?? null;
         $changes = $entry['changes'] ?? [];
@@ -306,10 +304,10 @@ class WebhookController extends Controller
 
             switch ($field) {
                 case 'comments':
-                    $this->processInstagramComment($instagramId, $value);
+                    $this->processInstagramComment($instagramId, $value, $companyId);
                     break;
                 case 'mentions':
-                    $this->processInstagramMention($instagramId, $value);
+                    $this->processInstagramMention($instagramId, $value, $companyId);
                     break;
                 default:
                     Log::info('Unhandled Instagram webhook field', ['field' => $field, 'value' => $value]);
@@ -320,32 +318,32 @@ class WebhookController extends Controller
     /**
      * Process Instagram comment
      */
-    private function processInstagramComment(string $accountId, array $commentData): void
+    private function processInstagramComment(string $accountId, array $commentData, $companyId = null): void
     {
-        $this->notifyNewComment($accountId, $commentData, 'instagram');
+        $this->notifyNewComment($accountId, $commentData, 'instagram', $companyId);
     }
 
     /**
      * Process Instagram mention
      */
-    private function processInstagramMention(string $accountId, array $mentionData): void
+    private function processInstagramMention(string $accountId, array $mentionData, $companyId = null): void
     {
-        $this->notifyNewMention($accountId, $mentionData, 'instagram');
+        $this->notifyNewMention($accountId, $mentionData, 'instagram', $companyId);
     }
 
     /**
      * Process LinkedIn event
      */
-    private function processLinkedInEvent(array $eventData): void
+    private function processLinkedInEvent(array $eventData, $companyId = null): void
     {
         $eventType = $eventData['eventType'] ?? null;
 
         switch ($eventType) {
             case 'SHARE_STATISTICS_UPDATE':
-                $this->processLinkedInShareUpdate($eventData);
+                $this->processLinkedInShareUpdate($eventData, $companyId);
                 break;
             case 'FOLLOWER_STATISTICS_UPDATE':
-                $this->processLinkedInFollowerUpdate($eventData);
+                $this->processLinkedInFollowerUpdate($eventData, $companyId);
                 break;
             default:
                 Log::info('Unhandled LinkedIn webhook event', ['event_type' => $eventType, 'data' => $eventData]);
@@ -355,114 +353,114 @@ class WebhookController extends Controller
     /**
      * Process LinkedIn share update
      */
-    private function processLinkedInShareUpdate(array $eventData): void
+    private function processLinkedInShareUpdate(array $eventData, $companyId = null): void
     {
         // Handle share statistics updates
-        Log::info('LinkedIn share statistics updated', $eventData);
+        Log::info('LinkedIn share statistics updated', array_merge($eventData, ['company_id' => $companyId]));
     }
 
     /**
      * Process LinkedIn follower update
      */
-    private function processLinkedInFollowerUpdate(array $eventData): void
+    private function processLinkedInFollowerUpdate(array $eventData, $companyId = null): void
     {
         // Handle follower statistics updates
-        Log::info('LinkedIn follower statistics updated', $eventData);
+        Log::info('LinkedIn follower statistics updated', array_merge($eventData, ['company_id' => $companyId]));
     }
 
     /**
      * Notify about new lead
      */
-    private function notifyNewLead(Lead $lead, string $platform): void
+    private function notifyNewLead(Lead $lead, string $platform, $companyId = null): void
     {
-        $admins = User::role(['admin', 'manager'])->get();
+        $admins = User::role(['admin', 'manager'])->where('company_id', $companyId)->get();
         
         Notification::send($admins, new SocialMediaNotification([
             'type' => 'new_lead',
             'platform' => $platform,
             'title' => 'New Lead from ' . ucfirst($platform),
             'message' => "A new lead has been captured from {$platform}",
-            'data' => ['lead_id' => $lead->id],
+            'data' => ['lead_id' => $lead->id, 'company_id' => $companyId],
         ]));
     }
 
     /**
      * Notify about post published
      */
-    private function notifyPostPublished(string $accountId, string $postId, string $platform): void
+    private function notifyPostPublished(string $accountId, string $postId, string $platform, $companyId = null): void
     {
-        $admins = User::role(['admin', 'manager'])->get();
+        $admins = User::role(['admin', 'manager'])->where('company_id', $companyId)->get();
         
         Notification::send($admins, new SocialMediaNotification([
             'type' => 'post_published',
             'platform' => $platform,
             'title' => 'Post Published on ' . ucfirst($platform),
             'message' => "A new post has been published on {$platform}",
-            'data' => ['account_id' => $accountId, 'post_id' => $postId],
+            'data' => ['account_id' => $accountId, 'post_id' => $postId, 'company_id' => $companyId],
         ]));
     }
 
     /**
      * Notify about post edited
      */
-    private function notifyPostEdited(string $accountId, string $postId, string $platform): void
+    private function notifyPostEdited(string $accountId, string $postId, string $platform, $companyId = null): void
     {
-        $admins = User::role(['admin', 'manager'])->get();
+        $admins = User::role(['admin', 'manager'])->where('company_id', $companyId)->get();
         
         Notification::send($admins, new SocialMediaNotification([
             'type' => 'post_edited',
             'platform' => $platform,
             'title' => 'Post Edited on ' . ucfirst($platform),
             'message' => "A post has been edited on {$platform}",
-            'data' => ['account_id' => $accountId, 'post_id' => $postId],
+            'data' => ['account_id' => $accountId, 'post_id' => $postId, 'company_id' => $companyId],
         ]));
     }
 
     /**
      * Notify about new message
      */
-    private function notifyNewMessage(string $accountId, array $messageData, string $platform): void
+    private function notifyNewMessage(string $accountId, array $messageData, string $platform, $companyId = null): void
     {
-        $admins = User::role(['admin', 'manager'])->get();
+        $admins = User::role(['admin', 'manager'])->where('company_id', $companyId)->get();
         
         Notification::send($admins, new SocialMediaNotification([
             'type' => 'new_message',
             'platform' => $platform,
             'title' => 'New Message on ' . ucfirst($platform),
             'message' => "A new message has been received on {$platform}",
-            'data' => ['account_id' => $accountId, 'message_data' => $messageData],
+            'data' => ['account_id' => $accountId, 'message_data' => $messageData, 'company_id' => $companyId],
         ]));
     }
 
     /**
      * Notify about new comment
      */
-    private function notifyNewComment(string $accountId, array $commentData, string $platform): void
+    private function notifyNewComment(string $accountId, array $commentData, string $platform, $companyId = null): void
     {
-        $admins = User::role(['admin', 'manager'])->get();
+        $admins = User::role(['admin', 'manager'])->where('company_id', $companyId)->get();
         
         Notification::send($admins, new SocialMediaNotification([
             'type' => 'new_comment',
             'platform' => $platform,
             'title' => 'New Comment on ' . ucfirst($platform),
             'message' => "A new comment has been posted on {$platform}",
-            'data' => ['account_id' => $accountId, 'comment_data' => $commentData],
+            'data' => ['account_id' => $accountId, 'comment_data' => $commentData, 'company_id' => $companyId],
         ]));
     }
 
     /**
      * Notify about new mention
      */
-    private function notifyNewMention(string $accountId, array $mentionData, string $platform): void
+    private function notifyNewMention(string $accountId, array $mentionData, string $platform, $companyId = null): void
     {
-        $admins = User::role(['admin', 'manager'])->get();
+        $admins = User::role(['admin', 'manager'])->where('company_id', $companyId)->get();
         
         Notification::send($admins, new SocialMediaNotification([
             'type' => 'new_mention',
             'platform' => $platform,
             'title' => 'New Mention on ' . ucfirst($platform),
             'message' => "You have been mentioned on {$platform}",
-            'data' => ['account_id' => $accountId, 'mention_data' => $mentionData],
+            'data' => ['account_id' => $accountId, 'mention_data' => $mentionData, 'company_id' => $companyId],
         ]));
     }
 }

@@ -28,7 +28,8 @@ class FAQ extends Model
         'not_helpful_count',
         'tags',
         'sort_order',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -134,4 +135,14 @@ class FAQ extends Model
         return round(($this->helpful_count / $total) * 100, 1);
     }
 
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
+    }
 }

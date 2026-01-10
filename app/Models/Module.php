@@ -13,7 +13,8 @@ class Module extends Model
         'description',
         'price',
         'is_active',
-    ];
+        'company_id',
+];
 
     protected static function booted()
     {

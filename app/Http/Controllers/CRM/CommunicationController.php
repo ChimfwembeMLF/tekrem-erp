@@ -22,7 +22,9 @@ class CommunicationController extends Controller
      */
     public function index(Request $request)
     {
+        $companyId = currentCompanyId();
         $query = Communication::query()
+            ->where('company_id', $companyId)
             ->with(['communicable', 'user'])
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($query) use ($search) {
@@ -50,8 +52,9 @@ class CommunicationController extends Controller
      */
     public function create(Request $request)
     {
-        $clients = Client::select('id', 'name')->get();
-        $leads = Lead::select('id', 'name')->get();
+        $companyId = currentCompanyId();
+        $clients = Client::where('company_id', $companyId)->select('id', 'name')->get();
+        $leads = Lead::where('company_id', $companyId)->select('id', 'name')->get();
 
         return Inertia::render('CRM/Communications/Create', [
             'clients' => $clients,
@@ -66,6 +69,7 @@ class CommunicationController extends Controller
      */
     public function store(Request $request)
     {
+        $companyId = currentCompanyId();
         $validated = $request->validate([
             'type' => ['required', 'string', Rule::in(['email', 'call', 'meeting', 'note'])],
             'content' => ['required', 'string'],
@@ -77,18 +81,18 @@ class CommunicationController extends Controller
             'communicable_id' => ['required', 'integer'],
         ]);
 
-        // Verify the communicable exists
         $communicableType = $validated['communicable_type'];
         $communicableId = $validated['communicable_id'];
-        $communicable = $communicableType::find($communicableId);
+        $communicable = $communicableType::where('company_id', $companyId)->find($communicableId);
 
         if (!$communicable) {
             return redirect()->back()->withErrors([
-                'communicable_id' => 'The selected client or lead does not exist.',
+                'communicable_id' => 'The selected client or lead does not exist or does not belong to your company.',
             ]);
         }
 
         $validated['user_id'] = Auth::id();
+        $validated['company_id'] = $companyId;
 
         $communication = Communication::create($validated);
 
@@ -136,8 +140,11 @@ class CommunicationController extends Controller
      */
     public function show(Communication $communication)
     {
+        $companyId = currentCompanyId();
+        if ($communication->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $communication->load(['communicable', 'user']);
-
         return Inertia::render('CRM/Communications/Show', [
             'communication' => $communication,
         ]);
@@ -148,10 +155,13 @@ class CommunicationController extends Controller
      */
     public function edit(Communication $communication)
     {
+        $companyId = currentCompanyId();
+        if ($communication->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $communication->load('communicable');
-        $clients = Client::select('id', 'name')->get();
-        $leads = Lead::select('id', 'name')->get();
-
+        $clients = Client::where('company_id', $companyId)->select('id', 'name')->get();
+        $leads = Lead::where('company_id', $companyId)->select('id', 'name')->get();
         return Inertia::render('CRM/Communications/Edit', [
             'communication' => $communication,
             'clients' => $clients,
@@ -164,6 +174,10 @@ class CommunicationController extends Controller
      */
     public function update(Request $request, Communication $communication)
     {
+        $companyId = currentCompanyId();
+        if ($communication->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $validated = $request->validate([
             'type' => ['required', 'string', Rule::in(['email', 'call', 'meeting', 'note'])],
             'content' => ['required', 'string'],
@@ -172,9 +186,7 @@ class CommunicationController extends Controller
             'direction' => ['nullable', 'string', Rule::in(['inbound', 'outbound'])],
             'status' => ['nullable', 'string', Rule::in(['completed', 'scheduled', 'cancelled'])],
         ]);
-
         $communication->update($validated);
-
         return redirect()->route('crm.communications.show', $communication)
             ->with('success', 'Communication updated successfully.');
     }
@@ -184,9 +196,12 @@ class CommunicationController extends Controller
      */
     public function destroy(Communication $communication)
     {
+        $companyId = currentCompanyId();
+        if ($communication->company_id !== $companyId) {
+            abort(403, 'Unauthorized');
+        }
         $communicable = $communication->communicable;
         $communication->delete();
-
         if ($communicable instanceof Client) {
             return redirect()->route('crm.clients.show', $communicable)
                 ->with('success', 'Communication deleted successfully.');

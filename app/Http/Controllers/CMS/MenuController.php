@@ -21,9 +21,12 @@ class MenuController extends Controller
         $query = Menu::with(['items' => function ($q) {
             $q->orderBy('sort_order');
         }])
+        ->where('company_id', currentCompanyId())
         ->when($request->search, function ($q, $search) {
-            $q->where('name', 'like', "%{$search}%")
-              ->orWhere('description', 'like', "%{$search}%");
+            $q->where(function ($subQ) use ($search) {
+                $subQ->where('name', 'like', "%{$search}%")
+                      ->orWhere('description', 'like', "%{$search}%");
+            });
         })
         ->when($request->location, function ($q, $location) {
             $q->where('location', $location);
@@ -83,6 +86,9 @@ class MenuController extends Controller
      */
     public function show(Menu $menu): Response
     {
+        if ($menu->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $menu->load(['items.page', 'items.children', 'createdBy']);
 
         return Inertia::render('CMS/Menus/Show', [
@@ -95,16 +101,18 @@ class MenuController extends Controller
      */
     public function edit(Menu $menu): Response
     {
+        if ($menu->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $menu->load(['items' => function ($q) {
             $q->with(['page', 'children'])->orderBy('sort_order');
         }]);
-
         $locations = Menu::getLocations();
         $pages = \App\Models\CMS\Page::published()
+            ->where('company_id', currentCompanyId())
             ->select('id', 'title', 'slug')
             ->orderBy('title')
             ->get();
-
         return Inertia::render('CMS/Menus/Edit', [
             'menu' => $menu,
             'locations' => $locations,
@@ -117,6 +125,9 @@ class MenuController extends Controller
      */
     public function update(Request $request, Menu $menu): RedirectResponse
     {
+        if ($menu->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255', 'unique:cms_menus,slug,' . $menu->id],
@@ -141,8 +152,10 @@ class MenuController extends Controller
      */
     public function destroy(Menu $menu): RedirectResponse
     {
+        if ($menu->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $menu->delete();
-
         return redirect()->route('cms.menus.index')
             ->with('success', 'Menu deleted successfully.');
     }
@@ -152,6 +165,9 @@ class MenuController extends Controller
      */
     public function structure(Menu $menu): JsonResponse
     {
+        if ($menu->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $items = $menu->items()
             ->with(['page', 'children' => function ($q) {
                 $q->orderBy('sort_order');
@@ -159,9 +175,7 @@ class MenuController extends Controller
             ->whereNull('parent_id')
             ->orderBy('sort_order')
             ->get();
-
         $structure = $this->buildMenuStructure($items);
-
         return response()->json([
             'menu' => $menu,
             'structure' => $structure,
@@ -194,6 +208,9 @@ class MenuController extends Controller
      */
     public function duplicate(Request $request, Menu $menu): RedirectResponse
     {
+        if ($menu->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $validated = $request->validate([
             'name' => ['nullable', 'string', 'max:255'],
         ]);
@@ -209,8 +226,10 @@ class MenuController extends Controller
      */
     public function export(Menu $menu): JsonResponse
     {
+        if ($menu->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $exportData = $menu->export();
-
         return response()->json($exportData)
             ->header('Content-Disposition', 'attachment; filename="menu-' . $menu->slug . '.json"');
     }
@@ -256,22 +275,28 @@ class MenuController extends Controller
 
         $processed = 0;
 
+        // Only process menus belonging to the current company
+        $menus = Menu::whereIn('id', $validated['menu_ids'])
+            ->where('company_id', currentCompanyId())
+            ->get();
+        $menuIds = $menus->pluck('id')->toArray();
+
         switch ($validated['action']) {
             case 'activate':
-                Menu::whereIn('id', $validated['menu_ids'])
+                Menu::whereIn('id', $menuIds)
                     ->update(['is_active' => true]);
-                $processed = count($validated['menu_ids']);
+                $processed = count($menuIds);
                 break;
 
             case 'deactivate':
-                Menu::whereIn('id', $validated['menu_ids'])
+                Menu::whereIn('id', $menuIds)
                     ->update(['is_active' => false]);
-                $processed = count($validated['menu_ids']);
+                $processed = count($menuIds);
                 break;
 
             case 'delete':
-                $processed = Menu::whereIn('id', $validated['menu_ids'])->count();
-                Menu::whereIn('id', $validated['menu_ids'])->delete();
+                $processed = Menu::whereIn('id', $menuIds)->count();
+                Menu::whereIn('id', $menuIds)->delete();
                 break;
         }
 
@@ -289,6 +314,7 @@ class MenuController extends Controller
     {
         $menu = Menu::active()
             ->where('location', $location)
+            ->where('company_id', currentCompanyId())
             ->with(['items' => function ($q) {
                 $q->active()
                   ->with(['page', 'children' => function ($subQ) {
@@ -298,16 +324,13 @@ class MenuController extends Controller
                   ->orderBy('sort_order');
             }])
             ->first();
-
         if (!$menu) {
             return response()->json([
                 'menu' => null,
                 'items' => [],
             ]);
         }
-
         $structure = $this->buildMenuStructure($menu->items);
-
         return response()->json([
             'menu' => [
                 'id' => $menu->id,

@@ -27,6 +27,10 @@ class BoardController extends Controller
     public function show(Board $board)
     {
         // $this->authorize('view', $board->project);
+        $companyId = auth()->user()->company_id;
+        if ($board->company_id !== $companyId) {
+            abort(403, 'Unauthorized: Board does not belong to your company.');
+        }
 
         $board->load([
             'columns.cards.assignee',
@@ -76,6 +80,7 @@ class BoardController extends Controller
             'type' => 'required|in:kanban,scrum',
         ]);
 
+        $validated['company_id'] = $project->company_id;
         $board = $project->boards()->create($validated);
 
         // Create default columns
@@ -97,7 +102,10 @@ class BoardController extends Controller
     public function edit(Board $board)
     {
         // $this->authorize('update', $board->project);
-
+        $companyId = auth()->user()->company_id;
+        if ($board->company_id !== $companyId) {
+            abort(403, 'Unauthorized: Board does not belong to your company.');
+        }
         return Inertia::render('Agile/Boards/Edit', [
             'board' => $board,
             'project' => $board->project,
@@ -107,24 +115,27 @@ class BoardController extends Controller
     public function update(Request $request, Board $board)
     {
         // $this->authorize('update', $board->project);
-
+        $companyId = auth()->user()->company_id;
+        if ($board->company_id !== $companyId) {
+            abort(403, 'Unauthorized: Board does not belong to your company.');
+        }
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'type' => 'required|in:kanban,scrum',
         ]);
-
         $board->update($validated);
-
         return back()->with('success', 'Board updated successfully.');
     }
 
     public function destroy(Board $board)
     {
         // $this->authorize('update', $board->project);
-
+        $companyId = auth()->user()->company_id;
+        if ($board->company_id !== $companyId) {
+            abort(403, 'Unauthorized: Board does not belong to your company.');
+        }
         $board->delete();
-
         return redirect()->route('projects.show', $board->project_id)
             ->with('success', 'Board deleted successfully.');
     }
@@ -132,7 +143,10 @@ class BoardController extends Controller
     public function settings(Board $board)
     {
         // $this->authorize('update', $board->project);
-
+        $companyId = auth()->user()->company_id;
+        if ($board->company_id !== $companyId) {
+            abort(403, 'Unauthorized: Board does not belong to your company.');
+        }
         return Inertia::render('Agile/Boards/Settings', [
             'board' => $board->load('columns'),
             'project' => $board->project,

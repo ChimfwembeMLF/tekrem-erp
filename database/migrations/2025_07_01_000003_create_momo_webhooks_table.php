@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('momo_provider_id')->constrained()->onDelete('cascade');
             $table->foreignId('momo_transaction_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             
             // Webhook details
             $table->string('webhook_id')->nullable(); // Provider's webhook ID

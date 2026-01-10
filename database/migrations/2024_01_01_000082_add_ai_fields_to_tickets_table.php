@@ -17,6 +17,9 @@ return new class extends Migration
                 $table->json('metadata')->nullable()->after('tags');
             }
 
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
+
             // Add AI processing flags
             if (!Schema::hasColumn('tickets', 'ai_processed')) {
                 $table->boolean('ai_processed')->default(false)->after('metadata');

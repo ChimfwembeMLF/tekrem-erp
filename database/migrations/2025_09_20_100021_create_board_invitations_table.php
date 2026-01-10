@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('board_invitations', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('board_id');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->string('email');
             $table->string('token');
             $table->enum('status', ['pending', 'accepted', 'declined'])->default('pending');

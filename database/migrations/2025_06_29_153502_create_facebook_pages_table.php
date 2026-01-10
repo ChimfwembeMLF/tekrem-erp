@@ -20,6 +20,8 @@ return new class extends Migration
             $table->string('picture_url')->nullable();
             $table->boolean('is_active')->default(true);
             $table->boolean('webhook_subscribed')->default(false);
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->timestamp('last_sync_at')->nullable();
             $table->json('settings')->nullable();
             $table->timestamps();

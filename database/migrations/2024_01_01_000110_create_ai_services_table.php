@@ -25,6 +25,8 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->json('supported_features')->nullable(); // chat, completion, embedding, etc.
             $table->decimal('cost_per_token', 10, 8)->nullable();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->integer('rate_limit_per_minute')->nullable();
             $table->integer('max_tokens_per_request')->nullable();
             $table->timestamps();

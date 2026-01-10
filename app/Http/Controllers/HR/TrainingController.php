@@ -19,11 +19,15 @@ class TrainingController extends Controller
      */
     public function index(Request $request): Response
     {
+        $companyId = currentCompanyId();
         $query = Training::with(['instructor', 'enrollments'])
             ->withCount('enrollments')
+            ->where('company_id', $companyId)
             ->when($request->search, function ($query, $search) {
-                $query->where('title', 'like', "%{$search}%")
+                $query->where(function($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
                       ->orWhere('description', 'like', "%{$search}%");
+                });
             })
             ->when($request->status, function ($query, $status) {
                 $query->where('status', $status);
@@ -39,8 +43,7 @@ class TrainingController extends Controller
             });
 
         $trainings = $query->latest()->paginate(15)->withQueryString();
-
-        $categories = Training::distinct()->pluck('category')->filter()->sort()->values();
+        $categories = Training::where('company_id', $companyId)->distinct()->pluck('category')->filter()->sort()->values();
 
         return Inertia::render('HR/Training/Index', [
             'trainings' => $trainings,
@@ -54,12 +57,11 @@ class TrainingController extends Controller
      */
     public function create(): Response
     {
+        $companyId = currentCompanyId();
         $instructors = User::whereHas('roles', function ($query) {
             $query->whereIn('name', ['super_user', 'admin', 'staff']);
         })->orderBy('name')->get(['id', 'name']);
-
-        $categories = Training::distinct()->pluck('category')->filter()->sort()->values();
-
+        $categories = Training::where('company_id', $companyId)->distinct()->pluck('category')->filter()->sort()->values();
         return Inertia::render('HR/Training/Create', [
             'instructors' => $instructors,
             'categories' => $categories,
@@ -71,6 +73,7 @@ class TrainingController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $companyId = currentCompanyId();
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -95,9 +98,8 @@ class TrainingController extends Controller
             'certification_validity_months' => 'nullable|integer|min:1',
             'attachments' => 'nullable|array',
         ]);
-
+        $validated['company_id'] = $companyId;
         $training = Training::create($validated);
-
         return redirect()->route('hr.training.show', $training)
             ->with('success', 'Training program created successfully.');
     }
@@ -107,8 +109,11 @@ class TrainingController extends Controller
      */
     public function show(Training $training): Response
     {
+        $companyId = currentCompanyId();
+        if ($training->company_id !== $companyId) {
+            abort(403);
+        }
         $training->load(['instructor', 'enrollments.employee.user']);
-
         return Inertia::render('HR/Training/Show', [
             'training' => $training,
         ]);
@@ -119,14 +124,15 @@ class TrainingController extends Controller
      */
     public function edit(Training $training): Response
     {
+        $companyId = currentCompanyId();
+        if ($training->company_id !== $companyId) {
+            abort(403);
+        }
         $training->load(['instructor']);
-
         $instructors = User::whereHas('roles', function ($query) {
             $query->whereIn('name', ['super_user', 'admin', 'staff']);
         })->orderBy('name')->get(['id', 'name']);
-
-        $categories = Training::distinct()->pluck('category')->filter()->sort()->values();
-
+        $categories = Training::where('company_id', $companyId)->distinct()->pluck('category')->filter()->sort()->values();
         return Inertia::render('HR/Training/Edit', [
             'training' => $training,
             'instructors' => $instructors,
@@ -139,6 +145,10 @@ class TrainingController extends Controller
      */
     public function update(Request $request, Training $training): RedirectResponse
     {
+        $companyId = currentCompanyId();
+        if ($training->company_id !== $companyId) {
+            abort(403);
+        }
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -163,9 +173,7 @@ class TrainingController extends Controller
             'certification_validity_months' => 'nullable|integer|min:1',
             'attachments' => 'nullable|array',
         ]);
-
         $training->update($validated);
-
         return redirect()->route('hr.training.show', $training)
             ->with('success', 'Training program updated successfully.');
     }
@@ -175,12 +183,14 @@ class TrainingController extends Controller
      */
     public function destroy(Training $training): RedirectResponse
     {
+        $companyId = currentCompanyId();
+        if ($training->company_id !== $companyId) {
+            abort(403);
+        }
         if ($training->enrollments()->exists()) {
             return back()->withErrors(['training' => 'Cannot delete training with enrollments.']);
         }
-
         $training->delete();
-
         return redirect()->route('hr.training.index')
             ->with('success', 'Training program deleted successfully.');
     }
@@ -190,22 +200,21 @@ class TrainingController extends Controller
      */
     public function enroll(Request $request, Training $training): RedirectResponse
     {
+        $companyId = currentCompanyId();
+        if ($training->company_id !== $companyId) {
+            abort(403);
+        }
         $request->validate([
             'employee_id' => 'required|exists:hr_employees,id',
         ]);
-
-        $employee = Employee::findOrFail($request->employee_id);
-
+        $employee = Employee::where('company_id', $companyId)->findOrFail($request->employee_id);
         if (!$training->canEnroll($employee)) {
             return back()->withErrors(['enrollment' => 'Employee cannot be enrolled in this training.']);
         }
-
         $enrollment = $training->enrollEmployee($employee);
-
         if (!$enrollment) {
             return back()->withErrors(['enrollment' => 'Failed to enroll employee in training.']);
         }
-
         return back()->with('success', 'Employee enrolled successfully.');
     }
 
@@ -214,26 +223,25 @@ class TrainingController extends Controller
      */
     public function complete(Request $request, Training $training): RedirectResponse
     {
+        $companyId = currentCompanyId();
+        if ($training->company_id !== $companyId) {
+            abort(403);
+        }
         $request->validate([
             'employee_id' => 'required|exists:hr_employees,id',
             'score' => 'nullable|numeric|min:0|max:100',
             'feedback' => 'nullable|string',
         ]);
-
         $enrollment = TrainingEnrollment::where('training_id', $training->id)
             ->where('employee_id', $request->employee_id)
             ->first();
-
         if (!$enrollment) {
             return back()->withErrors(['enrollment' => 'Employee is not enrolled in this training.']);
         }
-
         $enrollment->complete($request->score, $request->score >= 70);
-
         if ($request->feedback) {
             $enrollment->update(['feedback' => $request->feedback]);
         }
-
         return back()->with('success', 'Training completed successfully.');
     }
 }

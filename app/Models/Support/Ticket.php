@@ -44,7 +44,8 @@ class Ticket extends Model
         'first_response_at',
         'resolution_time_minutes',
         'response_time_minutes',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -249,5 +250,16 @@ class Ticket extends Model
             'closed' => 'gray',
             default => 'gray'
         };
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

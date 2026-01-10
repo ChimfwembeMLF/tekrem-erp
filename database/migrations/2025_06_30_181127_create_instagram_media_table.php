@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('instagram_media_id')->unique();
             $table->string('account_id'); // Instagram account ID
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->enum('media_type', ['IMAGE', 'VIDEO', 'CAROUSEL_ALBUM']);
             $table->text('media_url')->nullable();
             $table->text('thumbnail_url')->nullable();

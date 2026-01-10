@@ -34,7 +34,8 @@ class Quotation extends Model
         'user_id',
         'converted_to_invoice_id',
         'converted_at',
-    ];
+        'company_id',
+];
 
     /**
      * The attributes that should be cast.
@@ -254,5 +255,16 @@ class Quotation extends Model
         ]);
 
         return $invoice;
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

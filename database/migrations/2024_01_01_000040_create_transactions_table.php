@@ -26,6 +26,8 @@ return new class extends Migration
             $table->unsignedBigInteger('expense_id')->nullable();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->json('metadata')->nullable(); // For additional data
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->timestamps();
         });
     }

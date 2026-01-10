@@ -14,7 +14,9 @@ class NotificationController extends Controller
      */
     public function index()
     {
-        $notifications = Auth::user()->notifications()
+        $user = Auth::user();
+        $notifications = $user->notifications()
+            ->where('company_id', $user->company_id)
             ->with('notifiable')
             ->latest()
             ->paginate(20);
@@ -29,9 +31,10 @@ class NotificationController extends Controller
      */
     public function markAsRead(Notification $notification)
     {
-        // Check if the notification belongs to the authenticated user
-        if ($notification->user_id !== Auth::id()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+        $user = Auth::user();
+        // Check if the notification belongs to the authenticated user and company
+        if ($notification->user_id !== $user->id || $notification->company_id !== $user->company_id) {
+            abort(404);
         }
 
         $notification->markAsRead();
@@ -44,7 +47,8 @@ class NotificationController extends Controller
      */
     public function markAllAsRead()
     {
-        Auth::user()->notifications()->update(['is_read' => true]);
+        $user = Auth::user();
+        $user->notifications()->where('company_id', $user->company_id)->update(['is_read' => true]);
 
         return redirect()->back()->with('success', 'All notifications marked as read.');
     }
@@ -54,9 +58,10 @@ class NotificationController extends Controller
      */
     public function destroy(Notification $notification)
     {
-        // Check if the notification belongs to the authenticated user
-        if ($notification->user_id !== Auth::id()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+        $user = Auth::user();
+        // Check if the notification belongs to the authenticated user and company
+        if ($notification->user_id !== $user->id || $notification->company_id !== $user->company_id) {
+            abort(404);
         }
 
         $notification->delete();

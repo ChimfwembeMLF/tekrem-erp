@@ -28,7 +28,8 @@ class InstagramMedia extends Model
         'profile_visits',
         'website_clicks',
         'last_sync_at',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'timestamp' => 'datetime',
@@ -186,5 +187,16 @@ class InstagramMedia extends Model
     public function isCarousel(): bool
     {
         return $this->media_type === self::MEDIA_TYPE_CAROUSEL_ALBUM;
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

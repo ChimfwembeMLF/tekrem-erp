@@ -32,7 +32,8 @@ class Department extends Model
         'employee_count',
         'is_active',
         'metadata',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'budget' => 'decimal:2',
@@ -141,5 +142,16 @@ class Department extends Model
         }
 
         return $total;
+    }
+
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

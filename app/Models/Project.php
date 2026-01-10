@@ -40,7 +40,7 @@ class Project extends Model
         'team_members',
         'tags',      
         'metadata',
-    ];
+];
 
     /**
      * The attributes that should be cast.
@@ -416,5 +416,10 @@ class Project extends Model
     public function isHybrid(): bool
     {
         return $this->methodology === 'hybrid';
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

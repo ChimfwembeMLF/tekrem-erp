@@ -28,7 +28,8 @@ class Service extends Model
         'cost_per_token',
         'rate_limit_per_minute',
         'max_tokens_per_request',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'configuration' => 'array',
@@ -134,5 +135,15 @@ class Service extends Model
             'avg_response_time' => rand(200, 800) . 'ms',
             'success_rate' => rand(95, 100) . '%'
         ];
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

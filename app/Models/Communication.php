@@ -27,7 +27,8 @@ class Communication extends Model
         'communicable_id',
         'communicable_type',
         'user_id',
-    ];
+        'company_id',
+];
 
     /**
      * Get the company that owns the communication.
@@ -60,5 +61,10 @@ class Communication extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

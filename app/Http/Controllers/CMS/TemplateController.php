@@ -19,9 +19,12 @@ class TemplateController extends Controller
     public function index(Request $request): Response
     {
         $query = Template::with(['createdBy'])
+            ->where('company_id', currentCompanyId())
             ->when($request->search, function ($q, $search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                $q->where(function ($subQ) use ($search) {
+                    $subQ->where('name', 'like', "%{$search}%")
+                          ->orWhere('description', 'like', "%{$search}%");
+                });
             })
             ->when($request->category, function ($q, $category) {
                 $q->where('category', $category);
@@ -95,9 +98,11 @@ class TemplateController extends Controller
      */
     public function show(Template $template): Response
     {
+        if ($template->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $template->load(['createdBy']);
         $usageStats = $template->getUsageStats();
-
         return Inertia::render('CMS/Templates/Show', [
             'template' => $template,
             'usageStats' => $usageStats,
@@ -109,8 +114,10 @@ class TemplateController extends Controller
      */
     public function edit(Template $template): Response
     {
+        if ($template->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $categories = Template::getCategories();
-
         return Inertia::render('CMS/Templates/Edit', [
             'template' => $template,
             'categories' => $categories,
@@ -122,6 +129,9 @@ class TemplateController extends Controller
      */
     public function update(Request $request, Template $template): RedirectResponse
     {
+        if ($template->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255', 'unique:cms_templates,slug,' . $template->id],
@@ -153,14 +163,15 @@ class TemplateController extends Controller
      */
     public function destroy(Template $template): RedirectResponse
     {
+        if ($template->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         // Check if template is in use
         if ($template->pages()->exists()) {
             return redirect()->back()
                 ->with('error', 'Cannot delete template that is in use by pages.');
         }
-
         $template->delete();
-
         return redirect()->route('cms.templates.index')
             ->with('success', 'Template deleted successfully.');
     }
@@ -170,8 +181,10 @@ class TemplateController extends Controller
      */
     public function setDefault(Template $template): JsonResponse
     {
+        if ($template->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $success = $template->setAsDefault();
-
         return response()->json([
             'success' => $success,
             'message' => $success ? 'Template set as default successfully.' : 'Failed to set template as default.',
@@ -183,28 +196,27 @@ class TemplateController extends Controller
      */
     public function duplicate(Request $request, Template $template): RedirectResponse
     {
+        if ($template->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $validated = $request->validate([
             'name' => ['nullable', 'string', 'max:255'],
         ]);
-
         $data = $template->toArray();
         unset($data['id'], $data['created_at'], $data['updated_at']);
-
         $data['name'] = $validated['name'] ?? $data['name'] . ' (Copy)';
         $data['slug'] = \Str::slug($data['name']);
         $data['is_default'] = false;
         $data['created_by'] = Auth::id();
-
+        $data['company_id'] = currentCompanyId();
         // Ensure unique slug
         $originalSlug = $data['slug'];
         $counter = 1;
-        while (Template::where('slug', $data['slug'])->exists()) {
+        while (Template::where('slug', $data['slug'])->where('company_id', currentCompanyId())->exists()) {
             $data['slug'] = $originalSlug . '-' . $counter;
             $counter++;
         }
-
         $duplicatedTemplate = Template::create($data);
-
         return redirect()->route('cms.templates.edit', $duplicatedTemplate)
             ->with('success', 'Template duplicated successfully.');
     }
@@ -214,12 +226,14 @@ class TemplateController extends Controller
      */
     public function preview(Template $template): Response
     {
+        if ($template->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $sampleData = [
             'title' => 'Sample Page Title',
             'content' => '<p>This is sample content for the template preview.</p>',
             'excerpt' => 'This is a sample excerpt for the template preview.',
         ];
-
         // Add sample data for custom fields
         if ($template->fields) {
            foreach ($template->getFieldsWithDefaults() as $fieldName => $field) {
@@ -245,9 +259,7 @@ class TemplateController extends Controller
     }
 }
         }
-
         $renderedContent = $template->render($sampleData);
-
         return Inertia::render('CMS/Templates/Preview', [
             'template' => $template,
             'renderedContent' => $renderedContent,
@@ -260,6 +272,9 @@ class TemplateController extends Controller
      */
     public function export(Template $template): JsonResponse
     {
+        if ($template->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $exportData = [
             'name' => $template->name,
             'description' => $template->description,
@@ -270,7 +285,6 @@ class TemplateController extends Controller
             'version' => '1.0',
             'exported_at' => now()->toISOString(),
         ];
-
         return response()->json($exportData)
             ->header('Content-Disposition', 'attachment; filename="' . $template->slug . '.json"');
     }
@@ -287,19 +301,16 @@ class TemplateController extends Controller
         try {
             $content = file_get_contents($validated['template_file']->getPathname());
             $templateData = json_decode($content, true);
-
             if (!$templateData || !isset($templateData['name'], $templateData['content'])) {
                 throw new \Exception('Invalid template file format.');
             }
-
             $slug = \Str::slug($templateData['name']);
             $originalSlug = $slug;
             $counter = 1;
-            while (Template::where('slug', $slug)->exists()) {
+            while (Template::where('slug', $slug)->where('company_id', currentCompanyId())->exists()) {
                 $slug = $originalSlug . '-' . $counter;
                 $counter++;
             }
-
             $template = Template::create([
                 'name' => $templateData['name'],
                 'slug' => $slug,
@@ -311,11 +322,10 @@ class TemplateController extends Controller
                 'is_active' => true,
                 'is_default' => false,
                 'created_by' => Auth::id(),
+                'company_id' => currentCompanyId(),
             ]);
-
             return redirect()->route('cms.templates.show', $template)
                 ->with('success', 'Template imported successfully.');
-
         } catch (\Exception $e) {
             return redirect()->back()
                 ->with('error', 'Failed to import template: ' . $e->getMessage());

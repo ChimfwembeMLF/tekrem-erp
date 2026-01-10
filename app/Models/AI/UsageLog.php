@@ -32,7 +32,8 @@ class UsageLog extends Model
         'status',
         'error_message',
         'metadata',
-    ];
+        'company_id',
+];
 
     protected $casts = [
         'metadata' => 'array',
@@ -196,5 +197,15 @@ class UsageLog extends Model
                     ->selectRaw('DATE(created_at) as date, count(*) as requests, sum(total_tokens) as tokens, sum(cost) as cost')
                     ->orderBy('date')
                     ->get();
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }

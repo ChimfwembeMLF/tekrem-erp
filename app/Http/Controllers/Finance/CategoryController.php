@@ -15,7 +15,7 @@ class CategoryController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Category::query();
+        $query = Category::query()->where('company_id', currentCompanyId());
 
         // Search functionality
         if ($request->filled('search')) {
@@ -58,6 +58,7 @@ class CategoryController extends Controller
     public function create()
     {
         $parentCategories = Category::where('is_active', true)
+            ->where('company_id', currentCompanyId())
             ->whereNull('parent_id')
             ->orderBy('name')
             ->get(['id', 'name']);
@@ -112,6 +113,7 @@ class CategoryController extends Controller
             'color' => $request->color,
             'parent_id' => $request->parent_id,
             'is_active' => $request->boolean('is_active', true),
+            'company_id' => currentCompanyId(),
         ]);
 
         return redirect()->route('finance.categories.index')
@@ -123,20 +125,25 @@ class CategoryController extends Controller
      */
     public function show(Category $category)
     {
+        if ($category->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $category->load(['parent', 'children', 'transactions', 'expenses', 'budgets']);
 
         // Get category statistics
         $stats = [
-            'transaction_count' => $category->transactions()->count(),
-            'expense_count' => $category->expenses()->count(),
-            'budget_count' => $category->budgets()->count(),
+            'transaction_count' => $category->transactions()->where('company_id', currentCompanyId())->count(),
+            'expense_count' => $category->expenses()->where('company_id', currentCompanyId())->count(),
+            'budget_count' => $category->budgets()->where('company_id', currentCompanyId())->count(),
             'total_income' => $category->transactions()
                 ->where('type', 'income')
                 ->where('status', 'completed')
+                ->where('company_id', currentCompanyId())
                 ->sum('amount'),
             'total_expenses' => $category->transactions()
                 ->where('type', 'expense')
                 ->where('status', 'completed')
+                ->where('company_id', currentCompanyId())
                 ->sum('amount'),
         ];
 
@@ -151,7 +158,11 @@ class CategoryController extends Controller
      */
     public function edit(Category $category)
     {
+        if ($category->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $parentCategories = Category::where('is_active', true)
+            ->where('company_id', currentCompanyId())
             ->whereNull('parent_id')
             ->where('id', '!=', $category->id) // Exclude self
             ->orderBy('name')
@@ -206,6 +217,9 @@ class CategoryController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
+        if ($category->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         $category->update([
             'name' => $request->name,
             'type' => $request->type,
@@ -224,23 +238,26 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category)
     {
+        if ($category->company_id !== currentCompanyId()) {
+            abort(404);
+        }
         // Check if category has transactions
-        if ($category->transactions()->count() > 0) {
+        if ($category->transactions()->where('company_id', currentCompanyId())->count() > 0) {
             return back()->with('error', 'Cannot delete category with existing transactions.');
         }
 
         // Check if category has expenses
-        if ($category->expenses()->count() > 0) {
+        if ($category->expenses()->where('company_id', currentCompanyId())->count() > 0) {
             return back()->with('error', 'Cannot delete category with existing expenses.');
         }
 
         // Check if category has budgets
-        if ($category->budgets()->count() > 0) {
+        if ($category->budgets()->where('company_id', currentCompanyId())->count() > 0) {
             return back()->with('error', 'Cannot delete category with existing budgets.');
         }
 
         // Check if category has children
-        if ($category->children()->count() > 0) {
+        if ($category->children()->where('company_id', currentCompanyId())->count() > 0) {
             return back()->with('error', 'Cannot delete category with subcategories. Delete subcategories first.');
         }
 

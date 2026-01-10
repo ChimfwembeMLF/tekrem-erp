@@ -23,13 +23,13 @@ class AnalyticsController extends Controller
     {
         $period = $request->get('period', '30_days');
         $userId = auth()->id();
+        $companyId = app('currentCompany')->id;
 
-        $analytics = $this->analyticsService->getDashboardMetrics($userId);
-        
+        $analytics = $this->analyticsService->getDashboardMetrics($userId, $companyId);
         // Add period-specific data
-        $quotationAnalytics = $this->analyticsService->getQuotationAnalytics($userId, $period);
-        $invoiceAnalytics = $this->analyticsService->getInvoiceAnalytics($userId, $period);
-        $revenueAnalytics = $this->analyticsService->getRevenueAnalytics($userId, $period);
+        $quotationAnalytics = $this->analyticsService->getQuotationAnalytics($userId, $period, $companyId);
+        $invoiceAnalytics = $this->analyticsService->getInvoiceAnalytics($userId, $period, $companyId);
+        $revenueAnalytics = $this->analyticsService->getRevenueAnalytics($userId, $period, $companyId);
 
         return Inertia::render('Finance/Analytics/Dashboard', [
             'analytics' => [
@@ -49,8 +49,9 @@ class AnalyticsController extends Controller
     {
         $period = $request->get('period', '30_days');
         $userId = auth()->id();
+        $companyId = app('currentCompany')->id;
 
-        $analytics = $this->analyticsService->getQuotationAnalytics($userId, $period);
+        $analytics = $this->analyticsService->getQuotationAnalytics($userId, $period, $companyId);
 
         return Inertia::render('Finance/Analytics/Quotations', [
             'analytics' => $analytics,
@@ -65,8 +66,9 @@ class AnalyticsController extends Controller
     {
         $period = $request->get('period', '30_days');
         $userId = auth()->id();
+        $companyId = app('currentCompany')->id;
 
-        $analytics = $this->analyticsService->getInvoiceAnalytics($userId, $period);
+        $analytics = $this->analyticsService->getInvoiceAnalytics($userId, $period, $companyId);
 
         return Inertia::render('Finance/Analytics/Invoices', [
             'analytics' => $analytics,
@@ -81,8 +83,9 @@ class AnalyticsController extends Controller
     {
         $period = $request->get('period', '30_days');
         $userId = auth()->id();
+        $companyId = app('currentCompany')->id;
 
-        $analytics = $this->analyticsService->getRevenueAnalytics($userId, $period);
+        $analytics = $this->analyticsService->getRevenueAnalytics($userId, $period, $companyId);
 
         return Inertia::render('Finance/Analytics/Revenue', [
             'analytics' => $analytics,
@@ -99,19 +102,20 @@ class AnalyticsController extends Controller
         $period = $request->get('period', '30_days');
         $format = $request->get('format', 'csv');
         $userId = auth()->id();
+        $companyId = app('currentCompany')->id;
 
         switch ($type) {
             case 'quotations':
-                $data = $this->analyticsService->getQuotationAnalytics($userId, $period);
+                $data = $this->analyticsService->getQuotationAnalytics($userId, $period, $companyId);
                 break;
             case 'invoices':
-                $data = $this->analyticsService->getInvoiceAnalytics($userId, $period);
+                $data = $this->analyticsService->getInvoiceAnalytics($userId, $period, $companyId);
                 break;
             case 'revenue':
-                $data = $this->analyticsService->getRevenueAnalytics($userId, $period);
+                $data = $this->analyticsService->getRevenueAnalytics($userId, $period, $companyId);
                 break;
             default:
-                $data = $this->analyticsService->getDashboardMetrics($userId);
+                $data = $this->analyticsService->getDashboardMetrics($userId, $companyId);
         }
 
         return $this->exportData($data, $type, $format);

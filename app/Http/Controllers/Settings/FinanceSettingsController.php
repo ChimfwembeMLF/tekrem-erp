@@ -104,7 +104,7 @@ class FinanceSettingsController extends Controller
     public function updateMomoApiConfiguration(Request $request): RedirectResponse
     {
         //$this->authorize('manage-finance-settings');
-
+        $companyId = currentCompanyId();
         $validator = Validator::make($request->all(), [
             'global_timeout' => 'required|integer|min:5|max:300',
             'max_retry_attempts' => 'required|integer|min:0|max:10',
@@ -126,23 +126,18 @@ class FinanceSettingsController extends Controller
             'encryption_algorithm' => 'required|string',
             'api_version' => 'required|string',
         ]);
-
         if ($validator->fails()) {
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
         }
-
         $validated = $validator->validated();
-
-        // Save all settings with momo.api prefix
+        // Save all settings with momo.api prefix per company
         foreach ($validated as $key => $value) {
-            Setting::set("momo.api.{$key}", $value);
+            Setting::setForCompany($companyId, "momo.api.{$key}", $value);
         }
-
         // Clear relevant caches
         // Cache::tags(['momo', 'api-config']);
-
         return redirect()->back()->with('success', 'MoMo API configuration updated successfully');
     }
 
@@ -259,7 +254,7 @@ class FinanceSettingsController extends Controller
     public function updateZraTaxpayerInformation(Request $request): RedirectResponse
     {
         //$this->authorize('manage-finance-settings');
-
+        $companyId = currentCompanyId();
         $validator = Validator::make($request->all(), [
             'taxpayer_tpin' => 'required|string|size:10',
             'taxpayer_name' => 'required|string|max:255',
@@ -283,15 +278,12 @@ class FinanceSettingsController extends Controller
             'is_vat_registered' => 'boolean',
             'is_active_taxpayer' => 'boolean',
         ]);
-
         if ($validator->fails()) {
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
         }
-
         $validated = $validator->validated();
-
         // Update ZRA configuration with core taxpayer info
         $zraConfig = ZraConfiguration::active()->first();
         if ($zraConfig) {
@@ -303,19 +295,15 @@ class FinanceSettingsController extends Controller
                 'taxpayer_email' => $validated['taxpayer_email'],
             ]);
         }
-
-        // Save extended taxpayer information as settings
+        // Save extended taxpayer information as settings per company
         $settingsToSave = collect($validated)->except([
             'taxpayer_tpin', 'taxpayer_name', 'taxpayer_phone', 'taxpayer_email'
         ]);
-
         foreach ($settingsToSave as $key => $value) {
-            Setting::set("zra.taxpayer.{$key}", $value);
+            Setting::setForCompany($companyId, "zra.taxpayer.{$key}", $value);
         }
-
         // Clear relevant caches
         // Cache::tags(['zra', 'taxpayer']);
-
         return redirect()->back()->with('success', 'ZRA taxpayer information updated successfully');
     }
 

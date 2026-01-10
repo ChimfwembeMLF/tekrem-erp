@@ -22,7 +22,9 @@ class LeadController extends Controller
      */
     public function index(Request $request)
     {
+        $companyId = currentCompanyId();
         $query = Lead::query()
+            ->where('company_id', $companyId)
             ->with('user')
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($query) use ($search) {
@@ -60,6 +62,7 @@ class LeadController extends Controller
      */
     public function store(Request $request)
     {
+        $companyId = currentCompanyId();
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
@@ -77,6 +80,7 @@ class LeadController extends Controller
         ]);
 
         $validated['user_id'] = Auth::id();
+        $validated['company_id'] = $companyId;
 
         $lead = Lead::create($validated);
 
@@ -96,6 +100,10 @@ class LeadController extends Controller
      */
     public function show(Lead $lead)
     {
+        $companyId = currentCompanyId();
+        if ($lead->company_id !== $companyId) {
+            abort(403, 'Unauthorized access to this lead.');
+        }
         $lead->load(['user', 'communications' => function ($query) {
             $query->with('user')->latest();
         }]);
@@ -111,6 +119,10 @@ class LeadController extends Controller
      */
     public function edit(Lead $lead)
     {
+        $companyId = currentCompanyId();
+        if ($lead->company_id !== $companyId) {
+            abort(403, 'Unauthorized access to this lead.');
+        }
         return Inertia::render('CRM/Leads/Edit', [
             'lead' => $lead,
         ]);
@@ -121,6 +133,10 @@ class LeadController extends Controller
      */
     public function update(Request $request, Lead $lead)
     {
+        $companyId = currentCompanyId();
+        if ($lead->company_id !== $companyId) {
+            abort(403, 'Unauthorized access to this lead.');
+        }
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
@@ -148,6 +164,10 @@ class LeadController extends Controller
      */
     public function destroy(Lead $lead)
     {
+        $companyId = currentCompanyId();
+        if ($lead->company_id !== $companyId) {
+            abort(403, 'Unauthorized access to this lead.');
+        }
         $lead->delete();
 
         return redirect()->route('crm.leads.index')
@@ -159,6 +179,10 @@ class LeadController extends Controller
      */
     public function convertToClient(Lead $lead)
     {
+        $companyId = currentCompanyId();
+        if ($lead->company_id !== $companyId) {
+            abort(403, 'Unauthorized access to this lead.');
+        }
         // Check if lead is already converted
         if ($lead->converted_to_client) {
             return redirect()->route('crm.leads.show', $lead)
@@ -184,6 +208,7 @@ class LeadController extends Controller
                 'status' => 'active',
                 'user_id' => $lead->user_id,
                 'converted_from_lead_id' => $lead->id,
+                'company_id' => $companyId,
             ]);
 
             // Update the lead to mark it as converted
@@ -196,7 +221,7 @@ class LeadController extends Controller
             DB::commit();
 
             // Create notifications for admin users
-            $adminUsers = User::role('admin')->where('id', '!=', Auth::id())->get();
+            $adminUsers = User::role('admin')->where('company_id', $companyId)->where('id', '!=', Auth::id())->get();
             foreach ($adminUsers as $admin) {
                 NotificationService::createLeadNotification(
                     $admin,
@@ -303,6 +328,13 @@ class LeadController extends Controller
      */
     public function followUpRecommendations(Lead $lead, CRMAIService $crmAI)
     {
+        $companyId = currentCompanyId();
+        if ($lead->company_id !== $companyId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized access to this lead.',
+            ], 403);
+        }
         try {
             $recommendations = $crmAI->getFollowUpRecommendations($lead);
 
@@ -331,6 +363,13 @@ class LeadController extends Controller
      */
     public function conversionPrediction(Lead $lead, CRMAIService $crmAI)
     {
+        $companyId = currentCompanyId();
+        if ($lead->company_id !== $companyId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized access to this lead.',
+            ], 403);
+        }
         try {
             $prediction = $crmAI->predictConversion($lead);
 

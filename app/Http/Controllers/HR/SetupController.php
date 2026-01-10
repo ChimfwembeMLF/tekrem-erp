@@ -16,14 +16,14 @@ class SetupController extends Controller
     public function index(): Response
     {
         $this->authorize('manage-hr-settings');
-
+        $companyId = currentCompanyId();
         return Inertia::render('HR/Setup/Index', [
-            'payrollSettings' => $this->getPayrollSettings(),
-            'attendanceSettings' => $this->getAttendanceSettings(),
-            'leaveSettings' => $this->getLeaveSettings(),
-            'performanceSettings' => $this->getPerformanceSettings(),
-            'trainingSettings' => $this->getTrainingSettings(),
-            'generalSettings' => $this->getGeneralSettings(),
+            'payrollSettings' => $this->getPayrollSettings($companyId),
+            'attendanceSettings' => $this->getAttendanceSettings($companyId),
+            'leaveSettings' => $this->getLeaveSettings($companyId),
+            'performanceSettings' => $this->getPerformanceSettings($companyId),
+            'trainingSettings' => $this->getTrainingSettings($companyId),
+            'generalSettings' => $this->getGeneralSettings($companyId),
         ]);
     }
 
@@ -33,7 +33,7 @@ class SetupController extends Controller
     public function updatePayroll(Request $request)
     {
         $this->authorize('manage-hr-settings');
-
+        $companyId = currentCompanyId();
         $validated = $request->validate([
             'payroll_frequency' => 'required|in:weekly,bi-weekly,monthly,quarterly',
             'default_currency' => 'required|string|max:3',
@@ -50,16 +50,13 @@ class SetupController extends Controller
             'payroll_start_day' => 'required|integer|min:1|max:31',
             'payroll_cutoff_day' => 'required|integer|min:1|max:31',
         ]);
-
         foreach ($validated as $key => $value) {
-            Setting::set("hr.payroll.{$key}", $value);
+            Setting::setForCompany($companyId, "hr.payroll.{$key}", $value);
         }
-
         session()->flash('flash', [
             'bannerStyle' => 'success',
             'banner' => 'Payroll settings updated successfully!'
         ]);
-
         return redirect()->back();
     }
 
@@ -69,7 +66,7 @@ class SetupController extends Controller
     public function updateAttendance(Request $request)
     {
         $this->authorize('manage-hr-settings');
-
+        $companyId = currentCompanyId();
         $validated = $request->validate([
             'work_hours_per_day' => 'required|numeric|min:1|max:24',
             'work_days_per_week' => 'required|integer|min:1|max:7',
@@ -85,16 +82,13 @@ class SetupController extends Controller
             'enable_mobile_attendance' => 'boolean',
             'enable_biometric_attendance' => 'boolean',
         ]);
-
         foreach ($validated as $key => $value) {
-            Setting::set("hr.attendance.{$key}", $value);
+            Setting::setForCompany($companyId, "hr.attendance.{$key}", $value);
         }
-
         session()->flash('flash', [
             'bannerStyle' => 'success',
             'banner' => 'Attendance settings updated successfully!'
         ]);
-
         return redirect()->back();
     }
 
@@ -104,7 +98,7 @@ class SetupController extends Controller
     public function updateLeave(Request $request)
     {
         $this->authorize('manage-hr-settings');
-
+        $companyId = currentCompanyId();
         $validated = $request->validate([
             'annual_leave_days' => 'required|integer|min:0|max:365',
             'sick_leave_days' => 'required|integer|min:0|max:365',
@@ -120,16 +114,13 @@ class SetupController extends Controller
             'weekend_included' => 'boolean',
             'holidays_included' => 'boolean',
         ]);
-
         foreach ($validated as $key => $value) {
-            Setting::set("hr.leave.{$key}", $value);
+            Setting::setForCompany($companyId, "hr.leave.{$key}", $value);
         }
-
         session()->flash('flash', [
             'bannerStyle' => 'success',
             'banner' => 'Leave settings updated successfully!'
         ]);
-
         return redirect()->back();
     }
 
@@ -139,7 +130,7 @@ class SetupController extends Controller
     public function updatePerformance(Request $request)
     {
         $this->authorize('manage-hr-settings');
-
+        $companyId = currentCompanyId();
         $validated = $request->validate([
             'review_frequency' => 'required|in:quarterly,semi-annually,annually',
             'enable_360_feedback' => 'boolean',
@@ -152,16 +143,13 @@ class SetupController extends Controller
             'require_manager_approval' => 'boolean',
             'enable_performance_analytics' => 'boolean',
         ]);
-
         foreach ($validated as $key => $value) {
-            Setting::set("hr.performance.{$key}", $value);
+            Setting::setForCompany($companyId, "hr.performance.{$key}", $value);
         }
-
         session()->flash('flash', [
             'bannerStyle' => 'success',
             'banner' => 'Performance settings updated successfully!'
         ]);
-
         return redirect()->back();
     }
 
@@ -171,7 +159,7 @@ class SetupController extends Controller
     public function updateTraining(Request $request)
     {
         $this->authorize('manage-hr-settings');
-
+        $companyId = currentCompanyId();
         $validated = $request->validate([
             'enable_mandatory_training' => 'boolean',
             'enable_certification_tracking' => 'boolean',
@@ -184,16 +172,13 @@ class SetupController extends Controller
             'enable_training_analytics' => 'boolean',
             'require_training_approval' => 'boolean',
         ]);
-
         foreach ($validated as $key => $value) {
-            Setting::set("hr.training.{$key}", $value);
+            Setting::setForCompany($companyId, "hr.training.{$key}", $value);
         }
-
         session()->flash('flash', [
             'bannerStyle' => 'success',
             'banner' => 'Training settings updated successfully!'
         ]);
-
         return redirect()->back();
     }
 
@@ -203,7 +188,7 @@ class SetupController extends Controller
     public function updateGeneral(Request $request)
     {
         $this->authorize('manage-hr-settings');
-
+        $companyId = currentCompanyId();
         $validated = $request->validate([
             'employee_id_format' => 'required|string|max:50',
             'employee_id_prefix' => 'nullable|string|max:10',
@@ -216,140 +201,137 @@ class SetupController extends Controller
             'enable_hr_analytics' => 'boolean',
             'data_retention_years' => 'required|integer|min:1|max:50',
         ]);
-
         foreach ($validated as $key => $value) {
-            Setting::set("hr.general.{$key}", $value);
+            Setting::setForCompany($companyId, "hr.general.{$key}", $value);
         }
-
         session()->flash('flash', [
             'bannerStyle' => 'success',
             'banner' => 'General HR settings updated successfully!'
         ]);
-
         return redirect()->back();
     }
 
     /**
      * Get payroll settings.
      */
-    private function getPayrollSettings(): array
+    private function getPayrollSettings($companyId): array
     {
         return [
-            'payroll_frequency' => Setting::get('hr.payroll.payroll_frequency', 'monthly'),
-            'default_currency' => Setting::get('hr.payroll.default_currency', 'ZMW'),
-            'tax_calculation_method' => Setting::get('hr.payroll.tax_calculation_method', 'percentage'),
-            'default_tax_rate' => Setting::get('hr.payroll.default_tax_rate', 10),
-            'overtime_rate_multiplier' => Setting::get('hr.payroll.overtime_rate_multiplier', 1.5),
-            'enable_overtime' => Setting::get('hr.payroll.enable_overtime', true),
-            'enable_bonuses' => Setting::get('hr.payroll.enable_bonuses', true),
-            'enable_deductions' => Setting::get('hr.payroll.enable_deductions', true),
-            'enable_benefits' => Setting::get('hr.payroll.enable_benefits', true),
-            'payroll_approval_required' => Setting::get('hr.payroll.payroll_approval_required', true),
-            'auto_generate_payslips' => Setting::get('hr.payroll.auto_generate_payslips', true),
-            'payslip_template' => Setting::get('hr.payroll.payslip_template', 'default'),
-            'payroll_start_day' => Setting::get('hr.payroll.payroll_start_day', 1),
-            'payroll_cutoff_day' => Setting::get('hr.payroll.payroll_cutoff_day', 25),
+            'payroll_frequency' => Setting::getForCompany($companyId, 'hr.payroll.payroll_frequency', 'monthly'),
+            'default_currency' => Setting::getForCompany($companyId, 'hr.payroll.default_currency', 'ZMW'),
+            'tax_calculation_method' => Setting::getForCompany($companyId, 'hr.payroll.tax_calculation_method', 'percentage'),
+            'default_tax_rate' => Setting::getForCompany($companyId, 'hr.payroll.default_tax_rate', 10),
+            'overtime_rate_multiplier' => Setting::getForCompany($companyId, 'hr.payroll.overtime_rate_multiplier', 1.5),
+            'enable_overtime' => Setting::getForCompany($companyId, 'hr.payroll.enable_overtime', true),
+            'enable_bonuses' => Setting::getForCompany($companyId, 'hr.payroll.enable_bonuses', true),
+            'enable_deductions' => Setting::getForCompany($companyId, 'hr.payroll.enable_deductions', true),
+            'enable_benefits' => Setting::getForCompany($companyId, 'hr.payroll.enable_benefits', true),
+            'payroll_approval_required' => Setting::getForCompany($companyId, 'hr.payroll.payroll_approval_required', true),
+            'auto_generate_payslips' => Setting::getForCompany($companyId, 'hr.payroll.auto_generate_payslips', true),
+            'payslip_template' => Setting::getForCompany($companyId, 'hr.payroll.payslip_template', 'default'),
+            'payroll_start_day' => Setting::getForCompany($companyId, 'hr.payroll.payroll_start_day', 1),
+            'payroll_cutoff_day' => Setting::getForCompany($companyId, 'hr.payroll.payroll_cutoff_day', 25),
         ];
     }
 
     /**
      * Get attendance settings.
      */
-    private function getAttendanceSettings(): array
+    private function getAttendanceSettings($companyId): array
     {
         return [
-            'work_hours_per_day' => Setting::get('hr.attendance.work_hours_per_day', 8),
-            'work_days_per_week' => Setting::get('hr.attendance.work_days_per_week', 5),
-            'default_start_time' => Setting::get('hr.attendance.default_start_time', '09:00'),
-            'default_end_time' => Setting::get('hr.attendance.default_end_time', '17:00'),
-            'break_duration_minutes' => Setting::get('hr.attendance.break_duration_minutes', 60),
-            'grace_period_minutes' => Setting::get('hr.attendance.grace_period_minutes', 15),
-            'late_threshold_minutes' => Setting::get('hr.attendance.late_threshold_minutes', 30),
-            'enable_overtime_tracking' => Setting::get('hr.attendance.enable_overtime_tracking', true),
-            'enable_break_tracking' => Setting::get('hr.attendance.enable_break_tracking', false),
-            'require_clock_in_location' => Setting::get('hr.attendance.require_clock_in_location', false),
-            'allowed_clock_locations' => Setting::get('hr.attendance.allowed_clock_locations', []),
-            'enable_mobile_attendance' => Setting::get('hr.attendance.enable_mobile_attendance', true),
-            'enable_biometric_attendance' => Setting::get('hr.attendance.enable_biometric_attendance', false),
+            'work_hours_per_day' => Setting::getForCompany($companyId, 'hr.attendance.work_hours_per_day', 8),
+            'work_days_per_week' => Setting::getForCompany($companyId, 'hr.attendance.work_days_per_week', 5),
+            'default_start_time' => Setting::getForCompany($companyId, 'hr.attendance.default_start_time', '09:00'),
+            'default_end_time' => Setting::getForCompany($companyId, 'hr.attendance.default_end_time', '17:00'),
+            'break_duration_minutes' => Setting::getForCompany($companyId, 'hr.attendance.break_duration_minutes', 60),
+            'grace_period_minutes' => Setting::getForCompany($companyId, 'hr.attendance.grace_period_minutes', 15),
+            'late_threshold_minutes' => Setting::getForCompany($companyId, 'hr.attendance.late_threshold_minutes', 30),
+            'enable_overtime_tracking' => Setting::getForCompany($companyId, 'hr.attendance.enable_overtime_tracking', true),
+            'enable_break_tracking' => Setting::getForCompany($companyId, 'hr.attendance.enable_break_tracking', false),
+            'require_clock_in_location' => Setting::getForCompany($companyId, 'hr.attendance.require_clock_in_location', false),
+            'allowed_clock_locations' => Setting::getForCompany($companyId, 'hr.attendance.allowed_clock_locations', []),
+            'enable_mobile_attendance' => Setting::getForCompany($companyId, 'hr.attendance.enable_mobile_attendance', true),
+            'enable_biometric_attendance' => Setting::getForCompany($companyId, 'hr.attendance.enable_biometric_attendance', false),
         ];
     }
 
     /**
      * Get leave settings.
      */
-    private function getLeaveSettings(): array
+    private function getLeaveSettings($companyId): array
     {
         return [
-            'annual_leave_days' => Setting::get('hr.leave.annual_leave_days', 21),
-            'sick_leave_days' => Setting::get('hr.leave.sick_leave_days', 10),
-            'maternity_leave_days' => Setting::get('hr.leave.maternity_leave_days', 90),
-            'paternity_leave_days' => Setting::get('hr.leave.paternity_leave_days', 14),
-            'casual_leave_days' => Setting::get('hr.leave.casual_leave_days', 5),
-            'leave_accrual_method' => Setting::get('hr.leave.leave_accrual_method', 'monthly'),
-            'leave_approval_required' => Setting::get('hr.leave.leave_approval_required', true),
-            'allow_negative_balance' => Setting::get('hr.leave.allow_negative_balance', false),
-            'carry_forward_enabled' => Setting::get('hr.leave.carry_forward_enabled', true),
-            'max_carry_forward_days' => Setting::get('hr.leave.max_carry_forward_days', 5),
-            'advance_notice_days' => Setting::get('hr.leave.advance_notice_days', 7),
-            'weekend_included' => Setting::get('hr.leave.weekend_included', false),
-            'holidays_included' => Setting::get('hr.leave.holidays_included', false),
+            'annual_leave_days' => Setting::getForCompany($companyId, 'hr.leave.annual_leave_days', 21),
+            'sick_leave_days' => Setting::getForCompany($companyId, 'hr.leave.sick_leave_days', 10),
+            'maternity_leave_days' => Setting::getForCompany($companyId, 'hr.leave.maternity_leave_days', 90),
+            'paternity_leave_days' => Setting::getForCompany($companyId, 'hr.leave.paternity_leave_days', 14),
+            'casual_leave_days' => Setting::getForCompany($companyId, 'hr.leave.casual_leave_days', 5),
+            'leave_accrual_method' => Setting::getForCompany($companyId, 'hr.leave.leave_accrual_method', 'monthly'),
+            'leave_approval_required' => Setting::getForCompany($companyId, 'hr.leave.leave_approval_required', true),
+            'allow_negative_balance' => Setting::getForCompany($companyId, 'hr.leave.allow_negative_balance', false),
+            'carry_forward_enabled' => Setting::getForCompany($companyId, 'hr.leave.carry_forward_enabled', true),
+            'max_carry_forward_days' => Setting::getForCompany($companyId, 'hr.leave.max_carry_forward_days', 5),
+            'advance_notice_days' => Setting::getForCompany($companyId, 'hr.leave.advance_notice_days', 7),
+            'weekend_included' => Setting::getForCompany($companyId, 'hr.leave.weekend_included', false),
+            'holidays_included' => Setting::getForCompany($companyId, 'hr.leave.holidays_included', false),
         ];
     }
 
     /**
      * Get performance settings.
      */
-    private function getPerformanceSettings(): array
+    private function getPerformanceSettings($companyId): array
     {
         return [
-            'review_frequency' => Setting::get('hr.performance.review_frequency', 'annually'),
-            'enable_360_feedback' => Setting::get('hr.performance.enable_360_feedback', false),
-            'enable_self_assessment' => Setting::get('hr.performance.enable_self_assessment', true),
-            'enable_peer_review' => Setting::get('hr.performance.enable_peer_review', false),
-            'enable_goal_setting' => Setting::get('hr.performance.enable_goal_setting', true),
-            'performance_scale' => Setting::get('hr.performance.performance_scale', '5-point'),
-            'auto_reminder_enabled' => Setting::get('hr.performance.auto_reminder_enabled', true),
-            'reminder_days_before' => Setting::get('hr.performance.reminder_days_before', 30),
-            'require_manager_approval' => Setting::get('hr.performance.require_manager_approval', true),
-            'enable_performance_analytics' => Setting::get('hr.performance.enable_performance_analytics', true),
+            'review_frequency' => Setting::getForCompany($companyId, 'hr.performance.review_frequency', 'annually'),
+            'enable_360_feedback' => Setting::getForCompany($companyId, 'hr.performance.enable_360_feedback', false),
+            'enable_self_assessment' => Setting::getForCompany($companyId, 'hr.performance.enable_self_assessment', true),
+            'enable_peer_review' => Setting::getForCompany($companyId, 'hr.performance.enable_peer_review', false),
+            'enable_goal_setting' => Setting::getForCompany($companyId, 'hr.performance.enable_goal_setting', true),
+            'performance_scale' => Setting::getForCompany($companyId, 'hr.performance.performance_scale', '5-point'),
+            'auto_reminder_enabled' => Setting::getForCompany($companyId, 'hr.performance.auto_reminder_enabled', true),
+            'reminder_days_before' => Setting::getForCompany($companyId, 'hr.performance.reminder_days_before', 30),
+            'require_manager_approval' => Setting::getForCompany($companyId, 'hr.performance.require_manager_approval', true),
+            'enable_performance_analytics' => Setting::getForCompany($companyId, 'hr.performance.enable_performance_analytics', true),
         ];
     }
 
     /**
      * Get training settings.
      */
-    private function getTrainingSettings(): array
+    private function getTrainingSettings($companyId): array
     {
         return [
-            'enable_mandatory_training' => Setting::get('hr.training.enable_mandatory_training', true),
-            'enable_certification_tracking' => Setting::get('hr.training.enable_certification_tracking', true),
-            'enable_training_calendar' => Setting::get('hr.training.enable_training_calendar', true),
-            'enable_external_training' => Setting::get('hr.training.enable_external_training', true),
-            'training_budget_tracking' => Setting::get('hr.training.training_budget_tracking', false),
-            'auto_enrollment_enabled' => Setting::get('hr.training.auto_enrollment_enabled', false),
-            'completion_reminder_days' => Setting::get('hr.training.completion_reminder_days', 7),
-            'certificate_validity_months' => Setting::get('hr.training.certificate_validity_months', 12),
-            'enable_training_analytics' => Setting::get('hr.training.enable_training_analytics', true),
-            'require_training_approval' => Setting::get('hr.training.require_training_approval', true),
+            'enable_mandatory_training' => Setting::getForCompany($companyId, 'hr.training.enable_mandatory_training', true),
+            'enable_certification_tracking' => Setting::getForCompany($companyId, 'hr.training.enable_certification_tracking', true),
+            'enable_training_calendar' => Setting::getForCompany($companyId, 'hr.training.enable_training_calendar', true),
+            'enable_external_training' => Setting::getForCompany($companyId, 'hr.training.enable_external_training', true),
+            'training_budget_tracking' => Setting::getForCompany($companyId, 'hr.training.training_budget_tracking', false),
+            'auto_enrollment_enabled' => Setting::getForCompany($companyId, 'hr.training.auto_enrollment_enabled', false),
+            'completion_reminder_days' => Setting::getForCompany($companyId, 'hr.training.completion_reminder_days', 7),
+            'certificate_validity_months' => Setting::getForCompany($companyId, 'hr.training.certificate_validity_months', 12),
+            'enable_training_analytics' => Setting::getForCompany($companyId, 'hr.training.enable_training_analytics', true),
+            'require_training_approval' => Setting::getForCompany($companyId, 'hr.training.require_training_approval', true),
         ];
     }
 
     /**
      * Get general settings.
      */
-    private function getGeneralSettings(): array
+    private function getGeneralSettings($companyId): array
     {
         return [
-            'employee_id_format' => Setting::get('hr.general.employee_id_format', 'EMP-{YYYY}-{####}'),
-            'employee_id_prefix' => Setting::get('hr.general.employee_id_prefix', 'EMP'),
-            'probation_period_months' => Setting::get('hr.general.probation_period_months', 3),
-            'notice_period_days' => Setting::get('hr.general.notice_period_days', 30),
-            'enable_employee_portal' => Setting::get('hr.general.enable_employee_portal', true),
-            'enable_document_management' => Setting::get('hr.general.enable_document_management', true),
-            'enable_org_chart' => Setting::get('hr.general.enable_org_chart', true),
-            'enable_employee_directory' => Setting::get('hr.general.enable_employee_directory', true),
-            'enable_hr_analytics' => Setting::get('hr.general.enable_hr_analytics', true),
-            'data_retention_years' => Setting::get('hr.general.data_retention_years', 7),
+            'employee_id_format' => Setting::getForCompany($companyId, 'hr.general.employee_id_format', 'EMP-{YYYY}-{####}'),
+            'employee_id_prefix' => Setting::getForCompany($companyId, 'hr.general.employee_id_prefix', 'EMP'),
+            'probation_period_months' => Setting::getForCompany($companyId, 'hr.general.probation_period_months', 3),
+            'notice_period_days' => Setting::getForCompany($companyId, 'hr.general.notice_period_days', 30),
+            'enable_employee_portal' => Setting::getForCompany($companyId, 'hr.general.enable_employee_portal', true),
+            'enable_document_management' => Setting::getForCompany($companyId, 'hr.general.enable_document_management', true),
+            'enable_org_chart' => Setting::getForCompany($companyId, 'hr.general.enable_org_chart', true),
+            'enable_employee_directory' => Setting::getForCompany($companyId, 'hr.general.enable_employee_directory', true),
+            'enable_hr_analytics' => Setting::getForCompany($companyId, 'hr.general.enable_hr_analytics', true),
+            'data_retention_years' => Setting::getForCompany($companyId, 'hr.general.data_retention_years', 7),
         ];
     }
 }

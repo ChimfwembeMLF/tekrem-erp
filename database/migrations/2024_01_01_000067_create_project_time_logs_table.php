@@ -16,6 +16,8 @@ return new class extends Migration
             $table->foreignId('project_id')->constrained('projects')->onDelete('cascade');
             $table->foreignId('milestone_id')->nullable()->constrained('project_milestones')->onDelete('set null');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             
             // Time tracking
             $table->text('description')->nullable();

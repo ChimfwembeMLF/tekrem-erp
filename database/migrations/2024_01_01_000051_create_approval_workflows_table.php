@@ -20,6 +20,8 @@ return new class extends Migration
             $table->json('steps'); // Approval steps configuration
             $table->boolean('is_active')->default(true);
             $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
+
             $table->timestamps();
 
             $table->index(['type', 'is_active']);

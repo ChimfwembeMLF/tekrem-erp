@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('card_checklist_id');
             $table->unsignedBigInteger('checklist_id')->nullable();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->string('title');
             $table->boolean('is_completed')->default(false);
             $table->timestamps();
