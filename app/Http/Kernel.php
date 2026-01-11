@@ -43,5 +43,6 @@ class Kernel extends HttpKernel
     protected $routeMiddleware = [
         // ...existing middleware...
         'setCurrentCompany' => \App\Http\Middleware\SetCurrentCompany::class,
+        'ip.whitelist' => \App\Http\Middleware\IpWhitelistMiddleware::class,
     ];
 }

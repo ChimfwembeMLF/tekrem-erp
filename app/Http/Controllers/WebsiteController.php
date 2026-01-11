@@ -3,13 +3,27 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Package;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
+
 
 class WebsiteController extends Controller
 {
     public function index()
     {
-        return inertia('Website/Home', [
+        $packages = Package::with(['modules.addons' => function($q) {
+            $q->where('is_active', true);
+        }])->where('is_active', true)->get();
+
+        // Also load all active addons with their module
+        $addons = \App\Models\Addon::with('module')
+            ->where('is_active', true)
+            ->get();
+
+        return Inertia::render('Website/Home', [
+            'packages' => $packages,
+            'addons' => $addons,
             'canLogin' => Route::has('login'),
             'canRegister' => Route::has('register'),
         ]);

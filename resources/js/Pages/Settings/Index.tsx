@@ -36,6 +36,7 @@ interface SettingsIndexProps {
     total_conversations: number;
     system_uptime: string;
     storage_used: string;
+    storage_limit: string;
     database_size: string;
   };
 }
@@ -120,8 +121,14 @@ export default function SettingsIndex({ settings, stats }: SettingsIndexProps) {
     {
       title: 'Storage Used',
       value: stats.storage_used,
-      icon: <HardDrive className="h-5 w-5" />,
+      icon: <HardDrive className="h-5 w-5" />, 
       color: 'text-red-600'
+    },
+    {
+      title: 'Storage Limit',
+      value: stats.storage_limit,
+      icon: <HardDrive className="h-5 w-5" />, 
+      color: 'text-blue-600'
     }
   ];
 

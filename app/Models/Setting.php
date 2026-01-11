@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Setting extends Model
+
 {
     use HasFactory;
 
@@ -45,6 +46,32 @@ class Setting extends Model
      * @param mixed $default
      * @return mixed
      */
+
+
+    /**
+     * Set a setting value by key for a specific company.
+     *
+     * @param int $companyId
+     * @param string $key
+     * @param mixed $value
+     * @return void
+     */
+    public static function setForCompany($companyId, $key, $value): void
+    {
+        $setting = static::firstOrNew([
+            'company_id' => $companyId,
+            'key' => $key,
+        ]);
+        // Serialize arrays/objects to JSON before saving
+        if (is_array($value) || is_object($value)) {
+            $setting->value = json_encode($value);
+        } else {
+            $setting->value = $value;
+        }
+        $setting->save();
+    }
+
+    
     public static function get(string $key, $default = null)
     {
         $setting = static::where('key', $key)->first();
@@ -66,7 +93,12 @@ class Setting extends Model
     public static function set(string $key, $value): void
     {
         $setting = static::firstOrNew(['key' => $key]);
-        $setting->value = $value;
+        // Serialize arrays/objects to JSON before saving
+        if (is_array($value) || is_object($value)) {
+            $setting->value = json_encode($value);
+        } else {
+            $setting->value = $value;
+        }
         $setting->save();
     }
 
@@ -79,5 +111,19 @@ class Setting extends Model
     public function scopeForCompany($query, $companyId)
     {
         return $query->where('company_id', $companyId);
+    }
+
+    /**
+     * Get a setting value by key for a specific company.
+     *
+     * @param int $companyId
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
+    public static function getForCompany($companyId, $key, $default = null)
+    {
+        $setting = static::where('company_id', $companyId)->where('key', $key)->first();
+        return $setting ? $setting->value : $default;
     }
 }

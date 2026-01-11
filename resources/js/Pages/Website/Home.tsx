@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ChevronRight, Dot } from 'lucide-react';
 import { Head } from '@inertiajs/react';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Link } from '@inertiajs/react';
@@ -11,15 +12,29 @@ import TechnologiesSection from '@/Components/TechnologiesSection';
 import TeamCarousel from '@/Components/TeamCarousel';
 import TechnologyStack from '@/Components/TechnologyStack';
 import FAQ from '@/Components/FAQ';
+import CollapsibleModules from '@/Components/CollapsibleModules';
+import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 
 
+interface Package {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+  price: number;
+  modules: { id: number; name: string; slug: string; }[];
+}
 
 interface Props {
   canLogin: boolean;
   canRegister: boolean;
+  packages: Package[];
 }
 
-export default function Home({ canLogin, canRegister }: Props) {
+
+// Remove duplicate Props interface and use the one with packages
+
+export default function Home({ canLogin, canRegister, packages }: Props) {      
   const route = useRoute();
   const page = useTypedPage();
   const settings: any = page.props.settings || {};
@@ -27,6 +42,18 @@ export default function Home({ canLogin, canRegister }: Props) {
   // Testimonials Carousel State
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
 
+  // Types for modules and addons
+  interface Addon {
+    id: number;
+    name: string;
+  }
+  interface Module {
+    id: number;
+    name: string;
+    addons?: Addon[];
+  }
+
+  
   // Team Carousel State
   const [currentTeamMember, setCurrentTeamMember] = useState(0);
   const testimonials = [
@@ -215,30 +242,7 @@ export default function Home({ canLogin, canRegister }: Props) {
     return () => clearInterval(timer);
   }, [blogPosts.length]);
 
-  // Auto-advance team members
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTeamMember((prev) => (prev + 1) % orgData.length);
-    }, 10000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const nextTestimonial = () => {
-    setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
-  };
-
-  const prevTestimonial = () => {
-    setCurrentTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length);
-  };
-
-  const nextBlog = () => {
-    setCurrentBlog((prev) => (prev + 1) % blogPosts.length);
-  };
-
-  const prevBlog = () => {
-    setCurrentBlog((prev) => (prev - 1 + blogPosts.length) % blogPosts.length);
-  };
-
+  // Move orgData above all hooks and functions so it is initialized before use
   const orgData = [
     {
       name: "Chimfwembe Kangwa",
@@ -332,6 +336,30 @@ export default function Home({ canLogin, canRegister }: Props) {
       ],
     },
   ];
+
+  // Auto-advance team members
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTeamMember((prev) => (prev + 1) % orgData.length);
+    }, 10000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const nextTestimonial = () => {
+    setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
+  };
+
+  const prevTestimonial = () => {
+    setCurrentTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+  };
+
+  const nextBlog = () => {
+    setCurrentBlog((prev) => (prev + 1) % blogPosts.length);
+  };
+
+  const prevBlog = () => {
+    setCurrentBlog((prev) => (prev - 1 + blogPosts.length) % blogPosts.length);
+  };
 
   return (
     <GuestLayout title="Home">
@@ -455,7 +483,71 @@ export default function Home({ canLogin, canRegister }: Props) {
         <div className="absolute inset-0 opacity-40">
           <div className="absolute inset-0 bg-gray-800/20 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[length:20px_20px]"></div>
         </div>
-
+  {/* SaaS Packages Section */}
+        {packages && packages.length > 0 && (
+          <div className="py-20 bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-16">
+                <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase mb-4">Our Packages</h2>
+                <p className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
+                  Flexible SaaS Plans for Every Business
+                </p>
+                <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+                  Choose a package that fits your needs. All packages include access to our core platform and support.
+                </p>
+              </div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
+                {packages.map(pkg => (
+                  <div
+                    key={pkg.id}
+                    className="group relative bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 flex flex-col"
+                  >
+                    <div className="border-secondary/40 shadow-sm hover:shadow-md transition-shadow duration-300 bg-card text-card-foreground dark:bg-card dark:text-card-foreground">
+                      <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 transition-colors duration-300">{pkg.name}</h3>
+                      <p className="text-gray-600 dark:text-gray-300 mb-4 min-h-[48px]">{pkg.description}</p>
+                    </div>
+                    <div className="mb-6">
+                      <span className="text-4xl font-extrabold text-blue-600 dark:text-blue-400">{pkg.price === 0 ? 'Free' : `ZMW ${pkg.price}`}</span>
+                      <span className="ml-2 text-base text-gray-500 dark:text-gray-400">/ month</span>
+                    </div>
+                    <div className="mb-6">
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Includes:</h4>
+                      <ul className="space-y-2">
+                        {pkg.modules && pkg.modules.length > 0 ? (
+                          <CollapsibleModules modules={pkg.modules} />
+                        ) : (
+                          <li className="text-gray-400 italic">No modules listed</li>
+                        )}
+                      </ul>
+                    </div>
+                    <div className="mt-auto">
+                      <Link
+                        href={route('register', { package: pkg.slug })}
+                        className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl w-full"
+                      >
+                        Get Started
+                        <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="text-center mt-16">
+                <Link
+                  href={route('register')}
+                  className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
+                >
+                  Compare All Packages
+                  <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-base text-blue-300 font-semibold tracking-wide uppercase mb-4">Our Impact</h2>
@@ -931,7 +1023,7 @@ export default function Home({ canLogin, canRegister }: Props) {
                       </div>
 
                       {/* Testimonial Content */}
-                      <blockquote className="relative text-2xl font-medium text-gray-900 dark:text-white mb-8 leading-relaxed">
+                      <blockquote className="relative text-lg lg:text-2xl font-medium text-gray-900 dark:text-white mb-8 leading-relaxed line-clamp-4">
                         "{testimonial.quote}"
                       </blockquote>
 
@@ -948,9 +1040,9 @@ export default function Home({ canLogin, canRegister }: Props) {
                           </div>
                         </div>
                         <div className="ml-6">
-                          <h4 className="text-2xl font-bold text-gray-900 dark:text-white">{testimonial.company}</h4>
-                          <p className={`text-${testimonial.color}-600 dark:text-${testimonial.color}-400 font-semibold text-lg`}>{testimonial.industry}</p>
-                          <p className="text-gray-600 dark:text-gray-400 mt-1">{testimonial.author} • {testimonial.position}</p>
+                          <h4 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{testimonial.company}</h4>
+                          <p className={`text-${testimonial.color}-600 dark:text-${testimonial.color}-400 font-semibold text-md md:text-lg`}>{testimonial.industry}</p>
+                          <p className="text-sm md:text-md text-gray-600 dark:text-gray-400 mt-1">{testimonial.author} • {testimonial.position}</p>
                           <div className="flex mt-3">
                             {[...Array(testimonial.rating)].map((_, i) => (
                               <svg key={i} className="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20">
@@ -966,8 +1058,8 @@ export default function Home({ canLogin, canRegister }: Props) {
                         <div className="grid grid-cols-3 gap-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                           {testimonial.metrics.map((metric, metricIndex) => (
                             <div key={metricIndex} className="text-center">
-                              <div className={`text-3xl font-bold text-${testimonial.color}-600 mb-1`}>{metric.value}</div>
-                              <div className="text-sm text-gray-600 dark:text-gray-400">{metric.label}</div>
+                              <div className={`text-xl md:text-3xl font-bold text-${testimonial.color}-600 mb-1`}>{metric.value}</div>
+                              <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">{metric.label}</div>
                             </div>
                           ))}
                         </div>

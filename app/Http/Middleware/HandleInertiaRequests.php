@@ -47,6 +47,13 @@ class HandleInertiaRequests extends Middleware
                 ] : null,
             ],
             'current_company_id' => session('current_company_id'),
+            'availableModules' => function () use ($request) {
+                if ($request->user() && session('current_company_id')) {
+                    $company = $request->user()->companies()->find(session('current_company_id'));
+                    return $company ? $company->availableModules() : [];
+                }
+                return [];
+            },
             'notifications' => $request->user() ? [
                 'recent' => $request->user()->notifications()
                     ->latest()

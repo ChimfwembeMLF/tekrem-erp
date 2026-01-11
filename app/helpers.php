@@ -2,12 +2,16 @@
 
 if (!function_exists('currentCompanyId')) {
     /**
-     * Get the current company ID from the service container or session.
+     * Get or set the current company ID in the session or service container.
      *
+     * @param int|null $id
      * @return int|null
      */
-    function currentCompanyId()
+    function currentCompanyId($id = null)
     {
+        if (!is_null($id)) {
+            session(['current_company_id' => $id]);
+        }
         $company = app()->bound('currentCompany') ? app('currentCompany') : null;
         if ($company && isset($company->id)) {
             return $company->id;

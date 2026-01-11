@@ -38,8 +38,13 @@ class Module extends Model
             ->withTimestamps();
     }
 
-        public function addons()
+    public function addons()
     {
         return $this->hasMany(Addon::class);
+    }
+
+    public function packages()
+    {
+        return $this->belongsToMany(Package::class, 'module_package');
     }
 }

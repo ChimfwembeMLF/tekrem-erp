@@ -16,54 +16,73 @@ class ModuleSeeder extends Seeder
         ];
         $modules = [
             [
+                'slug' => 'dashboard',
+                'name' => 'Dashboard',
+                'description' => 'Main dashboard module',
+                'price' => 0,
+                'is_active' => true,
+                'settings' => json_encode($defaultModuleSettings),
+            ],
+            [
+                'slug' => 'crm',
                 'name' => 'CRM',
                 'description' => 'Customer Relationship Management',
-                'price' => 250.00, // ZMW / month
+                'price' => 30.00,
                 'is_active' => true,
                 'settings' => json_encode($defaultModuleSettings),
             ],
             [
+                'slug' => 'finance',
                 'name' => 'Finance',
                 'description' => 'Finance and Accounting',
-                'price' => 300.00,
+                'price' => 35.00,
                 'is_active' => true,
                 'settings' => json_encode($defaultModuleSettings),
             ],
             [
+                'slug' => 'hr',
                 'name' => 'HR',
                 'description' => 'Human Resources',
-                'price' => 200.00,
+                'price' => 25.00,
                 'is_active' => true,
                 'settings' => json_encode($defaultModuleSettings),
             ],
             [
+                'slug' => 'cms',
                 'name' => 'CMS',
                 'description' => 'Content Management System',
-                'price' => 150.00,
+                'price' => 20.00,
                 'is_active' => true,
                 'settings' => json_encode($defaultModuleSettings),
             ],
             [
+                'slug' => 'projects',
+                'name' => 'Projects',
+                'description' => 'Project Management',
+                'price' => 15.00,
+                'is_active' => true,
+                'settings' => json_encode($defaultModuleSettings),
+            ],
+            [
+                'slug' => 'support',
                 'name' => 'Support',
-                'description' => 'Support and Ticketing',
-                'price' => 180.00,
+                'description' => 'Customer Support & Ticketing',
+                'price' => 10.00,
                 'is_active' => true,
                 'settings' => json_encode($defaultModuleSettings),
             ],
             [
-                'name' => 'AI',
-                'description' => 'AI and Automation',
-                'price' => 450.00, // premium, obviously
+                'slug' => 'analytics',
+                'name' => 'Analytics',
+                'description' => 'Business Intelligence & Analytics',
+                'price' => 20.00,
                 'is_active' => true,
                 'settings' => json_encode($defaultModuleSettings),
             ],
         ];
 
-        foreach ($modules as $module) {
-            Module::updateOrCreate(
-                ['name' => $module['name']],
-                $module
-            );
+        foreach ($modules as $data) {
+            Module::updateOrCreate(['slug' => $data['slug']], $data);
         }
     }
 }

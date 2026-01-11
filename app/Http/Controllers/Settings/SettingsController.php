@@ -191,17 +191,39 @@ class SettingsController extends Controller
      */
     private function getSystemStats(): array
     {
+        $companyId = $this->getCompanyId();
+        $company = \App\Models\Company::with('package')->find($companyId);
+        $storageLimit = $company ? $company->storage_limit_bytes : 0;
+        // TODO: Replace with actual storage usage calculation per company
+        $storageUsed = 0; // e.g., Storage::disk('company')->size($companyId) or similar
+
         return [
-            'total_users' => \App\Models\User::count(),
-            'active_users' => \App\Models\User::where('created_at', '>=', now()->subDays(30))->count(),
-            'total_clients' => \App\Models\Client::count() ?? 0,
-            'total_leads' => \App\Models\Lead::count() ?? 0,
-            'total_conversations' => \App\Models\Conversation::count() ?? 0,
+            'total_users' => \App\Models\User::where('company_id', $companyId)->count(),
+            'active_users' => \App\Models\User::where('company_id', $companyId)
+                ->where('created_at', '>=', now()->subDays(30))->count(),
+            'total_clients' => \App\Models\Client::where('company_id', $companyId)->count() ?? 0,
+            'total_leads' => \App\Models\Lead::where('company_id', $companyId)->count() ?? 0,
+            'total_conversations' => \App\Models\Conversation::where('company_id', $companyId)->count() ?? 0,
             'system_uptime' => '99.9%',
-            'storage_used' => '2.3 GB',
+            'storage_used' => $this->formatBytes($storageUsed),
+            'storage_limit' => $this->formatBytes($storageLimit),
             'database_size' => '156 MB',
         ];
+   
     }
+
+         /**
+         * Format bytes as human-readable string.
+         */
+        private function formatBytes($bytes, $precision = 2)
+        {
+            if ($bytes <= 0) return '0 B';
+            $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+            $pow = floor(log($bytes, 1024));
+            $pow = min($pow, count($units) - 1);
+            $bytes /= pow(1024, $pow);
+            return round($bytes, $precision) . ' ' . $units[$pow];
+        }
 
     /**
      * Get user management settings.

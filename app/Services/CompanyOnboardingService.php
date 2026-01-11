@@ -27,11 +27,11 @@ class CompanyOnboardingService
             $user->assignRole('admin');
         }
 
-        // 3. Set up default company settings
-        $company->settings()->create([
-            'key' => 'onboarding_complete',
-            'value' => false,
+        // 3. Set up default company settings using JSON column
+        $company->settings = array_merge($company->settings ?? [], [
+            'onboarding_complete' => false,
         ]);
+        $company->save();
 
         // 4. Optionally, assign default modules or plans
         // Example: $company->modules()->attach([1,2,3]);

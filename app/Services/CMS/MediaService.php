@@ -19,19 +19,18 @@ class MediaService
     {
         // Generate unique filename
         $filename = $this->generateUniqueFilename($file);
-        
+        $companyId = $user->company_id ?? ($user->company?->id ?? null);
         // Determine storage path
         $folderPath = $folder ? $folder->path : 'uploads';
-        $filePath = $folderPath . '/' . $filename;
-        
+        $basePath = $companyId ? 'companies/' . $companyId . '/cms/' : 'cms/';
+        $filePath = $basePath . $folderPath . '/' . $filename;
         // Store file
-        $storedPath = $file->storeAs('cms/' . $folderPath, $filename, 'public');
-        
+        $storedPath = $file->storeAs($basePath . $folderPath, $filename, 'public');
         // Get file information
         $fileInfo = $this->getFileInfo($file, $storedPath);
-        
         // Create media record
         $media = Media::create([
+            'company_id' => $companyId,
             'name' => $options['name'] ?? pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
             'original_name' => $file->getClientOriginalName(),
             'file_path' => $storedPath,
@@ -46,17 +45,7 @@ class MediaService
             'uploaded_by' => $user->id,
             'is_public' => $options['is_public'] ?? true,
         ]);
-        
-        // Create image variants if it's an image (disabled - requires Intervention Image)
-        // if ($media->isImage()) {
-        //     $this->createImageVariants($media);
-        // }
-        
-        // Optimize if requested (disabled - requires Intervention Image)
-        // if ($options['optimize'] ?? true) {
-        //     $this->optimizeMedia($media);
-        // }
-        
+        // ...existing code...
         return $media;
     }
 
@@ -84,10 +73,10 @@ class MediaService
         if (empty($data['slug'])) {
             $data['slug'] = Str::slug($data['name']);
         }
-        
         $data['slug'] = $this->generateUniqueFolderSlug($data['slug'], $data['parent_id'] ?? null);
         $data['created_by'] = $user->id;
-        
+        // Set company_id for multi-tenancy
+        $data['company_id'] = $user->company_id ?? ($user->company?->id ?? null);
         return MediaFolder::create($data);
     }
 

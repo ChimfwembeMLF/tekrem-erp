@@ -61,10 +61,11 @@ class MediaController extends Controller
                       ->orderBy('created_at', 'desc')
                       ->paginate(24);
 
-        // Get subfolders
+        $companyId = currentCompanyId();
+        // Get subfolders (multi-tenant aware)
         $subfolders = $folder
-            ? $folder->children()->orderBy('sort_order')->get()
-            : MediaFolder::root()->orderBy('sort_order')->get();
+            ? $folder->children()->where('company_id', $companyId)->orderBy('sort_order')->get()
+            : MediaFolder::root()->where('company_id', $companyId)->orderBy('sort_order')->get();
 
         // Get breadcrumbs
         $breadcrumbs = $folder ? $folder->getBreadcrumbs() : [];

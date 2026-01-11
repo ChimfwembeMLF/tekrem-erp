@@ -119,11 +119,12 @@ class ProjectFileController extends Controller
         $file = $request->file('file');
         $originalName = $file->getClientOriginalName();
         $fileName = $validated['name'] ?: pathinfo($originalName, PATHINFO_FILENAME);
-        
-        // Store the file
-        $path = $file->store('projects/' . $project->id . '/files', 'public');
+        $companyId = $project->company_id;
+        // Store the file in a company-specific directory
+        $path = $file->store('companies/' . $companyId . '/projects/' . $project->id . '/files', 'public');
 
         $projectFile = ProjectFile::create([
+            'company_id' => $companyId,
             'project_id' => $project->id,
             'milestone_id' => $validated['milestone_id'] ?? null,
             'name' => $fileName,

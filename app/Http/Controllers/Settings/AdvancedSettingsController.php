@@ -55,7 +55,7 @@ class AdvancedSettingsController extends Controller
 
         $companyId = $this->getCompanyId();
         // Update system settings
-        Setting::setForCompany($companyId, 'advanced_settings.system', $request->validated());
+        Setting::setForCompany($companyId, 'advanced_settings.system', $validator->validated());
 
         session()->flash('flash', [
             'bannerStyle' => 'success',

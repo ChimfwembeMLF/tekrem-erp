@@ -28,6 +28,13 @@ Route::get('/contact', [WebsiteController::class, 'contact'])->name('contact');
 Route::get('/help', [WebsiteController::class, 'help'])->name('help');
 Route::get('/faq', [WebsiteController::class, 'faq'])->name('faq');
 
+Route::get('/api/packages', function() {
+    $packages = App\Models\Package::with(['modules.addons' => function($q) {
+        $q->where('is_active', true);
+    }])->where('is_active', true)->get();
+    return response()->json(['packages' => $packages]);
+});
+
 // Direct Quote Request Route (alias to guest.quote.create)
 Route::get('/quote-request', function() {
     return redirect()->route('guest.quote.create');

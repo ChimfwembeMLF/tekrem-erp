@@ -26,69 +26,94 @@ class AddonSeeder extends Seeder
             'advanced-reporting' => [
                 'name' => 'Advanced Reporting',
                 'description' => 'Unlock advanced analytics and reporting features.',
-                'price' => 50.00,
+                'price' => 10.00,
             ],
             'api-access' => [
                 'name' => 'API Access',
                 'description' => 'Enable API access for integrations.',
-                'price' => 75.00,
+                'price' => 15.00,
             ],
             'bulk-email-campaigns' => [
                 'name' => 'Bulk Email Campaigns',
                 'description' => 'Send bulk marketing emails to your contacts.',
-                'price' => 35.00,
+                'price' => 8.00,
             ],
             'multi-currency' => [
                 'name' => 'Multi-Currency',
                 'description' => 'Support for multiple currencies.',
-                'price' => 40.00,
+                'price' => 12.00,
             ],
             'automated-tax-filing' => [
                 'name' => 'Automated Tax Filing',
                 'description' => 'Automate your tax calculations and filings.',
-                'price' => 55.00,
+                'price' => 15.00,
             ],
             'payroll-automation' => [
                 'name' => 'Payroll Automation',
                 'description' => 'Automate payroll processing.',
-                'price' => 60.00,
+                'price' => 12.00,
             ],
             'leave-management' => [
                 'name' => 'Leave Management',
                 'description' => 'Advanced leave and absence management.',
-                'price' => 30.00,
+                'price' => 7.00,
             ],
             'seo-toolkit' => [
                 'name' => 'SEO Toolkit',
                 'description' => 'Advanced SEO tools for your content.',
-                'price' => 25.00,
+                'price' => 5.00,
             ],
             'media-library-pro' => [
                 'name' => 'Media Library Pro',
                 'description' => 'Enhanced media management and storage.',
-                'price' => 20.00,
+                'price' => 5.00,
             ],
             'live-chat' => [
                 'name' => 'Live Chat',
                 'description' => 'Enable real-time chat support for your customers.',
-                'price' => 45.00,
+                'price' => 10.00,
             ],
             'knowledge-base' => [
                 'name' => 'Knowledge Base',
                 'description' => 'Create a searchable help center for your users.',
-                'price' => 28.00,
+                'price' => 8.00,
             ],
             'ai-insights' => [
                 'name' => 'AI Insights',
                 'description' => 'Get actionable insights powered by AI.',
-                'price' => 80.00,
+                'price' => 20.00,
             ],
             'chatbot-builder' => [
                 'name' => 'Chatbot Builder',
                 'description' => 'Build and deploy custom AI chatbots.',
-                'price' => 90.00,
+                'price' => 25.00,
+            ],
+            // SME Upgrades
+            'extra-users-10' => [
+                'name' => 'Add 10 Users',
+                'description' => 'Increase your user limit by 10.',
+                'price' => 20.00,
+            ],
+            'extra-storage-5gb' => [
+                'name' => 'Add 5GB Storage',
+                'description' => 'Increase your storage by 5GB.',
+                'price' => 10.00,
+            ],
+            'extra-emails-500' => [
+                'name' => 'Add 500 Emails',
+                'description' => 'Increase your monthly email limit by 500.',
+                'price' => 5.00,
             ],
         ];
+
+        // Attach upgrade add-ons to all packages
+        $upgradeSlugs = ['extra-users-10', 'extra-storage-5gb', 'extra-emails-500'];
+        $modules = Module::where('is_active', true)->get();
+        foreach ($modules as $module) {
+            $slug = $module->slug;
+            if (!isset($addonMap[$slug])) $addonMap[$slug] = [];
+            $addonMap[$slug] = array_merge($addonMap[$slug], $upgradeSlugs);
+        }
 
         $modules = Module::where('is_active', true)->get();
         foreach ($modules as $module) {

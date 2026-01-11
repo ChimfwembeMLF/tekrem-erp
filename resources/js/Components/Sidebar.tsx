@@ -63,6 +63,7 @@ import { Button } from '@/Components/ui/button';
 import useRoute from '@/Hooks/useRoute';
 import useActiveRoute from '@/Hooks/useActiveRoute';
 import usePermissions from '@/Hooks/usePermissions';
+import { useAvailableModules } from '@/hooks/useAvailableModules';
 import useTranslate from '@/Hooks/useTranslate';
 import useTypedPage from '@/Hooks/useTypedPage';
 import ApplicationMark from '@/Components/ApplicationMark';
@@ -80,38 +81,20 @@ export default function Sidebar({ settings }: SidebarProps) {
   const { t } = useTranslate();
   const { hasAnyRole, hasAnyPermission } = usePermissions();
 
-  // Permission-based access checks
-  const hasCrmAccess = (): boolean => {
-    return hasAnyPermission(['view crm']);
-  };
 
-  const hasFinanceAccess = (): boolean => {
-    return hasAnyPermission(['view finance']);
-  };
+  // Module-based access checks
+  const availableModules = useAvailableModules();
+  const hasModule = (slug: string) => availableModules.some(m => m.slug === slug);
 
-  const hasProjectsAccess = (): boolean => {
-    return hasAnyPermission(['view projects']);
-  };
-
-  const hasHrAccess = (): boolean => {
-    return hasAnyPermission(['view hr']);
-  };
-
-  const hasSupportAccess = (): boolean => {
-    return hasAnyPermission(['view support']);
-  };
-
-  const hasCmsAccess = (): boolean => {
-    return hasAnyPermission(['view cms']);
-  };
-
-  const hasAiAccess = (): boolean => {
-    return hasAnyPermission(['view ai']);
-  };
-
-  const hasSocialMediaAccess = (): boolean => {
-    return hasAnyPermission(['view social_media']);
-  };
+  // Permission + module checks
+  const hasCrmAccess = () => hasAnyPermission(['view crm']) && hasModule('crm');
+  const hasFinanceAccess = () => hasAnyPermission(['view finance']) && hasModule('finance');
+  const hasProjectsAccess = () => hasAnyPermission(['view projects']) && hasModule('projects');
+  const hasHrAccess = () => hasAnyPermission(['view hr']) && hasModule('hr');
+  const hasSupportAccess = () => hasAnyPermission(['view support']) && hasModule('support');
+  const hasCmsAccess = () => hasAnyPermission(['view cms']) && hasModule('cms');
+  const hasAiAccess = () => hasAnyPermission(['view ai']) && hasModule('ai');
+  const hasSocialMediaAccess = () => hasAnyPermission(['view social_media']) && hasModule('social_media');
 
   // Define navigation items
   const navItems = [

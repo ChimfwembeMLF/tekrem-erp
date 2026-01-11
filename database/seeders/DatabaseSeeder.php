@@ -62,6 +62,15 @@ class DatabaseSeeder extends Seeder
         $this->call(ProjectSeeder::class);
 
 
+        // 4. Modules and Packages
+        $this->command->info('📦 Seeding modules and packages...');
+        Log::info('ModuleSeeder and PackageSeeder running at ' . now());
+        $this->call([
+            ModuleSeeder::class,
+            PackageSeeder::class,
+            CouponSeeder::class,
+        ]);
+
         // 5b. System Modules
         $this->command->info('🧩 Seeding system modules...');
         $this->call(ModuleSeeder::class);
