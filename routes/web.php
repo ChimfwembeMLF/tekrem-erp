@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\AdvancedSettingsController;
 use App\Http\Controllers\WebsiteController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -150,6 +151,10 @@ Route::middleware([
             Route::get('/modules/billing/{id}', [\App\Http\Controllers\Modules\BillingController::class, 'show'])->name('billing.show');
             Route::put('/modules/billing/{id}', [\App\Http\Controllers\Modules\BillingController::class, 'update'])->name('billing.update');
             Route::delete('/modules/billing/{id}', [\App\Http\Controllers\Modules\BillingController::class, 'destroy'])->name('billing.destroy');
+
+    // Advanced Settings (Security & Performance)
+    Route::put('/settings/advanced/security', [AdvancedSettingsController::class, 'updateSecurity'])->name('settings.advanced.security.update');
+    Route::put('/settings/advanced/performance', [AdvancedSettingsController::class, 'updatePerformance'])->name('settings.advanced.performance.update');
     });
         // Settings routes
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');

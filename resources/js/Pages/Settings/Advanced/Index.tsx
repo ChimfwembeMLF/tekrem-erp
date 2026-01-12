@@ -680,6 +680,7 @@ export default function AdvancedSettings({
             </Card>
           </TabsContent>
 
+
           {/* Security Settings Tab */}
           <TabsContent value="security">
             <Card>
@@ -694,11 +695,60 @@ export default function AdvancedSettings({
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSecuritySubmit} className="space-y-6">
-                  {/* Security settings form content will be added here */}
-                  <div className="text-center py-8 text-gray-500">
-                    Security settings form content coming soon...
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="enable_2fa">Enable Two-Factor Authentication</Label>
+                      <Switch
+                        id="enable_2fa"
+                        checked={securityForm.data.enable_2fa}
+                        onCheckedChange={(checked) => securityForm.setData('enable_2fa', checked)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password_min_length">Password Minimum Length</Label>
+                      <Input
+                        id="password_min_length"
+                        type="number"
+                        min="6"
+                        max="128"
+                        value={securityForm.data.password_min_length}
+                        onChange={(e) => securityForm.setData('password_min_length', parseInt(e.target.value))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="session_timeout">Session Timeout (minutes)</Label>
+                      <Input
+                        id="session_timeout"
+                        type="number"
+                        min="5"
+                        max="1440"
+                        value={securityForm.data.session_timeout}
+                        onChange={(e) => securityForm.setData('session_timeout', parseInt(e.target.value))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="max_login_attempts">Max Login Attempts</Label>
+                      <Input
+                        id="max_login_attempts"
+                        type="number"
+                        min="3"
+                        max="20"
+                        value={securityForm.data.max_login_attempts}
+                        onChange={(e) => securityForm.setData('max_login_attempts', parseInt(e.target.value))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lockout_duration">Account Lockout Duration (minutes)</Label>
+                      <Input
+                        id="lockout_duration"
+                        type="number"
+                        min="1"
+                        max="120"
+                        value={securityForm.data.lockout_duration}
+                        onChange={(e) => securityForm.setData('lockout_duration', parseInt(e.target.value))}
+                      />
+                    </div>
                   </div>
-
                   <div className="flex justify-end">
                     <Button
                       type="submit"
@@ -728,11 +778,55 @@ export default function AdvancedSettings({
               </CardHeader>
               <CardContent>
                 <form onSubmit={handlePerformanceSubmit} className="space-y-6">
-                  {/* Performance settings form content will be added here */}
-                  <div className="text-center py-8 text-gray-500">
-                    Performance settings form content coming soon...
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="cache_driver">Cache Driver</Label>
+                      <Select
+                        value={performanceForm.data.cache_driver}
+                        onValueChange={(value) => performanceForm.setData('cache_driver', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select cache driver" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="file">File</SelectItem>
+                          <SelectItem value="redis">Redis</SelectItem>
+                          <SelectItem value="memcached">Memcached</SelectItem>
+                          <SelectItem value="database">Database</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="cache_expiration">Cache Expiration (seconds)</Label>
+                      <Input
+                        id="cache_expiration"
+                        type="number"
+                        min="60"
+                        max="86400"
+                        value={performanceForm.data.cache_expiration}
+                        onChange={(e) => performanceForm.setData('cache_expiration', parseInt(e.target.value))}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="enable_query_logging">Enable Query Logging</Label>
+                      <Switch
+                        id="enable_query_logging"
+                        checked={performanceForm.data.enable_query_logging}
+                        onCheckedChange={(checked) => performanceForm.setData('enable_query_logging', checked)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="max_workers">Max Concurrent Workers</Label>
+                      <Input
+                        id="max_workers"
+                        type="number"
+                        min="1"
+                        max="32"
+                        value={performanceForm.data.max_workers}
+                        onChange={(e) => performanceForm.setData('max_workers', parseInt(e.target.value))}
+                      />
+                    </div>
                   </div>
-
                   <div className="flex justify-end">
                     <Button
                       type="submit"

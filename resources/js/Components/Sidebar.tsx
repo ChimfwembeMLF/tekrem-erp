@@ -84,7 +84,8 @@ export default function Sidebar({ settings }: SidebarProps) {
 
   // Module-based access checks
   const availableModules = useAvailableModules();
-  const hasModule = (slug: string) => availableModules.some(m => m.slug === slug);
+  // availableModules is now an array of slugs
+  const hasModule = (slug: string) => availableModules.includes(slug);
 
   // Permission + module checks
   const hasCrmAccess = () => hasAnyPermission(['view crm']) && hasModule('crm');

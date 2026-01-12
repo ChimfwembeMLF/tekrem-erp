@@ -44,5 +44,6 @@ class Kernel extends HttpKernel
         // ...existing middleware...
         'setCurrentCompany' => \App\Http\Middleware\SetCurrentCompany::class,
         'ip.whitelist' => \App\Http\Middleware\IpWhitelistMiddleware::class,
+        'company.has.module' => \App\Http\Middleware\EnsureCompanyHasModule::class,
     ];
 }

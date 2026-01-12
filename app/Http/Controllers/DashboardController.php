@@ -28,6 +28,10 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
+    // public function __construct()
+    // {
+    //     $this->middleware('company.has.module:dashboard');
+    // }
     /**
      * Handle dashboard routing based on user role.
      */
@@ -260,50 +264,67 @@ class DashboardController extends Controller
     private function getModuleUsage(): array
     {
         $cid = currentCompanyId();
-        return [
-            'crm' => [
+        $company = \App\Models\Company::find($cid);
+        $available = $company ? $company->availableModules()->pluck('slug')->toArray() : [];
+        $usage = [];
+
+        if (in_array('crm', $available)) {
+            $usage['crm'] = [
                 'clients' => Client::where('company_id', $cid)->count(),
                 'leads' => Lead::where('company_id', $cid)->count(),
                 'communications' => Communication::where('company_id', $cid)->count(),
                 'growth' => $this->getModuleGrowth('clients', $cid),
-            ],
-            'finance' => [
+            ];
+        }
+        if (in_array('finance', $available)) {
+            $usage['finance'] = [
                 'invoices' => Invoice::where('company_id', $cid)->count(),
                 'transactions' => Transaction::where('company_id', $cid)->count(),
                 'revenue' => Invoice::where('company_id', $cid)->where('status', 'paid')->sum('total_amount'),
                 'growth' => $this->getModuleGrowth('invoices', $cid),
-            ],
-            'projects' => [
+            ];
+        }
+        if (in_array('projects', $available)) {
+            $usage['projects'] = [
                 'total' => Project::where('company_id', $cid)->count(),
                 'active' => Project::where('company_id', $cid)->where('status', 'active')->count(),
                 'completed' => Project::where('company_id', $cid)->where('status', 'completed')->count(),
                 'growth' => $this->getModuleGrowth('projects', $cid),
-            ],
-            'hr' => [
+            ];
+        }
+        if (in_array('hr', $available)) {
+            $usage['hr'] = [
                 'employees' => Employee::where('company_id', $cid)->count(),
                 'active' => Employee::where('company_id', $cid)->count(),
                 'departments' => Employee::where('company_id', $cid)->distinct('department_id')->count(),
                 'growth' => $this->getModuleGrowth('employees', $cid),
-            ],
-            'support' => [
+            ];
+        }
+        if (in_array('support', $available)) {
+            $usage['support'] = [
                 'tickets' => Ticket::where('company_id', $cid)->count(),
                 'open' => Ticket::where('company_id', $cid)->where('status', 'open')->count(),
                 'resolved' => Ticket::where('company_id', $cid)->where('status', 'resolved')->count(),
                 'growth' => $this->getModuleGrowth('tickets', $cid),
-            ],
-            'cms' => [
+            ];
+        }
+        if (in_array('cms', $available)) {
+            $usage['cms'] = [
                 'pages' => Page::where('company_id', $cid)->count(),
                 'posts' => [],
                 'published' => [],
                 'growth' => [],
-            ],
-            'ai' => [
+            ];
+        }
+        if (in_array('ai', $available)) {
+            $usage['ai'] = [
                 'services' => AIService::where('company_id', $cid)->count(),
                 'conversations' => Conversation::where('company_id', $cid)->count(),
                 'active_services' => AIService::where('company_id', $cid)->where('is_enabled', true)->count(),
                 'growth' => $this->getModuleGrowth('ai_conversations', $cid),
-            ],
-        ];
+            ];
+        }
+        return $usage;
     }
 
     /**
