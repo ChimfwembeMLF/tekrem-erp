@@ -70,6 +70,7 @@ interface Package {
 interface RegistrationWizardProps {
   packages: Package[];
   preselectedPackage?: Package | null;
+  trialDays?: number | null;
 }
 
 interface FormErrors {
@@ -89,7 +90,7 @@ const steps = [
   { id: 3, name: 'Review & Submit', icon: CheckCircle2, description: 'Confirm details' },
 ];
 
-const RegistrationWizard: React.FC<RegistrationWizardProps> = ({ packages, preselectedPackage }) => {
+const RegistrationWizard: React.FC<RegistrationWizardProps> = ({ packages, preselectedPackage, trialDays }) => {
   const [step, setStep] = useState(0);
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(preselectedPackage || null);
   const [selectedModules, setSelectedModules] = useState<Module[]>(preselectedPackage?.modules || []);
@@ -102,7 +103,8 @@ const RegistrationWizard: React.FC<RegistrationWizardProps> = ({ packages, prese
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [animationDirection, setAnimationDirection] = useState<'forward' | 'backward'>('forward');
   // Add missing state for trial/coupon/discount
-  const [trialSelected, setTrialSelected] = useState(false);
+  const [trialSelected, setTrialSelected] = useState(!!trialDays);
+  const [trialPeriod, setTrialPeriod] = useState<number>(trialDays || 0);
   const [discountAmount, setDiscountAmount] = useState(0);
   // Coupon state for coupon UI
   const [coupon, setCoupon] = useState('');
@@ -291,6 +293,8 @@ const RegistrationWizard: React.FC<RegistrationWizardProps> = ({ packages, prese
         upgrades,
         total: calculateTotal(),
         coupon: coupon || undefined,
+        trial: trialSelected,
+        trial_days: trialSelected ? trialPeriod : undefined,
       };
         // Coupon input UI (add to step 1 or summary sidebar as needed)
         // Example: Add to summary sidebar before Total
@@ -1048,7 +1052,7 @@ const RegistrationWizard: React.FC<RegistrationWizardProps> = ({ packages, prese
                 )}
                 {trialSelected && (
                   <div className="flex justify-between text-sm text-green-600">
-                    <span>Free Trial</span>
+                    <span>Free Trial ({trialPeriod} days)</span>
                     <span className="font-medium">-100%</span>
                   </div>
                 )}

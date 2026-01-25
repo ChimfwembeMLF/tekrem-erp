@@ -520,7 +520,7 @@ export default function Home({ canLogin, canRegister, packages }: Props) {
                         )}
                       </ul>
                     </div>
-                    <div className="mt-auto">
+                    <div className="mt-auto space-y-3">
                       <Link
                         href={route('register', { package: pkg.slug })}
                         className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-secondary to-primary text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl w-full"
@@ -528,6 +528,15 @@ export default function Home({ canLogin, canRegister, packages }: Props) {
                         Get Started
                         <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                      </Link>
+                      <Link
+                        href={route('register', { package: pkg.slug, trial: '60' })}
+                        className="inline-flex items-center justify-center px-6 py-3 bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 font-semibold rounded-xl border-2 border-blue-600 dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-gray-600 transform hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg w-full"
+                      >
+                        Start 60-Day Trial
+                        <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </Link>
                     </div>

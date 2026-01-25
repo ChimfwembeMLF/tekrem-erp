@@ -6,6 +6,7 @@ export default function Register() {
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPackage, setSelectedPackage] = useState(null);
+  const [trialDays, setTrialDays] = useState<number | null>(null);
 
   useEffect(() => {
     fetch('/api/packages')
@@ -16,9 +17,18 @@ export default function Register() {
         // Preselect package from query param
         const urlParams = new URLSearchParams(window.location.search);
         const packageSlug = urlParams.get('package');
+        const trialParam = urlParams.get('trial');
+        
         if (packageSlug) {
           const pkg = (data.packages || []).find(p => p.slug === packageSlug);
           if (pkg) setSelectedPackage(pkg);
+        }
+        
+        if (trialParam) {
+          const days = parseInt(trialParam, 10);
+          if (!isNaN(days) && days > 0) {
+            setTrialDays(days);
+          }
         }
       });
   }, []);
@@ -28,7 +38,7 @@ export default function Register() {
   return (
     <div className="w-full mx-auto py-10">
       <Head title="Register" />
-      <RegistrationWizard packages={packages} preselectedPackage={selectedPackage} />
+      <RegistrationWizard packages={packages} preselectedPackage={selectedPackage} trialDays={trialDays} />
     </div>
   );
 }

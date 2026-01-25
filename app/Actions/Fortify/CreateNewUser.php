@@ -121,7 +121,7 @@ class CreateNewUser implements CreatesNewUsers
         \Log::info('User associated with company', ['user_id' => $user->id, 'company_id' => $company->id]);
 
         // Create a subscription for the company
-        $trialDays = ($input['trial'] ?? false) ? 14 : 0;
+        $trialDays = ($input['trial'] ?? false) ? ($input['trial_days'] ?? 14) : 0;
         $trialUsed = \App\Models\Subscription::where('company_id', $company->id)->whereNotNull('trial_ends_at')->exists();
         if ($trialDays && !$trialUsed) {
             $trialEndsAt = now()->addDays($trialDays);
