@@ -11,6 +11,9 @@ use Inertia\Inertia;
 // Public Website Routes
 Route::get('/',[WebsiteController::class, 'index'])->name('home');
 
+// Company landing page by slug
+Route::get('/company/{slug}', [\App\Http\Controllers\CompanyLandingController::class, 'show'])->name('company.landing');
+
 Route::get('/about', [WebsiteController::class, 'about'])->name('about');
 
 Route::get('/services', [WebsiteController::class, 'services'])->name('services');
@@ -41,12 +44,13 @@ Route::get('/quote-request', function() {
     return redirect()->route('guest.quote.create');
 })->name('quote-request');
 
-// Guest Chat Routes (no authentication required)
-Route::prefix('guest-chat')->name('guest-chat.')->group(function () {
+// Guest Chat Routes (no authentication required, CSRF exempted)
+Route::middleware('web')->prefix('guest-chat')->name('guest-chat.')->group(function () {
     Route::post('/initialize', [App\Http\Controllers\GuestChatController::class, 'initializeSession'])->name('initialize');
     Route::post('/update-info', [App\Http\Controllers\GuestChatController::class, 'updateGuestInfo'])->name('update-info');
     Route::post('/send', [App\Http\Controllers\GuestChatController::class, 'sendMessage'])->name('send');
     Route::get('/messages', [App\Http\Controllers\GuestChatController::class, 'getMessages'])->name('messages');
+    Route::post('/mark-read', [App\Http\Controllers\GuestChatController::class, 'markMessagesAsRead'])->name('mark-read');
 });
 
 // Guest Feature Routes (no authentication required)
@@ -121,8 +125,13 @@ Route::middleware([
     Route::prefix('admin')->name('admin.')->middleware('role:admin|super_user')->group(function () {
         // Company Switch Route
         Route::put('/companies/switch', [\App\Http\Controllers\Admin\CompanyController::class, 'switch'])->name('companies.switch');
+        // Superadmin Company CRUD
+        Route::resource('companies', \App\Http\Controllers\Admin\CompanyController::class);
+
+        // Show company info/settings page (GET)
+       Route::get('/settings/company/{company}', [\App\Http\Controllers\Admin\CompanyController::class, 'showInfo'])->name('admin.settings.company.show');
          // Module Marketplace & Company Modules (company context)
-    Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'setCurrentCompany'])->prefix('modules')->name('modules.')->group(function () {
+       Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'setCurrentCompany'])->prefix('modules')->name('modules.')->group(function () {
         // List all available modules (marketplace)
         Route::get('/marketplace', [\App\Http\Controllers\Admin\ModuleController::class, 'index'])->name('marketplace');
         // Module details page
@@ -159,6 +168,9 @@ Route::middleware([
         // Settings routes
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+
+        // Admin company info update (for Settings/Company.tsx)
+        Route::put('/settings/company/{company}', [\App\Http\Controllers\Admin\CompanyController::class, 'updateInfo'])->name('settings.company.update');
    
         // User Management
         Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
@@ -234,6 +246,7 @@ Route::middleware([
             Route::post('/conversations/{conversation}/messages', [\App\Http\Controllers\CRM\LiveChatController::class, 'sendMessage'])->name('send-message');
             Route::post('/conversations/{conversation}/mark-as-read', [\App\Http\Controllers\CRM\LiveChatController::class, 'markAsRead'])->name('mark-as-read');
             Route::post('/conversations/{conversation}/typing', [\App\Http\Controllers\CRM\LiveChatController::class, 'typing'])->name('typing');
+            Route::post('/conversations/{conversation}/assign', [\App\Http\Controllers\CRM\LiveChatController::class, 'assignAgent'])->name('assign');
             Route::post('/conversations/{conversation}/archive', [\App\Http\Controllers\CRM\LiveChatController::class, 'archive'])->name('archive');
             Route::post('/conversations/{conversation}/restore', [\App\Http\Controllers\CRM\LiveChatController::class, 'restore'])->name('restore');
 

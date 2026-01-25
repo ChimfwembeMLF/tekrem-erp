@@ -26,6 +26,7 @@ import RichTextEditor from '@/Components/CMS/RichTextEditor';
 import MediaPicker from '@/Components/CMS/MediaPicker';
 import SEOAnalyzer from '@/Components/CMS/SEOAnalyzer';
 import useTranslate from '@/Hooks/useTranslate';
+import SectionBlocksEditor from '@/Components/CMS/SectionBlocksEditor';
 
 interface Template {
   id: number;
@@ -224,6 +225,14 @@ export default function PageEditor({
                   <CardTitle>{t('cms.page_content', 'Page Content')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                                    {/* Section Blocks Editor (Drag-and-drop) */}
+                                    <div>
+                                      <Label>Sections (Content Blocks)</Label>
+                                      <SectionBlocksEditor
+                                        value={formData.content_blocks || []}
+                                        onChange={blocks => handleInputChange('content_blocks', blocks)}
+                                      />
+                                    </div>
                   <div>
                     <Label htmlFor="title">{t('cms.title', 'Title')}</Label>
                     <Input
@@ -256,7 +265,7 @@ export default function PageEditor({
                   </div>
 
                   <div>
-                    <Label>{t('cms.content', 'Content')}</Label>
+                    <Label>{t('cms.content', 'Content (HTML Fallback)')}</Label>
                     <RichTextEditor
                       value={formData.content}
                       onChange={(content) => handleInputChange('content', content)}

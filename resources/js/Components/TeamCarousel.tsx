@@ -115,7 +115,7 @@ export default function TeamCarousel({ orgData, autoPlayInterval = 5000 }: TeamC
     };
 
     return (
-        <section className="relative min-h-screen bg-gradient-to-br from-secondary/10 via-primary/10 to-secondary/5 dark:from-secondary/20 dark:via-primary/20 dark:to-secondary/10 overflow-hidden flex flex-col justify-between py-8 md:py-20">
+        <section className="relative min-h-screen bg-white dark:bg-gray-900 overflow-hidden flex flex-col justify-between py-8 md:py-20">
             {/* Background Text - Hidden on mobile */}
             <AnimatePresence initial={false} custom={direction}>
                 <motion.div

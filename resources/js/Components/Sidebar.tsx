@@ -517,6 +517,12 @@ export default function Sidebar({ settings }: SidebarProps) {
       active: route().current('admin.permissions.*')
     },
     {
+      href: route('admin.companies.index'),
+      label: t('admin.companies', 'Company Management'),
+      icon: <Building className="h-5 w-5" />, 
+      active: route().current('admin.companies.*')
+    },
+    {
       href: route('admin.modules.cart.index'),
       label: t('admin.cart', 'Cart'),
       icon: <ShoppingCart className="h-5 w-5" />, 
@@ -998,6 +1004,18 @@ export default function Sidebar({ settings }: SidebarProps) {
               >
                 <Cog className="h-4 w-4" />
                 <span>{t('settings.general', 'General Settings')}</span>
+              </Link>
+              <Link
+                href={route('admin.admin.settings.company.show', page.props.company?.id || 1)}
+                className={cn(
+                  "flex items-center gap-3 px-6 py-2 text-sm rounded-md transition-colors",
+                  route().current('admin.admin.settings.company.show')
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-foreground/60 hover:text-foreground hover:bg-accent"
+                )}
+              >
+                <Building className="h-4 w-4" />
+                <span>{t('settings.company', 'Company Info')}</span>
               </Link>
               <Link
                 href={route('settings.finance.index')}

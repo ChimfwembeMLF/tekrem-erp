@@ -28,6 +28,7 @@ import {
   History
 } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
+import useRoute from '@/Hooks/useRoute';
 
 interface Page {
   id: number;
@@ -88,6 +89,7 @@ interface Props {
 
 export default function ShowPage({ page }: Props) {
   const { t } = useTranslate();
+  const route = useRoute();
 
   const handleAction = (action: string) => {
     switch (action) {
@@ -140,8 +142,7 @@ export default function ShowPage({ page }: Props) {
   };
 
   return (
-    <AppLayout>
-      <Head title={page.title} />
+    <AppLayout title={page.title} >
 
       <div className="space-y-6">
         {/* Header */}
@@ -315,7 +316,7 @@ export default function ShowPage({ page }: Props) {
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{page.author.name}</span>
+                  <span className="text-sm">{page.author ? page.author.name : t('cms.unknown_author', 'Unknown')}</span>
                 </div>
                 
                 <div className="flex items-center gap-2">

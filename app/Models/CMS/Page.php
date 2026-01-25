@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use App\Models\Company;
 
 class Page extends Model
 {
@@ -431,5 +432,27 @@ class Page extends Model
     public function scopeForCompany($query, $companyId)
     {
         return $query->where('company_id', $companyId);
+    }
+
+        protected static function booted()
+    {
+        static::saving(function ($page) {
+            // Only set slug if not manually set or if title/company changed
+            if (empty($page->slug) || $page->isDirty('title') || $page->isDirty('company_id')) {
+                $companySlug = null;
+                if ($page->company_id && $page->company) {
+                    $companySlug = $page->company->slug ?? Str::slug($page->company->name);
+                }
+                $baseSlug = Str::slug($page->title);
+                $slug = $companySlug ? $baseSlug . '-' . $companySlug : $baseSlug;
+                $originalSlug = $slug;
+                $counter = 1;
+                while (static::where('slug', $slug)->where('id', '!=', $page->id)->exists()) {
+                    $slug = $originalSlug . '-' . $counter;
+                    $counter++;
+                }
+                $page->slug = $slug;
+            }
+        });
     }
 }

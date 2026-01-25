@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use App\Models\Company;
+use Illuminate\Support\Str;
 
 class CMSSeeder extends Seeder
 {
@@ -142,77 +144,81 @@ class CMSSeeder extends Seeder
             DB::table('cms_templates')->insert($template);
         }
 
-        // Default pages
-        $pages = [
-            [
-                'title' => 'Welcome to TekRem ERP',
-                'slug' => 'welcome',
-                'excerpt' => 'Discover the power of our comprehensive Enterprise Resource Planning solution.',
-                'content' => '<h2>About TekRem ERP</h2> ...',
-                'template' => 'default-page',
-                'layout' => 'default',
-                'meta_title' => 'Welcome to TekRem ERP',
-                'meta_description' => 'Discover TekRem ERP...',
-                'meta_keywords' => json_encode(['ERP', 'business management']),
-                'status' => 'published',
-                'published_at' => now(),
-                'author_id' => $user->id,
-                'language' => 'en',
-                'is_homepage' => true,
-                'show_in_menu' => true,
-                'require_auth' => false,
-                'view_count' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            // About
-            [
-                'title' => 'About Us',
-                'slug' => 'about',
-                'excerpt' => 'Learn more about our company and mission.',
-                'content' => '<h2>Our Story</h2> ...',
-                'template' => 'default-page',
-                'layout' => 'default',
-                'meta_title' => 'About TekRem',
-                'meta_description' => 'Learn about TekRem...',
-                'meta_keywords' => json_encode(['about', 'company']),
-                'status' => 'published',
-                'published_at' => now(),
-                'author_id' => $user->id,
-                'language' => 'en',
-                'is_homepage' => false,
-                'show_in_menu' => true,
-                'require_auth' => false,
-                'view_count' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            // Contact
-            [
-                'title' => 'Contact Us',
-                'slug' => 'contact',
-                'excerpt' => 'Get in touch with our team.',
-                'content' => '<h2>Get in Touch</h2> ...',
-                'template' => 'default-page',
-                'layout' => 'default',
-                'meta_title' => 'Contact TekRem',
-                'meta_description' => 'Reach out to TekRem...',
-                'meta_keywords' => json_encode(['contact']),
-                'status' => 'published',
-                'published_at' => now(),
-                'author_id' => $user->id,
-                'language' => 'en',
-                'is_homepage' => false,
-                'show_in_menu' => true,
-                'require_auth' => false,
-                'view_count' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ];
-
-        foreach ($pages as $page) {
-            DB::table('cms_pages')->insert($page);
+        // Default pages for each company
+        $companies = Company::all();
+        foreach ($companies as $company) {
+            $companySlug = $company->slug ?? Str::slug($company->name);
+            $pages = [
+                [
+                    'title' => 'Welcome to ' . $company->name,
+                    'slug' => 'welcome-' . $companySlug,
+                    'excerpt' => 'Discover the power of our comprehensive Enterprise Resource Planning solution.',
+                    'content' => '<h2>About ' . $company->name . '</h2> ...',
+                    'template' => 'default-page',
+                    'layout' => 'default',
+                    'meta_title' => 'Welcome to ' . $company->name,
+                    'meta_description' => 'Discover ' . $company->name . '...',
+                    'meta_keywords' => json_encode(['ERP', 'business management', $company->name]),
+                    'status' => 'published',
+                    'published_at' => now(),
+                    'author_id' => $user->id,
+                    'language' => 'en',
+                    'is_homepage' => true,
+                    'show_in_menu' => true,
+                    'require_auth' => false,
+                    'view_count' => 0,
+                    'company_id' => $company->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'title' => 'About Us',
+                    'slug' => 'about-' . $companySlug,
+                    'excerpt' => 'Learn more about our company and mission.',
+                    'content' => '<h2>Our Story</h2> ...',
+                    'template' => 'default-page',
+                    'layout' => 'default',
+                    'meta_title' => 'About ' . $company->name,
+                    'meta_description' => 'Learn about ' . $company->name . '...',
+                    'meta_keywords' => json_encode(['about', 'company', $company->name]),
+                    'status' => 'published',
+                    'published_at' => now(),
+                    'author_id' => $user->id,
+                    'language' => 'en',
+                    'is_homepage' => false,
+                    'show_in_menu' => true,
+                    'require_auth' => false,
+                    'view_count' => 0,
+                    'company_id' => $company->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'title' => 'Contact Us',
+                    'slug' => 'contact-' . $companySlug,
+                    'excerpt' => 'Get in touch with our team.',
+                    'content' => '<h2>Get in Touch</h2> ...',
+                    'template' => 'default-page',
+                    'layout' => 'default',
+                    'meta_title' => 'Contact ' . $company->name,
+                    'meta_description' => 'Reach out to ' . $company->name . '...',
+                    'meta_keywords' => json_encode(['contact', $company->name]),
+                    'status' => 'published',
+                    'published_at' => now(),
+                    'author_id' => $user->id,
+                    'language' => 'en',
+                    'is_homepage' => false,
+                    'show_in_menu' => true,
+                    'require_auth' => false,
+                    'view_count' => 0,
+                    'company_id' => $company->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+            ];
+            foreach ($pages as $page) {
+                DB::table('cms_pages')->insert($page);
+            }
         }
 
         // Default menu

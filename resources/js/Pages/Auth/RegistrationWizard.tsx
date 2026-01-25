@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -37,7 +37,7 @@ import {
   DollarSign
 } from 'lucide-react';
 import axios from 'axios';
-
+import tekremLogo from '../../../../public/tekrem-logo.png';
 // Types
 interface Addon { 
   id: number; 
@@ -302,7 +302,8 @@ const RegistrationWizard: React.FC<RegistrationWizardProps> = ({ packages, prese
       toast.success('Registration submitted successfully!', {
         description: 'Check your email for confirmation.',
       });
-      // Optionally, redirect or handle response
+      // Redirect to dashboard after registration (SPA)
+      router.visit('/dashboard');
     } catch (error) {
       let message = 'Please try again or contact support.';
       if (error?.response?.data?.message) {
@@ -1095,9 +1096,9 @@ const RegistrationWizard: React.FC<RegistrationWizardProps> = ({ packages, prese
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <img src={tekremLogo} className='w-64' alt="Tekrem Logo" />
+      <div className="mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <Head title="Register - Complete Your Account" />
-        
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main wizard content (2 columns) */}
           <div className="lg:col-span-2 space-y-6">

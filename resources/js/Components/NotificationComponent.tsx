@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import { Bell } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
@@ -36,6 +36,43 @@ export default function NotificationComponent({ className = '' }: NotificationCo
   const notificationsData = page.props.notifications;
   const notifications = notificationsData?.recent || [];
   const unreadCount = notificationsData?.unreadCount || 0;
+
+  const [liveNotifications, setLiveNotifications] = useState<Notification[]>(notifications);
+  const [liveUnreadCount, setLiveUnreadCount] = useState<number>(unreadCount);
+
+  useEffect(() => {
+    setLiveNotifications(notifications);
+    setLiveUnreadCount(unreadCount);
+  }, [notificationsData]);
+
+  useEffect(() => {
+    const userId = page.props.auth?.user?.id;
+    if (!userId || !(window as any).Echo) return;
+
+    const channelName = `notifications.${userId}`;
+    const channel = (window as any).Echo.private(channelName);
+
+    const handler = (event: any) => {
+      const incoming = event.notification as Notification;
+      setLiveNotifications((prev) => {
+        const existing = prev.find((n) => n.id === incoming.id);
+        if (existing) {
+          return prev.map((n) => (n.id === incoming.id ? incoming : n));
+        }
+        return [incoming, ...prev].slice(0, 50);
+      });
+      if (!incoming.is_read) {
+        setLiveUnreadCount((prev) => prev + 1);
+      }
+    };
+
+    channel.listen('.NotificationSent', handler);
+
+    return () => {
+      channel.stopListening('.NotificationSent');
+      (window as any).Echo.leave(`private-${channelName}`);
+    };
+  }, [page.props.auth?.user?.id]);
 
   // console.log('notificationsData',notificationsData);
   const handleMarkAsRead = (id: number) => {
@@ -199,9 +236,9 @@ export default function NotificationComponent({ className = '' }: NotificationCo
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className={`relative ${className}`}>
           <Bell className="h-5 w-5" />
-          {unreadCount > 0 && (
+          {liveUnreadCount > 0 && (
             <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-red-500 hover:bg-red-600">
-              {unreadCount > 99 ? '99+' : unreadCount}
+              {liveUnreadCount > 99 ? '99+' : liveUnreadCount}
             </Badge>
           )}
         </Button>
@@ -209,7 +246,7 @@ export default function NotificationComponent({ className = '' }: NotificationCo
       <DropdownMenuContent align="end" className="w-96 lg:w-[600px]">
         <DropdownMenuLabel className="flex justify-between items-center">
           <span>Notifications</span>
-          {unreadCount > 0 && (
+          {liveUnreadCount > 0 && (
             <Button
               variant="ghost"
               size="sm"
@@ -222,11 +259,11 @@ export default function NotificationComponent({ className = '' }: NotificationCo
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
 
-        {notifications.length === 0 ? (
+        {liveNotifications.length === 0 ? (
           <div className="p-4 text-center text-muted-foreground">No notifications</div>
         ) : (
           <div className="max-h-[300px] overflow-y-auto">
-            {notifications.map((notification) => (
+            {liveNotifications.map((notification) => (
               <DropdownMenuItem key={notification.id} className={`mb-2 flex flex-col items-start p-3 cursor-default border-l-4 ${!notification.is_read ? 'bg-muted/30' : ''}`} style={{ borderLeftColor: !notification.is_read ? getNotificationBorderColor(notification.type) : 'transparent' }}>
                 <div className="flex w-full justify-between">
                   <div className="flex items-start gap-3">

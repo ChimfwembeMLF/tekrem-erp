@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Minimize2, Maximize2, Settings, MessageCircle } from 'lucide-react';
+import { X, Minimize2, Maximize2, Settings, MessageCircle, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { CardHeader } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
@@ -33,6 +33,7 @@ interface GuestChatHeaderProps {
   onToggleMinimize: () => void;
   onClose: () => void;
   onShowGuestForm: () => void;
+  connectionStatus?: 'connected' | 'connecting' | 'disconnected';
 }
 
 export default function GuestChatHeader({
@@ -42,6 +43,7 @@ export default function GuestChatHeader({
   onToggleMinimize,
   onClose,
   onShowGuestForm,
+  connectionStatus = 'disconnected',
 }: GuestChatHeaderProps) {
   const getStatusColor = (status?: string) => {
     switch (status) {
@@ -83,7 +85,7 @@ export default function GuestChatHeader({
   };
 
   return (
-    <CardHeader className="flex flex-row items-center rounded-t-lg justify-between space-y-0 pb-2 bg-secondary text-primary-foreground">
+    <CardHeader className="flex flex-row items-center rounded-t-lg justify-between space-y-0 pb-2 bg-gradient-to-br from-secondary to-primary  text-primary-foreground">
       <div className="flex items-center space-x-3 flex-1 min-w-0">
         {/* Company Logo/Icon */}
         <div className="flex-shrink-0">
@@ -105,6 +107,26 @@ export default function GuestChatHeader({
           
           {!isMinimized && (
             <div className="flex items-center space-x-2 mt-1">
+              {/* Connection Status */}
+              <div className="flex items-center gap-1">
+                {connectionStatus === 'connected' ? (
+                  <>
+                    <Check className="w-3 h-3 text-green-400" />
+                    <span className="text-xs opacity-90 text-green-400">Connected</span>
+                  </>
+                ) : connectionStatus === 'connecting' ? (
+                  <>
+                    <Loader2 className="w-3 h-3 animate-spin text-yellow-400" />
+                    <span className="text-xs opacity-90 text-yellow-400">Connecting...</span>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-2 h-2 bg-red-400 rounded-full" />
+                    <span className="text-xs opacity-90 text-red-400">Disconnected</span>
+                  </>
+                )}
+              </div>
+              
               {guestSession && (
                 <Badge 
                   variant="secondary" 
@@ -120,7 +142,7 @@ export default function GuestChatHeader({
                 </span>
               ) : (
                 <span className="text-xs opacity-75">
-                  Connecting...
+                  No agent assigned
                 </span>
               )}
             </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Head, router } from '@inertiajs/react';
+import ReactMarkdown from 'react-markdown';
 import AppLayout from '@/Layouts/AppLayout';
 import CustomerLayout from '@/Layouts/CustomerLayout';
 import { toast } from 'sonner';
@@ -174,6 +175,47 @@ export default function ConversationView({
     };
   }, [sidebarOpen]);
 
+  // Set up WebSocket listeners for real-time updates instead of polling
+  useEffect(() => {
+    if (!window.Echo) {
+      console.warn('Echo not available');
+      return;
+    }
+
+    const channelName = `conversation.${conversation.id}`;
+    console.debug('Subscribing to channel:', channelName);
+
+    // Subscribe to conversation channel
+    const channel = window.Echo.private(channelName);
+
+    // Listen for new messages
+    channel.listen('ChatMessageSent', (data: any) => {
+      console.debug('New message received:', data);
+      // Trigger a refresh to get the latest conversation state
+      router.get(route('crm.livechat.show', conversation.id, false), {}, {
+        preserveScroll: true,
+        preserveState: false,
+        only: ['conversation', 'pinnedMessages'],
+      });
+    });
+
+    // Listen for conversation updates (assignee, status, etc.)
+    channel.listen('ConversationUpdated', (data: any) => {
+      console.debug('Conversation updated:', data);
+      router.get(route('crm.livechat.show', conversation.id, false), {}, {
+        preserveScroll: true,
+        preserveState: false,
+        only: ['conversation'],
+      });
+    });
+
+    // Cleanup on unmount
+    return () => {
+      console.debug('Unsubscribing from channel:', channelName);
+      window.Echo?.leave(`private-${channelName}`);
+    };
+  }, [conversation.id]);
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim() && selectedFiles.length === 0 && selectedImages.length === 0) return;
@@ -210,7 +252,7 @@ export default function ConversationView({
       });
 
       // Use fetch for AJAX request instead of Inertia
-      const response = await fetch(route('crm.livechat.send-message', conversation.id), {
+      const response = await fetch(route('crm.livechat.send-message', conversation.id, false), {
         method: 'POST',
         body: formData,
         headers: {
@@ -237,8 +279,8 @@ export default function ConversationView({
       setSelectedImages([]);
       setShowEmojiPicker(false);
 
-      // Refresh the page to show the new message
-      router.reload();
+      // Let polling handle the update instead of reloading
+      // The useEffect will fetch new messages in 5 seconds
     } catch (error) {
       console.error('Failed to send message:', error);
 
@@ -352,6 +394,46 @@ export default function ConversationView({
     setShowEmojiPicker(false);
   };
 
+  const handleAssignAgent = async (agentId: number) => {
+    const toastId = toast.loading('Assigning agent...', {
+      description: 'Please wait'
+    });
+
+    try {
+      const response = await fetch(route('crm.livechat.assign', conversation.id, false), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': getCsrfToken(),
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ assigned_to: agentId })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to assign agent');
+      }
+
+      toast.success('Agent assigned!', {
+        id: toastId,
+        description: 'The conversation is now assigned'
+      });
+
+      // Trigger a refresh to show the updated assignee
+      router.get(route('crm.livechat.show', conversation.id, false), {}, {
+        preserveScroll: true,
+        preserveState: false,
+        only: ['conversation']
+      });
+    } catch (error) {
+      console.error('Failed to assign agent:', error);
+      toast.error('Failed to assign agent', {
+        id: toastId,
+        description: 'Please try again'
+      });
+    }
+  };
+
   const handleAddNote = async () => {
     if (!newNote.trim()) return;
 
@@ -366,7 +448,7 @@ export default function ConversationView({
       formData.append('is_internal_note', '1'); // Use '1' for true in FormData
 
       // Use fetch for AJAX request instead of Inertia
-      const response = await fetch(route('crm.livechat.send-message', conversation.id), {
+      const response = await fetch(route('crm.livechat.send-message', conversation.id, false), {
         method: 'POST',
         body: formData,
         headers: {
@@ -386,8 +468,7 @@ export default function ConversationView({
 
       setNewNote('');
 
-      // Refresh the page to show the new note
-      router.reload();
+      // Let polling handle the update instead of reloading
     } catch (error) {
       console.error('Failed to add note:', error);
 
@@ -668,7 +749,7 @@ export default function ConversationView({
                 size="sm"
                 onClick={() => setSidebarOpen(true)}
                 title="Show sidebar"
-                className="absolute top-4 right-4 z-20 bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 border-gray-300 dark:border-gray-600"
+                className="absolute top-4 right-4 z-20 bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out border-gray-300 dark:border-gray-600 animate-in fade-in slide-in-from-right"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -690,7 +771,7 @@ export default function ConversationView({
                       'justify-start'
                     } transition-colors duration-500`}
                 >
-                  <div className={`flex gap-2 max-w-[70%] ${isCurrentUser(msg.user_id) ? 'flex-row-reverse' : 'flex-row'
+                  <div className={`flex gap-2 ${isCurrentUser(msg.user_id) ? 'max-w-[80%] flex-row-reverse' : 'w-full flex-row'
                     }`}>
                     <Avatar className={`h-8 w-8 ${isAIMessage(msg) ? 'bg-purple-100 border-purple-200' :
                       isGuestMessage(msg) ? 'bg-blue-100 border-blue-200' :
@@ -726,39 +807,35 @@ export default function ConversationView({
                       )}
 
                       {/* Message bubble with WhatsApp-style reactions */}
-                      <div className="relative">
-                        <div
-                          className={`rounded-lg px-3 py-2 ${isCurrentUser(msg.user_id)
-                            ? 'bg-blue-600 text-white'
-                            : isAIMessage(msg)
-                              ? 'bg-purple-50 border border-purple-200 text-gray-900'
-                              : isGuestMessage(msg)
-                                ? 'bg-blue-50 border border-blue-200 text-gray-900'
-                                : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
-                            }`}
-                        >
-                          {/* Message sender header for non-current user messages */}
-                          {!isCurrentUser(msg.user_id) && (
-                            <div className="flex items-center gap-1 mb-1">
-                              {isAIMessage(msg) ? (
-                                <>
-                                  <Sparkles className="w-3 h-3 text-purple-600" />
-                                  <span className="text-xs font-medium text-purple-600">TekRem AI Assistant</span>
-                                </>
-                              ) : isGuestMessage(msg) ? (
-                                <>
-                                  <User className="w-3 h-3 text-blue-600" />
-                                  <span className="text-xs font-medium text-blue-600">{getMessageSender(msg)}</span>
-                                </>
-                              ) : (
-                                <>
-                                  <User className="w-3 h-3 text-gray-600" />
-                                  <span className="text-xs font-medium text-gray-600">{msg.user?.name || 'Agent'}</span>
-                                </>
-                              )}
-                            </div>
-                          )}
+                      <div className="relative w-full">
+                        {/* Message sender header for non-current user messages */}
+                        {!isCurrentUser(msg.user_id) && (
+                          <div className="flex items-center gap-1 mb-2">
+                            {isAIMessage(msg) ? (
+                              <>
+                                <Sparkles className="w-4 h-4 text-purple-600" />
+                                <span className="text-sm font-medium text-purple-600">TekRem AI Assistant</span>
+                              </>
+                            ) : isGuestMessage(msg) ? (
+                              <>
+                                <User className="w-4 h-4 text-blue-600" />
+                                <span className="text-sm font-medium text-blue-600">{getMessageSender(msg)}</span>
+                              </>
+                            ) : (
+                              <>
+                                <User className="w-4 h-4 text-gray-600" />
+                                <span className="text-sm font-medium text-gray-600">{msg.user?.name || 'Agent'}</span>
+                              </>
+                            )}
+                          </div>
+                        )}
 
+                        <div
+                          className={isCurrentUser(msg.user_id)
+                            ? 'rounded-lg px-3 py-2 bg-blue-600 text-white'
+                            : ''
+                          }
+                        >
                           {/* Internal note indicator */}
                           {msg.is_internal_note && (
                             <div className="text-xs opacity-75 mb-1">
@@ -766,7 +843,9 @@ export default function ConversationView({
                             </div>
                           )}
 
-                          <p className="whitespace-pre-wrap">{msg.message}</p>
+                          <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-1 prose-headings:my-2">
+                            <ReactMarkdown>{msg.message}</ReactMarkdown>
+                          </div>
 
                           {/* Edit indicator */}
                           {msg.is_edited && (
@@ -1032,18 +1111,18 @@ export default function ConversationView({
                     }}
                   />
 
-              
+
                 </div>
-    {/* Emoji Button (inside textarea wrapper) */}
-    <Button
-                    type="button"
-                    variant="unstyled"
-                    size="icon"
-                    className="text-gray-400 hover:text-white"
-                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  >
-                    <Smile className="h-4 w-4" />
-                  </Button>
+                {/* Emoji Button (inside textarea wrapper) */}
+                <Button
+                  type="button"
+                  variant="unstyled"
+                  size="icon"
+                  className="text-gray-400 hover:text-white"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                >
+                  <Smile className="h-4 w-4" />
+                </Button>
                 {/* Send Button */}
                 <Button
                   type="submit"
@@ -1118,217 +1197,239 @@ export default function ConversationView({
 
           {/* Toggleable Sidebar with Tabs */}
           {!isCustomerView && (
-            <div className={`border-l transition-all duration-300 ease-in-out overflow-hidden ${sidebarOpen ? 'w-80 lg:w-80 md:w-72 sm:w-64 opacity-100' : 'w-0 opacity-0'
-              } ${sidebarOpen ? 'lg:relative md:absolute md:right-0 md:top-0 md:h-full md:z-30 md:shadow-lg' : ''}`}>
+            <div className={`border-l transition-all duration-300 ease-in-out bg-white dark:bg-gray-900 ${sidebarOpen ? 'w-80 lg:w-80 md:w-72 sm:w-64 lg:relative md:absolute md:right-0 md:top-0 md:h-full md:z-30 md:shadow-lg' : 'w-0'
+              }`}>
+              {/* Mobile Overlay */}
               {sidebarOpen && (
-              <>
-                {/* Mobile Overlay */}
                 <div
-                  className="lg:hidden fixed inset-0 bg-black/50 z-20"
+                  className="lg:hidden fixed inset-0 bg-black/50 z-20 animate-in fade-in duration-300"
                   onClick={() => setSidebarOpen(false)}
                 />
+              )}
+              <div className={`h-full transition-all duration-300 ease-in-out ${sidebarOpen ? 'opacity-100 translate-x-0 visible' : 'opacity-0 translate-x-8 invisible pointer-events-none'}`}>
                 <Tabs defaultValue="info" className="h-full w-80 lg:w-80 md:w-72 sm:w-64 relative z-30">
-                  {/* Mobile Close Button */}
-                  <div className="lg:hidden flex justify-between items-center p-3 border-b bg-white dark:bg-gray-800">
-                    <h3 className="font-medium text-gray-900 dark:text-gray-100">Chat Details</h3>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSidebarOpen(false)}
-                      className="h-8 w-8 p-0"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
+                    {/* Mobile Close Button */}
+                    <div className="lg:hidden flex justify-between items-center p-3 border-b bg-white dark:bg-gray-800">
+                      <h3 className="font-medium text-gray-900 dark:text-gray-100">Chat Details</h3>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSidebarOpen(false)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
 
-                  <TabsList className={`grid w-full dark:bg-black/0 rounded-none ${isProjectChat ? 'grid-cols-4' : 'grid-cols-3'}`}>
-                    <TabsTrigger value="info" className="flex items-center gap-1">
-                      <Info className="h-3 w-3" />
-                      Info
-                    </TabsTrigger>
-                    {isProjectChat && (
-                      <TabsTrigger value="team" className="flex items-center gap-1">
-                        <Users className="h-3 w-3" />
-                        Team
+                    <TabsList className={`grid w-full dark:bg-black/0 rounded-none ${isProjectChat ? 'grid-cols-4' : 'grid-cols-3'}`}>
+                      <TabsTrigger value="info" className="flex items-center gap-1">
+                        <Info className="h-3 w-3" />
+                        Info
                       </TabsTrigger>
-                    )}
-                    <TabsTrigger value="files" className="flex items-center gap-1">
-                      <Paperclip className="h-3 w-3" />
-                      Files
-                    </TabsTrigger>
-                    <TabsTrigger value="notes" className="flex items-center gap-1">
-                      <StickyNote className="h-3 w-3" />
-                      Notes
-                    </TabsTrigger>
-                  </TabsList>
+                      {isProjectChat && (
+                        <TabsTrigger value="team" className="flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          Team
+                        </TabsTrigger>
+                      )}
+                      <TabsTrigger value="files" className="flex items-center gap-1">
+                        <Paperclip className="h-3 w-3" />
+                        Files
+                      </TabsTrigger>
+                      <TabsTrigger value="notes" className="flex items-center gap-1">
+                        <StickyNote className="h-3 w-3" />
+                        Notes
+                      </TabsTrigger>
+                    </TabsList>
 
-                  <TabsContent value="info" className="p-4 space-y-4 h-[calc(100%-3rem)] overflow-y-auto">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-sm">Conversation Details</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div>
-                          <label className="text-xs font-medium text-gray-500">Status</label>
-                          <p className="text-sm">{conversation.status}</p>
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium text-gray-500">Priority</label>
-                          <p className="text-sm">{conversation.priority}</p>
-                        </div>
-                        {conversation.assignee && (
-                          <div>
-                            <label className="text-xs font-medium text-gray-500">Assigned to</label>
-                            <p className="text-sm">{conversation.assignee.name}</p>
-                          </div>
-                        )}
-                        {conversation.conversable && (
-                          <div>
-                            <label className="text-xs font-medium text-gray-500">Contact</label>
-                            <p className="text-sm">{conversation.conversable.name}</p>
-                            <p className="text-xs text-gray-500">{conversation.conversable.email}</p>
-                          </div>
-                        )}
-                        <div>
-                          <label className="text-xs font-medium text-gray-500">Created</label>
-                          <p className="text-sm">{new Date(conversation.created_at).toLocaleDateString()}</p>
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium text-gray-500">Last Activity</label>
-                          <p className="text-sm">
-                            {conversation.last_message_at
-                              ? new Date(conversation.last_message_at).toLocaleDateString()
-                              : 'No messages yet'
-                            }
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-
-                  {isProjectChat && (
-                    <TabsContent value="team" className="p-4 space-y-4 h-[calc(100%-3rem)] overflow-y-auto">
+                    <TabsContent value="info" className="p-4 space-y-4 h-[calc(100%-3rem)] overflow-y-auto">
                       <Card>
                         <CardHeader>
-                          <CardTitle className="text-sm">Project Team</CardTitle>
+                          <CardTitle className="text-sm">Conversation Details</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                          {teamMembers.map((member) => (
-                            <div key={member.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
-                              <Avatar className="h-8 w-8">
-                                <AvatarImage src={member.profile_photo_url} />
-                                <AvatarFallback>
-                                  {member.name.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium truncate">{member.name}</p>
-                                <p className="text-xs text-gray-500 truncate">{member.email}</p>
-                              </div>
-                              {member.id === project?.manager_id && (
-                                <Badge variant="secondary" className="text-xs">
-                                  Manager
-                                </Badge>
-                              )}
+                          <div>
+                            <label className="text-xs font-medium text-gray-500">Status</label>
+                            <p className="text-sm">{conversation.status}</p>
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-gray-500">Priority</label>
+                            <p className="text-sm">{conversation.priority}</p>
+                          </div>
+                          {conversation.assignee && (
+                            <div>
+                              <label className="text-xs font-medium text-gray-500">Assigned to</label>
+                              <p className="text-sm">{conversation.assignee.name}</p>
                             </div>
-                          ))}
-                          {teamMembers.length === 0 && (
-                            <p className="text-sm text-gray-500">No team members assigned</p>
                           )}
+                          {!conversation.assignee && (
+                            <div>
+                              <label className="text-xs font-medium text-gray-500 mb-1 block">Assign to Agent</label>
+                              <select
+                                onChange={(e) => {
+                                  if (e.target.value) {
+                                    handleAssignAgent(parseInt(e.target.value));
+                                    e.target.value = '';
+                                  }
+                                }}
+                                className="w-full px-2 py-1 border rounded text-sm"
+                                defaultValue=""
+                              >
+                                <option value="">Select an agent...</option>
+                                {staff.map((member: any) => (
+                                  <option key={member.id} value={member.id}>
+                                    {member.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+                          {conversation.conversable && (
+                            <div>
+                              <label className="text-xs font-medium text-gray-500">Contact</label>
+                              <p className="text-sm">{conversation.conversable.name}</p>
+                              <p className="text-xs text-gray-500">{conversation.conversable.email}</p>
+                            </div>
+                          )}
+                          <div>
+                            <label className="text-xs font-medium text-gray-500">Created</label>
+                            <p className="text-sm">{new Date(conversation.created_at).toLocaleDateString()}</p>
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-gray-500">Last Activity</label>
+                            <p className="text-sm">
+                              {conversation.last_message_at
+                                ? new Date(conversation.last_message_at).toLocaleDateString()
+                                : 'No messages yet'
+                              }
+                            </p>
+                          </div>
                         </CardContent>
                       </Card>
                     </TabsContent>
-                  )}
 
-                  <TabsContent value="files" className="p-4 h-[calc(100%-3rem)] overflow-y-auto">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-sm">Shared Files</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          {conversation.messages?.filter(msg => msg.attachments && msg.attachments.length > 0).length === 0 ? (
-                            <p className="text-sm text-gray-500">No files shared yet</p>
-                          ) : (
-                            conversation.messages
-                              ?.filter(msg => msg.attachments && msg.attachments.length > 0)
-                              .map(msg =>
-                                msg.attachments?.map((attachment, index) => (
-                                  <div key={`${msg.id}-${index}`} className="flex items-center gap-2 p-2 bg-white dark:bg-gray-800 rounded border">
-                                    <Paperclip className="h-4 w-4 text-gray-400" />
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-sm font-medium truncate">{attachment.name}</p>
-                                      <p className="text-xs text-gray-500">
-                                        Shared by {msg.user?.name} • {new Date(msg.created_at).toLocaleDateString()}
-                                      </p>
+                    {isProjectChat && (
+                      <TabsContent value="team" className="p-4 space-y-4 h-[calc(100%-3rem)] overflow-y-auto">
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-sm">Project Team</CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            {teamMembers.map((member) => (
+                              <div key={member.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarImage src={member.profile_photo_url} />
+                                  <AvatarFallback>
+                                    {member.name.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium truncate">{member.name}</p>
+                                  <p className="text-xs text-gray-500 truncate">{member.email}</p>
+                                </div>
+                                {member.id === project?.manager_id && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    Manager
+                                  </Badge>
+                                )}
+                              </div>
+                            ))}
+                            {teamMembers.length === 0 && (
+                              <p className="text-sm text-gray-500">No team members assigned</p>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </TabsContent>
+                    )}
+
+                    <TabsContent value="files" className="p-4 h-[calc(100%-3rem)] overflow-y-auto">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-sm">Shared Files</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2">
+                            {conversation.messages?.filter(msg => msg.attachments && msg.attachments.length > 0).length === 0 ? (
+                              <p className="text-sm text-gray-500">No files shared yet</p>
+                            ) : (
+                              conversation.messages
+                                ?.filter(msg => msg.attachments && msg.attachments.length > 0)
+                                .map(msg =>
+                                  msg.attachments?.map((attachment, index) => (
+                                    <div key={`${msg.id}-${index}`} className="flex items-center gap-2 p-2 bg-white dark:bg-gray-800 rounded border">
+                                      <Paperclip className="h-4 w-4 text-gray-400" />
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium truncate">{attachment.name}</p>
+                                        <p className="text-xs text-gray-500">
+                                          Shared by {msg.user?.name} • {new Date(msg.created_at).toLocaleDateString()}
+                                        </p>
+                                      </div>
+                                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
+                                        <Download className="h-3 w-3" />
+                                      </Button>
                                     </div>
-                                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
-                                      <Download className="h-3 w-3" />
-                                    </Button>
+                                  ))
+                                )
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+
+                    <TabsContent value="notes" className="p-4 h-[calc(100%-3rem)] overflow-y-auto">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-sm">Internal Notes</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          {/* Add Note Form */}
+                          {userRole !== 'customer' && (
+                            <div className="space-y-2">
+                              <Textarea
+                                value={newNote}
+                                onChange={(e) => setNewNote(e.target.value)}
+                                placeholder="Add an internal note..."
+                                className="min-h-[60px] text-sm"
+                              />
+                              <Button
+                                size="sm"
+                                onClick={handleAddNote}
+                                disabled={!newNote.trim()}
+                                className="w-full"
+                              >
+                                <Plus className="h-3 w-3 mr-1" />
+                                Add Note
+                              </Button>
+                            </div>
+                          )}
+
+                          {/* Existing Notes */}
+                          <div className="space-y-2">
+                            {conversation.messages?.filter(msg => msg.is_internal_note).length === 0 ? (
+                              <p className="text-sm text-gray-500">No internal notes yet</p>
+                            ) : (
+                              conversation.messages
+                                ?.filter(msg => msg.is_internal_note)
+                                .map(note => (
+                                  <div key={note.id} className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">
+                                    <div className="flex items-start gap-2">
+                                      <StickyNote className="h-4 w-4 text-yellow-600 mt-0.5" />
+                                      <div className="flex-1">
+                                        <p className="text-sm">{note.message}</p>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                          {note.user?.name} • {new Date(note.created_at).toLocaleDateString()}
+                                        </p>
+                                      </div>
+                                    </div>
                                   </div>
                                 ))
-                              )
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-
-                  <TabsContent value="notes" className="p-4 h-[calc(100%-3rem)] overflow-y-auto">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-sm">Internal Notes</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        {/* Add Note Form */}
-                        {userRole !== 'customer' && (
-                          <div className="space-y-2">
-                            <Textarea
-                              value={newNote}
-                              onChange={(e) => setNewNote(e.target.value)}
-                              placeholder="Add an internal note..."
-                              className="min-h-[60px] text-sm"
-                            />
-                            <Button
-                              size="sm"
-                              onClick={handleAddNote}
-                              disabled={!newNote.trim()}
-                              className="w-full"
-                            >
-                              <Plus className="h-3 w-3 mr-1" />
-                              Add Note
-                            </Button>
+                            )}
                           </div>
-                        )}
-
-                        {/* Existing Notes */}
-                        <div className="space-y-2">
-                          {conversation.messages?.filter(msg => msg.is_internal_note).length === 0 ? (
-                            <p className="text-sm text-gray-500">No internal notes yet</p>
-                          ) : (
-                            conversation.messages
-                              ?.filter(msg => msg.is_internal_note)
-                              .map(note => (
-                                <div key={note.id} className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">
-                                  <div className="flex items-start gap-2">
-                                    <StickyNote className="h-4 w-4 text-yellow-600 mt-0.5" />
-                                    <div className="flex-1">
-                                      <p className="text-sm">{note.message}</p>
-                                      <p className="text-xs text-gray-500 mt-1">
-                                        {note.user?.name} • {new Date(note.created_at).toLocaleDateString()}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                </Tabs>
-              </>
-              )}
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                  </Tabs>
+                </div>
             </div>
           )}
         </div>
@@ -1430,7 +1531,7 @@ export default function ConversationView({
 
   return isCustomerView ? (
     <LayoutComponent
-      title={`Chat - ${conversation.display_title}`}      
+      title={`Chat - ${conversation.display_title}`}
     >
       {!isFullScreen && headerContent}
       {chatContent}

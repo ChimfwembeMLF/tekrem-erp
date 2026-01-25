@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Notification;
 use App\Models\User;
 use App\Models\UserNotificationPreference;
+use App\Events\NotificationSent;
 use App\Models\Finance\MoMoTransaction;
 use App\Models\Finance\ZraSmartInvoice;
 use App\Models\Finance\MoMoReconciliation;
@@ -58,7 +59,12 @@ class NotificationService
             $data['notifiable_type'] = get_class($notifiable);
         }
 
-        return Notification::create($data);
+        $notification = Notification::create($data);
+
+        // Broadcast over websockets to the user
+        broadcast(new NotificationSent($user->id, $notification))->toOthers();
+
+        return $notification;
     }
 
     /**

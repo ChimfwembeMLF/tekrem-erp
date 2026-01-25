@@ -11,6 +11,7 @@ use App\Models\Lead;
 use App\Models\Project;
 use App\Models\User;
 use App\Events\ChatMessageSent;
+use App\Events\ConversationUpdated;
 use App\Events\UserTyping;
 use App\Notifications\NewChatMessage;
 use Illuminate\Http\Request;
@@ -305,7 +306,7 @@ class LiveChatController extends Controller
         $message->load(['user', 'replyTo.user']);
 
         // Broadcast the message
-        broadcast(new ChatMessageSent($message))->toOthers();
+        broadcast(new ChatMessageSent($message, $conversation->id))->toOthers();
 
         // Send notifications to participants
         $participants = User::whereIn('id', $conversation->participants ?? [])->get();
@@ -381,6 +382,35 @@ class LiveChatController extends Controller
         $conversation->update(['status' => 'active']);
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Assign a conversation to an agent.
+     */
+    public function assignAgent(Request $request, Conversation $conversation): JsonResponse
+    {
+        $companyId = currentCompanyId();
+        if ($conversation->company_id !== $companyId) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized access to this conversation.'], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'assigned_to' => 'required|integer|exists:users,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $conversation->update(['assigned_to' => $request->assigned_to]);
+
+        // Broadcast the assignment update
+        broadcast(new ConversationUpdated($conversation->load(['conversable', 'creator', 'assignee'])))->toOthers();
+
+        return response()->json([
+            'success' => true,
+            'conversation' => $conversation->load(['conversable', 'creator', 'assignee'])
+        ]);
     }
 
     /**

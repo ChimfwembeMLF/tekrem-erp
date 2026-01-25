@@ -12,10 +12,6 @@ return new class extends Migration {
                     $table->unsignedBigInteger('owner_id')->nullable()->after('id');
                     $table->foreign('owner_id')->references('id')->on('users')->onDelete('set null');
                 }
-                if (!Schema::hasColumn('companies', 'package_id')) {
-                    $table->unsignedBigInteger('package_id')->nullable()->after('settings');
-                    $table->foreign('package_id')->references('id')->on('packages')->onDelete('set null');
-                }
         });
     }
 

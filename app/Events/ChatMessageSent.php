@@ -18,7 +18,9 @@ class ChatMessageSent implements ShouldBroadcast
      * Create a new event instance.
      */
     public function __construct(
-        public $chat
+        public $message,
+        public $conversationId = null,
+        public $chat = null
     ) {}
 
     /**
@@ -28,18 +30,31 @@ class ChatMessageSent implements ShouldBroadcast
      */
     public function broadcastOn(): array
     {
-        $channelName = '';
+        $channels = [];
 
-        if ($this->chat->chattable_type === 'App\\Models\\Client') {
-            $channelName = 'client.' . $this->chat->chattable_id;
-        } elseif ($this->chat->chattable_type === 'App\\Models\\Lead') {
-            $channelName = 'lead.' . $this->chat->chattable_id;
+        // Support for LiveChat conversations
+        if ($this->conversationId) {
+            $channels[] = new PrivateChannel('conversation.' . $this->conversationId);
         }
 
-        return [
-            new PrivateChannel($channelName),
-            new PrivateChannel('user.' . $this->chat->recipient_id),
-        ];
+        // Support for legacy chat system
+        if ($this->chat) {
+            $channelName = '';
+
+            if ($this->chat->chattable_type === 'App\\Models\\Client') {
+                $channelName = 'client.' . $this->chat->chattable_id;
+            } elseif ($this->chat->chattable_type === 'App\\Models\\Lead') {
+                $channelName = 'lead.' . $this->chat->chattable_id;
+            }
+
+            if ($channelName) {
+                $channels[] = new PrivateChannel($channelName);
+            }
+            
+            $channels[] = new PrivateChannel('user.' . $this->chat->recipient_id);
+        }
+
+        return $channels;
     }
 
     /**
@@ -47,7 +62,7 @@ class ChatMessageSent implements ShouldBroadcast
      */
     public function broadcastAs(): string
     {
-        return 'chat.message';
+        return 'ChatMessageSent';
     }
 
     /**

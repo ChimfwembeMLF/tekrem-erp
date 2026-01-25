@@ -2,8 +2,8 @@
 
 use App\Models\Client;
 use App\Models\Lead;
-use App\Models\User;
 use Illuminate\Support\Facades\Broadcast;
+use App\Models\User;
 
 /*
 |--------------------------------------------------------------------------
@@ -81,4 +81,9 @@ Broadcast::channel('guest-session.{sessionId}', function ($user, $sessionId) {
 
     // For guest users, we'll handle this differently in the frontend
     return true;
+});
+
+// User notifications channel
+Broadcast::channel('notifications.{userId}', function (User $user, $userId) {
+    return (int) $user->id === (int) $userId;
 });

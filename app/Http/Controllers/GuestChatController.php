@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\ChatMessageSent;
+use App\Events\GuestChatMessageSent;
 use App\Models\Chat;
 use App\Models\Conversation;
 use App\Models\GuestSession;
@@ -23,12 +24,10 @@ class GuestChatController extends Controller
     public function initializeSession(Request $request): JsonResponse
     {
         $sessionId = $request->session()->getId();
-        $companyId = currentCompanyId();
+        $companyId = currentCompanyId() ?? config('company.main_company_id') ?? 1;
 
-        $guestSession = GuestSession::getOrCreateBySessionId($sessionId, $companyId);
-        if ($guestSession->company_id !== $companyId) {
-            abort(404);
-        }
+            $guestSession = GuestSession::getOrCreateBySessionId($sessionId, ['company_id' => $companyId]);
+        // For guest sessions, we don't enforce company matching - they belong to the company they accessed
 
         // Get or create conversation for this guest session
         $conversation = $guestSession->conversation;
@@ -75,11 +74,9 @@ class GuestChatController extends Controller
         }
 
         $sessionId = $request->session()->getId();
-        $companyId = currentCompanyId();
-        $guestSession = GuestSession::getOrCreateBySessionId($sessionId, $companyId);
-        if ($guestSession->company_id !== $companyId) {
-            abort(404);
-        }
+        $companyId = currentCompanyId() ?? config('company.main_company_id') ?? 1;
+            $guestSession = GuestSession::getOrCreateBySessionId($sessionId, ['company_id' => $companyId]);
+        // For guest sessions, we don't enforce company matching - they belong to the company they accessed
 
         $guestSession->update($validator->validated());
         $guestSession->updateActivity();
@@ -104,20 +101,16 @@ class GuestChatController extends Controller
         }
 
         $sessionId = $request->session()->getId();
-        $companyId = currentCompanyId();
-        $guestSession = GuestSession::getOrCreateBySessionId($sessionId, $companyId);
-        if ($guestSession->company_id !== $companyId) {
-            abort(404);
-        }
+        $companyId = currentCompanyId() ?? config('company.main_company_id') ?? 1;
+        $guestSession = GuestSession::getOrCreateBySessionId($sessionId, ['company_id' => $companyId]);
+        // For guest sessions, we don't enforce company matching - they belong to the company they accessed
         $guestSession->updateActivity();
 
         $conversation = $guestSession->conversation;
         if (!$conversation) {
             $conversation = $this->createGuestConversation($guestSession);
         }
-        if ($conversation->company_id !== $companyId) {
-            abort(404);
-        }
+        // For guest conversations, we don't enforce company matching - they belong to the company they accessed
 
         // Handle file attachments (add id, url, mime_type, uploaded_at, etc.)
         $attachments = [];
@@ -166,6 +159,9 @@ class GuestChatController extends Controller
 
         // Broadcast the message to staff
         broadcast(new ChatMessageSent($message))->toOthers();
+        
+        // Broadcast the message to guest via private channel
+        broadcast(new GuestChatMessageSent($message, $conversation->id))->toOthers();
 
         // Notify available staff members
         $this->notifyAvailableStaff($conversation, $message, $guestSession);
@@ -186,20 +182,33 @@ class GuestChatController extends Controller
      */
     public function getMessages(Request $request): JsonResponse
     {
+        // Get session ID from the request cookie (automatically sent by browser)
         $sessionId = $request->session()->getId();
-        $companyId = currentCompanyId();
-        $guestSession = GuestSession::where('session_id', $sessionId)->where('company_id', $companyId)->first();
+        $companyId = currentCompanyId() ?? config('company.main_company_id') ?? 1;
+        
+        \Log::debug('GuestChat::getMessages', [
+            'sessionId' => $sessionId,
+            'companyId' => $companyId,
+        ]);
+        
+        // Find guest session by session_id
+        $guestSession = GuestSession::where('session_id', $sessionId)->first();
+        
+        \Log::debug('GuestSession found:', ['guestSession' => $guestSession?->id, 'company_id' => $guestSession?->company_id]);
 
-        if (!$guestSession || !$guestSession->conversation || $guestSession->company_id !== $companyId) {
-            return response()->json(['messages' => []]);
+        if (!$guestSession) {
+            \Log::debug('No guest session found for session:', ['sessionId' => $sessionId]);
+            return response()->json(['messages' => [], 'error' => 'No session found']);
+        }
+        
+        if (!$guestSession->conversation) {
+            \Log::debug('No conversation found for session');
+            return response()->json(['messages' => [], 'error' => 'No conversation found']);
         }
 
         $conversation = $guestSession->conversation;
-        if ($conversation->company_id !== $companyId) {
-            return response()->json(['messages' => []]);
-        }
+        
         $messages = $conversation->messages()
-            ->where('company_id', $companyId)
             ->orderBy('created_at', 'asc')
             ->take(50)
             ->get()
@@ -213,10 +222,43 @@ class GuestChatController extends Controller
 
         $guestSession->updateActivity();
 
+        \Log::debug('Returning messages', ['count' => $messages->count()]);
+
         return response()->json([
             'messages' => $messages,
             'conversation' => $conversation->load('assignee'),
         ]);
+    }
+
+    /**
+     * Mark messages as read by guest.
+     */
+    public function markMessagesAsRead(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'message_ids' => 'required|array',
+            'message_ids.*' => 'integer',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $sessionId = $request->session()->getId();
+        $companyId = currentCompanyId();
+        $guestSession = GuestSession::where('session_id', $sessionId)->where('company_id', $companyId)->first();
+
+        if (!$guestSession || !$guestSession->conversation || $guestSession->company_id !== $companyId) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // Mark messages as read
+        Chat::whereIn('id', $request->message_ids)
+            ->where('conversation_id', $guestSession->conversation_id)
+            ->where('company_id', $companyId)
+            ->update(['read_at' => now()]);
+
+        return response()->json(['success' => true]);
     }
 
     /**

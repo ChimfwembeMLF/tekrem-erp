@@ -57,6 +57,7 @@ export default function GuestChatWidget() {
   const [attachments, setAttachments] = useState<File[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showGuestForm, setShowGuestForm] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('disconnected');
   const [guestInfo, setGuestInfo] = useState({
     guest_name: '',
     guest_email: '',
@@ -83,11 +84,46 @@ export default function GuestChatWidget() {
 
   // Poll for new messages every 5 seconds when chat is open
   useEffect(() => {
-    if (isOpen && isInitialized) {
+    if (!isOpen || !isInitialized || !guestSession) {
+      return;
+    }
+
+    if (!window.Echo) {
+      console.warn('Echo not available, falling back to polling');
       const interval = setInterval(fetchMessages, 5000);
       return () => clearInterval(interval);
     }
-  }, [isOpen, isInitialized]);
+
+    // Subscribe to guest session channel for real-time updates
+    const channelName = `guest-chat.${guestSession.session_id}`;
+    console.debug('Subscribing to guest chat channel:', channelName);
+
+    const channel = window.Echo.channel(channelName);
+
+    // Listen for new messages
+    channel.listen('GuestChatMessageSent', (data: any) => {
+      console.debug('New guest chat message received:', data);
+
+      if (data.message) {
+        setMessages(prev => [...prev, data.message]);
+
+        // Increment unread when widget closed and message is from agent/AI (has user_id)
+        if (!isOpen && data.message.user_id) {
+          setUnreadCount(prev => prev + 1);
+        }
+      }
+
+      if (data.conversation) {
+        setConversation(data.conversation);
+      }
+    });
+
+    // Cleanup on unmount
+    return () => {
+      console.debug('Unsubscribing from guest chat channel:', channelName);
+      window.Echo?.leaveChannel(channelName);
+    };
+  }, [isOpen, isInitialized, guestSession]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -97,6 +133,7 @@ export default function GuestChatWidget() {
     try {
       setIsLoading(true);
       setInitError(null);
+      setConnectionStatus('connecting');
       const response = await fetch('/guest-chat/initialize', {
         method: 'POST',
         headers: {
@@ -111,6 +148,7 @@ export default function GuestChatWidget() {
         setConversation(data.conversation);
         setMessages(data.messages || []);
         setIsInitialized(true);
+        setConnectionStatus('connected');
         console.debug('Guest chat initialized successfully:', data);
 
         // Show guest form if no name is provided
@@ -119,10 +157,12 @@ export default function GuestChatWidget() {
         }
       } else {
         setInitError('Failed to initialize chat session. Please try again.');
+        setConnectionStatus('disconnected');
         toast.error('Failed to initialize chat session');
       }
     } catch (error) {
       setInitError('Failed to connect to chat service. Please check your connection and try again.');
+      setConnectionStatus('disconnected');
       toast.error('Failed to connect to chat service');
     } finally {
       setIsLoading(false);
@@ -133,14 +173,17 @@ export default function GuestChatWidget() {
     if (!isInitialized) return;
 
     try {
+      console.debug('Fetching messages');
       const response = await fetch('/guest-chat/messages', {
         headers: {
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
         },
       });
 
+      const data = await response.json();
+      console.debug('Messages response:', data);
+
       if (response.ok) {
-        const data = await response.json();
         const newMessages = data.messages || [];
 
         // Check for new messages and update unread count
@@ -152,6 +195,8 @@ export default function GuestChatWidget() {
         if (data.conversation) {
           setConversation(data.conversation);
         }
+      } else {
+        console.error('Failed to fetch messages:', response.status, data);
       }
     } catch (error) {
       console.error('Failed to fetch messages:', error);
@@ -288,7 +333,7 @@ export default function GuestChatWidget() {
       style={{ pointerEvents: isOpen ? 'auto' : 'none' }}
     >
       <Card
-        className={`w-full h-full max-w-none md:w-96 md:h-[calc(100vh-4rem)] shadow-2xl rounded-none md:rounded-t-lg transition-all duration-200 ${isMinimized ? 'h-16' : ''}`}
+        className={`w-full max-w-none md:max-w-xl shadow-2xl rounded-none md:rounded-t-lg transition-all duration-200 ${isMinimized ? 'h-16' : 'h-screen md:h-[750px]'}`}
       >
         <GuestChatHeader
           guestSession={guestSession}
@@ -297,6 +342,7 @@ export default function GuestChatWidget() {
           onToggleMinimize={toggleMinimize}
           onClose={() => setIsOpen(false)}
           onShowGuestForm={() => setShowGuestForm(true)}
+          connectionStatus={connectionStatus}
         />
 
         {!isMinimized && (

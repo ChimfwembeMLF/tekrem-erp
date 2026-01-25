@@ -66,7 +66,7 @@ export default function Contact() {
               <div className="mt-10 flex flex-col sm:flex-row gap-4">
                 <a
                   href="mailto:info@tekrem.com"
-                  className="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
+                  className="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-secondary to-primary text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
                 >
                   Email Us
                   <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -126,7 +126,7 @@ export default function Contact() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3">
               {/* Contact information */}
-              <div className="relative overflow-hidden py-10 px-6 bg-blue-700 sm:px-10 xl:p-12">
+              <div className="relative overflow-hidden py-10 px-6 bg-gradient-to-br from-secondary to-primary sm:px-10 xl:p-12">
                 <div className="absolute inset-0 pointer-events-none sm:hidden" aria-hidden="true">
                   <svg
                     className="absolute inset-0 w-full h-full"
@@ -440,7 +440,7 @@ export default function Contact() {
                     <button
                       type="submit"
                       disabled={processing}
-                      className="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                      className="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-gradient-to-r from-secondary to-primary hover:from-primary hover:to-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                     >
                       {processing ? 'Sending...' : 'Send Message'}
                     </button>

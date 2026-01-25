@@ -236,21 +236,29 @@ export default function PagePreview({
               
               {/* Page Content */}
               <div className="p-6">
-                <div 
-                  className="prose prose-lg max-w-none"
-                  dangerouslySetInnerHTML={{ __html: page.content }}
-                />
-                
-                {!page.content && (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <div className="text-lg font-medium mb-2">
-                      {t('cms.no_content', 'No content available')}
+                <div className="prose prose-lg max-w-none">
+                  {/* Main page content */}
+                  {page.content && (
+                    <div dangerouslySetInnerHTML={{ __html: page.content }} />
+                  )}
+                  {/* Render HTML Content sections if present */}
+                  {Array.isArray(page.sections) && page.sections.map((section, idx) => (
+                    section.type === 'html_content' && section.data?.html ? (
+                      <div key={idx} dangerouslySetInnerHTML={{ __html: section.data.html }} />
+                    ) : null
+                  ))}
+                  {/* No content fallback */}
+                  {!page.content && (!Array.isArray(page.sections) || !page.sections.some(s => s.type === 'html_content' && s.data?.html)) && (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <div className="text-lg font-medium mb-2">
+                        {t('cms.no_content', 'No content available')}
+                      </div>
+                      <div className="text-sm">
+                        {t('cms.add_content_to_preview', 'Add content to see the preview')}
+                      </div>
                     </div>
-                    <div className="text-sm">
-                      {t('cms.add_content_to_preview', 'Add content to see the preview')}
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
