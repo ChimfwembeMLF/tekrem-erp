@@ -188,6 +188,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit departments',
             'delete departments',
             'manage department hierarchy',
+            'view all departments',
+            'view own department',
+            'manage own department',
 
             // Leave Management
             'view leave',
@@ -499,6 +502,9 @@ class RolesAndPermissionsSeeder extends Seeder
             // Module Access
             'view crm', 'view finance', 'view projects', 'view hr', 'view support', 'view cms', 'view ai', 'view social_media',
 
+            // Department Access
+            'view all departments',
+
             // User Management (limited)
             'view users',
             'view user activity',
@@ -589,6 +595,9 @@ class RolesAndPermissionsSeeder extends Seeder
         $staffPermissions = [
             // Module Access
             'view crm', 'view finance', 'view projects', 'view hr', 'view support', 'view cms', 'view ai', 'view social_media',
+
+            // Department Access
+            'view own department',
 
             // User Management (view only)
             'view users',

@@ -24,7 +24,10 @@ class PageController extends Controller
      */
     public function index(Request $request): Response
     {
+        $companyId = currentCompanyId();
+        
         $query = Page::with(['author', 'parent'])
+            ->where('company_id', $companyId)
             ->when($request->search, function ($q, $search) {
                 $q->where('title', 'like', "%{$search}%")
                   ->orWhere('slug', 'like', "%{$search}%");
@@ -44,9 +47,9 @@ class PageController extends Controller
 
         $pages = $query->orderBy('created_at', 'desc')->paginate(15);
 
-        $templates = Template::active()->get(['slug', 'name']);
-        $languages = Page::distinct()->pluck('language');
-        $authors = \App\Models\User::whereIn('id', Page::distinct()->pluck('author_id'))->get(['id', 'name']);
+        $templates = Template::active()->where('company_id', $companyId)->get(['slug', 'name']);
+        $languages = Page::where('company_id', $companyId)->distinct()->pluck('language');
+        $authors = \App\Models\User::whereIn('id', Page::where('company_id', $companyId)->distinct()->pluck('author_id'))->get(['id', 'name']);
 
         return Inertia::render('CMS/Pages/Index', [
             'pages' => $pages,
@@ -62,8 +65,10 @@ class PageController extends Controller
      */
     public function create(): Response
     {
-        $templates = Template::active()->get();
-        $pages = Page::published()->get(['id', 'title', 'slug']);
+        $companyId = currentCompanyId();
+        
+        $templates = Template::active()->where('company_id', $companyId)->get();
+        $pages = Page::where('company_id', $companyId)->published()->get(['id', 'title', 'slug']);
         $languages = config('cms.languages', ['en' => 'English']);
 
         return Inertia::render('CMS/Pages/Create', [
@@ -108,6 +113,9 @@ class PageController extends Controller
             'settings' => ['nullable', 'array'],
         ]);
 
+        // Auto-set company_id to current tenant
+        $validated['company_id'] = currentCompanyId();
+        
         $page = $this->pageService->createPage($validated, Auth::user());
 
         return redirect()->route('cms.pages.show', $page)
@@ -349,10 +357,13 @@ class PageController extends Controller
             'limit' => ['nullable', 'integer', 'min:1', 'max:50'],
         ]);
 
+        $companyId = currentCompanyId();
+        
         $results = $this->pageService->searchPages(
             $validated['query'],
             $validated['language'] ?? 'en',
-            $validated['limit'] ?? 10
+            $validated['limit'] ?? 10,
+            $companyId
         );
 
         return response()->json($results);

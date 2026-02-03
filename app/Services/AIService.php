@@ -767,7 +767,7 @@ Guidelines:
     /**
      * Call the AI service API.
      */
-    private function callAIService(array $config, string $prompt): ?string
+    public function callAIService(array $config, string $prompt): ?string
     {
         $service = $config['service'];
 

@@ -62,6 +62,7 @@ export default function useFinanceAI() {
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
         },
         body: JSON.stringify(data),
+        credentials: 'include',
       });
 
       const result = await response.json();
@@ -93,6 +94,7 @@ export default function useFinanceAI() {
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
         },
         body: JSON.stringify({ receipt_text: receiptText }),
+        credentials: 'include',
       });
 
       const result = await response.json();
@@ -127,6 +129,7 @@ export default function useFinanceAI() {
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
         },
         body: JSON.stringify(data),
+        credentials: 'include',
       });
 
       const result = await response.json();

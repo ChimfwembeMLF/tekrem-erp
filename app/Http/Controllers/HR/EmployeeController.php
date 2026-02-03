@@ -30,7 +30,10 @@ class EmployeeController extends Controller
     public function index(Request $request): Response
     {
         $companyId = currentCompanyId();
+        $user = auth()->user();
+        
         $query = Employee::where('company_id', $companyId)
+            ->forUserDepartments($user) // Apply department scoping
             ->with(['user', 'department', 'manager.user'])
             ->when($request->search, function ($query, $search) {
                 $query->whereHas('user', function ($q) use ($search) {
@@ -179,8 +182,8 @@ class EmployeeController extends Controller
      * Show the form for editing the employee.
      */
     public function edit(Employee $employee): Response
-    {
-        $companyId = currentCompanyId();
+    {        $this->authorize('update', $employee);
+                $companyId = currentCompanyId();
         if ($employee->company_id !== $companyId) {
             abort(403);
         }
@@ -212,6 +215,8 @@ class EmployeeController extends Controller
      */
     public function update(Request $request, Employee $employee): RedirectResponse
     {
+        $this->authorize('update', $employee);
+        
         $companyId = currentCompanyId();
         if ($employee->company_id !== $companyId) {
             abort(403);
@@ -269,6 +274,8 @@ class EmployeeController extends Controller
      */
     public function destroy(Employee $employee): RedirectResponse
     {
+        $this->authorize('delete', $employee);
+        
         $companyId = currentCompanyId();
         if ($employee->company_id !== $companyId) {
             abort(403);
@@ -288,6 +295,8 @@ class EmployeeController extends Controller
      */
     public function activate(Employee $employee): RedirectResponse
     {
+        $this->authorize('update', $employee);
+        
         $companyId = currentCompanyId();
         if ($employee->company_id !== $companyId) {
             abort(403);
@@ -306,6 +315,8 @@ class EmployeeController extends Controller
      */
     public function deactivate(Employee $employee): RedirectResponse
     {
+        $this->authorize('update', $employee);
+        
         $companyId = currentCompanyId();
         if ($employee->company_id !== $companyId) {
             abort(403);

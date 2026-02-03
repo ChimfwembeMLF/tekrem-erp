@@ -241,10 +241,11 @@ class PageService
     /**
      * Search pages.
      */
-    public function searchPages(string $query, string $language = 'en', int $limit = 10): array
+    public function searchPages(string $query, string $language = 'en', int $limit = 10, ?int $companyId = null): array
     {
         return Page::published()
             ->byLanguage($language)
+            ->when($companyId, fn($q) => $q->where('company_id', $companyId))
             ->where(function ($q) use ($query) {
                 $q->where('title', 'like', "%{$query}%")
                   ->orWhere('excerpt', 'like', "%{$query}%")

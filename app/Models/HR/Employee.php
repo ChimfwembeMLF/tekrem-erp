@@ -3,6 +3,7 @@
 namespace App\Models\HR;
 
 use App\Models\User;
+use App\Traits\HasDepartmentScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Employee extends Model
 {
-    use HasFactory;
+    use HasFactory, HasDepartmentScope;
 
     protected $table = 'hr_employees';
 
