@@ -25,6 +25,14 @@ interface Page {
   template: string;
   status: string;
   published_at?: string;
+  use_html_content?: boolean;
+  html_content?: string;
+  html_components?: Array<{
+    id: string;
+    name: string;
+    html: string;
+    order: number;
+  }>;
 }
 
 interface Props {
@@ -76,6 +84,12 @@ export default function PagePreview({
             <Badge variant={page.status === 'published' ? 'default' : 'secondary'}>
               {page.status}
             </Badge>
+            {page.use_html_content && (
+              <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                HTML Mode
+                {page.html_components?.length && ` (${page.html_components.length} components)`}
+              </Badge>
+            )}
           </div>
           
           <div className="flex items-center gap-2">
@@ -236,29 +250,35 @@ export default function PagePreview({
               
               {/* Page Content */}
               <div className="p-6">
-                <div className="prose prose-lg max-w-none">
-                  {/* Main page content */}
-                  {page.content && (
-                    <div dangerouslySetInnerHTML={{ __html: page.content }} />
-                  )}
-                  {/* Render HTML Content sections if present */}
-                  {Array.isArray(page.sections) && page.sections.map((section, idx) => (
-                    section.type === 'html_content' && section.data?.html ? (
-                      <div key={idx} dangerouslySetInnerHTML={{ __html: section.data.html }} />
-                    ) : null
-                  ))}
-                  {/* No content fallback */}
-                  {!page.content && (!Array.isArray(page.sections) || !page.sections.some(s => s.type === 'html_content' && s.data?.html)) && (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <div className="text-lg font-medium mb-2">
-                        {t('cms.no_content', 'No content available')}
+                {/* HTML Mode: Full HTML Content */}
+                {page.use_html_content && page.html_content ? (
+                  <div dangerouslySetInnerHTML={{ __html: page.html_content }} />
+                ) : (
+                  /* Markdown/Block Mode */
+                  <div className="prose prose-lg max-w-none">
+                    {/* Main page content */}
+                    {page.content && (
+                      <div dangerouslySetInnerHTML={{ __html: page.content }} />
+                    )}
+                    {/* Render HTML Content sections if present */}
+                    {Array.isArray(page.sections) && page.sections.map((section, idx) => (
+                      section.type === 'html_content' && section.data?.html ? (
+                        <div key={idx} dangerouslySetInnerHTML={{ __html: section.data.html }} />
+                      ) : null
+                    ))}
+                    {/* No content fallback */}
+                    {!page.content && (!Array.isArray(page.sections) || !page.sections.some(s => s.type === 'html_content' && s.data?.html)) && (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <div className="text-lg font-medium mb-2">
+                          {t('cms.no_content', 'No content available')}
+                        </div>
+                        <div className="text-sm">
+                          {t('cms.add_content_to_preview', 'Add content to see the preview')}
+                        </div>
                       </div>
-                      <div className="text-sm">
-                        {t('cms.add_content_to_preview', 'Add content to see the preview')}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

@@ -22,6 +22,9 @@ class Page extends Model
         'slug',
         'excerpt',
         'content',
+        'html_content',
+        'use_html_content',
+        'html_components',
         'content_blocks',
         'template',
         'layout',
@@ -55,6 +58,7 @@ class Page extends Model
 
     protected $casts = [
         'content_blocks' => 'array',
+        'html_components' => 'array',
         'meta_keywords' => 'array',
         'permissions' => 'array',
         'settings' => 'array',
@@ -65,6 +69,7 @@ class Page extends Model
         'is_homepage' => 'boolean',
         'show_in_menu' => 'boolean',
         'require_auth' => 'boolean',
+        'use_html_content' => 'boolean',
     ];
 
     /**

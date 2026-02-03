@@ -76,34 +76,34 @@ export default function TopNav({ settings }: TopNavProps) {
         {/* <h1 className="text-lg font-semibold">{settings.site_name || 'TekRem ERP'}</h1> */}
       </div>
 
-      {/* Company Landing Page Link (if company selected) */}
+      {/* CMS Public Page Link (if company selected) */}
       {currentCompany && (
         <div className="flex items-center gap-2 bg-muted px-3 py-1 rounded shadow-sm">
           <a
-            href={`/company/${currentCompany.slug}`}
+            href={`/company/${currentCompany.slug}/home`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-600 underline flex items-center gap-1"
-            title="View public landing page"
+            title="View public CMS page"
           >
             <Globe className="h-4 w-4" />
-            <span className="hidden md:inline">Landing Page</span>
-            <span className="sr-only">Open landing page</span>
+            <span className="hidden md:inline">Public Page</span>
+            <span className="sr-only">Open public CMS page</span>
           </a>
           <Button
             type="button"
             size="icon"
             variant="ghost"
             className="p-1"
-            title="Copy landing page URL"
+            title="Copy public page URL"
             onClick={() => {
               if (typeof window !== 'undefined') {
-                navigator.clipboard.writeText(window.location.origin + `/company/${currentCompany.slug}`);
+                navigator.clipboard.writeText(window.location.origin + `/company/${currentCompany.slug}/home`);
               }
             }}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16h8M8 12h8m-8-4h8M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
-            <span className="sr-only">Copy landing page URL</span>
+            <span className="sr-only">Copy public page URL</span>
           </Button>
         </div>
       )}

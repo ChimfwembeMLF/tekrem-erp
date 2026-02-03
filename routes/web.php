@@ -11,8 +11,13 @@ use Inertia\Inertia;
 // Public Website Routes
 Route::get('/',[WebsiteController::class, 'index'])->name('home');
 
-// Company landing page by slug
-Route::get('/company/{slug}', [\App\Http\Controllers\CompanyLandingController::class, 'show'])->name('company.landing');
+// Public CMS Routes for Companies (guest-accessible)
+Route::prefix('company/{company}')->name('company.')->group(function () {
+    Route::get('/home', [\App\Http\Controllers\PublicCMSController::class, 'companyHome'])->name('home');
+    Route::get('/pages', [\App\Http\Controllers\PublicCMSController::class, 'listPages'])->name('pages');
+    Route::get('/pages/search', [\App\Http\Controllers\PublicCMSController::class, 'search'])->name('pages.search');
+    Route::get('/pages/{page}', [\App\Http\Controllers\PublicCMSController::class, 'showPage'])->name('pages.show');
+});
 
 Route::get('/about', [WebsiteController::class, 'about'])->name('about');
 

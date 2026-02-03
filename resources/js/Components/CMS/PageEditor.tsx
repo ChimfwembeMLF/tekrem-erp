@@ -20,9 +20,12 @@ import {
   FileText,
   Image,
   Code,
-  Layers
+  Layers,
+  Zap
 } from 'lucide-react';
 import RichTextEditor from '@/Components/CMS/RichTextEditor';
+import HtmlContentEditor from '@/Components/CMS/HtmlContentEditor';
+import HTMLComponentBuilder from '@/Components/CMS/HTMLComponentBuilder';
 import MediaPicker from '@/Components/CMS/MediaPicker';
 import SEOAnalyzer from '@/Components/CMS/SEOAnalyzer';
 import useTranslate from '@/Hooks/useTranslate';
@@ -42,6 +45,9 @@ interface Page {
   slug: string;
   excerpt?: string;
   content: string;
+  html_content?: string;
+  use_html_content?: boolean;
+  html_components?: Array<{ id: string; name: string; html: string; order: number }>;
   content_blocks?: any[];
   template: string;
   layout?: string;
@@ -89,6 +95,9 @@ export default function PageEditor({
     slug: '',
     excerpt: '',
     content: '',
+    html_content: '',
+    use_html_content: false,
+    html_components: [],
     content_blocks: [],
     template: templates[0]?.slug || 'default',
     layout: 'default',
@@ -116,6 +125,7 @@ export default function PageEditor({
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [showMediaPicker, setShowMediaPicker] = useState(false);
   const [seoScore, setSeoScore] = useState(0);
+  const [htmlMode, setHtmlMode] = useState<'editor' | 'builder'>('editor');
 
   const selectedTemplate = templates.find(t => t.slug === formData.template);
 
@@ -225,14 +235,17 @@ export default function PageEditor({
                   <CardTitle>{t('cms.page_content', 'Page Content')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                                    {/* Section Blocks Editor (Drag-and-drop) */}
-                                    <div>
-                                      <Label>Sections (Content Blocks)</Label>
-                                      <SectionBlocksEditor
-                                        value={formData.content_blocks || []}
-                                        onChange={blocks => handleInputChange('content_blocks', blocks)}
-                                      />
-                                    </div>
+                  {/* Section Blocks Editor (Drag-and-drop) */}
+                  <div>
+                    <Label>Sections (Content Blocks)</Label>
+                    <SectionBlocksEditor
+                      value={formData.content_blocks || []}
+                      onChange={blocks => handleInputChange('content_blocks', blocks)}
+                    />
+                  </div>
+
+                  <Separator />
+
                   <div>
                     <Label htmlFor="title">{t('cms.title', 'Title')}</Label>
                     <Input
@@ -264,13 +277,83 @@ export default function PageEditor({
                     />
                   </div>
 
-                  <div>
-                    <Label>{t('cms.content', 'Content (HTML Fallback)')}</Label>
-                    <RichTextEditor
-                      value={formData.content}
-                      onChange={(content) => handleInputChange('content', content)}
-                      onImageInsert={() => setShowMediaPicker(true)}
-                    />
+                  {/* Content Editor Toggle */}
+                  <div className="border rounded-lg p-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-base font-semibold">{t('cms.content_editor', 'Content Editor')}</Label>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {formData.use_html_content 
+                            ? 'Using HTML mode for custom content'
+                            : 'Using rich text editor for easy content creation'}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant={formData.use_html_content ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => handleInputChange('use_html_content', !formData.use_html_content)}
+                        className="ml-2"
+                      >
+                        <Code className="h-4 w-4 mr-1" />
+                        {formData.use_html_content ? 'HTML Mode' : 'Switch to HTML'}
+                      </Button>
+                    </div>
+
+                    {formData.use_html_content ? (
+                      <div>
+                        {/* HTML Sub-tabs: Builder vs Raw Editor */}
+                        <Tabs value={htmlMode} onValueChange={(val: any) => setHtmlMode(val)}>
+                          <TabsList className="grid w-full grid-cols-2 mb-4">
+                            <TabsTrigger value="builder" className="flex gap-2">
+                              <Zap className="h-4 w-4" />
+                              Visual Builder
+                            </TabsTrigger>
+                            <TabsTrigger value="editor" className="flex gap-2">
+                              <Code className="h-4 w-4" />
+                              Code Editor
+                            </TabsTrigger>
+                          </TabsList>
+
+                          <TabsContent value="builder" className="space-y-3">
+                            <p className="text-sm text-muted-foreground">
+                              Drag and drop components to build your page visually, then it will be converted to HTML.
+                            </p>
+                            <HTMLComponentBuilder
+                              value={formData.html_components || []}
+                              onChange={(components) => {
+                                // Generate HTML from components
+                                const generatedHtml = components.map(c => c.html).join('\n');
+                                handleInputChange('html_components', components);
+                                handleInputChange('html_content', generatedHtml);
+                                // Auto-enable HTML content mode when using builder
+                                if (components.length > 0 && !formData.use_html_content) {
+                                  handleInputChange('use_html_content', true);
+                                }
+                              }}
+                            />
+                          </TabsContent>
+
+                          <TabsContent value="editor" className="space-y-3">
+                            <Label>{t('cms.html_content', 'HTML Content')}</Label>
+                            <HtmlContentEditor
+                              value={formData.html_content || ''}
+                              onChange={(content) => handleInputChange('html_content', content)}
+                              onImageInsert={() => setShowMediaPicker(true)}
+                            />
+                          </TabsContent>
+                        </Tabs>
+                      </div>
+                    ) : (
+                      <div>
+                        <Label>{t('cms.content', 'Content')}</Label>
+                        <RichTextEditor
+                          value={formData.content}
+                          onChange={(content) => handleInputChange('content', content)}
+                          onImageInsert={() => setShowMediaPicker(true)}
+                        />
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

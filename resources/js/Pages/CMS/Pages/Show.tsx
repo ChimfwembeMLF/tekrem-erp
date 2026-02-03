@@ -36,6 +36,9 @@ interface Page {
   slug: string;
   excerpt?: string;
   content: string;
+  html_content?: string;
+  use_html_content?: boolean;
+  html_components?: Array<{ id: string; name: string; html: string; order: number }>;
   template: string;
   layout?: string;
   meta_title?: string;
@@ -214,7 +217,20 @@ export default function ShowPage({ page }: Props) {
             {/* Page Content */}
             <Card>
               <CardHeader>
-                <CardTitle>{t('cms.page_content', 'Page Content')}</CardTitle>
+                <CardTitle className="flex items-center justify-between">
+                  <span>{t('cms.page_content', 'Page Content')}</span>
+                  {page.use_html_content && (
+                    <Badge variant="outline" className="text-xs">
+                      <Globe className="h-3 w-3 mr-1" />
+                      HTML Mode
+                    </Badge>
+                  )}
+                </CardTitle>
+                {page.use_html_content && page.html_components && page.html_components.length > 0 && (
+                  <CardDescription>
+                    {page.html_components.length} HTML component{page.html_components.length !== 1 ? 's' : ''}
+                  </CardDescription>
+                )}
               </CardHeader>
               <CardContent>
                 {page.excerpt && (
@@ -223,9 +239,24 @@ export default function ShowPage({ page }: Props) {
                     <p className="text-muted-foreground">{page.excerpt}</p>
                   </div>
                 )}
-                <div className="prose prose-sm max-w-none">
-                  <div dangerouslySetInnerHTML={{ __html: page.content }} />
-                </div>
+                
+                {/* Render HTML content if using HTML mode */}
+                {page.use_html_content && page.html_content ? (
+                  <div className="border rounded-lg overflow-hidden bg-gray-50">
+                    <div className="p-2 bg-gray-100 border-b text-xs text-muted-foreground flex items-center gap-2">
+                      <Eye className="h-3 w-3" />
+                      HTML Preview
+                    </div>
+                    <div 
+                      className="bg-white"
+                      dangerouslySetInnerHTML={{ __html: page.html_content }} 
+                    />
+                  </div>
+                ) : (
+                  <div className="prose prose-sm max-w-none">
+                    <div dangerouslySetInnerHTML={{ __html: page.content }} />
+                  </div>
+                )}
               </CardContent>
             </Card>
 
