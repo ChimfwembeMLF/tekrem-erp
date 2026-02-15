@@ -446,14 +446,14 @@ export default function Home({ canLogin, canRegister, packages }: Props) {
               </div>
 
               {/* Trust indicators */}
-              <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+              {/* <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Trusted by leading companies</p>
                 <div className="flex items-center space-x-6 opacity-60">
                   <div className="bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded text-sm font-medium">Zambia Bank</div>
                   <div className="bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded text-sm font-medium">MTN Zambia</div>
                   <div className="bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded text-sm font-medium">Airtel</div>
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* Hero Image */}
@@ -477,12 +477,7 @@ export default function Home({ canLogin, canRegister, packages }: Props) {
       </div>
 
       {/* Statistics Section with Modern Design */}
-      <div className="relative bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 py-20 overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="absolute inset-0 opacity-40">
-          <div className="absolute inset-0 bg-gray-800/20 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[length:20px_20px]"></div>
-        </div>
+      <div className="relative overflow-hidden">
   {/* SaaS Packages Section */}
         {packages && packages.length > 0 && (
           <div className="py-20 bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">

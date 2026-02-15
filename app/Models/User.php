@@ -78,17 +78,6 @@ class User extends Authenticatable
         return $this->belongsToMany(Company::class)->withPivot('role', 'permissions')->withTimestamps();
     }
 
-      /**
-     * Override hasPermissionTo so super_user and admin have all permissions.
-     */
-    public function hasPermissionTo($permission, $guardName = null): bool
-    {
-        if ($this->hasRole(['super_user', 'admin'])) {
-            return true;
-        }
-        return parent::hasPermissionTo($permission, $guardName);
-    }
-
     /**
      * The departments that the user belongs to.
      */
