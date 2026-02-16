@@ -368,19 +368,19 @@ export default function Home({ canLogin, canRegister, packages }: Props) {
       {/* Modern Hero Section with Gradient Background */}
       <div className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         {/* Animated background elements */}
-        <div className="absolute inset-0 overflow-hidden">
+        {/* <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -right-32 w-96 h-96 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse"></div>
           <div className="absolute -bottom-40 -left-32 w-96 h-96 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        </div>
+        </div> */}
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
+        <div className="container mx-auto">
           <div className="lg:grid lg:grid-cols-12 lg:gap-8 lg:items-center">
             <div className="lg:col-span-6">
               {/* Badge */}
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-blue-100 to-purple-100 dark:from-gray-800 dark:to-gray-700 text-sm font-medium text-blue-800 dark:text-blue-300 mb-8">
+              {/* <div className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-blue-100 to-purple-100 dark:from-gray-800 dark:to-gray-700 text-sm font-medium text-blue-800 dark:text-blue-300 mb-8">
                 <span className="mr-2">🚀</span>
                 Trusted by 100+ companies across Africa
-              </div>
+              </div> */}
 
               {/* Main heading */}
               <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl">
@@ -457,11 +457,11 @@ export default function Home({ canLogin, canRegister, packages }: Props) {
             </div>
 
             {/* Hero Image */}
-            <div className="lg:col-span-6 mt-12 lg:mt-0">
+            <div className="lg:col-span-6">
               <div className="relative">
                 {/* Decorative elements */}
-                <div className="absolute -top-4 -left-4 w-24 h-24 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full opacity-20 animate-pulse"></div>
-                <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full opacity-20 animate-pulse delay-500"></div>
+                {/* <div className="absolute -top-4 -left-4 w-24 h-24 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full opacity-20 animate-pulse"></div>
+                <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full opacity-20 animate-pulse delay-500"></div> */}
 
                 <div className="relative">
                   <img
@@ -471,141 +471,6 @@ export default function Home({ canLogin, canRegister, packages }: Props) {
                   />
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Statistics Section with Modern Design */}
-      <div className="relative overflow-hidden">
-  {/* SaaS Packages Section */}
-        {packages && packages.length > 0 && (
-          <div className="py-20 bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="text-center mb-16">
-                <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase mb-4">Our Packages</h2>
-                <p className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
-                  Flexible SaaS Plans for Every Business
-                </p>
-                <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-                  Choose a package that fits your needs. All packages include access to our core platform and support.
-                </p>
-              </div>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
-                {packages.map(pkg => (
-                  <div
-                    key={pkg.id}
-                    className="group relative bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 flex flex-col"
-                  >
-                    <div className="border-secondary/40 shadow-sm hover:shadow-md transition-shadow duration-300">
-                      <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 transition-colors duration-300">{pkg.name}</h3>
-                      <p className="text-gray-600 dark:text-gray-300 mb-4 min-h-[48px]">{pkg.description}</p>
-                    </div>
-                    <div className="mb-6">
-                      <span className="text-4xl font-extrabold text-blue-600 dark:text-blue-400">{pkg.price === 0 ? 'Free' : `ZMW ${pkg.price}`}</span>
-                      <span className="ml-2 text-base text-gray-500 dark:text-gray-400">/ month</span>
-                    </div>
-                    <div className="mb-6">
-                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Includes:</h4>
-                      <ul className="space-y-2">
-                        {pkg.modules && pkg.modules.length > 0 ? (
-                          <CollapsibleModules modules={pkg.modules} />
-                        ) : (
-                          <li className="text-gray-400 italic">No modules listed</li>
-                        )}
-                      </ul>
-                    </div>
-                    <div className="mt-auto space-y-3">
-                      <Link
-                        href={route('register', { package: pkg.slug })}
-                        className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-secondary to-primary text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl w-full"
-                      >
-                        Get Started
-                        <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                        </svg>
-                      </Link>
-                      <Link
-                        href={route('register', { package: pkg.slug, trial: '60' })}
-                        className="inline-flex items-center justify-center px-6 py-3 bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 font-semibold rounded-xl border-2 border-blue-600 dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-gray-600 transform hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg w-full"
-                      >
-                        Start 60-Day Trial
-                        <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </Link>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="text-center mt-16">
-                <Link
-                  href={route('register')}
-                  className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-secondary to-primary text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
-                >
-                  Compare All Packages
-                  <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-base text-blue-300 font-semibold tracking-wide uppercase mb-4">Our Impact</h2>
-            <p className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Delivering Results That Matter
-            </p>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Trusted by organizations across Africa to transform their digital landscape
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-            <div className="text-center group">
-              <div className="relative">
-                <div className="text-5xl md:text-6xl font-bold text-transparent bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text mb-2">
-                  100+
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 blur-xl group-hover:blur-2xl transition-all duration-300"></div>
-              </div>
-              <div className="text-lg font-semibold text-white mb-2">Clients Served</div>
-              <div className="text-sm text-gray-300">Across 15+ countries</div>
-            </div>
-
-            <div className="text-center group">
-              <div className="relative">
-                <div className="text-5xl md:text-6xl font-bold text-transparent bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text mb-2">
-                  250+
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 to-blue-400/20 blur-xl group-hover:blur-2xl transition-all duration-300"></div>
-              </div>
-              <div className="text-lg font-semibold text-white mb-2">Projects Completed</div>
-              <div className="text-sm text-gray-300">With 100% success rate</div>
-            </div>
-
-            <div className="text-center group">
-              <div className="relative">
-                <div className="text-5xl md:text-6xl font-bold text-transparent bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text mb-2">
-                  10+
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20 blur-xl group-hover:blur-2xl transition-all duration-300"></div>
-              </div>
-              <div className="text-lg font-semibold text-white mb-2">Years Experience</div>
-              <div className="text-sm text-gray-300">Industry expertise</div>
-            </div>
-
-            <div className="text-center group">
-              <div className="relative">
-                <div className="text-5xl md:text-6xl font-bold text-transparent bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text mb-2">
-                  98%
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 to-orange-400/20 blur-xl group-hover:blur-2xl transition-all duration-300"></div>
-              </div>
-              <div className="text-lg font-semibold text-white mb-2">Client Satisfaction</div>
-              <div className="text-sm text-gray-300">Rated satisfaction</div>
             </div>
           </div>
         </div>
@@ -760,84 +625,6 @@ export default function Home({ canLogin, canRegister, packages }: Props) {
         </div>
       </div>
 
-      {/* Features Section */}
-      <div className="py-12 bg-gray-50 dark:bg-primary/80">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="lg:text-center">
-            <h2 className="text-base text-primary font-semibold tracking-wide uppercase">Features</h2>
-            <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-              A better way to build your business
-            </p>
-            <p className="mt-4 max-w-2xl text-xl text-gray-500 dark:text-gray-400 lg:mx-auto">
-              Our comprehensive suite of technology solutions helps you streamline operations, enhance customer experiences, and drive growth.
-            </p>
-          </div>
-
-          <div className="mt-10">
-            <div className="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
-              {/* Feature 1 */}
-              <div className="relative">
-                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
-                  <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                  </svg>
-                </div>
-                <div className="ml-16">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">Web Development</h3>
-                  <p className="mt-2 text-base text-gray-500 dark:text-gray-400">
-                    Custom websites and web applications tailored to your business needs, from simple brochure sites to complex enterprise platforms.
-                  </p>
-                </div>
-              </div>
-
-              {/* Feature 2 */}
-              <div className="relative">
-                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
-                  <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <div className="ml-16">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">Mobile App Development</h3>
-                  <p className="mt-2 text-base text-gray-500 dark:text-gray-400">
-                    Native and cross-platform mobile applications for iOS and Android that help you reach customers wherever they are.
-                  </p>
-                </div>
-              </div>
-
-              {/* Feature 3 */}
-              <div className="relative">
-                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
-                  <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <div className="ml-16">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">Data Analytics</h3>
-                  <p className="mt-2 text-base text-gray-500 dark:text-gray-400">
-                    Turn your data into actionable insights with our analytics solutions, helping you make informed business decisions.
-                  </p>
-                </div>
-              </div>
-
-              {/* Feature 4 */}
-              <div className="relative">
-                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
-                  <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <div className="ml-16">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">AI Solutions</h3>
-                  <p className="mt-2 text-base text-gray-500 dark:text-gray-400">
-                    Leverage the power of artificial intelligence to automate processes, enhance customer experiences, and gain competitive advantages.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Modern Why Choose Us Section */}
       <div className="relative bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 py-20 overflow-hidden">
@@ -951,8 +738,8 @@ export default function Home({ canLogin, canRegister, packages }: Props) {
 
 
       {/* Modern Testimonials Carousel Section */}
-      <div className="relative bg-gradient-to-br from-white via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-20 overflow-hidden">
-        {/* Background Decorations */}
+      {/* <div className="relative bg-gradient-to-br from-white via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-20 overflow-hidden">
+        Background Decorations
         <div className="absolute top-10 left-10 w-40 h-40 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-10 right-10 w-32 h-32 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full blur-3xl"></div>
@@ -970,7 +757,7 @@ export default function Home({ canLogin, canRegister, packages }: Props) {
               Don't just take our word for it - hear from our satisfied clients about their transformational journey with us
             </p>
 
-            {/* Carousel Controls */}
+            Carousel Controls
             <div className="flex items-center justify-center mt-8 space-x-4">
               <button
                 onClick={prevTestimonial}
@@ -1005,7 +792,7 @@ export default function Home({ canLogin, canRegister, packages }: Props) {
             </div>
           </div>
 
-          {/* Testimonials Carousel */}
+          Testimonials Carousel
           <div className="relative">
             <div className="overflow-hidden">
               <div
@@ -1017,7 +804,7 @@ export default function Home({ canLogin, canRegister, packages }: Props) {
                     <div className="group relative bg-white dark:bg-gray-800 rounded-3xl p-10 mx-4 shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200/50 dark:border-gray-700/50">
                       <div className={`absolute inset-0 bg-gradient-to-br from-${testimonial.color}-600/5 to-${testimonial.color}-600/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
 
-                      {/* Quote Icon */}
+                      Quote Icon
                       <div className="relative mb-8">
                         <div className={`w-16 h-16 bg-gradient-to-br ${testimonial.gradient} rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                           <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -1026,12 +813,12 @@ export default function Home({ canLogin, canRegister, packages }: Props) {
                         </div>
                       </div>
 
-                      {/* Testimonial Content */}
-                      <blockquote className="relative text-lg lg:text-2xl font-medium text-gray-900 dark:text-white mb-8 leading-relaxed line-clamp-4">
+                      Testimonial Content
+                      <blockquote className="relative text-xl line-clamp-3 lg:line-clamp-5 lg:text-2xl font-medium text-gray-900 dark:text-white mb-8 leading-relaxed">
                         "{testimonial.quote}"
                       </blockquote>
 
-                      {/* Client Info */}
+                      Client Info
                       <div className="flex items-center mb-8">
                         <div className="relative">
                           <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${testimonial.gradient} flex items-center justify-center shadow-lg`}>
@@ -1044,9 +831,9 @@ export default function Home({ canLogin, canRegister, packages }: Props) {
                           </div>
                         </div>
                         <div className="ml-6">
-                          <h4 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{testimonial.company}</h4>
-                          <p className={`text-${testimonial.color}-600 dark:text-${testimonial.color}-400 font-semibold text-md md:text-lg`}>{testimonial.industry}</p>
-                          <p className="text-sm md:text-md text-gray-600 dark:text-gray-400 mt-1">{testimonial.author} • {testimonial.position}</p>
+                          <h4 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">{testimonial.company}</h4>
+                          <p className={`text-${testimonial.color}-600 dark:text-${testimonial.color}-400 font-semibold text-md lg:text-lg`}>{testimonial.industry}</p>
+                          <p className="text-gray-600 dark:text-gray-400 mt-1">{testimonial.author} • {testimonial.position}</p>
                           <div className="flex mt-3">
                             {[...Array(testimonial.rating)].map((_, i) => (
                               <svg key={i} className="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20">
@@ -1057,7 +844,7 @@ export default function Home({ canLogin, canRegister, packages }: Props) {
                         </div>
                       </div>
 
-                      {/* Results Metrics */}
+                      Results Metrics
                       {testimonial.metrics && (
                         <div className="grid grid-cols-3 gap-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                           {testimonial.metrics.map((metric, metricIndex) => (
@@ -1075,7 +862,7 @@ export default function Home({ canLogin, canRegister, packages }: Props) {
             </div>
           </div>
 
-          {/* Trust Indicators */}
+          Trust Indicators
           <div className="mt-16 text-center">
             <div className="inline-flex items-center px-6 py-3 rounded-2xl bg-gradient-to-r from-blue-100 to-purple-100 dark:from-gray-800 dark:to-gray-700 mb-8">
               <div className="flex items-center space-x-6 text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -1111,7 +898,7 @@ export default function Home({ canLogin, canRegister, packages }: Props) {
             </Link>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Creative Technology Stack Section */}
       {/* <TechnologyStack /> */}
@@ -1172,8 +959,8 @@ export default function Home({ canLogin, canRegister, packages }: Props) {
       </div>
 
       {/* Modern Blog Carousel Section */}
-      <div className="relative bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 py-20 overflow-hidden">
-        {/* Background Decorations */}
+      {/* <div className="relative bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 py-20 overflow-hidden">
+        Background Decorations
         <div className="absolute top-10 right-10 w-32 h-32 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-xl animate-pulse"></div>
         <div className="absolute bottom-10 left-10 w-40 h-40 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-xl animate-pulse delay-1000"></div>
 
@@ -1190,7 +977,7 @@ export default function Home({ canLogin, canRegister, packages }: Props) {
               Discover the latest trends, insights, and best practices in technology from our expert team
             </p>
 
-            {/* Blog Carousel Controls */}
+            Blog Carousel Controls
             <div className="flex items-center justify-center mt-8 space-x-4">
               <button
                 onClick={prevBlog}
@@ -1225,7 +1012,7 @@ export default function Home({ canLogin, canRegister, packages }: Props) {
             </div>
           </div>
 
-          {/* Blog Posts Carousel */}
+          Blog Posts Carousel
           <div className="relative">
             <div className="overflow-hidden">
               <div
@@ -1236,7 +1023,7 @@ export default function Home({ canLogin, canRegister, packages }: Props) {
                   <div key={post.id} className="w-full flex-shrink-0">
                     <div className="mx-4">
                       {post.featured ? (
-                        // Featured Blog Post Layout
+                        Featured Blog Post Layout
                         <div className="group relative bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50">
                           <div className={`absolute inset-0 bg-gradient-to-br from-${post.categoryColor}-600/5 to-${post.categoryColor}-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
                           <div className="relative">
@@ -1282,7 +1069,7 @@ export default function Home({ canLogin, canRegister, packages }: Props) {
                           </div>
                         </div>
                       ) : (
-                        // Regular Blog Post Layout
+                        Regular Blog Post Layout
                         <div className="group relative bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50">
                           <div className={`absolute inset-0 bg-gradient-to-br from-${post.categoryColor}-600/5 to-${post.categoryColor}-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
                           <div className="relative">
@@ -1332,9 +1119,9 @@ export default function Home({ canLogin, canRegister, packages }: Props) {
             </div>
           </div>
 
-          {/* Navigation Controls */}
+          Navigation Controls
           <div className="flex items-center justify-center mt-8 space-x-4">
-            {/* Previous Button */}
+            Previous Button
             <button
               onClick={() => setCurrentBlog(currentBlog === 0 ? blogPosts.length - 1 : currentBlog - 1)}
               className="flex items-center justify-center w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg hover:shadow-xl border border-gray-200/50 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 group"
@@ -1344,7 +1131,7 @@ export default function Home({ canLogin, canRegister, packages }: Props) {
               </svg>
             </button>
 
-            {/* Dots Indicator */}
+            Dots Indicator
             <div className="flex space-x-2">
               {blogPosts.map((_, index) => (
                 <button
@@ -1358,7 +1145,7 @@ export default function Home({ canLogin, canRegister, packages }: Props) {
               ))}
             </div>
 
-            {/* Next Button */}
+            Next Button
             <button
               onClick={() => setCurrentBlog(currentBlog === blogPosts.length - 1 ? 0 : currentBlog + 1)}
               className="flex items-center justify-center w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg hover:shadow-xl border border-gray-200/50 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 group"
@@ -1381,7 +1168,7 @@ export default function Home({ canLogin, canRegister, packages }: Props) {
             </Link>
           </div>
         </div>
-      </div>
+      </div> */}
     </GuestLayout>
   );
 }
