@@ -7,9 +7,9 @@ import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
-import { 
-    MessageSquare, 
-    Send, 
+import {
+    MessageSquare,
+    Send,
     ArrowLeft,
     Paperclip,
     X
@@ -39,13 +39,13 @@ export default function Create({ types, priorities }: Props) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         const formData = new FormData();
         formData.append('type', data.type);
         formData.append('subject', data.subject);
         formData.append('content', data.content);
         formData.append('priority', data.priority);
-        
+
         data.attachments.forEach((file, index) => {
             formData.append(`attachments[${index}]`, file);
         });
@@ -83,8 +83,8 @@ export default function Create({ types, priorities }: Props) {
             <div className="space-y-6">
                 {/* Header */}
                 <div className="flex items-center gap-4">
-                    <Button 
-                        variant="outline" 
+                    <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => window.history.back()}
                     >
@@ -123,11 +123,10 @@ export default function Create({ types, priorities }: Props) {
                                             <SelectValue placeholder="Select communication type" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {types?.map((type) => (
-                                                <SelectItem key={type.value} value={type.value}>
-                                                    {type.label}
-                                                </SelectItem>
-                                            ))}
+                                            <SelectItem value="email">Email</SelectItem>
+                                            <SelectItem value="call">Phone Call</SelectItem>
+                                            <SelectItem value="meeting">Meeting</SelectItem>
+                                            <SelectItem value="note">Note</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     {errors.type && (
@@ -249,8 +248,8 @@ export default function Create({ types, priorities }: Props) {
                                     <Send className="mr-2 h-4 w-4" />
                                     {processing ? 'Sending...' : 'Send Request'}
                                 </Button>
-                                <Button 
-                                    type="button" 
+                                <Button
+                                    type="button"
                                     variant="outline"
                                     onClick={() => window.history.back()}
                                 >

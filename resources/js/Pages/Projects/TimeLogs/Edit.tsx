@@ -229,7 +229,7 @@ export default function Edit({ project, timeLog, milestones, users }: Props) {
                                                 Total Amount:
                                             </span>
                                             <span className="text-lg font-bold text-gray-900">
-                                                ${(parseFloat(data.hours) * parseFloat(data.hourly_rate)).toFixed(2)}
+                                                ${(parseFloat(data.hours) * parseFloat(data.hourly_rate))}
                                             </span>
                                         </div>
                                     </div>

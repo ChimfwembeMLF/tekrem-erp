@@ -81,8 +81,7 @@ export default function Index({ project, timeLogs, users, filters }: Props) {
         .reduce((sum, log) => sum + log.hours * (log.hourly_rate || 0), 0);
 
     return (
-        <AppLayout>
-            <Head title={`Time Logs - ${project.name}`} />
+        <AppLayout title={`Time Logs - ${project.name}`} >
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
@@ -110,7 +109,7 @@ export default function Index({ project, timeLogs, users, filters }: Props) {
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold">
-                                    {Number(totalHours || 0).toFixed(2)}
+                                    {Number(totalHours || 0)}
                                 </div>
 
                                 <p className="text-xs text-muted-foreground">
@@ -125,7 +124,7 @@ export default function Index({ project, timeLogs, users, filters }: Props) {
                                 <DollarSign className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold">${totalBillable.toFixed(2)}</div>
+                                <div className="text-2xl font-bold">${totalBillable}</div>
                                 <p className="text-xs text-muted-foreground">
                                     Billable hours logged
                                 </p>
@@ -139,7 +138,7 @@ export default function Index({ project, timeLogs, users, filters }: Props) {
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold">
-                                    {timeLogs.total > 0 ? (totalHours / timeLogs.total).toFixed(1) : 0}h
+                                    {timeLogs.total > 0 ? (totalHours / timeLogs.total) : 0}h
                                 </div>
                                 <p className="text-xs text-muted-foreground">Per time log entry</p>
                             </CardContent>
@@ -254,15 +253,15 @@ export default function Index({ project, timeLogs, users, filters }: Props) {
                                                     {log.description || '-'}
                                                 </TableCell>
                                                 <TableCell>{log.milestone?.name || '-'}</TableCell>
-                                                <TableCell className="text-right">{log.hours.toFixed(2)}</TableCell>
+                                                <TableCell className="text-right">{log.hours}</TableCell>
                                                 <TableCell className="text-right">
                                                     {log.is_billable && log.hourly_rate
-                                                        ? `$${log.hourly_rate.toFixed(2)}`
+                                                        ? `$${log.hourly_rate}`
                                                         : '-'}
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     {log.is_billable && log.hourly_rate
-                                                        ? `$${(log.hours * log.hourly_rate).toFixed(2)}`
+                                                        ? `$${(log.hours * log.hourly_rate)}`
                                                         : '-'}
                                                 </TableCell>
                                                 <TableCell>{getStatusBadge(log.status)}</TableCell>

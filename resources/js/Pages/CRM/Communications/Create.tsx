@@ -168,6 +168,7 @@ export default function CommunicationCreate({ auth, clients, leads, communicable
                         <SelectItem value="meeting">Meeting</SelectItem>
                         <SelectItem value="note">Note</SelectItem>
                       </SelectContent>
+                      {/*  */}
                     </Select>
                     {errors.type && <p className="text-red-500 text-sm">{errors.type}</p>}
                   </div>

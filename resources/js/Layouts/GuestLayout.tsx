@@ -106,7 +106,7 @@ export default function GuestLayout({
                             Login
                           </Link>
                         </Button>
-                        <Button asChild className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                        <Button asChild className="bg-gradient-to-r from-secondary to-primary hover:from-primary hover:to-secondary">
                           <Link href={route('register')}>
                             Get Started
                           </Link>

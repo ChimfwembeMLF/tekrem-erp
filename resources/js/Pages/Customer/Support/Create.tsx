@@ -169,7 +169,7 @@ export default function Create({ categories, priorities }: Props) {
                                             <SelectValue placeholder="Select priority" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {priorities.map((priority) => (
+                                            {(priorities ?? []).map((priority) => (
                                                 <SelectItem key={priority.value} value={priority.value}>
                                                     <div className="flex items-center gap-2">
                                                         <AlertCircle className={`h-3 w-3 ${getPriorityColor(priority.value)}`} />

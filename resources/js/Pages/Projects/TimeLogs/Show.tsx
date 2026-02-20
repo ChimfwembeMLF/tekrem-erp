@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Com
 import { Badge } from '@/Components/ui/badge';
 import { ArrowLeft, Clock, Calendar, DollarSign, User, FileText, Edit, Trash2 } from 'lucide-react';
 import { Project, ProjectTimeLog } from '@/types';
+import useRoute from '@/Hooks/useRoute';
 
 interface Props {
   project: Project;
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export default function Show({ project, timeLog }: Props) {
+  const route = useRoute();
   const getStatusBadge = (status?: string) => {
     const statusColors: Record<string, string> = {
       draft: 'bg-gray-100 text-gray-800',
@@ -46,8 +48,7 @@ export default function Show({ project, timeLog }: Props) {
     : 0;
 
   return (
-    <AppLayout>
-      <Head title={`Time Log Details - ${project.name}`} />
+    <AppLayout title={`Time Log Details - ${project.name}`} >
 
       <div className="py-12">
         <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
@@ -97,7 +98,7 @@ export default function Show({ project, timeLog }: Props) {
                   <Clock className="h-8 w-8 text-blue-500" />
                   <div>
                     <p className="text-sm font-medium text-gray-500">Hours Logged</p>
-                    <p className="text-2xl font-bold">{timeLog.hours.toFixed(2)}</p>
+                    <p className="text-2xl font-bold">{timeLog.hours}</p>
                   </div>
                 </div>
 
@@ -118,7 +119,7 @@ export default function Show({ project, timeLog }: Props) {
                       {timeLog.is_billable ? 'Billable' : 'Non-Billable'}
                     </p>
                     <p className="text-2xl font-bold">
-                      {timeLog.is_billable ? `$${totalAmount.toFixed(2)}` : '-'}
+                      {timeLog.is_billable ? `$${totalAmount}` : '-'}
                     </p>
                   </div>
                 </div>
@@ -164,14 +165,14 @@ export default function Show({ project, timeLog }: Props) {
                         <div className="flex justify-between">
                           <span className="text-sm font-medium text-gray-500">Hourly Rate:</span>
                           <span className="text-sm font-semibold text-gray-900">
-                            ${timeLog.hourly_rate?.toFixed(2) || '0.00'}
+                            ${timeLog.hourly_rate || '0.00'}
                           </span>
                         </div>
 
                         <div className="flex justify-between">
                           <span className="text-sm font-medium text-gray-500">Total Amount:</span>
                           <span className="text-lg font-bold text-green-600">
-                            ${totalAmount.toFixed(2)}
+                            ${totalAmount}
                           </span>
                         </div>
                       </>

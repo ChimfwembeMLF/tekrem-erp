@@ -27,9 +27,9 @@ import {
 } from 'lucide-react';
 import NotificationComponent from '@/Components/NotificationComponent';
 import useRoute from '@/Hooks/useRoute';
+import ApplicationMark from '@/Components/ApplicationMark';
 import { ThemeToggle } from '@/Components/ThemeProvider';
 import useTypedPage from '@/Hooks/useTypedPage';
-import ApplicationLogo from '@/Components/ApplicationLogo';
 
 interface User {
     id: number;
@@ -68,11 +68,11 @@ const navigation = [
         href: 'customer.communications.index',
         icon: MessageSquare,
     },
-    {
-        name: 'HR Portal',
-        href: 'customer.hr.index',
-        icon: Users,
-    },
+    // {
+    //     name: 'HR Portal',
+    //     href: 'customer.hr.index',
+    //     icon: Users,
+    // },
     {
         name: 'Support',
         href: 'customer.support.index',
@@ -107,10 +107,7 @@ export default function CustomerLayout({ children }: Props) {
             {/* Logo */}
             <div className="flex h-16 shrink-0 items-center px-6 border-b">
                 <Link href={route('customer.dashboard')} className="flex items-center space-x-2">
-                    <div className="h-12 w-12 flex items-center justify-center">
-                         <ApplicationLogo />
-                    </div>
-                    <span className="font-bold text-lg">{settings?.site_name ? settings?.site_name : 'TekRem'} </span>
+                    <ApplicationMark />
                 </Link>
             </div>
 
@@ -141,6 +138,7 @@ export default function CustomerLayout({ children }: Props) {
             {/* User section */}
             <div className="border-t p-4">
                 <div className="flex items-center space-x-3">
+                    <ThemeToggle />
                     <Avatar className="h-8 w-8">
                         <AvatarImage src={user.profile_photo_url} alt={user.name} />
                         <AvatarFallback>
