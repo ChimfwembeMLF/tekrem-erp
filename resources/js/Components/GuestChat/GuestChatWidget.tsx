@@ -252,7 +252,7 @@ export default function GuestChatWidget() {
   // Widget trigger button
   if (!isOpen) {
     return (
-      <div className="fixed bottom-6 right-6 z-50 md:bottom-6 md:right-6 bottom-6 right-6 w-auto flex justify-end md:justify-end px-0 md:px-0">
+      <div className="fixed bottom-6 right-6 z-50 md:bottom-6 md:right-6 w-auto flex justify-end md:justify-end px-0 md:px-0">
         <Button
           onClick={toggleWidget}
           className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 bg-primary hover:bg-primary/90 relative"

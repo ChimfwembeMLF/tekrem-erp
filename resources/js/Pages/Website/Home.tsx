@@ -339,7 +339,7 @@ export default function Home({ canLogin, canRegister }: Props) {
 
       {/* Modern Hero Section with Gradient Background */}
       <div
-        className="relative flex items-center overflow-hidden min-h-screen bg-white dark:bg-gray-900"
+        className="relative flex items-center overflow-hidden min-h-screen -mt-24 bg-white/10 dark:bg-gray-900/10"
         style={{
           backgroundImage: "url('/assets/illustrations/tekrem-hero-section-image.png')",
           backgroundRepeat: 'no-repeat',
@@ -349,7 +349,7 @@ export default function Home({ canLogin, canRegister }: Props) {
       >
 
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-black/70 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-br  backdrop-blur-sm from-primary/90 via-black/50 to-transparent" />
 
         <div className="relative z-10 container mx-auto px-6 pt-24 pb-16">
           <div className="lg:grid lg:grid-cols-12 lg:gap-8 lg:items-center">
