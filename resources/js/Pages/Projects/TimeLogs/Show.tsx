@@ -43,22 +43,37 @@ export default function Show({ project, timeLog }: Props) {
     }
   };
 
-  const totalAmount = timeLog.is_billable && timeLog.hourly_rate 
-    ? timeLog.hours * timeLog.hourly_rate 
+  const totalAmount = timeLog.is_billable && timeLog.hourly_rate
+    ? timeLog.hours * timeLog.hourly_rate
     : 0;
 
   return (
-    <AppLayout title={`Time Log Details - ${project.name}`} >
-
-      <div className="py-12">
-        <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
-          <div className="mb-6 flex items-center justify-between">
-            <Link href={route('projects.time-logs.index', project.id)}>
+    <AppLayout
+      title={`Time Log Details - ${project.name}`}
+      renderHeader={() => (
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="font-semibold text-xl text-foreground leading-tight">
+              View Time Log
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Log time spent on {project.name}
+            </p>
+          </div>
+          <Link href={route('projects.time-logs.index', project.id)}>
               <Button variant="ghost" size="sm">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Time Logs
               </Button>
             </Link>
+        </div>
+      )}
+    >
+
+      <div className="py-12">
+        <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
+          <div className="mb-6 flex items-center justify-end">
+            
 
             <div className="flex gap-2">
               <Link href={route('projects.time-logs.edit', [project.id, timeLog.id])}>
@@ -139,7 +154,7 @@ export default function Show({ project, timeLog }: Props) {
               <div className="space-y-4">
                 <div className="border-t pt-4">
                   <h3 className="mb-4 text-lg font-semibold">Details</h3>
-                  
+
                   <div className="space-y-3">
                     <div className="flex justify-between">
                       <span className="text-sm font-medium text-gray-500">Project:</span>

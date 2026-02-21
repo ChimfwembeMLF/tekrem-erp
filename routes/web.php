@@ -1,14 +1,12 @@
 <?php
 
-use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\WebsiteController;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 // Public Website Routes
-Route::get('/',[WebsiteController::class, 'index'])->name('home');
+Route::get('/', [WebsiteController::class, 'index'])->name('home');
 
 Route::get('/about', [WebsiteController::class, 'about'])->name('about');
 
@@ -29,7 +27,7 @@ Route::get('/help', [WebsiteController::class, 'help'])->name('help');
 Route::get('/faq', [WebsiteController::class, 'faq'])->name('faq');
 
 // Direct Quote Request Route (alias to guest.quote.create)
-Route::get('/quote-request', function() {
+Route::get('/quote-request', function () {
     return redirect()->route('guest.quote.create');
 })->name('quote-request');
 
@@ -76,12 +74,13 @@ Route::prefix('guest')->name('guest.')->group(function () {
 });
 
 // AI Service Test Route (for development/testing)
-Route::post('/test-ai-service', function(\Illuminate\Http\Request $request) {
-    $aiService = new \App\Services\AIService();
+Route::post('/test-ai-service', function (\Illuminate\Http\Request $request) {
+    $aiService = new \App\Services\AIService;
     $response = $aiService->generateGuestChatResponse(
         $request->input('message', 'Hello, I need help with web development services.'),
         []
     );
+
     return response()->json(['response' => $response]);
 })->name('test-ai-service');
 
@@ -151,7 +150,7 @@ Route::middleware([
                     'show' => 'guest-inquiries.show',
                     'update' => 'guest-inquiries.update',
                     'destroy' => 'guest-inquiries.destroy',
-                ]
+                ],
             ])->except(['create', 'store', 'edit']);
             Route::post('inquiries/{guestInquiry}/assign', [\App\Http\Controllers\Admin\GuestInquiryController::class, 'assign'])->name('guest-inquiries.assign');
             Route::post('inquiries/{guestInquiry}/mark-responded', [\App\Http\Controllers\Admin\GuestInquiryController::class, 'markResponded'])->name('guest-inquiries.mark-responded');
@@ -227,6 +226,7 @@ Route::middleware([
 
     // Projects routes
     Route::prefix('projects')->name('projects.')->middleware('permission:view projects')->group(function () {
+            Route::get('/{project}/users', [\App\Http\Controllers\ProjectController::class, 'users'])->name('project.users');
         // Dashboard
         Route::get('/', [\App\Http\Controllers\ProjectController::class, 'dashboard'])->name('dashboard');
         Route::get('/analytics', [\App\Http\Controllers\ProjectController::class, 'analytics'])->name('analytics');
@@ -283,7 +283,10 @@ Route::middleware([
 
         // Generate project insights
         Route::post('/{project}/ai-milestones', [\App\Http\Controllers\ProjectController::class, 'generateAIMilestonesApi'])
-        ->name('projects.ai-milestones');
+            ->name('ai-milestones');
+
+        Route::post('/{project}/ai-insights', [\App\Http\Controllers\ProjectController::class, 'aiInsights'])
+            ->name('ai-insights');
 
         // Milestones
         Route::prefix('{project}/milestones')->name('milestones.')->group(function () {
@@ -362,12 +365,19 @@ Route::middleware([
 
         // Board Cards
         Route::prefix('cards')->name('cards.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Agile\BoardCardController::class, 'index'])->name('index');
+            Route::get('/', [\App\Http\Controllers\Agile\BoardCardController::class, 'index'])->name('index');
             Route::get('/create', [\App\Http\Controllers\Agile\BoardCardController::class, 'create'])->name('create');
             Route::post('/{board}', [\App\Http\Controllers\Agile\BoardCardController::class, 'store'])->name('store');
             Route::get('/{card}', [\App\Http\Controllers\Agile\BoardCardController::class, 'show'])->name('show');
             Route::get('/{card}/edit', [\App\Http\Controllers\Agile\BoardCardController::class, 'edit'])->name('edit');
             Route::put('/{card}', [\App\Http\Controllers\Agile\BoardCardController::class, 'update'])->name('update');
             Route::put('/{card}/move', [\App\Http\Controllers\Agile\BoardCardController::class, 'move'])->name('move');
+            Route::post('/{card}/comments', [\App\Http\Controllers\Agile\BoardCardController::class, 'storeComment'])->name('comments.store');
+            Route::delete('/{card}/comments/{comment}', [\App\Http\Controllers\Agile\BoardCardController::class, 'destroyComment'])->name('comments.destroy');
+
+            Route::post('/{card}/attachments', [\App\Http\Controllers\Agile\BoardCardController::class, 'storeAttachment'])->name('attachments.store');
+            Route::delete('/{card}/attachments/{attachment}', [\App\Http\Controllers\Agile\BoardCardController::class, 'destroyAttachment'])->name('attachments.destroy');
             Route::delete('/{card}', [\App\Http\Controllers\Agile\BoardCardController::class, 'destroy'])->name('destroy');
         });
 
@@ -385,10 +395,27 @@ Route::middleware([
         // Backlog
         Route::prefix('backlog')->name('backlog.')->group(function () {
             Route::get('/{project}', [\App\Http\Controllers\Agile\BacklogController::class, 'index'])->name('index');
+            Route::get('/{project}/create', [\App\Http\Controllers\Agile\BacklogController::class, 'create'])->name('create');
             Route::post('/{project}', [\App\Http\Controllers\Agile\BacklogController::class, 'store'])->name('store');
-            Route::put('/{backlog}', [\App\Http\Controllers\Agile\BacklogController::class, 'update'])->name('update');
+
+            // ✅ show MUST include backlog id
+            Route::get('/{backlog}/project/{project}', [\App\Http\Controllers\Agile\BacklogController::class, 'show'])->name('show');
+
+            // edit already fine
+            Route::get('/{backlog}/project/{project}/edit', [\App\Http\Controllers\Agile\BacklogController::class, 'edit'])->name('edit');
+
+            // update should include project too (recommended for consistency)
+            Route::put('/{project}/{backlog}', [\App\Http\Controllers\Agile\BacklogController::class, 'update'])->name('update');
+
             Route::put('/{backlog}/move', [\App\Http\Controllers\Agile\BacklogController::class, 'move'])->name('move');
-            Route::delete('/{backlog}', [\App\Http\Controllers\Agile\BacklogController::class, 'destroy'])->name('destroy');
+
+            // ✅ these 3 are fine (no project param)
+            Route::patch('/{backlog}/assign', [\App\Http\Controllers\Agile\BacklogController::class, 'assign'])->name('assign');
+            Route::patch('/{backlog}/priority', [\App\Http\Controllers\Agile\BacklogController::class, 'updatePriority'])->name('priority');
+            Route::patch('/{backlog}/status', [\App\Http\Controllers\Agile\BacklogController::class, 'updateStatus'])->name('status');
+
+            // ✅ destroy should take project too (recommended)
+            Route::delete('/{project}/{backlog}', [\App\Http\Controllers\Agile\BacklogController::class, 'destroy'])->name('destroy');
         });
 
         // Releases
@@ -614,8 +641,8 @@ Route::middleware([
 
     // HR routes
     Route::prefix('hr')->name('hr.')->middleware('permission:view hr')->group(function () {
-    // Teams Management
-    Route::resource('teams', \App\Http\Controllers\HR\TeamController::class);
+        // Teams Management
+        Route::resource('teams', \App\Http\Controllers\HR\TeamController::class);
         // Dashboard
         Route::get('/', [\App\Http\Controllers\HR\DashboardController::class, 'index'])->name('dashboard');
 

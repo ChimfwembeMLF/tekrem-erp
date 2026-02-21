@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/Components/ui/checkbox';
 import useRoute from '@/Hooks/useRoute';
 import { Project, User, ProjectMilestone } from '@/types';
+import { ArrowLeft } from 'lucide-react';
 
 interface MilestoneCreateProps {
   auth: {
@@ -33,13 +34,13 @@ export default function MilestoneCreate({ auth, project, users, availableDepende
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Convert "empty" values to empty strings for backend
     const submitData = {
       ...data,
       assigned_to: data.assigned_to === 'empty' ? '' : data.assigned_to,
     };
-    
+
     post(route('projects.milestones.store', project.id), {
       data: submitData
     });
@@ -56,17 +57,27 @@ export default function MilestoneCreate({ auth, project, users, availableDepende
 
   return (
     <AppLayout
-      title={`Create Milestone - ${project.name}`}
+      title={`Create Milestone - ${project.name}`}   
       renderHeader={() => (
-        <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-          Create Milestone for {project.name}
-        </h2>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+              Create Milestone for {project.name}
+            </h2>
+            <Link href={route('projects.time-logs.index', project.id)}>
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Milestones
+              </Button>
+            </Link>
+          </div>
+
+        </div>
       )}
     >
-      <Head title={`Create Milestone - ${project.name}`} />
 
-      <div className="py-12">
-        <div className="w-full mx-auto sm:px-6 lg:px-8">
+      <div className="">
+        <div className="w-full mx-auto sm:px-6">
           <form onSubmit={handleSubmit}>
             <div className="space-y-6">
               {/* Basic Information */}

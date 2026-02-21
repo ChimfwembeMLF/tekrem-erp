@@ -36,15 +36,15 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('transactions', function (Blueprint $table) {
-            // Drop indexes first
+            // Drop foreign key constraints first
+            $table->dropForeign(['reconciliation_id']);
+            $table->dropForeign(['reconciled_by']);
+
+            // Then drop indexes
             $table->dropIndex(['is_reconciled', 'account_id']);
             $table->dropIndex(['reconciliation_id']);
             $table->dropIndex(['reconciled_date']);
-            
-            // Drop foreign key constraints
-            $table->dropForeign(['reconciliation_id']);
-            $table->dropForeign(['reconciled_by']);
-            
+
             // Drop columns
             $table->dropColumn([
                 'is_reconciled',

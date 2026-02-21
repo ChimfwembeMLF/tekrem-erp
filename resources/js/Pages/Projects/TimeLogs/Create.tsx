@@ -69,10 +69,10 @@ export default function CreateTimeLog({ project, milestones, users }: CreateTime
               Log time spent on {project.name}
             </p>
           </div>
-          <Link href={route('projects.show', project.id)}>
-            <Button variant="outline">
+          <Link href={route('projects.time-logs.index', project.id)}>
+            <Button variant="ghost" size="sm">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Project
+              Back to Time Logs
             </Button>
           </Link>
         </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
@@ -16,6 +17,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { Project, ProjectMilestone } from '@/types';
+import useRoute from '@/Hooks/useRoute';
 
 interface AIInsightsProps {
   project: Project;
@@ -38,6 +40,9 @@ const insightConfig = {
 };
 
 export default function AIInsights({ project, milestones = [] }: AIInsightsProps) {
+  const route = useRoute()
+  // Get CSRF token from meta tag
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
   const [insights, setInsights] = useState<AIInsight[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [customPrompt, setCustomPrompt] = useState('');
@@ -45,12 +50,11 @@ export default function AIInsights({ project, milestones = [] }: AIInsightsProps
 const generateInsights = async () => {
   setIsGenerating(true);
   try {
-    const res = await fetch('projects.ai-milestones', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ project, milestones }),
-    });
-    const data: AIInsight[] = await res.json();
+    const { data } = await axios.post(
+      route('projects.ai-milestones', { project: project.id }),
+      { project, milestones },
+      { headers: { 'X-CSRF-TOKEN': csrfToken } }
+    );
     setInsights(data);
   } catch (err) {
     console.error(err);
@@ -63,12 +67,11 @@ const handleCustomAnalysis = async () => {
   if (!customPrompt.trim()) return;
   setIsGenerating(true);
   try {
-    const res = await fetch('projects.ai-milestones/custom', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ project, query: customPrompt }),
-    });
-    const data: AIInsight[] = await res.json();
+    const { data } = await axios.post(
+      route('projects.ai-insights', { project: project.id }),
+      { project, query: customPrompt },
+      { headers: { 'X-CSRF-TOKEN': csrfToken } }
+    );
     setInsights(prev => [ ...data, ...prev ]);
     setCustomPrompt('');
   } catch (err) {

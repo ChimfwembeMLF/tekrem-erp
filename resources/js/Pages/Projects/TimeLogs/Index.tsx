@@ -36,7 +36,7 @@ export default function Index({ project, timeLogs, users, filters }: Props) {
     const [selectedUser, setSelectedUser] = useState(filters.user_id?.toString() || '');
     const [dateFrom, setDateFrom] = useState(filters.date_from || '');
     const [dateTo, setDateTo] = useState(filters.date_to || '');
-    const route  =useRoute();
+    const route = useRoute();
     const handleFilter = () => {
         router.get(
             route('projects.time-logs.index', project.id),
@@ -81,17 +81,26 @@ export default function Index({ project, timeLogs, users, filters }: Props) {
         .reduce((sum, log) => sum + log.hours * (log.hourly_rate || 0), 0);
 
     return (
-        <AppLayout title={`Time Logs - ${project.name}`} >
+        <AppLayout
+            title={`Time Logs - ${project.name}`}
+            renderHeader={() => (
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h2 className="font-semibold text-xl text-foreground leading-tight">
+                            Time Logs
+                        </h2>
+                        <p className="text-sm text-muted-foreground mt-1">
+                             Track time spent on {project.name}
+                        </p>
+                    </div>
+                </div>
+            )}
+        >
 
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    <div className="mb-6 flex items-center justify-between">
-                        <div>
-                            <h1 className="text-2xl font-semibold text-gray-900">Time Logs</h1>
-                            <p className="mt-1 text-sm text-gray-600">
-                                Track time spent on {project.name}
-                            </p>
-                        </div>
+            <div className="">
+                <div className="mx-auto max-w-full sm:px-6">
+                    <div className="mb-6 flex items-center justify-end">
+                     
                         <Link href={route('projects.time-logs.create', project.id)}>
                             <Button>
                                 <Plus className="mr-2 h-4 w-4" />

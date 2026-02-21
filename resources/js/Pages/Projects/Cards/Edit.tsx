@@ -61,17 +61,16 @@ export default function CardEdit({ auth, card, board, project, sprints, epics }:
 
   return (
     <AppLayout
-      title="Edit Card"
+      title={`Edit Card ${card.title  }`}
       renderHeader={() => (
         <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
           Edit Card
         </h2>
       )}
     >
-      <Head title="Edit Card" />
 
-      <div className="py-12">
-        <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
+      <div className="">
+        <div className="max-w-full mx-auto sm:px-6">
           <Card>
             <CardHeader>
               <CardTitle>Card Details</CardTitle>

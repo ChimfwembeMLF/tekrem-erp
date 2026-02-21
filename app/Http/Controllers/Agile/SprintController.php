@@ -23,7 +23,7 @@ class SprintController extends Controller
         $plannedSprints = $sprints->where('status', 'planning');
         $completedSprints = $sprints->where('status', 'completed');
 
-        return Inertia::render('Agile/Sprints', [
+        return Inertia::render('Projects/Sprints', [
             'project' => $project,
             'sprints' => $sprints,
             'activeSprint' => $activeSprint,
@@ -43,7 +43,7 @@ class SprintController extends Controller
             'project'
         ]);
 
-        return Inertia::render('Agile/Sprints/Show', [
+        return Inertia::render('Projects/Sprints/Show', [
             'sprint' => $sprint,
             'project' => $sprint->project,
         ]);

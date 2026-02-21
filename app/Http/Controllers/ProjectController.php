@@ -404,11 +404,26 @@ class ProjectController extends Controller
             }
         }
 
+
+        // Load product backlog items (type = 'product', status != 'removed')
+        $priorityMap = [1 => 'low', 2 => 'medium', 3 => 'high', 4 => 'critical'];
+        $productBacklog = $project->productBacklog()
+            ->with(['card', 'epic', 'sprint', 'assignedUser'])
+            ->where('status', '!=', 'removed')
+            ->orderBy('priority', 'desc')
+            ->orderBy('order', 'asc')
+            ->get()
+            ->map(function ($item) use ($priorityMap) {
+                $item->priority = $priorityMap[$item->priority] ?? $item->priority;
+                return $item;
+            });
+
         return Inertia::render('Projects/Show', [
             'project' => $project,
             'board' => $board,
             'columns' => $columns,
             'cards' => $cards,
+            'productBacklog' => $productBacklog,
             'settings' => [
                 'enable_project_budgets' => Setting::get('projects.general.enable_project_budgets', true),
                 'enable_client_access' => Setting::get('projects.general.enable_client_access', true),
@@ -659,4 +674,47 @@ class ProjectController extends Controller
             \Log::warning('Failed to generate AI milestones for project ' . $project->id . ': ' . $e->getMessage());
         }
     }
+
+        /**
+     * Return users for a project (team members and manager).
+     */
+    public function users(Project $project)
+    {
+        // Get manager
+        $manager = $project->manager;
+        // Get team members from JSON array
+        $teamMembers = $project->team_members ? \App\Models\User::whereIn('id', $project->team_members)->get() : collect();
+        // Merge manager and team members, unique by id
+        $users = $teamMembers;
+        if ($manager && !$users->contains('id', $manager->id)) {
+            $users->push($manager);
+        }
+        return redirect()->back()->with(['users' => $users]);
+    }
+
+    /**
+ * Generate AI insights for a project.
+ */
+public function aiInsights(Request $request, $project)
+{
+    // Validate input
+    $data = $request->all();
+    // Example: fetch project and milestones
+    $projectModel = \App\Models\Project::findOrFail($project);
+    $milestones = $data['milestones'] ?? [];
+    $query = $data['query'] ?? null;
+
+    // Dummy AI logic (replace with real AI integration)
+    $insights = [
+        [
+            'type' => 'info',
+            'title' => 'AI Analysis',
+            'description' => $query ? 'Custom query: ' . $query : 'General project analysis.',
+            'recommendation' => 'Review project milestones for risks.',
+            'confidence' => 90,
+        ]
+    ];
+
+    return redirect()->back()->with(['insights' => $insights]);
+}
 }

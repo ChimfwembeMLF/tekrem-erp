@@ -150,7 +150,7 @@ export default function MilestoneShow({ auth, project, milestone }: MilestoneSho
                             <span>Due: {formatDate(milestone.due_date)}</span>
                           </div>
                         )}
-                        
+
                         {milestone.assignee && (
                           <div className="flex items-center text-sm text-gray-600">
                             <Users className="h-4 w-4 mr-2" />
@@ -160,7 +160,7 @@ export default function MilestoneShow({ auth, project, milestone }: MilestoneSho
 
                         <div className="flex items-center text-sm text-gray-600">
                           <Clock className="h-4 w-4 mr-2" />
-                          <span>Total Hours: {totalHours.toFixed(1)}</span>
+                          <span>Total Hours: {totalHours}</span>
                         </div>
 
                         <div className="flex items-center text-sm text-gray-600">
@@ -270,7 +270,7 @@ export default function MilestoneShow({ auth, project, milestone }: MilestoneSho
                   </CardHeader>
                   <CardContent>
                     {milestone.files && milestone.files.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 gap-4">
                         {milestone.files.map((file) => (
                           <Card key={file.id}>
                             <CardContent className="p-4">
@@ -285,12 +285,16 @@ export default function MilestoneShow({ auth, project, milestone }: MilestoneSho
                                   </p>
                                 </div>
                                 <div className="flex gap-1 ml-2">
-                                  <Button variant="outline" size="sm">
-                                    <Eye className="h-3 w-3" />
-                                  </Button>
-                                  <Button variant="outline" size="sm">
-                                    <Download className="h-3 w-3" />
-                                  </Button>
+                                  <Link href={route(`projects.files.show`, [project.id, file.id])}>
+                                    <Button variant="outline" size="sm">
+                                      <Eye className="h-3 w-3" />
+                                    </Button>
+                                  </Link>
+                                  <Link href={route(`projects.files.download`, [project.id, file.id])}>
+                                    <Button variant="outline" size="sm">
+                                      <Download className="h-3 w-3" />
+                                    </Button>
+                                  </Link>
                                 </div>
                               </div>
                             </CardContent>

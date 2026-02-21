@@ -86,14 +86,13 @@ export default function ProjectEdit({ auth, project, clients, users, tags, selec
         </h2>
       )}
     >
-      <Head title={`Edit ${project.name}`} />
 
-      <div className="py-12">
-        <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
+      <div className="">
+        <div className="max-w-full mx-auto sm:px-6">
           <form onSubmit={handleSubmit}>
             <div className="space-y-6">
               {/* Basic Information */}
-              <Card>
+              <div>
                 <CardHeader>
                   <CardTitle>Basic Information</CardTitle>
                   <CardDescription>
@@ -185,7 +184,7 @@ export default function ProjectEdit({ auth, project, clients, users, tags, selec
                     </div>
                   </div>
                 </CardContent>
-              </Card>
+              </div>
 
               {/* Project Methodology */}
               <Card>
@@ -213,7 +212,7 @@ export default function ProjectEdit({ auth, project, clients, users, tags, selec
                           setData('enable_boards', true);
                           setData('enable_milestones', true);
                         }
-                      }}
+                      }}                    
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -232,7 +231,7 @@ export default function ProjectEdit({ auth, project, clients, users, tags, selec
                           </div>
                         </SelectItem>
                         <SelectItem value="hybrid">
-                          <div className="flex flex-col">
+                          <div className="flex flex-col p-4">
                             <span className="font-medium">Hybrid</span>
                             <span className="text-xs text-gray-500">Combine both approaches for maximum flexibility</span>
                           </div>
@@ -243,7 +242,7 @@ export default function ProjectEdit({ auth, project, clients, users, tags, selec
                   </div>
 
                   {/* Feature Toggles */}
-                  <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                  <div className="space-y-4 p-4 border rounded-lg">
                     <h4 className="font-medium text-sm text-gray-700">Enabled Features</h4>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">

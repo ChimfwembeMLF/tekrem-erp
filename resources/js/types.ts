@@ -128,6 +128,8 @@ export interface Project {
   total_hours?: number;
   total_billable_amount?: number;
   enable_boards?: boolean;
+  methodology: string;
+  enable_milestones: boolean;
 }
 
 export interface ProjectFile {

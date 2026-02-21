@@ -38,7 +38,27 @@ export default function Edit({ project, timeLog, milestones, users }: Props) {
     };
 
     return (
-        <AppLayout title={`Edit Time Log - ${project.name}`}>
+        <AppLayout
+            title={`Edit Time Log - ${project.name}`}
+            renderHeader={() => (
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h2 className="font-semibold text-xl text-foreground leading-tight">
+                            Edit Time Log
+                        </h2>
+                        <p className="text-sm text-muted-foreground mt-1">
+                            Log time spent on {project.name}
+                        </p>
+                    </div>
+                    <Link href={route('projects.time-logs.index', project.id)}>
+                        <Button variant="ghost" size="sm">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Back to Time Logs
+                        </Button>
+                    </Link>
+                </div>
+            )}
+        >
 
             <div className="py-12">
                 <div className="mx-auto max-w-3xl sm:px-6 lg:px-8">

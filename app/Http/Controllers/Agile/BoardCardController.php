@@ -6,11 +6,121 @@ use App\Http\Controllers\Controller;
 use App\Models\Board;
 use App\Models\BoardCard;
 use App\Models\BoardColumn;
+use App\Models\BoardComment;
+use App\Models\BoardAttachment;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class BoardCardController extends Controller
 {
+      /**
+     * Display a listing of the board cards.
+     */
+    public function index(Request $request)
+    {
+        // Optionally filter by board, project, sprint, etc.
+        $query = BoardCard::query();
+
+        if ($request->has('board_id')) {
+            $query->where('board_id', $request->input('board_id'));
+        }
+        if ($request->has('column_id')) {
+            $query->where('column_id', $request->input('column_id'));
+        }
+        // Add more filters as needed
+
+        $cards = $query->with(['assignee', 'reporter', 'column', 'board', 'sprint', 'epic', 'task'])->get();
+
+        // Return as Inertia page or JSON depending on request
+        if ($request->wantsJson()) {
+            return response()->json(['cards' => $cards]);
+        }
+
+        return Inertia::render('Projects/Cards/Index', [
+            'cards' => $cards,
+        ]);
+    }
+
+    public function storeComment(Request $request, BoardCard $card)
+    {
+        // $this->authorize('update', $card->board->project);
+
+        $data = $request->validate([
+            'comment' => ['required', 'string', 'max:5000'],
+        ]);
+
+        $card->comments()->create([
+            'user_id' => $request->user()->id,
+            'comment' => $data['comment'],
+        ]);
+
+        return back()->with('success', 'Comment added.');
+    }
+
+    public function destroyComment(BoardCard $card, BoardCardComment $comment)
+    {
+        // $this->authorize('update', $card->board->project);
+
+        // ensure comment belongs to this card
+        abort_unless((int) $comment->board_card_id === (int) $card->id, 404);
+
+        // optional: only owner/admin can delete
+        abort_unless($comment->user_id === auth()->id(), 403);
+
+        $comment->delete();
+
+        return back()->with('success', 'Comment deleted.');
+    }
+
+    public function storeAttachment(Request $request, BoardCard $card)
+    {
+        // $this->authorize('update', $card->board->project);
+
+        $data = $request->validate([
+            'file' => ['required', 'file', 'max:10240'], // 10MB
+            'name' => ['nullable', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $file = $data['file'];
+
+        $dir = "cards/{$card->id}";
+        $originalName = $file->getClientOriginalName();
+        $ext = $file->getClientOriginalExtension();
+        $safeBase = Str::slug(pathinfo($originalName, PATHINFO_FILENAME));
+        $filename = $safeBase . '-' . Str::random(8) . ($ext ? ".{$ext}" : '');
+
+        $path = $file->storeAs($dir, $filename, 'public');
+
+        $attachment = $card->attachments()->create([
+            'user_id' => $request->user()->id,
+            'card_id' => $card->id,
+            'filename' => $filename,
+            'path' => $path,
+            'mime_type' => $file->getClientMimeType(),
+            'size' => $file->getSize(),
+        ]);
+
+        return back()->with('success', 'Attachment uploaded.');
+    }
+
+    public function destroyAttachment(BoardCard $card, BoardAttachment $attachment)
+    {
+        // $this->authorize('update', $card->board->project);
+
+        abort_unless((int) $attachment->board_card_id === (int) $card->id, 404);
+
+        if ($attachment->disk && $attachment->path) {
+            Storage::disk($attachment->disk)->delete($attachment->path);
+        }
+
+        $attachment->delete();
+
+        return back()->with('success', 'Attachment deleted.');
+    }
+
     public function show(BoardCard $card)
     {
         // $this->authorize('view', $card->board->project);
@@ -27,7 +137,7 @@ class BoardCardController extends Controller
             'attachments'
         ]);
 
-        return Inertia::render('Agile/Cards/Show', [
+        return Inertia::render('Projects/Cards/Show', [
             'card' => $card,
             'project' => $card->board->project,
         ]);
@@ -40,7 +150,7 @@ class BoardCardController extends Controller
 
         $column = $request->column ? BoardColumn::find($request->column) : null;
 
-        return Inertia::render('Agile/Cards/Create', [
+        return Inertia::render('Projects/Cards/Create', [
             'board' => $board->load('columns'),
             'project' => $board->project,
             'defaultColumn' => $column,
@@ -74,7 +184,7 @@ class BoardCardController extends Controller
 
         $card = BoardCard::create($validated);
 
-        return redirect()->route('agile.board.show', $board)
+        return redirect()->back()
             ->with('success', 'Card created successfully.');
     }
 
@@ -84,7 +194,7 @@ class BoardCardController extends Controller
 
         $card->load(['board.columns', 'board.project']);
 
-        return Inertia::render('Agile/Cards/Edit', [
+        return Inertia::render('Projects/Cards/Edit', [
             'card' => $card,
             'board' => $card->board,
             'project' => $card->board->project,
@@ -151,7 +261,7 @@ class BoardCardController extends Controller
             $order++;
         }
 
-        return response()->json(['success' => true]);
+        return redirect()->back()->with(['success' => true]);
     }
 
     public function destroy(BoardCard $card)

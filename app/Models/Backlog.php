@@ -10,6 +10,8 @@ class Backlog extends Model
 {
     use SoftDeletes;
 
+    protected $table = 'backlogs';
+
     protected $fillable = [
         'project_id',
         'card_id',

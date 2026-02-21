@@ -23,6 +23,7 @@ import {
   DropdownMenuTrigger,
 } from '@/Components/ui/dropdown-menu';
 import { Project, Backlog, Sprint, Epic } from '@/types';
+import useRoute from '@/Hooks/useRoute';
 
 interface Props {
   project: Project;
@@ -34,7 +35,7 @@ interface Props {
 
 export default function Index({ project, productBacklog, sprintBacklogs, sprints, epics }: Props) {
   const [activeTab, setActiveTab] = useState('product');
-
+  const route = useRoute();
   const getPriorityBadge = (priority: string) => {
     const priorityConfig = {
       low: { color: 'bg-gray-100 text-gray-800', icon: null },
@@ -214,11 +215,10 @@ export default function Index({ project, productBacklog, sprintBacklogs, sprints
   };
 
   return (
-    <AppLayout>
-      <Head title={`Backlog - ${project.name}`} />
+    <AppLayout title={`Backlog - ${project.name}`} >
 
-      <div className="py-12">
-        <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+      <div className="">
+        <div className="mx-auto max-w-full sm:px-6">
           <div className="mb-6 flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-semibold text-gray-900">Product Backlog</h1>
@@ -226,10 +226,12 @@ export default function Index({ project, productBacklog, sprintBacklogs, sprints
                 Manage backlog items for {project.name}
               </p>
             </div>
+           <Link href={route('agile.backlog.create')}>           
             <Button>
               <Plus className="mr-2 h-4 w-4" />
               Add Backlog Item
             </Button>
+            </Link>
           </div>
 
           {/* Stats Cards */}

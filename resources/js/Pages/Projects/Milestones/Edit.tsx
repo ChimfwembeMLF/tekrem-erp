@@ -11,6 +11,7 @@ import { Checkbox } from '@/Components/ui/checkbox';
 import { Slider } from '@/Components/ui/slider';
 import useRoute from '@/Hooks/useRoute';
 import { Project, User, ProjectMilestone } from '@/types';
+import { ArrowLeft } from 'lucide-react';
 
 interface MilestoneEditProps {
   auth: {
@@ -60,10 +61,21 @@ export default function MilestoneEdit({ auth, project, milestone, users, availab
   return (
     <AppLayout
       title={`Edit ${milestone.name}`}
-      renderHeader={() => (
-        <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-          Edit Milestone: {milestone.name}
-        </h2>
+       renderHeader={() => (
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+              Edit Milestone for {project.name}
+            </h2>
+            <Link href={route('projects.time-logs.index', project.id)}>
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Milestones
+              </Button>
+            </Link>
+          </div>
+
+        </div>
       )}
     >
       <Head title={`Edit ${milestone.name}`} />

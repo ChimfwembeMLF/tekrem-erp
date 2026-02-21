@@ -136,9 +136,13 @@ export default function Sprints({
                 {project.name}
               </Link>
               {' / '}
-              <Link href={route('agile.board.show', board.id)} className="hover:underline">
-                {board.name}
-              </Link>
+              {board && board.id ? (
+                <Link href={route('agile.board.show', board.id)} className="hover:underline">
+                  {board.name}
+                </Link>
+              ) : (
+                <span className="text-gray-400">Board unavailable</span>
+              )}
             </p>
           </div>
           <div className="flex gap-2">

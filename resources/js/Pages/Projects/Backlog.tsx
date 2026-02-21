@@ -85,7 +85,7 @@ interface BacklogProps {
     methodology: 'waterfall' | 'agile' | 'hybrid';
   };
   productBacklog: BacklogItem[];
-  sprintBacklog: BacklogItem[];
+  sprintBacklogs: BacklogItem[];
   sprints: Sprint[];
   epics: Epic[];
   activeSprint?: Sprint;
@@ -95,7 +95,7 @@ export default function Backlog({
   auth, 
   project, 
   productBacklog = [], 
-  sprintBacklog = [],
+  sprintBacklogs  = [],
   sprints = [],
   epics = [],
   activeSprint 
@@ -105,8 +105,10 @@ export default function Backlog({
   const [filterPriority, setFilterPriority] = useState<string>('all');
   const [filterEpic, setFilterEpic] = useState<string>('all');
   const [productItems, setProductItems] = useState<BacklogItem[]>(productBacklog);
-  const [sprintItems, setSprintItems] = useState<BacklogItem[]>(sprintBacklog);
+  const [sprintItems, setSprintItems] = useState<BacklogItem[]>(sprintBacklogs);
 
+  console.log('[sprintItems]', sprintItems);
+  console.log('[sprintBacklogs]',sprintBacklogs)
   const getPriorityColor = (priority: number) => {
     if (priority >= 80) return 'bg-red-100 text-red-800 border-red-200';
     if (priority >= 60) return 'bg-orange-100 text-orange-800 border-orange-200';
@@ -291,7 +293,7 @@ export default function Backlog({
                                 className={`cursor-pointer hover:shadow-md transition-shadow ${
                                   snapshot.isDragging ? 'shadow-lg' : ''
                                 }`}
-                                onClick={() => router.visit(route('agile.backlog.show', item.id))}
+                                onClick={() => router.visit(route('agile.backlog.show', [item.id, project.id]))}
                               >
                                 <CardContent className="p-4">
                                   <div className="flex items-start gap-3">

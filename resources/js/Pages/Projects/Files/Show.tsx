@@ -18,6 +18,7 @@ import {
   Upload,
 } from 'lucide-react';
 import { Project, ProjectFile } from '@/types';
+import useRoute from '@/Hooks/useRoute';
 
 interface Props {
   project: Project;
@@ -36,6 +37,7 @@ interface Props {
 }
 
 export default function Show({ project, file }: Props) {
+  const route = useRoute();
   const getCategoryBadge = (category?: string) => {
     const categoryColors: Record<string, string> = {
       document: 'bg-blue-100 text-blue-800',
@@ -89,12 +91,11 @@ export default function Show({ project, file }: Props) {
   const isPDF = file.mime_type === 'application/pdf';
 
   return (
-    <AppLayout>
-      <Head title={`${file.name} - ${project.name}`} />
+    <AppLayout title={`${file.name} - ${project.name}`} >
 
-      <div className="py-12">
-        <div className="mx-auto max-w-6xl sm:px-6 lg:px-8">
-          <div className="mb-6 flex items-center justify-between">
+      <div className="">
+        <div className="mx-auto max-w-full sm:px-6">
+          <div className="flex items-center justify-between">
             <Link href={route('projects.files.index', project.id)}>
               <Button variant="ghost" size="sm">
                 <ArrowLeft className="mr-2 h-4 w-4" />

@@ -61,6 +61,14 @@ class Project extends Model
     ];
 
     /**
+     * Get the epics for the project.
+     */
+    public function epics()
+    {
+        return $this->hasMany(\App\Models\Epic::class);
+    }
+
+    /**
      * Get the client that owns the project.
      */
     public function client(): BelongsTo
@@ -74,6 +82,14 @@ class Project extends Model
     public function manager(): BelongsTo
     {
         return $this->belongsTo(User::class, 'manager_id');
+    }
+
+    /**
+     * Get the sprints for the project.
+     */
+    public function sprints()
+    {
+        return $this->hasMany(\App\Models\Sprint::class);
     }
 
     /**

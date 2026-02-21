@@ -41,7 +41,7 @@ export default function FormCheckbox({
       {label && (
         <Label
           htmlFor={checkboxId}
-          className={cn("text-sm font-medium cursor-pointer", labelClassName)}
+          className={cn("text-sm font-medium cursor-pointer text-black", labelClassName)}
         >
           {label}
         </Label>
