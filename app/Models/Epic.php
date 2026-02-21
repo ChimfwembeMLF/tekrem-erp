@@ -34,4 +34,42 @@ class Epic extends Model
         return $this->belongsToMany(Release::class, 'epic_release')
             ->withTimestamps();
     }
+
+
+    /**
+     * Get the total story points for this epic.
+     */
+    public function getTotalStoryPointsAttribute()
+    {
+        return $this->cards()->sum('story_points');
+    }
+
+    /**
+     * Get the completed story points for this epic.
+     */
+    public function getCompletedStoryPointsAttribute()
+    {
+        return $this->cards()->where('status', 'done')->sum('story_points');
+    }
+
+    /**
+     * Get the percent complete for this epic (0-100).
+     */
+    public function getPercentCompleteAttribute()
+    {
+        $total = $this->total_story_points;
+        if ($total == 0) return 0;
+        return round(($this->completed_story_points / $total) * 100);
+    }
+
+    /**
+     * Get card counts by status for this epic.
+     */
+    public function getCardStatusCountsAttribute()
+    {
+        return $this->cards()
+            ->selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status');
+    }
 }

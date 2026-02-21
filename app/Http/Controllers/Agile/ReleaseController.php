@@ -43,6 +43,12 @@ class ReleaseController extends Controller
         return Inertia::render('Agile/Releases/Show', [
             'release' => $release,
             'project' => $release->project,
+            'progress' => [
+                'percent_complete' => $release->percent_complete,
+                'total_story_points' => $release->total_story_points,
+                'completed_story_points' => $release->completed_story_points,
+                'card_status_counts' => $release->card_status_counts,
+            ],
         ]);
     }
 

@@ -6,7 +6,7 @@ import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 import { Progress } from '@/Components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
-import { 
+import {
   Plus,
   Zap,
   Calendar,
@@ -64,11 +64,11 @@ interface SprintsProps {
   completedSprints: Sprint[];
 }
 
-export default function Sprints({ 
-  auth, 
-  project, 
+export default function Sprints({
+  auth,
+  project,
   board,
-  sprints = [], 
+  sprints = [],
   activeSprint,
   completedSprints = []
 }: SprintsProps) {
@@ -107,21 +107,23 @@ export default function Sprints({
 
   const isSprintOnTrack = (sprint: Sprint & { stats?: SprintStats }) => {
     if (!sprint.start_date || !sprint.end_date || !sprint.stats) return true;
-    
+
     const start = new Date(sprint.start_date).getTime();
     const end = new Date(sprint.end_date).getTime();
     const now = new Date().getTime();
-    
+
     const totalDuration = end - start;
     const elapsed = now - start;
     const elapsedPercentage = (elapsed / totalDuration) * 100;
-    
+
     const completionPercentage = calculateProgress(sprint.completed_story_points, sprint.planned_story_points);
-    
+
     // On track if completion is within 10% of elapsed time
     return completionPercentage >= (elapsedPercentage - 10);
   };
 
+
+  console.log('board', board);
   return (
     <AppLayout
       title={`Sprints - ${project.name}`}
@@ -150,10 +152,12 @@ export default function Sprints({
               <Target className="h-4 w-4 mr-2" />
               View Backlog
             </Button>
-            <Button onClick={() => router.visit(route('agile.sprints.create', board.id))}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Sprint
-            </Button>
+            <Link href={route('agile.sprints.create', project.id)}>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Sprint
+              </Button>
+            </Link>
           </div>
         </div>
       )}
@@ -219,7 +223,7 @@ export default function Sprints({
                         </p>
                         {getDaysRemaining(activeSprint.end_date) !== null && (
                           <p className="text-xs text-gray-500">
-                            {getDaysRemaining(activeSprint.end_date)! > 0 
+                            {getDaysRemaining(activeSprint.end_date)! > 0
                               ? `${getDaysRemaining(activeSprint.end_date)} days remaining`
                               : 'Sprint ended'
                             }
@@ -229,7 +233,7 @@ export default function Sprints({
                       <div className="space-y-1">
                         <p className="text-sm text-gray-600">Velocity</p>
                         <p className="text-lg font-semibold flex items-center gap-2">
-                          {activeSprint.velocity.toFixed(1)} pts/day
+                          {activeSprint.velocity} pts/day
                           {activeSprint.velocity > 0 ? (
                             <TrendingUp className="h-4 w-4 text-green-600" />
                           ) : (
@@ -280,8 +284,8 @@ export default function Sprints({
                             {activeSprint.completed_story_points} / {activeSprint.planned_story_points} pts
                           </span>
                         </div>
-                        <Progress 
-                          value={calculateProgress(activeSprint.completed_story_points, activeSprint.planned_story_points)} 
+                        <Progress
+                          value={calculateProgress(activeSprint.completed_story_points, activeSprint.planned_story_points)}
                           className="h-3"
                         />
                         <p className="text-xs text-gray-500 mt-1">
@@ -320,13 +324,34 @@ export default function Sprints({
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="h-64 flex items-center justify-center text-gray-400">
-                        <div className="text-center">
-                          <BarChart3 className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                          <p className="text-sm">Burndown chart visualization</p>
-                          <p className="text-xs">Coming soon</p>
+                      {activeSprint && activeSprint.daily_progress && Object.keys(activeSprint.daily_progress).length > 0 ? (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full text-sm">
+                            <thead>
+                              <tr>
+                                <th className="text-left px-2 py-1">Date</th>
+                                <th className="text-left px-2 py-1">Points Remaining</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {Object.entries(activeSprint.daily_progress).map(([date, points]) => (
+                                <tr key={date}>
+                                  <td className="px-2 py-1">{date}</td>
+                                  <td className="px-2 py-1">{points}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="h-64 flex items-center justify-center text-gray-400">
+                          <div className="text-center">
+                            <BarChart3 className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                            <p className="text-sm">Burndown chart visualization</p>
+                            <p className="text-xs">No data available</p>
+                          </div>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </div>
@@ -350,9 +375,9 @@ export default function Sprints({
 
           {/* Planned Sprints */}
           <TabsContent value="planned" className="space-y-4">
-            {sprints.filter(s => s.status === 'planning').length > 0 ? (
+            {sprints.filter(s => s.status === 'planned').length > 0 ? (
               <div className="space-y-4">
-                {sprints.filter(s => s.status === 'planning').map((sprint) => (
+                {sprints.filter(s => s.status === 'planned').map((sprint) => (
                   <Card key={sprint.id}>
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
@@ -378,7 +403,7 @@ export default function Sprints({
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <Button 
+                          <Button
                             variant="outline"
                             onClick={() => router.visit(route('agile.sprints.edit', sprint.id))}
                           >
@@ -437,14 +462,14 @@ export default function Sprints({
                             {sprint.completed_story_points} / {sprint.planned_story_points}
                           </span>
                         </div>
-                        <Progress 
-                          value={calculateProgress(sprint.completed_story_points, sprint.planned_story_points)} 
+                        <Progress
+                          value={calculateProgress(sprint.completed_story_points, sprint.planned_story_points)}
                           className="h-2"
                         />
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Velocity</span>
-                        <span className="font-semibold">{sprint.velocity.toFixed(1)} pts/day</span>
+                        <span className="font-semibold">{sprint.velocity} pts/day</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Duration</span>
@@ -452,8 +477,8 @@ export default function Sprints({
                           {formatDate(sprint.start_date)} - {formatDate(sprint.end_date)}
                         </span>
                       </div>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         className="w-full mt-2"
                         onClick={() => router.visit(route('agile.sprints.show', sprint.id))}
                       >

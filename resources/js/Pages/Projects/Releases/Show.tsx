@@ -23,15 +23,15 @@ interface ReleaseShowProps {
   auth: { user: any };
   project: any;
   release: Release;
-  stats?: {
-    total_cards: number;
-    completed_cards: number;
-    total_points: number;
-    completed_points: number;
+  progress?: {
+    percent_complete: number;
+    total_story_points: number;
+    completed_story_points: number;
+    card_status_counts: Record<string, number>;
   };
 }
 
-export default function ReleaseShow({ auth, project, release, stats }: ReleaseShowProps) {
+export default function ReleaseShow({ auth, project, release, progress }: ReleaseShowProps) {
   const route = useRoute();
 
   const getStatusColor = (status: string) => {
@@ -55,9 +55,7 @@ export default function ReleaseShow({ auth, project, release, stats }: ReleaseSh
     }
   };
 
-  const completionPercentage = stats
-    ? Math.round((stats.completed_cards / stats.total_cards) * 100) || 0
-    : 0;
+  const completionPercentage = progress?.percent_complete ?? 0;
 
   return (
     <AppLayout
@@ -149,32 +147,46 @@ export default function ReleaseShow({ auth, project, release, stats }: ReleaseSh
             </Card>
           </div>
 
-          {stats && (
+          {progress && (
             <Card>
               <CardHeader>
                 <CardTitle>Progress</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-2xl font-bold">{completionPercentage}%</span>
+                  <span className="text-2xl font-bold">{progress.percent_complete}%</span>
                   <span className="text-sm text-gray-600">
-                    {stats.completed_cards} of {stats.total_cards} cards completed
+                    {progress.completed_story_points} / {progress.total_story_points} story points complete
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-4">
                   <div
                     className="bg-green-600 h-4 rounded-full transition-all"
-                    style={{ width: `${completionPercentage}%` }}
+                    style={{ width: `${progress.percent_complete}%` }}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4 pt-4">
                   <div>
-                    <p className="text-sm text-gray-600">Story Points</p>
-                    <p className="text-xl font-bold">
-                      {stats.completed_points} / {stats.total_points}
-                    </p>
+                    <p className="text-sm text-gray-600">Total Story Points</p>
+                    <p className="text-xl font-bold">{progress.total_story_points}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Completed Points</p>
+                    <p className="text-xl font-bold">{progress.completed_story_points}</p>
                   </div>
                 </div>
+                {progress.card_status_counts && (
+                  <div className="pt-4">
+                    <p className="text-sm text-gray-600 mb-1">Cards by Status:</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {Object.entries(progress.card_status_counts).map(([status, count]) => (
+                        <Badge key={status} variant="outline" className="capitalize">
+                          {status}: {count}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}

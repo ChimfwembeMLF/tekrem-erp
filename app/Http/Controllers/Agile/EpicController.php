@@ -58,6 +58,12 @@ class EpicController extends Controller
         return Inertia::render('Agile/Epics/Show', [
             'epic' => $epic,
             'project' => $epic->project,
+            'progress' => [
+                'percent_complete' => $epic->percent_complete,
+                'total_story_points' => $epic->total_story_points,
+                'completed_story_points' => $epic->completed_story_points,
+                'card_status_counts' => $epic->card_status_counts,
+            ],
         ]);
     }
 

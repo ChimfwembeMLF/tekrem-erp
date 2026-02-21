@@ -11,6 +11,7 @@ class Sprint extends Model
 
     protected $fillable = [
         'board_id',
+        'project_id',
         'name',
         'goal',
         'planned_story_points',
@@ -46,6 +47,14 @@ class Sprint extends Model
     public function reports()
     {
         return $this->hasMany(SprintReport::class);
+    }
+
+    /**
+     * Get the project that owns the sprint.
+     */
+    public function project()
+    {
+        return $this->belongsTo(Project::class, 'project_id');
     }
 
     /**
@@ -117,5 +126,39 @@ class Sprint extends Model
     {
         return $this->belongsToMany(Release::class, 'release_sprint')
             ->withTimestamps();
+    }
+
+    /**
+     * Calculate daily burndown progress for this sprint.
+     * Returns an associative array: date => story points remaining
+     */
+    public function getDailyBurndown()
+    {
+        if (!$this->start_date || !$this->end_date) {
+            return [];
+        }
+
+        $start = new \DateTime($this->start_date);
+        $end = new \DateTime($this->end_date);
+        $interval = \DateInterval::createFromDateString('1 day');
+        $period = new \DatePeriod($start, $interval, $end->modify('+1 day'));
+
+        // Get all cards for this sprint
+        $cards = $this->cards()->get();
+
+        // For each day, count story points completed up to that day
+        $burndown = [];
+        $totalPoints = $this->planned_story_points;
+
+        foreach ($period as $date) {
+            $day = $date->format('Y-m-d');
+            // Cards completed up to this day
+            $completedPoints = $cards->where('status', 'done')
+                ->where('completed_at', '<=', $day)
+                ->sum('story_points');
+            $remaining = max($totalPoints - $completedPoints, 0);
+            $burndown[$day] = $remaining;
+        }
+        return $burndown;
     }
 }

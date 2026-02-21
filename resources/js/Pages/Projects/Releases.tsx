@@ -35,6 +35,9 @@ interface Release {
   metadata?: Record<string, any>;
   sprints?: Sprint[];
   epics?: Epic[];
+  percent_complete?: number;
+  total_story_points?: number;
+  completed_story_points?: number;
 }
 
 interface Sprint {
@@ -209,6 +212,18 @@ export default function Releases({
                             {statusConfig.label}
                           </Badge>
                         </div>
+                        {(typeof release.percent_complete === 'number' || typeof release.completed_story_points === 'number') && (
+                          <div className="flex items-center gap-2 mt-2 text-xs text-blue-700">
+                            {typeof release.percent_complete === 'number' && (
+                              <span className="font-semibold">{release.percent_complete}%</span>
+                            )}
+                            {typeof release.completed_story_points === 'number' && typeof release.total_story_points === 'number' && (
+                              <span>
+                                {release.completed_story_points} / {release.total_story_points} pts
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </CardHeader>
                       <CardContent className="space-y-4">
                         {/* Release Date */}

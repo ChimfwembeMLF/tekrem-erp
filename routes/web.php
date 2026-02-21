@@ -384,9 +384,11 @@ Route::middleware([
         // Sprints
         Route::prefix('sprints')->name('sprints.')->group(function () {
             Route::get('/{project}', [\App\Http\Controllers\Agile\SprintController::class, 'index'])->name('index');
-            Route::post('/{project}', [\App\Http\Controllers\Agile\SprintController::class, 'store'])->name('create');
+            Route::get('/{project}/create', [\App\Http\Controllers\Agile\SprintController::class, 'create'])->name('create');
+            Route::post('/{project}/create', [\App\Http\Controllers\Agile\SprintController::class, 'store'])->name('store');
             Route::get('/{sprint}/show', [\App\Http\Controllers\Agile\SprintController::class, 'show'])->name('show');
             Route::put('/{sprint}', [\App\Http\Controllers\Agile\SprintController::class, 'update'])->name('update');
+            Route::get('/{sprint}/edit', [\App\Http\Controllers\Agile\SprintController::class, 'edit'])->name('edit');
             Route::post('/{sprint}/start', [\App\Http\Controllers\Agile\SprintController::class, 'start'])->name('start');
             Route::post('/{sprint}/complete', [\App\Http\Controllers\Agile\SprintController::class, 'complete'])->name('complete');
             Route::delete('/{sprint}', [\App\Http\Controllers\Agile\SprintController::class, 'destroy'])->name('destroy');

@@ -16,6 +16,9 @@ interface Epic {
   color?: string;
   status: string;
   cards_count?: number;
+  percent_complete?: number;
+  total_story_points?: number;
+  completed_story_points?: number;
 }
 
 interface EpicIndexProps {
@@ -187,6 +190,14 @@ export default function EpicIndex({ auth, project, epics }: EpicIndexProps) {
                             <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
                               <span>{epic.cards_count || 0} cards</span>
                               <span className="capitalize">{epic.status}</span>
+                              {typeof epic.percent_complete === 'number' && (
+                                <span className="text-blue-600 font-semibold">{epic.percent_complete}%</span>
+                              )}
+                              {typeof epic.completed_story_points === 'number' && typeof epic.total_story_points === 'number' && (
+                                <span>
+                                  {epic.completed_story_points} / {epic.total_story_points} pts
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>

@@ -19,16 +19,51 @@ class SprintController extends Controller
             ->orderBy('start_date', 'desc')
             ->get();
 
+
         $activeSprint = $sprints->firstWhere('status', 'active');
-        $plannedSprints = $sprints->where('status', 'planning');
-        $completedSprints = $sprints->where('status', 'completed');
+        $plannedSprints = $sprints->where('status', 'planned')->values()->all();
+        $completedSprints = $sprints->where('status', 'completed')->values()->all();
+        $archivedSprints = $sprints->where('status', 'archived')->values()->all();
+
+
+        // Get board for this project (assumes project has one board)
+        $board = $project->board ?? $project->boards()->first();
+
+        // Optionally add stats to activeSprint
+        if ($activeSprint) {
+            $activeSprint->stats = [
+                'total_cards' => $activeSprint->cards->count(),
+                'completed_cards' => $activeSprint->cards->where('status', 'completed')->count(),
+                'in_progress_cards' => $activeSprint->cards->where('status', 'in_progress')->count(),
+                'todo_cards' => $activeSprint->cards->where('status', 'todo')->count(),
+                'total_story_points' => $activeSprint->cards->sum('story_points'),
+                'completed_story_points' => $activeSprint->cards->where('status', 'completed')->sum('story_points'),
+            ];
+        }
 
         return Inertia::render('Projects/Sprints', [
             'project' => $project,
+            'board' => $board,
             'sprints' => $sprints,
             'activeSprint' => $activeSprint,
-            'plannedSprints' => $plannedSprints,
             'completedSprints' => $completedSprints,
+            'archivedSprints' => $archivedSprints
+        ]);
+    }
+
+    /**
+     * Show the form for creating a new sprint.
+     */
+    public function create(Project $project)
+    {
+        // $this->authorize('update', $project);
+
+        // Get all boards for this project
+        $boards = $project->boards()->get();
+
+        return Inertia::render('Projects/Sprints/Create', [
+            'project' => $project,
+            'boards' => $boards,
         ]);
     }
 
@@ -43,9 +78,19 @@ class SprintController extends Controller
             'project'
         ]);
 
+        // Ensure project is loaded and not null
+        $project = $sprint->project;
+        if (!$project) {
+            $project = $sprint->board ? $sprint->board->project : null;
+        }
+
+        // Add daily burndown progress
+        $dailyBurndown = $sprint->getDailyBurndown();
+
         return Inertia::render('Projects/Sprints/Show', [
             'sprint' => $sprint,
-            'project' => $sprint->project,
+            'project' => $project,
+            'daily_progress' => $dailyBurndown,
         ]);
     }
 
@@ -59,9 +104,10 @@ class SprintController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'team_capacity' => 'nullable|integer|min:0',
+            'board_id' => 'required|integer|exists:boards,id',
         ]);
 
-        $validated['status'] = 'planning';
+        // $validated['status'] = 'planning';
         $validated['project_id'] = $project->id;
 
         $sprint = Sprint::create($validated);
@@ -70,6 +116,25 @@ class SprintController extends Controller
             ->with('success', 'Sprint created successfully.');
     }
 
+        /**
+     * Show the form for editing a sprint.
+     */
+    public function edit(Sprint $sprint)
+    {
+        // $this->authorize('update', $sprint->project);
+
+        // Ensure project is loaded and not null
+        $sprint->load(['project', 'board']);
+        $project = $sprint->project;
+        if (!$project) {
+            $project = $sprint->board ? $sprint->board->project : null;
+        }
+
+        return Inertia::render('Projects/Sprints/Edit', [
+            'sprint' => $sprint,
+            'project' => $project,
+        ]);
+    }
     public function update(Request $request, Sprint $sprint)
     {
         // $this->authorize('update', $sprint->project);
@@ -91,8 +156,17 @@ class SprintController extends Controller
     {
         // $this->authorize('update', $sprint->project);
 
+        // Ensure project is loaded
+        $project = $sprint->project;
+        if (!$project && $sprint->board) {
+            $project = $sprint->board->project;
+        }
+        if (!$project) {
+            return back()->with('error', 'Project not found for this sprint.');
+        }
+
         // Check if another sprint is active
-        $activeSprint = $sprint->project->sprints()->where('status', 'active')->first();
+        $activeSprint = $project->sprints()->where('status', 'active')->first();
         if ($activeSprint) {
             return back()->with('error', 'Another sprint is already active. Please complete it first.');
         }
