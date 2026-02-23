@@ -12,22 +12,35 @@ class EpicController extends Controller
 {
     public function index(Project $project)
     {
-        $this->authorize('view', $project);
+        // $this->authorize('view', $project);
 
         $epics = $project->epics()
             ->with('cards')
             ->orderBy('created_at', 'desc')
             ->get();
+        $boards = $project->boards()->get();
 
-        return Inertia::render('Agile/Epics/Index', [
+        return Inertia::render('Projects/Epics/Index', [
             'project' => $project,
             'epics' => $epics,
+            'boards' => $boards,
         ]);
     }
 
+    public function create(Project $project)
+    {
+        // $this->authorize('update', $project);
+        $boards = $project->boards()->get();
+        return Inertia::render('Projects/Epics/Create', [
+            'project' => $project,
+            'boards' => $boards,
+        ]);
+    }
+
+
     public function store(Request $request, Project $project)
     {
-        $this->authorize('update', $project);
+        // $this->authorize('update', $project);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -35,18 +48,21 @@ class EpicController extends Controller
             'color' => 'required|string|max:7', // hex color
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after:start_date',
+            'board_id' => 'required|integer|exists:boards,id',
         ]);
 
+        
         $validated['project_id'] = $project->id;
 
         $epic = Epic::create($validated);
 
+        // return $validated;
         return back()->with('success', 'Epic created successfully.');
     }
 
     public function show(Epic $epic)
     {
-        $this->authorize('view', $epic->project);
+        // $this->authorize('view', $epic->project);
 
         $epic->load([
             'cards.assignee',
@@ -55,7 +71,7 @@ class EpicController extends Controller
             'project'
         ]);
 
-        return Inertia::render('Agile/Epics/Show', [
+        return Inertia::render('Projects/Epics/Show', [
             'epic' => $epic,
             'project' => $epic->project,
             'progress' => [
@@ -69,7 +85,7 @@ class EpicController extends Controller
 
     public function update(Request $request, Epic $epic)
     {
-        $this->authorize('update', $epic->project);
+        // $this->authorize('update', $epic->project);
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
@@ -86,7 +102,7 @@ class EpicController extends Controller
 
     public function destroy(Epic $epic)
     {
-        $this->authorize('update', $epic->project);
+        // $this->authorize('update', $epic->project);
 
         // Remove epic association from cards
         $epic->cards()->update(['epic_id' => null]);

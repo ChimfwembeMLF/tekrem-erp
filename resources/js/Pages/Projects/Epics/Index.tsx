@@ -1,5 +1,5 @@
 import React from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
@@ -8,6 +8,7 @@ import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import { Plus, Trash2 } from 'lucide-react';
 import useRoute from '@/Hooks/useRoute';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 
 interface Epic {
   id: number;
@@ -21,25 +22,32 @@ interface Epic {
   completed_story_points?: number;
 }
 
+interface Board {
+  id: number;
+  name: string;
+}
+
 interface EpicIndexProps {
   auth: { user: any };
   project: any;
   epics: Epic[];
+  boards: Board[];
 }
 
-export default function EpicIndex({ auth, project, epics }: EpicIndexProps) {
+export default function EpicIndex({ auth, project, epics, boards = [] }: EpicIndexProps) {
   const route = useRoute();
   const [isCreating, setIsCreating] = React.useState(false);
-  
+  const defaultBoardId = boards?.[0]?.id ? String(boards[0].id) : '';
   const { data, setData, post, processing, errors, reset } = useForm({
     name: '',
     description: '',
     color: '#3b82f6',
+    board_id: defaultBoardId,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    post(route('agile.epics.store', project.id), {
+    post(route('agile.epics.store', project), {
       onSuccess: () => {
         reset();
         setIsCreating(false);
@@ -132,6 +140,25 @@ export default function EpicIndex({ auth, project, epics }: EpicIndexProps) {
                     />
                     {errors.description && (
                       <p className="text-sm text-red-500">{errors.description}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="board_id">Board *</Label>
+                    <Select value={data.board_id} onValueChange={value => setData('board_id', value)}>
+                      <SelectTrigger className="w-full mt-1">
+                        <SelectValue placeholder="Select a board" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {boards.map(board => (
+                          <SelectItem key={board.id} value={String(board.id)}>
+                            {board.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.board_id && (
+                      <p className="text-sm text-red-500">{errors.board_id}</p>
                     )}
                   </div>
 

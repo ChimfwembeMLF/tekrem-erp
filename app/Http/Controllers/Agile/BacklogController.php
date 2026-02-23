@@ -207,6 +207,8 @@ class BacklogController extends Controller
             'order' => 'required|integer|min:0',
         ]);
 
+        $validated['sprint_id'] = $backlog->sprint_id;
+
         $backlog->update($validated);
 
         return response()->json(['success' => true]);

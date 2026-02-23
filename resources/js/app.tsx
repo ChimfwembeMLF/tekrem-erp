@@ -10,6 +10,8 @@ import { ThemeProvider } from '@/Components/ThemeProvider';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { initializeTheme } from '@/lib/themes';
 
+import CookieConsentBanner from '@/Components/CookieConsentBanner';
+
 // Initialize theme as early as possible to prevent flash of wrong theme
 initializeTheme();
 
@@ -37,7 +39,10 @@ createInertiaApp({
     return root.render(
       <RouteContext.Provider value={(window as any).route}>
         {/* ThemeProvider is applied inside the App component to ensure it has access to Inertia context */}
-        <App {...props} />
+        <>
+          <App {...props} />
+          <CookieConsentBanner />
+        </>
       </RouteContext.Provider>,
     );
   },

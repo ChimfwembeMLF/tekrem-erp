@@ -74,7 +74,7 @@ const daysUntil = (date: string | null | undefined) => {
 
 function GlassCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`border border-white/10 rounded-xl shadow-lg ${className}`}>
+    <div className={`bg-white dark:bg-card border border-gray-200 dark:border-white/10 rounded-xl shadow-lg ${className}`}>
       {children}
     </div>
   );
@@ -86,8 +86,8 @@ function StatCard({
   value,
   sub,
   trend,
-  color = 'text-white',
-  iconBg = 'bg-white/10',
+  color = 'text-gray-900 dark:text-white',
+  iconBg = 'bg-gray-100 dark:bg-white/10',
 }: {
   icon: React.ElementType;
   label: string;
@@ -98,19 +98,19 @@ function StatCard({
   iconBg?: string;
 }) {
   const TrendIcon = trend === 'up' ? ArrowUpRight : trend === 'down' ? ArrowDownRight : Minus;
-  const trendColor = trend === 'up' ? 'text-green-400' : trend === 'down' ? 'text-red-400' : 'text-white/40';
+  const trendColor = trend === 'up' ? 'text-green-400' : trend === 'down' ? 'text-red-400' : 'text-gray-400 dark:text-white/40';
   return (
     <GlassCard className="p-5 flex items-start gap-4">
       <div className={`w-10 h-10 rounded-lg ${iconBg} flex items-center justify-center flex-shrink-0`}>
         <Icon className={`w-5 h-5 ${color}`} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-white/50 text-xs font-medium uppercase tracking-wider">{label}</p>
+        <p className="text-gray-500 dark:text-white/50 text-xs font-medium uppercase tracking-wider">{label}</p>
         <p className={`text-xl font-bold mt-0.5 ${color}`}>{value}</p>
         {sub && (
           <div className="flex items-center gap-1 mt-0.5">
             {trend && <TrendIcon className={`w-3 h-3 ${trendColor}`} />}
-            <p className="text-white/40 text-xs">{sub}</p>
+            <p className="text-gray-400 dark:text-white/40 text-xs">{sub}</p>
           </div>
         )}
       </div>
@@ -130,8 +130,8 @@ function SectionHeader({
   return (
     <div className="flex items-center justify-between mb-5">
       <div>
-        <h3 className="text-white font-semibold text-base">{title}</h3>
-        {sub && <p className="text-white/40 text-xs mt-0.5">{sub}</p>}
+        <h3 className="text-gray-900 dark:text-white font-semibold text-base">{title}</h3>
+        {sub && <p className="text-gray-400 dark:text-white/40 text-xs mt-0.5">{sub}</p>}
       </div>
       {action}
     </div>
@@ -151,11 +151,11 @@ function EmptyState({
 }) {
   return (
     <GlassCard className="p-12 text-center">
-      <div className="w-14 h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-4">
-        <Icon className="w-7 h-7 text-white/30" />
+      <div className="w-14 h-14 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center justify-center mx-auto mb-4">
+        <Icon className="w-7 h-7 text-gray-400 dark:text-white/30" />
       </div>
-      <p className="text-white/60 font-medium">{title}</p>
-      {description && <p className="text-white/30 text-sm mt-1 max-w-xs mx-auto">{description}</p>}
+      <p className="text-gray-500 dark:text-white/60 font-medium">{title}</p>
+      {description && <p className="text-gray-400 dark:text-white/30 text-sm mt-1 max-w-xs mx-auto">{description}</p>}
       {action && <div className="mt-5">{action}</div>}
     </GlassCard>
   );
@@ -168,7 +168,7 @@ function PrimaryButton({ children, onClick, href, icon: Icon, small }: {
   icon?: React.ElementType;
   small?: boolean;
 }) {
-  const cls = `inline-flex items-center gap-2 bg-gradient-to-r from-secondary to-primary hover:from-primary hover:to-secondary text-white font-semibold rounded-lg transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${small ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'}`;
+  const cls = `inline-flex items-center gap-2 bg-gradient-to-r from-secondary to-primary hover:from-primary hover:to-secondary text-gray-900 dark:text-white font-semibold rounded-lg transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${small ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'}`;
   const content = (
     <>
       {Icon && <Icon className={small ? 'w-3.5 h-3.5' : 'w-4 h-4'} />}
@@ -187,7 +187,7 @@ function GhostButton({ children, onClick, href, icon: Icon, small, danger }: {
   small?: boolean;
   danger?: boolean;
 }) {
-  const cls = `inline-flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 ${danger ? 'text-red-400 hover:text-red-300 hover:border-red-500/30 hover:bg-red-500/10' : 'text-white/60 hover:text-white'} font-medium rounded-lg transition-all duration-200 ${small ? 'px-2.5 py-1.5 text-xs' : 'px-3 py-2 text-sm'}`;
+  const cls = `inline-flex items-center gap-1.5 bg-gray-50 dark:bg-black hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10 hover:border-gray-300 dark:border-white/20 ${danger ? 'text-red-400 hover:text-red-300 hover:border-red-500/30 hover:bg-red-500/10' : 'text-gray-500 dark:text-white/60 hover:text-gray-900 dark:hover:text-white'} font-medium rounded-lg transition-all duration-200 ${small ? 'px-2.5 py-1.5 text-xs' : 'px-3 py-2 text-sm'}`;
   const content = (
     <>
       {Icon && <Icon className={small ? 'w-3.5 h-3.5' : 'w-4 h-4'} />}
@@ -206,7 +206,7 @@ function ProgressRing({ value, size = 56, stroke = 5, color = '#6366f1' }: {
   const offset = circ - (value / 100) * circ;
   return (
     <svg width={size} height={size} className="-rotate-90">
-      <circle cx={size / 2} cy={size / 2} r={r} strokeWidth={stroke} stroke="rgba(255,255,255,0.1)" fill="none" />
+      <circle cx={size / 2} cy={size / 2} r={r} strokeWidth={stroke} stroke="rgba(0,0,0,0.08)" className="dark-track" fill="none" />
       <circle
         cx={size / 2} cy={size / 2} r={r} strokeWidth={stroke} stroke={color} fill="none"
         strokeDasharray={circ} strokeDashoffset={offset}
@@ -218,7 +218,7 @@ function ProgressRing({ value, size = 56, stroke = 5, color = '#6366f1' }: {
 
 function GlassProgressBar({ value, color = 'bg-primary' }: { value: number; color?: string }) {
   return (
-    <div className="relative h-1.5 bg-white/10 rounded-full overflow-hidden">
+    <div className="relative h-1.5 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
       <div
         className={`absolute inset-y-0 left-0 ${color} rounded-full transition-all duration-700`}
         style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
@@ -235,36 +235,36 @@ function MilestoneCard({ milestone, project, formatDate, getStatusBadge, hasPerm
   const isDueSoon = days !== null && days >= 0 && days <= 7 && milestone.status !== 'completed';
 
   return (
-    <GlassCard className="p-5 group hover:border-white/20 transition-all duration-200">
+    <GlassCard className="p-5 group hover:border-gray-300 dark:border-white/20 transition-all duration-200">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-4 flex-1 min-w-0">
           <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${milestone.status === 'completed' ? 'bg-green-500/20' :
-            isOverdue ? 'bg-red-500/20' : 'bg-white/10'
+            isOverdue ? 'bg-red-500/20' : 'bg-gray-100 dark:bg-white/10'
             }`}>
             {milestone.status === 'completed'
               ? <CheckCircle2 className="w-4 h-4 text-green-400" />
               : isOverdue
                 ? <AlertTriangle className="w-4 h-4 text-red-400" />
-                : <Target className="w-4 h-4 text-white/50" />
+                : <Target className="w-4 h-4 text-gray-500 dark:text-white/50" />
             }
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h4 className="text-white font-medium text-sm">{milestone.name}</h4>
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border ${statusMeta[milestone.status]?.bg || 'bg-white/10 border-white/10'} ${statusMeta[milestone.status]?.color || 'text-white/60'}`}>
+              <h4 className="text-gray-900 dark:text-white font-medium text-sm">{milestone.name}</h4>
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border ${statusMeta[milestone.status]?.bg || 'bg-gray-100 dark:bg-white/10 border-gray-200 dark:border-white/10'} ${statusMeta[milestone.status]?.color || 'text-gray-500 dark:text-white/60'}`}>
                 {milestone.status}
               </span>
               {isOverdue && <span className="px-2 py-0.5 rounded-full text-xs bg-red-500/20 border border-red-500/30 text-red-400">Overdue</span>}
               {isDueSoon && !isOverdue && <span className="px-2 py-0.5 rounded-full text-xs bg-yellow-500/20 border border-yellow-500/30 text-yellow-400">Due soon</span>}
             </div>
             {milestone.description && (
-              <p className="text-white/40 text-xs mt-1 line-clamp-1">{milestone.description}</p>
+              <p className="text-gray-400 dark:text-white/40 text-xs mt-1 line-clamp-1">{milestone.description}</p>
             )}
             <div className="flex items-center gap-4 mt-3">
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-white/30 text-xs">Progress</span>
-                  <span className="text-white/60 text-xs font-medium">{milestone.progress}%</span>
+                  <span className="text-gray-400 dark:text-white/30 text-xs">Progress</span>
+                  <span className="text-gray-500 dark:text-white/60 text-xs font-medium">{milestone.progress}%</span>
                 </div>
                 <GlassProgressBar
                   value={milestone.progress}
@@ -272,7 +272,7 @@ function MilestoneCard({ milestone, project, formatDate, getStatusBadge, hasPerm
                 />
               </div>
             </div>
-            <div className="flex items-center gap-4 mt-3 text-xs text-white/40">
+            <div className="flex items-center gap-4 mt-3 text-xs text-gray-400 dark:text-white/40">
               {milestone.due_date && (
                 <span className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
@@ -311,45 +311,45 @@ function BacklogItemCard({ item, onEdit, onDelete, hasPermission }: {
 }) {
   const pMeta = priorityMeta[item.priority] || priorityMeta.medium;
   return (
-    <GlassCard className="p-4 group hover:border-white/20 transition-all duration-200">
+    <GlassCard className="p-4 group hover:border-gray-300 dark:border-white/20 transition-all duration-200">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3 flex-1 min-w-0">
-          <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-            <Layers className="w-3.5 h-3.5 text-white/40" />
+          <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <Layers className="w-3.5 h-3.5 text-gray-400 dark:text-white/40" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h4 className="text-white font-medium text-sm">{item.title}</h4>
+              <h4 className="text-gray-900 dark:text-white font-medium text-sm">{item.title}</h4>
               <span className={`px-2 py-0.5 rounded-full text-xs border ${pMeta.bg} ${pMeta.color}`}>
                 {pMeta.label}
               </span>
               {item.status && (
-                <span className={`px-2 py-0.5 rounded-full text-xs border ${statusMeta[item.status]?.bg || 'bg-white/10 border-white/10'} ${statusMeta[item.status]?.color || 'text-white/60'}`}>
+                <span className={`px-2 py-0.5 rounded-full text-xs border ${statusMeta[item.status]?.bg || 'bg-gray-100 dark:bg-white/10 border-gray-200 dark:border-white/10'} ${statusMeta[item.status]?.color || 'text-gray-500 dark:text-white/60'}`}>
                   {item.status.replace('_', ' ')}
                 </span>
               )}
             </div>
             {item.description && (
-              <p className="text-white/40 text-xs mt-1 line-clamp-2">{item.description}</p>
+              <p className="text-gray-400 dark:text-white/40 text-xs mt-1 line-clamp-2">{item.description}</p>
             )}
             <div className="flex items-center gap-3 mt-2.5 flex-wrap">
-              <span className="flex items-center gap-1 text-xs text-white/40">
+              <span className="flex items-center gap-1 text-xs text-gray-400 dark:text-white/40">
                 <Star className="w-3 h-3" />
                 {item.story_points} pts
               </span>
               {item.sprint && (
-                <span className="flex items-center gap-1 text-xs text-white/40">
+                <span className="flex items-center gap-1 text-xs text-gray-400 dark:text-white/40">
                   <GitBranch className="w-3 h-3" />
                   {item.sprint.name}
                 </span>
               )}
               {item.assignee && (
-                <span className="flex items-center gap-1 text-xs text-white/40">
+                <span className="flex items-center gap-1 text-xs text-gray-400 dark:text-white/40">
                   <Users className="w-3 h-3" />
                   {item.assignee.name}
                 </span>
               )}
-              <span className="flex items-center gap-1 text-xs text-white/30">
+              <span className="flex items-center gap-1 text-xs text-gray-400 dark:text-white/30">
                 <Tag className="w-3 h-3" />
                 {item.type}
               </span>
@@ -383,19 +383,19 @@ function FileCard({ file }: { file: any }) {
     jpg: 'text-purple-400 bg-purple-500/20 border-purple-500/30',
     jpeg: 'text-purple-400 bg-purple-500/20 border-purple-500/30',
   };
-  const colorCls = extColors[ext] || 'text-white/50 bg-white/10 border-white/10';
+  const colorCls = extColors[ext] || 'text-gray-500 dark:text-white/50 bg-gray-100 dark:bg-white/10 border-gray-200 dark:border-white/10';
 
   return (
-    <GlassCard className="p-4 group hover:border-white/20 transition-all duration-200">
+    <GlassCard className="p-4 group hover:border-gray-300 dark:border-white/20 transition-all duration-200">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 flex-1 min-w-0">
           <div className={`w-9 h-9 rounded-lg border flex items-center justify-center flex-shrink-0 ${colorCls}`}>
             <span className="text-xs font-bold uppercase">{ext || 'F'}</span>
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-white font-medium text-sm truncate">{file.name}</p>
-            <p className="text-white/40 text-xs mt-0.5">{file.file_size_formatted} · {file.category}</p>
-            <p className="text-white/30 text-xs mt-0.5">by {file.uploader?.name}</p>
+            <p className="text-gray-900 dark:text-white font-medium text-sm truncate">{file.name}</p>
+            <p className="text-gray-400 dark:text-white/40 text-xs mt-0.5">{file.file_size_formatted} · {file.category}</p>
+            <p className="text-gray-400 dark:text-white/30 text-xs mt-0.5">by {file.uploader?.name}</p>
           </div>
         </div>
         <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -414,14 +414,14 @@ function TimeLogCard({ log, formatDate, formatCurrency }: any) {
     <GlassCard className="p-4">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3 flex-1 min-w-0">
-          <div className="w-9 h-9 rounded-full bg-white/10 border border-white/10 flex items-center justify-center flex-shrink-0">
-            <span className="text-xs font-bold text-white/60">{log.user?.name?.charAt(0) || '?'}</span>
+          <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-white/10 border border-gray-200 dark:border-white/10 flex items-center justify-center flex-shrink-0">
+            <span className="text-xs font-bold text-gray-500 dark:text-white/60">{log.user?.name?.charAt(0) || '?'}</span>
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-white font-medium text-sm">{log.user?.name}</span>
+              <span className="text-gray-900 dark:text-white font-medium text-sm">{log.user?.name}</span>
               {log.status && (
-                <span className="px-2 py-0.5 rounded-full text-xs bg-white/10 border border-white/10 text-white/50">
+                <span className="px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-white/10 border border-gray-200 dark:border-white/10 text-gray-500 dark:text-white/50">
                   {log.status}
                 </span>
               )}
@@ -431,8 +431,8 @@ function TimeLogCard({ log, formatDate, formatCurrency }: any) {
                 </span>
               )}
             </div>
-            <p className="text-white/40 text-xs mt-1 line-clamp-1">{log.description || 'No description'}</p>
-            <div className="flex items-center gap-4 mt-2 text-xs text-white/40">
+            <p className="text-gray-400 dark:text-white/40 text-xs mt-1 line-clamp-1">{log.description || 'No description'}</p>
+            <div className="flex items-center gap-4 mt-2 text-xs text-gray-400 dark:text-white/40">
               <span className="flex items-center gap-1">
                 <Clock className="w-3 h-3" />
                 {log.hours}h
@@ -475,7 +475,7 @@ export default function ProjectShow({ auth, project, board, columns = [], cards 
         <GhostButton key={link.label}>
           <Link
             href={link.route}
-            className="inline-flex items-center text-white rounded-lg font-semibold transition-all duration-150 shadow-sm"
+            className="inline-flex items-center text-gray-700 dark:text-white rounded-lg font-semibold transition-all duration-150 shadow-sm"
           >
             {link.label}
           </Link>
@@ -507,10 +507,10 @@ export default function ProjectShow({ auth, project, board, columns = [], cards 
 
   // --- Quick navigation buttons for Cards, Epics, Sprints, Users ---
   const navLinks = [
-    { label: 'Cards', route: route('agile.cards.index', project.id) },
+    // { label: 'Cards', route: route('agile.cards.index', project.id) },
     { label: 'Epics', route: route('agile.epics.index', project.id) },
     { label: 'Sprints', route: route('agile.sprints.index', project.id) },
-    { label: 'Users', route: route('projects.project.users', project.id) },
+    // { label: 'Users', route: route('projects.project.users', project.id) },
   ];
 
 
@@ -585,13 +585,13 @@ export default function ProjectShow({ auth, project, board, columns = [], cards 
           {/* Left: title + badges */}
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Link href={route('projects.index')} className="text-white/40 hover:text-white/70 text-sm transition-colors">
+              <Link href={route('projects.index')} className="text-gray-400 dark:text-white/40 hover:text-gray-600 dark:text-white/70 text-sm transition-colors">
                 Projects
               </Link>
-              <ChevronRight className="w-3.5 h-3.5 text-white/30" />
-              <span className="text-white/70 text-sm truncate max-w-[200px]">{project.name}</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-300 dark:text-white/30" />
+              <span className="text-gray-600 dark:text-white/70 text-sm truncate max-w-[200px]">{project.name}</span>
             </div>
-            <h2 className="text-2xl font-bold text-white leading-tight">{project.name}</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white leading-tight">{project.name}</h2>
             <div className="flex items-center gap-2 mt-2 flex-wrap">
               <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border font-medium ${sMeta.bg} ${sMeta.color}`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${sMeta.dot} animate-pulse`} />
@@ -606,7 +606,7 @@ export default function ProjectShow({ auth, project, board, columns = [], cards 
                 {mMeta.label}
               </span>
               {project.category && (
-                <span className="px-2.5 py-1 rounded-full text-xs border bg-white/5 border-white/10 text-white/50">
+                <span className="px-2.5 py-1 rounded-full text-xs border bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-500 dark:text-white/50">
                   {project.category}
                 </span>
               )}
@@ -672,8 +672,8 @@ export default function ProjectShow({ auth, project, board, columns = [], cards 
             value={deadlineDays !== null ? (deadlineDays < 0 ? 'Overdue' : `${deadlineDays}d`) : '—'}
             sub={formatDateShort(project.deadline)}
             trend={deadlineDays !== null ? (deadlineDays < 0 ? 'down' : deadlineDays < 14 ? 'neutral' : 'up') : 'neutral'}
-            color={deadlineDays !== null && deadlineDays < 0 ? 'text-red-400' : deadlineDays !== null && deadlineDays < 14 ? 'text-yellow-400' : 'text-white'}
-            iconBg={deadlineDays !== null && deadlineDays < 0 ? 'bg-red-500/20' : 'bg-white/10'}
+            color={deadlineDays !== null && deadlineDays < 0 ? 'text-red-400' : deadlineDays !== null && deadlineDays < 14 ? 'text-yellow-400' : 'text-gray-900 dark:text-white'}
+            iconBg={deadlineDays !== null && deadlineDays < 0 ? 'bg-red-500/20' : 'bg-gray-100 dark:bg-white/10'}
           />
         </div>
 
@@ -687,15 +687,15 @@ export default function ProjectShow({ auth, project, board, columns = [], cards 
             <GlassCard className="p-6">
               <div className="flex items-start justify-between gap-6 mb-6">
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-white font-semibold mb-2">Project Overview</h3>
-                  <p className="text-white/50 text-sm leading-relaxed">
+                  <h3 className="text-gray-900 dark:text-white font-semibold mb-2">Project Overview</h3>
+                  <p className="text-gray-500 dark:text-white/50 text-sm leading-relaxed">
                     {project.description || 'No description provided for this project.'}
                   </p>
                 </div>
                 <div className="flex-shrink-0 relative">
                   <ProgressRing value={project.progress || 0} size={72} stroke={6} color="#6366f1" />
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">{project.progress || 0}%</span>
+                    <span className="text-gray-900 dark:text-white font-bold text-sm">{project.progress || 0}%</span>
                   </div>
                 </div>
               </div>
@@ -704,23 +704,23 @@ export default function ProjectShow({ auth, project, board, columns = [], cards 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-white/50 text-xs font-medium uppercase tracking-wide">Overall Progress</span>
-                    <span className="text-white font-semibold text-sm">{project.progress || 0}%</span>
+                    <span className="text-gray-500 dark:text-white/50 text-xs font-medium uppercase tracking-wide">Overall Progress</span>
+                    <span className="text-gray-900 dark:text-white font-semibold text-sm">{project.progress || 0}%</span>
                   </div>
                   <GlassProgressBar value={project.progress || 0} color="bg-primary" />
                 </div>
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-white/50 text-xs font-medium uppercase tracking-wide">Milestones</span>
-                    <span className="text-white font-semibold text-sm">{milestoneProgress}%</span>
+                    <span className="text-gray-500 dark:text-white/50 text-xs font-medium uppercase tracking-wide">Milestones</span>
+                    <span className="text-gray-900 dark:text-white font-semibold text-sm">{milestoneProgress}%</span>
                   </div>
                   <GlassProgressBar value={milestoneProgress} color="bg-green-400" />
                 </div>
                 {project.budget && project.spent_amount != null && (
                   <div className="sm:col-span-2">
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-white/50 text-xs font-medium uppercase tracking-wide">Budget Used</span>
-                      <span className="text-white font-semibold text-sm">
+                      <span className="text-gray-500 dark:text-white/50 text-xs font-medium uppercase tracking-wide">Budget Used</span>
+                      <span className="text-gray-900 dark:text-white font-semibold text-sm">
                         {formatCurrency(project.spent_amount)} / {formatCurrency(project.budget)}
                       </span>
                     </div>
@@ -734,11 +734,11 @@ export default function ProjectShow({ auth, project, board, columns = [], cards 
 
               {/* Tags */}
               {project.tags && project.tags.length > 0 && (
-                <div className="mt-5 pt-5 border-t border-white/5">
-                  <p className="text-white/30 text-xs uppercase tracking-wide mb-2">Tags</p>
+                <div className="mt-5 pt-5 border-t border-gray-100 dark:border-white/5">
+                  <p className="text-gray-400 dark:text-white/30 text-xs uppercase tracking-wide mb-2">Tags</p>
                   <div className="flex flex-wrap gap-2">
                     {project.tags.map((tag: string, i: number) => (
-                      <span key={i} className="px-2.5 py-1 rounded-full text-xs bg-white/5 border border-white/10 text-white/50">
+                      <span key={i} className="px-2.5 py-1 rounded-full text-xs bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-500 dark:text-white/50">
                         {tag}
                       </span>
                     ))}
@@ -756,7 +756,7 @@ export default function ProjectShow({ auth, project, board, columns = [], cards 
 
             {/* Project Details */}
             <GlassCard className="p-5">
-              <h3 className="text-white font-semibold text-sm mb-4">Project Details</h3>
+              <h3 className="text-gray-900 dark:text-white font-semibold text-sm mb-4">Project Details</h3>
               <div className="space-y-3.5">
                 {[
                   project.client && { icon: Users, label: 'Client', value: project.client.name },
@@ -769,11 +769,11 @@ export default function ProjectShow({ auth, project, board, columns = [], cards 
                   project.total_billable_amount && { icon: DollarSign, label: 'Billable', value: formatCurrency(project.total_billable_amount) },
                 ].filter(Boolean).map((row: any, i: number) => (
                   <div key={i} className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2 text-white/40">
+                    <span className="flex items-center gap-2 text-gray-400 dark:text-white/40">
                       <row.icon className="w-3.5 h-3.5" />
                       {row.label}
                     </span>
-                    <span className="text-white/80 font-medium">{row.value}</span>
+                    <span className="text-gray-700 dark:text-white/80 font-medium">{row.value}</span>
                   </div>
                 ))}
               </div>
@@ -782,14 +782,14 @@ export default function ProjectShow({ auth, project, board, columns = [], cards 
             {/* Team Members */}
             {project.team && project.team.length > 0 && (
               <GlassCard className="p-5">
-                <h3 className="text-white font-semibold text-sm mb-4">Team</h3>
+                <h3 className="text-gray-900 dark:text-white font-semibold text-sm mb-4">Team</h3>
                 <div className="space-y-2.5">
                   {project.team.map((member: any) => (
                     <div key={member.id} className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-secondary to-primary flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-secondary to-primary flex items-center justify-center text-gray-900 dark:text-white text-xs font-bold flex-shrink-0">
                         {member.name?.charAt(0)}
                       </div>
-                      <span className="text-white/70 text-sm">{member.name}</span>
+                      <span className="text-gray-600 dark:text-white/70 text-sm">{member.name}</span>
                     </div>
                   ))}
                 </div>
@@ -798,7 +798,7 @@ export default function ProjectShow({ auth, project, board, columns = [], cards 
 
             {/* Quick actions */}
             <GlassCard className="p-5">
-              <h3 className="text-white font-semibold text-sm mb-4">Quick Actions</h3>
+              <h3 className="text-gray-900 dark:text-white font-semibold text-sm mb-4">Quick Actions</h3>
               <div className="space-y-2 space-x-2">
                 {showMilestones && hasPermission('projects.milestones.create') && (
                   <GhostButton href={route('projects.milestones.create', { project: project.id })} icon={Plus} small>
@@ -825,44 +825,44 @@ export default function ProjectShow({ auth, project, board, columns = [], cards 
 
         {/* ── Tabs ──────────────────────────────────────────────────────── */}
         <Tabs defaultValue={showMilestones ? 'milestones' : showBoards ? 'board' : 'files'} className="w-full">
-          <div className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl p-1 mb-6 overflow-x-auto">
+          <div className="backdrop-blur-sm bg-white dark:bg-card border border-gray-200 dark:border-white/10 rounded-xl pb-2 mb-6 overflow-x-auto">
             <TabsList className={`grid w-full min-w-max gap-1 bg-transparent ${tabGridCols}`}>
               {showMilestones && (
-                <TabsTrigger value="milestones" className="flex items-center gap-1.5 text-white/50 data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-none rounded-lg px-4 py-2 text-sm transition-all">
+                <TabsTrigger value="milestones" className="flex items-center gap-1.5 text-gray-500 dark:text-white/50 data-[state=active]:bg-gray-100 dark:bg-white/10 data-[state=active]:text-gray-900 dark:text-white data-[state=active]:shadow-none rounded-lg px-4 py-2 text-sm transition-all">
                   <Target className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline">Milestones</span>
                   {totalMilestones > 0 && (
-                    <span className="text-xs bg-white/10 px-1.5 py-0.5 rounded-full">{totalMilestones}</span>
+                    <span className="text-xs bg-gray-100 dark:bg-white/10 px-1.5 py-0.5 rounded-full">{totalMilestones}</span>
                   )}
                 </TabsTrigger>
               )}
               {showBoards && (
-                <TabsTrigger value="board" className="flex items-center gap-1.5 text-white/50 data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-none rounded-lg px-4 py-2 text-sm transition-all">
+                <TabsTrigger value="board" className="flex items-center gap-1.5 text-gray-500 dark:text-white/50 data-[state=active]:bg-gray-100 dark:bg-white/10 data-[state=active]:text-gray-900 dark:text-white data-[state=active]:shadow-none rounded-lg px-4 py-2 text-sm transition-all">
                   <Kanban className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline">Board</span>
                 </TabsTrigger>
               )}
               {showBoards && (
-                <TabsTrigger value="backlog" className="flex items-center gap-1.5 text-white/50 data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-none rounded-lg px-4 py-2 text-sm transition-all">
+                <TabsTrigger value="backlog" className="flex items-center gap-1.5 text-gray-500 dark:text-white/50 data-[state=active]:bg-gray-100 dark:bg-white/10 data-[state=active]:text-gray-900 dark:text-white data-[state=active]:shadow-none rounded-lg px-4 py-2 text-sm transition-all">
                   <Layers className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline">Backlog</span>
                   {backlogItems.length > 0 && (
-                    <span className="text-xs bg-white/10 px-1.5 py-0.5 rounded-full">{backlogItems.length}</span>
+                    <span className="text-xs bg-gray-100 dark:bg-white/10 px-1.5 py-0.5 rounded-full">{backlogItems.length}</span>
                   )}
                 </TabsTrigger>
               )}
-              <TabsTrigger value="files" className="flex items-center gap-1.5 text-white/50 data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-none rounded-lg px-4 py-2 text-sm transition-all">
+              <TabsTrigger value="files" className="flex items-center gap-1.5 text-gray-500 dark:text-white/50 data-[state=active]:bg-gray-100 dark:bg-white/10 data-[state=active]:text-gray-900 dark:text-white data-[state=active]:shadow-none rounded-lg px-4 py-2 text-sm transition-all">
                 <FileText className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Files</span>
                 {project.files?.length > 0 && (
-                  <span className="text-xs bg-white/10 px-1.5 py-0.5 rounded-full">{project.files.length}</span>
+                  <span className="text-xs bg-gray-100 dark:bg-white/10 px-1.5 py-0.5 rounded-full">{project.files.length}</span>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="time-logs" className="flex items-center gap-1.5 text-white/50 data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-none rounded-lg px-4 py-2 text-sm transition-all">
+              <TabsTrigger value="time-logs" className="flex items-center gap-1.5 text-gray-500 dark:text-white/50 data-[state=active]:bg-gray-100 dark:bg-white/10 data-[state=active]:text-gray-900 dark:text-white data-[state=active]:shadow-none rounded-lg px-4 py-2 text-sm transition-all">
                 <Clock className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Time Logs</span>
               </TabsTrigger>
-              <TabsTrigger value="activity" className="flex items-center gap-1.5 text-white/50 data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-none rounded-lg px-4 py-2 text-sm transition-all">
+              <TabsTrigger value="activity" className="flex items-center gap-1.5 text-gray-500 dark:text-white/50 data-[state=active]:bg-gray-100 dark:bg-white/10 data-[state=active]:text-gray-900 dark:text-white data-[state=active]:shadow-none rounded-lg px-4 py-2 text-sm transition-all">
                 <Activity className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Activity</span>
               </TabsTrigger>
@@ -883,7 +883,7 @@ export default function ProjectShow({ auth, project, board, columns = [], cards 
                         <button
                           key={f}
                           onClick={() => setMilestoneFilter(f)}
-                          className={`px-2.5 py-1 rounded-lg text-xs transition-all ${milestoneFilter === f ? 'bg-white/10 text-white border border-white/20' : 'text-white/40 hover:text-white/70'}`}
+                          className={`px-2.5 py-1 rounded-lg text-xs transition-all ${milestoneFilter === f ? 'bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white border border-gray-200 dark:border-white/20' : 'text-gray-400 dark:text-white/40 hover:text-gray-600 dark:text-white/70'}`}
                         >
                           {f === 'all' ? 'All' : f.replace('_', ' ')}
                         </button>
@@ -904,22 +904,22 @@ export default function ProjectShow({ auth, project, board, columns = [], cards 
                   <div className="flex items-center gap-4">
                     <div className="flex-1">
                       <div className="flex justify-between mb-2">
-                        <span className="text-white/40 text-xs">Milestone completion</span>
-                        <span className="text-white text-xs font-medium">{milestoneProgress}%</span>
+                        <span className="text-gray-400 dark:text-white/40 text-xs">Milestone completion</span>
+                        <span className="text-gray-900 dark:text-white text-xs font-medium">{milestoneProgress}%</span>
                       </div>
                       <div className="flex gap-px h-2 rounded-full overflow-hidden">
                         {project.milestones?.map((m: any, i: number) => (
                           <div
                             key={m.id}
-                            className={`flex-1 ${m.status === 'completed' ? 'bg-green-400' : m.status === 'in_progress' ? 'bg-blue-400' : 'bg-white/10'}`}
+                            className={`flex-1 ${m.status === 'completed' ? 'bg-green-400' : m.status === 'in_progress' ? 'bg-blue-400' : 'bg-gray-200 dark:bg-white/10'}`}
                           />
                         ))}
                       </div>
                     </div>
-                    <div className="flex items-center gap-4 text-xs text-white/40 flex-shrink-0">
+                    <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-white/40 flex-shrink-0">
                       <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-400" />Done</span>
                       <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-400" />Active</span>
-                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-white/20" />Pending</span>
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-gray-300 dark:bg-white/20" />Pending</span>
                     </div>
                   </div>
                 </GlassCard>
@@ -993,8 +993,8 @@ export default function ProjectShow({ auth, project, board, columns = [], cards 
                         <GitBranch className="w-4 h-4 text-purple-400" />
                       </div>
                       <div>
-                        <p className="text-white/70 text-sm font-medium">Hybrid Mode Active</p>
-                        <p className="text-white/40 text-xs mt-0.5">
+                        <p className="text-gray-600 dark:text-white/70 text-sm font-medium">Hybrid Mode Active</p>
+                        <p className="text-gray-400 dark:text-white/40 text-xs mt-0.5">
                           This project uses both Waterfall and Agile methodologies. Tasks and cards can be linked for synchronized tracking.
                         </p>
                       </div>
@@ -1034,12 +1034,12 @@ export default function ProjectShow({ auth, project, board, columns = [], cards 
               {backlogItems.length > 0 && (
                 <div className="flex items-center gap-2 mb-4 flex-wrap">
                   <div className="relative flex-1 min-w-[180px]">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 dark:text-white/40" />
                     <input
                       value={backlogSearch}
                       onChange={e => setBacklogSearch(e.target.value)}
                       placeholder="Search backlog..."
-                      className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-4 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-primary/50 focus:bg-white/10 transition-all"
+                      className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg pl-9 pr-4 py-2 text-sm text-gray-900 dark:text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:border-primary/50 focus:bg-white dark:focus:bg-gray-100 dark:bg-white/10 transition-all"
                     />
                   </div>
                   <div className="flex gap-1">
@@ -1047,7 +1047,7 @@ export default function ProjectShow({ auth, project, board, columns = [], cards 
                       <button
                         key={f}
                         onClick={() => setBacklogFilter(f)}
-                        className={`px-2.5 py-1.5 rounded-lg text-xs transition-all ${backlogFilter === f ? 'bg-white/10 text-white border border-white/20' : 'text-white/40 hover:text-white/70'}`}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs transition-all ${backlogFilter === f ? 'bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white border border-gray-200 dark:border-white/20' : 'text-gray-400 dark:text-white/40 hover:text-gray-600 dark:text-white/70'}`}
                       >
                         {f === 'all' ? 'All' : f}
                       </button>
@@ -1066,7 +1066,7 @@ export default function ProjectShow({ auth, project, board, columns = [], cards 
 
               {/* Loading */}
               {loadingBacklog && (
-                <div className="flex items-center gap-2 p-3 mb-4 rounded-lg bg-white/5 border border-white/10 text-white/40 text-sm">
+                <div className="flex items-center gap-2 p-3 mb-4 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-400 dark:text-white/40 text-sm">
                   <RefreshCw className="w-4 h-4 animate-spin" />
                   Saving...
                 </div>
@@ -1085,10 +1085,10 @@ export default function ProjectShow({ auth, project, board, columns = [], cards 
                       done: { label: 'Done', color: 'text-green-400', bg: 'bg-green-500/10' },
                     }[s];
                     return (
-                      <div key={s} className={`${meta.bg} border border-white/5 rounded-lg p-3`}>
+                      <div key={s} className={`${meta.bg} border border-gray-100 dark:border-white/5 rounded-lg p-3`}>
                         <p className={`text-xs font-medium ${meta.color}`}>{meta.label}</p>
-                        <p className="text-white font-bold text-lg">{count}</p>
-                        <p className="text-white/30 text-xs">{pts} pts</p>
+                        <p className="text-gray-900 dark:text-white font-bold text-lg">{count}</p>
+                        <p className="text-gray-400 dark:text-white/30 text-xs">{pts} pts</p>
                       </div>
                     );
                   })}
@@ -1168,16 +1168,16 @@ export default function ProjectShow({ auth, project, board, columns = [], cards 
                 {/* Summary row */}
                 <div className="grid grid-cols-3 gap-3 mb-5">
                   <GlassCard className="p-4 text-center">
-                    <p className="text-white/40 text-xs mb-1">Total Hours</p>
-                    <p className="text-white font-bold text-xl">{totalHoursLogged}h</p>
+                    <p className="text-gray-400 dark:text-white/40 text-xs mb-1">Total Hours</p>
+                    <p className="text-gray-900 dark:text-white font-bold text-xl">{totalHoursLogged}h</p>
                   </GlassCard>
                   <GlassCard className="p-4 text-center">
-                    <p className="text-white/40 text-xs mb-1">Billable</p>
+                    <p className="text-gray-400 dark:text-white/40 text-xs mb-1">Billable</p>
                     <p className="text-green-400 font-bold text-xl">{formatCurrency(project.total_billable_amount)}</p>
                   </GlassCard>
                   <GlassCard className="p-4 text-center">
-                    <p className="text-white/40 text-xs mb-1">Team Members</p>
-                    <p className="text-white font-bold text-xl">
+                    <p className="text-gray-400 dark:text-white/40 text-xs mb-1">Team Members</p>
+                    <p className="text-gray-900 dark:text-white font-bold text-xl">
                       {new Set(project.time_logs.map((l: any) => l.user?.id)).size}
                     </p>
                   </GlassCard>
@@ -1234,19 +1234,19 @@ export default function ProjectShow({ auth, project, board, columns = [], cards 
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           onClick={() => setDeleteConfirm(null)}
         >
-          <div className="absolute inset-0 backdrop-blur-sm bg-black/50" />
-          <div className="relative z-10 backdrop-blur-md bg-gray-900/90 border border-white/10 rounded-2xl p-6 shadow-2xl max-w-sm w-full">
+          <div className="absolute inset-0 backdrop-blur-sm bg-black/30 dark:bg-black/50" />
+          <div className="relative z-10 backdrop-blur-md bg-white dark:bg-gray-900/95 border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-2xl max-w-sm w-full">
             <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center mx-auto mb-4">
               <Trash2 className="w-6 h-6 text-red-400" />
             </div>
-            <h3 className="text-white font-semibold text-center mb-2">Delete Backlog Item</h3>
-            <p className="text-white/50 text-sm text-center mb-5">
+            <h3 className="text-gray-900 dark:text-white font-semibold text-center mb-2">Delete Backlog Item</h3>
+            <p className="text-gray-500 dark:text-white/50 text-sm text-center mb-5">
               This action cannot be undone. The item will be permanently removed from the backlog.
             </p>
             <div className="flex gap-2">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="flex-1 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 text-sm font-medium transition-all"
+                className="flex-1 py-2.5 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-white/70 hover:bg-gray-100 dark:bg-white/10 text-sm font-medium transition-all"
               >
                 Cancel
               </button>
@@ -1295,19 +1295,19 @@ export function BudgetGauge({ spent, total }: { spent: number; total: number }) 
   return (
     <div className="space-y-2">
       <div className="flex justify-between text-xs">
-        <span className="text-white/50">Budget utilisation</span>
+        <span className="text-gray-500 dark:text-white/50">Budget utilisation</span>
         <span className={`font-semibold ${over ? 'text-red-400' : warn ? 'text-yellow-400' : 'text-green-400'}`}>{pct}%</span>
       </div>
-      <div className="relative h-2.5 bg-white/10 rounded-full overflow-hidden">
+      <div className="relative h-2.5 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
         <div
           className={`absolute inset-y-0 left-0 ${barColor} rounded-full transition-all duration-700`}
           style={{ width: `${pct}%` }}
         />
         {/* threshold markers */}
-        <div className="absolute top-0 bottom-0 left-[70%] w-px bg-white/20" />
-        <div className="absolute top-0 bottom-0 left-[90%] w-px bg-white/20" />
+        <div className="absolute top-0 bottom-0 left-[70%] w-px bg-gray-200 dark:bg-white/20" />
+        <div className="absolute top-0 bottom-0 left-[90%] w-px bg-gray-200 dark:bg-white/20" />
       </div>
-      <div className="flex justify-between text-xs text-white/30">
+      <div className="flex justify-between text-xs text-gray-400 dark:text-white/30">
         <span>${spent?.toLocaleString() || 0} spent</span>
         <span>${total?.toLocaleString() || 0} total</span>
       </div>
@@ -1333,16 +1333,16 @@ export function SprintBurndown({ items }: { items: any[] }) {
           return (
             <div
               key={i}
-              className={`flex-1 rounded-sm transition-all ${i < done ? 'bg-green-400/60' : i < done + inProg ? 'bg-blue-400/60' : 'bg-white/10'}`}
+              className={`flex-1 rounded-sm transition-all ${i < done ? 'bg-green-400/60' : i < done + inProg ? 'bg-blue-400/60' : 'bg-gray-200 dark:bg-white/10'}`}
               style={{ height: `${Math.max(8, Math.min(100, height))}%` }}
             />
           );
         })}
       </div>
-      <div className="flex gap-3 text-xs text-white/40">
+      <div className="flex gap-3 text-xs text-gray-400 dark:text-white/40">
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-green-400/60" />{done} done</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-blue-400/60" />{inProg} in progress</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-white/10" />{todo} todo</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-gray-100 dark:bg-white/10" />{todo} todo</span>
       </div>
     </div>
   );
@@ -1355,10 +1355,10 @@ export function VelocityChip({ items }: { items: any[] }) {
   const completedPts = items.filter(i => i.status === 'done').reduce((s: number, i: any) => s + (i.story_points || 0), 0);
   const totalPts = items.reduce((s: number, i: any) => s + (i.story_points || 0), 0);
   return (
-    <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
+    <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10">
       <div>
-        <p className="text-white/40 text-xs">Velocity</p>
-        <p className="text-white font-bold text-lg">{completedPts} <span className="text-white/30 text-sm font-normal">/ {totalPts} pts</span></p>
+        <p className="text-gray-400 dark:text-white/40 text-xs">Velocity</p>
+        <p className="text-gray-900 dark:text-white font-bold text-lg">{completedPts} <span className="text-gray-400 dark:text-white/30 text-sm font-normal">/ {totalPts} pts</span></p>
       </div>
       <div className="w-10 h-10 rounded-full border-2 border-primary/50 flex items-center justify-center">
         <Zap className="w-4 h-4 text-primary" />
@@ -1378,7 +1378,7 @@ export function TeamAvatarStack({ team, max = 5 }: { team: any[]; max?: number }
       {visible.map((m, i) => (
         <div
           key={m.id}
-          className="w-8 h-8 rounded-full bg-gradient-to-br from-secondary to-primary border-2 border-gray-900 flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+          className="w-8 h-8 rounded-full bg-gradient-to-br from-secondary to-primary border-2 border-gray-900 flex items-center justify-center text-gray-900 dark:text-white text-xs font-bold flex-shrink-0"
           style={{ marginLeft: i > 0 ? '-8px' : 0, zIndex: visible.length - i }}
           title={m.name}
         >
@@ -1387,7 +1387,7 @@ export function TeamAvatarStack({ team, max = 5 }: { team: any[]; max?: number }
       ))}
       {overflow > 0 && (
         <div
-          className="w-8 h-8 rounded-full bg-white/10 border-2 border-gray-900 flex items-center justify-center text-white/60 text-xs font-bold flex-shrink-0"
+          className="w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 border-2 border-gray-900 flex items-center justify-center text-gray-500 dark:text-white/60 text-xs font-bold flex-shrink-0"
           style={{ marginLeft: '-8px' }}
         >
           +{overflow}
@@ -1400,15 +1400,15 @@ export function TeamAvatarStack({ team, max = 5 }: { team: any[]; max?: number }
 /**
  * KeyMetricRow – single metric row for details panel
  */
-export function KeyMetricRow({ icon: Icon, label, value, valueClass = 'text-white/80' }: {
+export function KeyMetricRow({ icon: Icon, label, value, valueClass = 'text-gray-700 dark:text-white/80' }: {
   icon: React.ElementType;
   label: string;
   value: string | number | React.ReactNode;
   valueClass?: string;
 }) {
   return (
-    <div className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
-      <span className="flex items-center gap-2 text-white/40 text-sm">
+    <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-white/5 last:border-0">
+      <span className="flex items-center gap-2 text-gray-400 dark:text-white/40 text-sm">
         <Icon className="w-3.5 h-3.5" />
         {label}
       </span>
@@ -1426,7 +1426,7 @@ export function FilterChip({ label, active, onClick }: { label: string; active: 
       onClick={onClick}
       className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-150 ${active
         ? 'bg-primary/20 border-primary/40 text-primary'
-        : 'bg-white/5 border-white/10 text-white/50 hover:text-white/80 hover:bg-white/10'
+        : 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-500 dark:text-white/50 hover:text-gray-700 dark:text-white/80 hover:bg-gray-100 dark:bg-white/10'
         }`}
     >
       {label}
@@ -1438,12 +1438,12 @@ export function FilterChip({ label, active, onClick }: { label: string; active: 
  * SectionDivider – subtle divider with optional label
  */
 export function SectionDivider({ label }: { label?: string }) {
-  if (!label) return <div className="border-t border-white/5 my-4" />;
+  if (!label) return <div className="border-t border-gray-200 dark:border-white/5 my-4" />;
   return (
     <div className="flex items-center gap-3 my-4">
-      <div className="flex-1 border-t border-white/5" />
-      <span className="text-white/25 text-xs uppercase tracking-wider">{label}</span>
-      <div className="flex-1 border-t border-white/5" />
+      <div className="flex-1 border-t border-gray-100 dark:border-white/5" />
+      <span className="text-gray-300 dark:text-white/25 text-xs uppercase tracking-wider">{label}</span>
+      <div className="flex-1 border-t border-gray-100 dark:border-white/5" />
     </div>
   );
 }
@@ -1454,7 +1454,7 @@ export function SectionDivider({ label }: { label?: string }) {
 export function LoadingSpinner({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
   const sz = size === 'sm' ? 'w-4 h-4' : size === 'lg' ? 'w-8 h-8' : 'w-6 h-6';
   return (
-    <div className={`${sz} border-2 border-white/20 border-t-primary rounded-full animate-spin`} />
+    <div className={`${sz} border-2 border-gray-300 dark:border-gray-200 dark:border-white/20 border-t-primary rounded-full animate-spin`} />
   );
 }
 
@@ -1483,9 +1483,9 @@ export function ConfirmDialog({
   const TheIcon = Icon;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onCancel}>
-      <div className="absolute inset-0 backdrop-blur-sm bg-black/50" />
+      <div className="absolute inset-0 backdrop-blur-sm bg-black/30 dark:bg-black/50" />
       <div
-        className="relative z-10 backdrop-blur-md bg-gray-900/90 border border-white/10 rounded-2xl p-6 shadow-2xl max-w-sm w-full"
+        className="relative z-10 backdrop-blur-md bg-white dark:bg-gray-900/95 border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-2xl max-w-sm w-full"
         onClick={e => e.stopPropagation()}
       >
         {TheIcon && (
@@ -1493,12 +1493,12 @@ export function ConfirmDialog({
             <TheIcon className={`w-6 h-6 ${danger ? 'text-red-400' : 'text-primary'}`} />
           </div>
         )}
-        <h3 className="text-white font-semibold text-center mb-2">{title}</h3>
-        <p className="text-white/50 text-sm text-center mb-5">{description}</p>
+        <h3 className="text-gray-900 dark:text-white font-semibold text-center mb-2">{title}</h3>
+        <p className="text-gray-500 dark:text-white/50 text-sm text-center mb-5">{description}</p>
         <div className="flex gap-2">
           <button
             onClick={onCancel}
-            className="flex-1 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 text-sm font-medium transition-all"
+            className="flex-1 py-2.5 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-white/70 hover:bg-gray-100 dark:bg-white/10 text-sm font-medium transition-all"
           >
             {cancelLabel}
           </button>
@@ -1564,7 +1564,7 @@ export function MilestoneTimeline({ milestones, formatDate }: { milestones: any[
   return (
     <div className="relative pl-5">
       {/* vertical line */}
-      <div className="absolute left-0 top-2 bottom-2 w-px bg-white/10" />
+      <div className="absolute left-0 top-2 bottom-2 w-px bg-gray-200 dark:bg-white/10" />
       <div className="space-y-4">
         {sorted.map((m, i) => {
           const done = m.status === 'completed';
@@ -1575,14 +1575,14 @@ export function MilestoneTimeline({ milestones, formatDate }: { milestones: any[
               {/* dot */}
               <div className={`absolute -left-[17px] w-3 h-3 rounded-full border-2 flex-shrink-0 mt-1 ${done ? 'bg-green-400 border-green-400' :
                 overdue ? 'bg-red-400 border-red-400' :
-                  'bg-white/10 border-white/30'
+                  'bg-gray-200 dark:bg-white/10 border-gray-300 dark:border-white/30'
                 }`} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className={`text-sm font-medium ${done ? 'text-white/50 line-through' : 'text-white/80'}`}>{m.name}</span>
+                  <span className={`text-sm font-medium ${done ? 'text-gray-500 dark:text-white/50 line-through' : 'text-gray-700 dark:text-white/80'}`}>{m.name}</span>
                   {overdue && <span className="text-xs text-red-400">overdue</span>}
                 </div>
-                <div className="flex items-center gap-3 mt-0.5 text-xs text-white/30">
+                <div className="flex items-center gap-3 mt-0.5 text-xs text-gray-400 dark:text-white/30">
                   {m.due_date && <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{formatDateShort(m.due_date)}</span>}
                   {m.assignee && <span>{m.assignee.name}</span>}
                 </div>
@@ -1608,29 +1608,29 @@ export function BacklogStatsPanel({ items }: { items: any[] }) {
   return (
     <div className="grid grid-cols-2 gap-4">
       <GlassCard className="p-4">
-        <p className="text-white/40 text-xs mb-3 uppercase tracking-wide">By Priority</p>
+        <p className="text-gray-400 dark:text-white/40 text-xs mb-3 uppercase tracking-wide">By Priority</p>
         <div className="space-y-2">
           {byPriority.map(({ label, count, color }) => (
             <div key={label} className="flex items-center gap-2">
-              <span className="text-white/50 text-xs w-16 capitalize">{label}</span>
-              <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+              <span className="text-gray-500 dark:text-white/50 text-xs w-16 capitalize">{label}</span>
+              <div className="flex-1 h-1.5 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
                 <div className={`h-full ${color} rounded-full`} style={{ width: `${items.length ? (count / items.length) * 100 : 0}%` }} />
               </div>
-              <span className="text-white/60 text-xs w-4 text-right">{count}</span>
+              <span className="text-gray-500 dark:text-white/60 text-xs w-4 text-right">{count}</span>
             </div>
           ))}
         </div>
       </GlassCard>
       <GlassCard className="p-4">
-        <p className="text-white/40 text-xs mb-3 uppercase tracking-wide">Story Points</p>
+        <p className="text-gray-400 dark:text-white/40 text-xs mb-3 uppercase tracking-wide">Story Points</p>
         <div className="relative flex items-center justify-center">
           <ProgressRing value={totalPts > 0 ? (completedPts / totalPts) * 100 : 0} size={72} stroke={5} color="#a78bfa" />
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-white font-bold text-sm">{completedPts}</span>
-            <span className="text-white/30 text-xs">/{totalPts}</span>
+            <span className="text-gray-900 dark:text-white font-bold text-sm">{completedPts}</span>
+            <span className="text-gray-400 dark:text-white/30 text-xs">/{totalPts}</span>
           </div>
         </div>
-        <p className="text-center text-white/40 text-xs mt-2">pts completed</p>
+        <p className="text-center text-gray-400 dark:text-white/40 text-xs mt-2">pts completed</p>
       </GlassCard>
     </div>
   );
@@ -1649,8 +1649,8 @@ export function FileTypeBreakdown({ files }: { files: any[] }) {
   return (
     <div className="flex flex-wrap gap-2">
       {Object.entries(byExt).map(([ext, count]) => (
-        <span key={ext} className="px-2.5 py-1 rounded-full text-xs bg-white/5 border border-white/10 text-white/50">
-          .{ext} <span className="text-white/30">({count})</span>
+        <span key={ext} className="px-2.5 py-1 rounded-full text-xs bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-500 dark:text-white/50">
+          .{ext} <span className="text-gray-400 dark:text-white/30">({count})</span>
         </span>
       ))}
     </div>
@@ -1671,21 +1671,21 @@ export function TimeLogSummaryByUser({ logs, formatCurrency }: { logs: any[]; fo
   });
   return (
     <GlassCard className="p-4 mb-4">
-      <p className="text-white/40 text-xs uppercase tracking-wide mb-3">Hours by Team Member</p>
+      <p className="text-gray-400 dark:text-white/40 text-xs uppercase tracking-wide mb-3">Hours by Team Member</p>
       <div className="space-y-2.5">
         {Object.entries(byUser).map(([uid, data]) => {
           const maxHours = Math.max(...Object.values(byUser).map(d => d.hours));
           return (
             <div key={uid} className="flex items-center gap-3">
-              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-secondary to-primary flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-secondary to-primary flex items-center justify-center text-gray-900 dark:text-white text-xs font-bold flex-shrink-0">
                 {data.name.charAt(0)}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-center mb-1">
-                  <span className="text-white/70 text-xs truncate">{data.name}</span>
-                  <span className="text-white/50 text-xs">{data.hours}h</span>
+                  <span className="text-gray-600 dark:text-white/70 text-xs truncate">{data.name}</span>
+                  <span className="text-gray-500 dark:text-white/50 text-xs">{data.hours}h</span>
                 </div>
-                <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-1.5 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
                   <div className="h-full bg-primary/60 rounded-full" style={{ width: `${maxHours > 0 ? (data.hours / maxHours) * 100 : 0}%` }} />
                 </div>
               </div>
@@ -1709,17 +1709,17 @@ export function ActivityFeedPlaceholder() {
       {Array.from({ length: 5 }).map((_, i) => (
         <GlassCard key={i} className="p-4">
           <div className="flex items-start gap-3 animate-pulse">
-            <div className="w-8 h-8 rounded-full bg-white/10 flex-shrink-0" />
+            <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-white/10 flex-shrink-0" />
             <div className="flex-1 space-y-2">
-              <div className="h-3 bg-white/10 rounded w-3/4" />
-              <div className="h-2.5 bg-white/5 rounded w-1/2" />
+              <div className="h-3 bg-gray-200 dark:bg-white/10 rounded w-3/4" />
+              <div className="h-2.5 bg-gray-100 dark:bg-white/5 rounded w-1/2" />
             </div>
-            <div className="h-2.5 bg-white/5 rounded w-16" />
+            <div className="h-2.5 bg-gray-100 dark:bg-white/5 rounded w-16" />
           </div>
         </GlassCard>
       ))}
       <div className="text-center py-4">
-        <p className="text-white/30 text-xs">Activity feed coming soon</p>
+        <p className="text-gray-400 dark:text-white/30 text-xs">Activity feed coming soon</p>
       </div>
     </div>
   );
@@ -1750,7 +1750,7 @@ export function ProjectHealthScore({ project }: { project: any }) {
   return (
     <GlassCard className="p-5">
       <div className="flex items-center justify-between mb-4">
-        <h4 className="text-white/70 text-sm font-medium">Project Health</h4>
+        <h4 className="text-gray-600 dark:text-white/70 text-sm font-medium">Project Health</h4>
         <span className={`px-2.5 py-1 rounded-full text-xs border font-medium ${bg} ${color}`}>{label}</span>
       </div>
       <div className="flex items-center gap-4">
@@ -1764,7 +1764,7 @@ export function ProjectHealthScore({ project }: { project: any }) {
           {issues.length > 0 ? (
             <ul className="space-y-1">
               {issues.map((issue, i) => (
-                <li key={i} className="flex items-center gap-1.5 text-xs text-white/50">
+                <li key={i} className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-white/50">
                   <AlertTriangle className="w-3 h-3 text-yellow-400 flex-shrink-0" />
                   {issue}
                 </li>
@@ -1798,7 +1798,7 @@ export function SprintSelector({ sprints, value, onChange }: {
     <select
       value={value}
       onChange={e => onChange(e.target.value)}
-      className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white/70 focus:outline-none focus:border-primary/50 transition-all"
+      className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-1.5 text-sm text-gray-600 dark:text-gray-600 dark:text-white/70 focus:outline-none focus:border-primary/50 transition-all"
     >
       <option value="">No sprint</option>
       {sprints.map(s => (
@@ -1877,9 +1877,9 @@ export function BoardColumnSummary({ columns, cards }: { columns: any[]; cards: 
         const colCards = cards.filter(c => c.column_id === col.id || c.board_column_id === col.id);
         return (
           <GlassCard key={col.id} className="p-3">
-            <p className="text-white/40 text-xs truncate mb-1">{col.name || col.title}</p>
-            <p className="text-white font-bold text-xl">{colCards.length}</p>
-            <p className="text-white/30 text-xs">cards</p>
+            <p className="text-gray-400 dark:text-white/40 text-xs truncate mb-1">{col.name || col.title}</p>
+            <p className="text-gray-900 dark:text-white font-bold text-xl">{colCards.length}</p>
+            <p className="text-gray-400 dark:text-white/30 text-xs">cards</p>
           </GlassCard>
         );
       })}
@@ -1899,8 +1899,8 @@ export function ProjectCompletionBanner({ projectName }: { projectName: string }
         </div>
         <div>
           <h4 className="text-green-400 font-semibold">Project Completed!</h4>
-          <p className="text-white/50 text-sm mt-0.5">
-            <span className="text-white/70">{projectName}</span> has been successfully delivered.
+          <p className="text-gray-500 dark:text-white/50 text-sm mt-0.5">
+            <span className="text-gray-600 dark:text-white/70">{projectName}</span> has been successfully delivered.
           </p>
         </div>
       </div>
@@ -1922,7 +1922,7 @@ export function OnHoldBanner({ reason }: { reason?: string }) {
       </div>
       <div>
         <p className="text-yellow-400 font-medium text-sm">Project On Hold</p>
-        {reason && <p className="text-white/40 text-xs mt-0.5">{reason}</p>}
+        {reason && <p className="text-gray-400 dark:text-white/40 text-xs mt-0.5">{reason}</p>}
       </div>
     </div>
   );
@@ -1939,7 +1939,7 @@ export function CriticalAlertBanner({ deadline }: { deadline: string }) {
       </div>
       <div>
         <p className="text-red-400 font-semibold text-sm">Critical: Deadline Passed</p>
-        <p className="text-white/40 text-xs mt-0.5">
+        <p className="text-gray-400 dark:text-white/40 text-xs mt-0.5">
           Project deadline was {formatDate(deadline)}. Immediate action required.
         </p>
       </div>
@@ -1985,8 +1985,8 @@ export function BacklogGroupedBySprint({ items, sprints, onEdit, onDelete, hasPe
         <div key={sprint.id}>
           <div className="flex items-center gap-2 mb-3">
             <GitBranch className="w-4 h-4 text-purple-400" />
-            <h4 className="text-white/70 text-sm font-medium">{sprint.name || sprint.title}</h4>
-            <span className="text-xs text-white/30">({sprintItems.length} items · {sprintItems.reduce((s: number, i: any) => s + (i.story_points || 0), 0)} pts)</span>
+            <h4 className="text-gray-600 dark:text-white/70 text-sm font-medium">{sprint.name || sprint.title}</h4>
+            <span className="text-xs text-gray-400 dark:text-white/30">({sprintItems.length} items · {sprintItems.reduce((s: number, i: any) => s + (i.story_points || 0), 0)} pts)</span>
           </div>
           <div className="space-y-2.5">
             {sprintItems.map((item: any) => (
@@ -1998,9 +1998,9 @@ export function BacklogGroupedBySprint({ items, sprints, onEdit, onDelete, hasPe
       {unassigned.length > 0 && (
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <Layers className="w-4 h-4 text-white/30" />
-            <h4 className="text-white/50 text-sm font-medium">Unassigned</h4>
-            <span className="text-xs text-white/30">({unassigned.length} items)</span>
+            <Layers className="w-4 h-4 text-gray-400 dark:text-white/30" />
+            <h4 className="text-gray-500 dark:text-white/50 text-sm font-medium">Unassigned</h4>
+            <span className="text-xs text-gray-400 dark:text-white/30">({unassigned.length} items)</span>
           </div>
           <div className="space-y-2.5">
             {unassigned.map((item: any) => (
@@ -2026,18 +2026,18 @@ export function ProjectSharePanel({ project, route }: { project: any; route: any
   };
   return (
     <GlassCard className="p-5">
-      <h4 className="text-white/70 text-sm font-medium mb-4">Share & Export</h4>
+      <h4 className="text-gray-600 dark:text-white/70 text-sm font-medium mb-4">Share & Export</h4>
       <div className="space-y-2">
         <button
           onClick={handleCopy}
-          className="w-full flex items-center gap-2 p-2.5 rounded-lg bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 text-sm transition-all text-left"
+          className="w-full flex items-center gap-2 p-2.5 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-500 dark:text-white/60 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:bg-white/10 text-sm transition-all text-left"
         >
           <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
           {copied ? 'Copied!' : 'Copy project link'}
         </button>
         <Link
           href={route('projects.livechat', project.id)}
-          className="w-full flex items-center gap-2 p-2.5 rounded-lg bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 text-sm transition-all"
+          className="w-full flex items-center gap-2 p-2.5 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-500 dark:text-white/60 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:bg-white/10 text-sm transition-all"
         >
           <MessageSquare className="w-3.5 h-3.5 flex-shrink-0" />
           Open project chat

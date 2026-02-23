@@ -11,6 +11,7 @@ class Epic extends Model
 
     protected $fillable = [
         'board_id',
+        'project_id',
         'name',
         'description',
         'color',
@@ -35,6 +36,10 @@ class Epic extends Model
             ->withTimestamps();
     }
 
+    public function project()
+    {
+        return $this->board ? $this->board->project() : null;
+    }
 
     /**
      * Get the total story points for this epic.

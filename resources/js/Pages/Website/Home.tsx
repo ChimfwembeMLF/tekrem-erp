@@ -11,6 +11,7 @@ import TechnologiesSection from '@/Components/TechnologiesSection';
 import TeamCarousel from '@/Components/TeamCarousel';
 import TechnologyStack from '@/Components/TechnologyStack';
 import FAQ from '@/Components/FAQ';
+import { Check } from 'lucide-react';
 
 
 
@@ -241,12 +242,12 @@ export default function Home({ canLogin, canRegister }: Props) {
 
   const orgData = [
     {
-      name: "Chimfwembe Kangwa",
+      name: "Kangwa Chimfwembe",
       initials: "CK",
       role: "CTO / Developer",
       bio: "Passionate about scalable systems and modern development practices.",
       color: "from-teal-500 to-cyan-600",
-      image: "/assets/team/chimfwembe-kangwa.png",
+      image: "/assets/team/chimfwembe-kangwa1.png",
       socials: [
         { platform: "linkedin", url: "#" },
         { platform: "github", url: "#" },
@@ -364,34 +365,26 @@ export default function Home({ canLogin, canRegister }: Props) {
               </h1>
 
               {/* Description */}
-              <p className="mt-6 text-lg text-gray-600 dark:text-gray-300 max-w-2xl">
+              <p className="mt-6 text-xl tracking-tight text-white max-w-2xl">
                 {settings.company_name || 'Technology Remedies Innovations'} provides cutting-edge technology solutions to help businesses in Zambia and beyond thrive in the digital age.
               </p>
 
               {/* Feature highlights */}
-              <div className="mt-8 grid grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-400">
+              <div className="mt-8 grid grid-cols-2 gap-4 text-lg text-white">
                 <div className="flex items-center">
-                  <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
+                  <Check className='text-green-500 h-4' />
                   24/7 Support
                 </div>
                 <div className="flex items-center">
-                  <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
+                  <Check className='text-green-500 h-4' />
                   99.9% Uptime
                 </div>
                 <div className="flex items-center">
-                  <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
+                  <Check className='text-green-500 h-4' />
                   Secure & Compliant
                 </div>
                 <div className="flex items-center">
-                  <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
+                  <Check className='text-green-500 h-4' />
                   Scalable Solutions
                 </div>
               </div>
