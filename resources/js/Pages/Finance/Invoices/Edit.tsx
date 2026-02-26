@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
 import { toast } from 'sonner';
+import useRoute from '@/Hooks/useRoute';
 
 interface Client {
   id: number;
@@ -73,6 +74,7 @@ interface Props {
 
 export default function Edit({ invoice, clients, leads, currencies, statuses }: Props) {
   const { t } = useTranslate();
+  const route = useRoute();
   const [items, setItems] = useState<InvoiceItem[]>(invoice.items || [
     { description: '', quantity: 1, unit_price: 0, total_price: 0 }
   ]);
@@ -154,7 +156,7 @@ export default function Edit({ invoice, clients, leads, currencies, statuses }: 
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
       currency: data.currency,
     }).format(amount);
@@ -163,14 +165,7 @@ export default function Edit({ invoice, clients, leads, currencies, statuses }: 
   return (
     <AppLayout
       title={`${t('common.edit', 'Edit')} ${t('finance.invoice', 'Invoice')} ${invoice.invoice_number}`}
-      breadcrumbs={[
-        { label: t('finance.title', 'Finance'), href: '/finance' },
-        { label: t('finance.invoices', 'Invoices'), href: '/finance/invoices' },
-        { label: invoice.invoice_number, href: `/finance/invoices/${invoice.id}` },
-        { label: t('common.edit', 'Edit') },
-      ]}
     >
-      <Head title={`${t('common.edit', 'Edit')} ${t('finance.invoice', 'Invoice')} ${invoice.invoice_number}`} />
 
       <div className="space-y-6">
         {/* Header */}

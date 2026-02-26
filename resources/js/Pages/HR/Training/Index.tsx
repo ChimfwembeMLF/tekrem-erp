@@ -156,7 +156,7 @@ export default function Index({ trainings, categories, filters }: TrainingIndexP
 
   const formatCurrency = (amount: number | null, currency: string) => {
     if (!amount) return '-';
-    return new Intl.NumberFormat('en-US', {
+    return new Intl\.NumberFormat\('en-ZM', {
       style: 'currency',
       currency: currency || 'USD',
     }).format(amount);

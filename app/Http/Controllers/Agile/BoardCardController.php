@@ -134,12 +134,22 @@ class BoardCardController extends Controller
             'epic',
             'task',
             'comments.user',
-            'attachments'
+            'attachments',
+            // Enforce additional relationships
+            'activityLogs', // CardActivity
+            'checklists.items.reminders', // CardChecklist, CheckListItemCardReminder
+            'subscribers', // CardSubscriber
+            'votes', // CardVote
+            'watchers', // CardWatcher
         ]);
+
+        $board = $card->board->load(['columns', 'members.user', 'invitations']);
 
         return Inertia::render('Projects/Cards/Show', [
             'card' => $card,
             'project' => $card->board->project,
+            'board' => $board,
+            'board_invitations' => $board->invitations,
         ]);
     }
 

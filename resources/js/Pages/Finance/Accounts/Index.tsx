@@ -67,8 +67,8 @@ export default function Index({ accounts, accountTypes, filters }: Props) {
   const [selectedType, setSelectedType] = useState(filters.type || 'all');
   const [selectedStatus, setSelectedStatus] = useState(filters.status || 'all');
 
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
+  const formatCurrency = (amount: number, currency: string = 'ZMW') => {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
       currency: currency,
     }).format(amount);

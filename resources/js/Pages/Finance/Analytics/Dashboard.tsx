@@ -97,8 +97,8 @@ export default function AnalyticsDashboard({ analytics, period: initialPeriod }:
     '1_year': t('common.last_year', 'Last year'),
   };
 
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
+  const formatCurrency = (amount: number, currency: string = 'ZMW') => {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
       currency: currency,
     }).format(amount);
@@ -146,12 +146,7 @@ export default function AnalyticsDashboard({ analytics, period: initialPeriod }:
   return (
     <AppLayout
       title={t('finance.analytics', 'Finance Analytics')}
-      breadcrumbs={[
-        { label: t('finance.title', 'Finance'), href: '/finance' },
-        { label: t('finance.analytics', 'Analytics') },
-      ]}
     >
-      <Head title={t('finance.analytics', 'Finance Analytics')} />
 
       <div className="space-y-6">
         {/* Header */}

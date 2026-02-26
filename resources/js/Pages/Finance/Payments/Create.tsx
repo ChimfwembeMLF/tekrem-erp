@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
 import { toast } from 'sonner';
+import { useRoute } from 'ziggy-js';
 
 interface Account {
   id: number;
@@ -66,6 +67,8 @@ interface Props {
 
 export default function Create({ accounts = [], invoices = [], clients = [], leads = [], paymentMethods = {}, statuses = {} }: Props) {
   const { t } = useTranslate();
+    const route = useRoute();
+
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
   const { data, setData, post, processing, errors } = useForm({
@@ -120,8 +123,8 @@ export default function Create({ accounts = [], invoices = [], clients = [], lea
     });
   };
 
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
+  const formatCurrency = (amount: number, currency: string = 'ZMW') => {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
       currency: currency,
     }).format(amount);
@@ -130,12 +133,7 @@ export default function Create({ accounts = [], invoices = [], clients = [], lea
   return (
     <AppLayout
       title={t('finance.record_payment', 'Record Payment')}
-      breadcrumbs={[
-        { label: t('finance.title', 'Finance'), href: '/finance' },
-        { label: t('finance.payments', 'Payments'), href: '/finance/payments' },
-        { label: t('finance.record_payment', 'Record Payment') },
-      ]}
-    >
+      >
       <Head title={t('finance.record_payment', 'Record Payment')} />
 
       <div className="space-y-6">

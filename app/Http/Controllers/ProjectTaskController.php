@@ -340,10 +340,16 @@ class ProjectTaskController extends Controller
         }
 
         $tasks = $query->orderBy('due_date')->paginate(15);
-        // dd($tasks);
+
+        // Fetch BoardCards assigned to the user
+        $cards = \App\Models\BoardCard::with(['board', 'column', 'sprint', 'epic', 'assignee'])
+            ->where('assignee_id', $user->id)
+            ->orderBy('due_date')
+            ->get();
 
         return Inertia::render('Projects/Tasks/MyTasks', [
             'tasks' => $tasks,
+            'cards' => $cards,
             'filters' => $request->only(['status', 'priority']),
         ]);
     }

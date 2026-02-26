@@ -81,8 +81,8 @@ export default function Show({ budget, statuses, periodTypes }: Props) {
     }
   };
 
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
+  const formatCurrency = (amount: number, currency: string = 'ZMW') => {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
       currency: currency,
     }).format(amount);
@@ -126,13 +126,7 @@ export default function Show({ budget, statuses, periodTypes }: Props) {
   return (
     <AppLayout
       title={budget.name}
-      breadcrumbs={[
-        { label: t('finance.title', 'Finance'), href: '/finance' },
-        { label: t('finance.budgets', 'Budgets'), href: '/finance/budgets' },
-        { label: budget.name },
-      ]}
     >
-      <Head title={budget.name} />
 
       <div className="space-y-6">
         {/* Header */}

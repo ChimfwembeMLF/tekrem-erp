@@ -26,8 +26,17 @@ import {
   X,
   Send,
 } from 'lucide-react';
+
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem
+} from '@/Components/ui/select';
 import useRoute from '@/Hooks/useRoute';
 import { LinkedItemIndicator } from '@/Components/HybridSync';
+import MarkdownEditor from '@/Components/PM/MarkdownEditor';
 
 interface BoardCard {
   id: number;
@@ -65,16 +74,77 @@ interface BoardCard {
     path?: string;
     created_at?: string;
   }>;
+
+  // Enforced relationships
+  activity_logs?: Array<any>; // CardActivity
+  invitations?: Array<any>; // CardInvitation
+  checklists?: Array<{
+    id: number | string;
+    title: string;
+    items: Array<{
+      id: number | string;
+      name: string;
+      completed: boolean;
+      reminders?: Array<any>; // CheckListItemCardReminder
+    }>;
+  }>;
+  subscribers?: Array<any>; // CardSubscriber
+  votes?: Array<any>; // CardVote
+  watchers?: Array<any>; // CardWatcher
 }
 
 interface CardShowProps {
   auth: { user: any };
   card: BoardCard;
   project: any;
+  board: {
+    id: number;
+    name: string;
+    columns: any[];
+    members: any[];
+  };
+  board_invitations?: Array<any>;
 }
 
-export default function CardShow({ auth, card, project }: CardShowProps) {
+export default function CardShow({ auth, card, project, board_invitations }: CardShowProps) {
   const route = useRoute();
+  const { board } = arguments[0];
+
+  // --- ENFORCED UI SECTIONS ---
+  // CardActivity
+  const activityLogs = card.activity_logs || [];
+  // Board-level Invitations
+  const invitations = board_invitations || [];
+  // CardChecklist & CheckListItemCardReminder
+  const checklists = card.checklists || [];
+  // CardSubscriber
+  const subscribers = card.subscribers || [];
+  // CardVote
+  const votes = card.votes || [];
+  // CardWatcher
+  const watchers = card.watchers || [];
+
+  // Select state for assignee and column
+  const [assigneeId, setAssigneeId] = useState(card.assignee?.id ? card.assignee.id.toString() : '');
+  const [columnId, setColumnId] = useState(card.column?.id ? card.column.id.toString() : '');
+  const [updating, setUpdating] = useState(false);
+
+  // Update handler
+  const handleUpdate = (field: 'assignee_id' | 'column_id', value: string) => {
+    setUpdating(true);
+    const data: any = {};
+    if (field === 'assignee_id') {
+      setAssigneeId(value);
+      data.assignee_id = value || null;
+    } else if (field === 'column_id') {
+      setColumnId(value);
+      data.column_id = value;
+    }
+    router.put(route('agile.cards.update', card.id), data, {
+      preserveScroll: true,
+      onFinish: () => setUpdating(false),
+    });
+  };
 
   // ---------- helpers ----------
   const getPriorityColor = (priority: string) => {
@@ -225,6 +295,126 @@ export default function CardShow({ auth, card, project }: CardShowProps) {
                         {card.type}
                       </Badge>
                       <Badge variant="outline" className={getPriorityColor(card.priority)}>
+
+              {/* --- ENFORCED UI: CardActivity --- */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Activity</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {activityLogs.length === 0 ? (
+                    <span className="text-xs text-gray-500">No activity yet.</span>
+                  ) : (
+                    <ul className="text-xs space-y-1">
+                      {activityLogs.map((log: any) => (
+                        <li key={log.id}>{log.description || log.action || 'Activity'}</li>
+                      ))}
+                    </ul>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* --- ENFORCED UI: CardInvitations --- */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Board Invitations</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {invitations.length === 0 ? (
+                    <span className="text-xs text-gray-500">No invitations.</span>
+                  ) : (
+                    <ul className="text-xs space-y-1">
+                      {invitations.map((invite: any) => (
+                        <li key={invite.id}>{invite.email || invite.user?.name || 'Invitation'}</li>
+                      ))}
+                    </ul>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* --- ENFORCED UI: CardChecklist & Reminders --- */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Checklists</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {checklists.length === 0 ? (
+                    <span className="text-xs text-gray-500">No checklists.</span>
+                  ) : (
+                    <ul className="space-y-2">
+                      {checklists.map((cl: any) => (
+                        <li key={cl.id}>
+                          <div className="font-medium text-xs">{cl.title}</div>
+                          <ul className="ml-4 list-disc">
+                            {cl.items?.map((item: any) => (
+                              <li key={item.id} className="flex flex-col">
+                                <span>{item.name} {item.completed ? '(done)' : ''}</span>
+                                {item.reminders && item.reminders.length > 0 && (
+                                  <span className="text-[10px] text-blue-500">Reminders: {item.reminders.length}</span>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* --- ENFORCED UI: CardSubscribers --- */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Subscribers</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {subscribers.length === 0 ? (
+                    <span className="text-xs text-gray-500">No subscribers.</span>
+                  ) : (
+                    <ul className="text-xs space-y-1">
+                      {subscribers.map((sub: any) => (
+                        <li key={sub.id}>{sub.user?.name || sub.email || 'Subscriber'}</li>
+                      ))}
+                    </ul>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* --- ENFORCED UI: CardVotes --- */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Votes</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {votes.length === 0 ? (
+                    <span className="text-xs text-gray-500">No votes.</span>
+                  ) : (
+                    <ul className="text-xs space-y-1">
+                      {votes.map((vote: any) => (
+                        <li key={vote.id}>{vote.user?.name || 'Vote'}</li>
+                      ))}
+                    </ul>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* --- ENFORCED UI: CardWatchers --- */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Watchers</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {watchers.length === 0 ? (
+                    <span className="text-xs text-gray-500">No watchers.</span>
+                  ) : (
+                    <ul className="text-xs space-y-1">
+                      {watchers.map((w: any) => (
+                        <li key={w.id}>{w.user?.name || 'Watcher'}</li>
+                      ))}
+                    </ul>
+                  )}
+                </CardContent>
+              </Card>
                         {card.priority}
                       </Badge>
                     </div>
@@ -430,13 +620,14 @@ export default function CardShow({ auth, card, project }: CardShowProps) {
                       placeholder="Write something useful..."
                       rows={3}
                     />
+                    <MarkdownEditor initialValue='' />
                     {commentForm.errors.comment && (
                       <p className="text-sm text-red-600">{commentForm.errors.comment}</p>
                     )}
                     <div className="flex justify-end">
                       <Button type="submit" disabled={commentForm.processing || !commentForm.data.comment.trim()}>
                         <Send className="h-4 w-4 mr-2" />
-                        {commentForm.processing ? 'Posting...' : 'Post'}
+                        {commentForm.processing ? 'Commenting...' : 'Comment'}
                       </Button>
                     </div>
                   </form>
@@ -482,10 +673,20 @@ export default function CardShow({ auth, card, project }: CardShowProps) {
                     <span className="font-medium">{card.story_points ?? 'Not set'}</span>
                   </div>
 
-                  <div className="flex items-center gap-2 text-sm">
-                    <Flag className="h-4 w-4 text-gray-500" />
-                    <span className="text-gray-600 dark:text-gray-300">Status:</span>
-                    <span className="font-medium">{card.column?.name ?? 'N/A'}</span>
+                  {/* Status Select */}
+                  <div className="space-y-2">
+                    <Label htmlFor="column_id" className="flex items-center gap-2 text-sm">
+                      <Flag className="h-4 w-4 text-gray-500" />
+                      <span>Status:</span>
+                    </Label>
+                    <Select value={columnId} onValueChange={(value) => handleUpdate('column_id', value)} disabled={updating}>
+                      <SelectTrigger><SelectValue placeholder="Select column" /></SelectTrigger>
+                      <SelectContent>
+                        {board.columns.map((column: any) => (
+                          <SelectItem key={column.id} value={column.id.toString()}>{column.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   {card.due_date && (
@@ -498,18 +699,29 @@ export default function CardShow({ auth, card, project }: CardShowProps) {
 
                   <Separator />
 
+                  {/* Assignee Select */}
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm">
+                    <Label htmlFor="assignee_id" className="flex items-center gap-2 text-sm">
                       <Users className="h-4 w-4 text-gray-500" />
-                      <span className="text-gray-600 dark:text-gray-300">Assignee:</span>
-                      <span className="font-medium">{card.assignee?.name ?? 'Unassigned'}</span>
-                    </div>
+                      <span>Assignee:</span>
+                    </Label>
+                    <Select value={assigneeId} onValueChange={(value) => handleUpdate('assignee_id', value)} disabled={updating}>
+                      <SelectTrigger><SelectValue placeholder="Select assignee" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Unassigned</SelectItem>
+                        {board.members.map((member: any) => (
+                          member.user && (
+                            <SelectItem key={member.user.id} value={member.user.id.toString()}>{member.user.name}</SelectItem>
+                          )
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                    <div className="flex items-center gap-2 text-sm">
-                      <UserIcon className="h-4 w-4 text-gray-500" />
-                      <span className="text-gray-600 dark:text-gray-300">Reporter:</span>
-                      <span className="font-medium">{card.reporter?.name ?? 'N/A'}</span>
-                    </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <UserIcon className="h-4 w-4 text-gray-500" />
+                    <span className="text-gray-600 dark:text-gray-300">Reporter:</span>
+                    <span className="font-medium">{card.reporter?.name ?? 'N/A'}</span>
                   </div>
 
                   <Separator />

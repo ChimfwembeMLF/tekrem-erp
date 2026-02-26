@@ -168,17 +168,15 @@ export default function Index({ accounts, categories, types, filters }: Props) {
     }
   };
 
-  const formatBalance = (balance: number, currency: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
+  const formatBalance = (balance: number, currency: string = 'ZMW') => {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
       currency: currency,
     }).format(balance);
   };
 
   return (
-    <AppLayout>
-      <Head title={t('Chart of Accounts')} />
-
+    <AppLayout title={t('Chart of Accounts')} >
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

@@ -120,12 +120,7 @@ export default function Create({ accounts = [], categories = [], periodTypes = {
   return (
     <AppLayout
       title={t('finance.create_budget', 'Create Budget')}
-      breadcrumbs={[
-        { label: t('finance.title', 'Finance'), href: '/finance' },
-        { label: t('finance.budgets', 'Budgets'), href: '/finance/budgets' },
-        { label: t('finance.create_budget', 'Create Budget') },
-      ]}
-    >
+      >
       <Head title={t('finance.create_budget', 'Create Budget')} />
 
       <div className="space-y-6">

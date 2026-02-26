@@ -27,6 +27,7 @@ import {
 import useTranslate from '@/Hooks/useTranslate';
 import InvoiceItemsGenerator from '@/Components/Finance/InvoiceItemsGenerator';
 import { toast } from 'sonner';
+import useRoute from '@/Hooks/useRoute';
 
 interface Client {
   id: number;
@@ -56,6 +57,7 @@ interface Props {
 
 export default function Create({ clients = [], leads = [], currencies = {}, statuses = {} }: Props) {
   const { t } = useTranslate();
+  const route = useRoute();
   const [items, setItems] = useState<InvoiceItem[]>([
     { description: '', quantity: 1, unit_price: 0, total_price: 0 }
   ]);
@@ -66,7 +68,7 @@ export default function Create({ clients = [], leads = [], currencies = {}, stat
     billable_id: '',
     issue_date: new Date().toISOString().split('T')[0],
     due_date: '',
-    currency: 'USD',
+    currency: 'ZMW',
     status: 'draft',
     notes: '',
     terms: '',
@@ -136,7 +138,7 @@ export default function Create({ clients = [], leads = [], currencies = {}, stat
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
       currency: data.currency,
     }).format(amount);
@@ -163,11 +165,6 @@ export default function Create({ clients = [], leads = [], currencies = {}, stat
   return (
     <AppLayout
       title={t('finance.create_invoice', 'Create Invoice')}
-      breadcrumbs={[
-        { label: t('finance.title', 'Finance'), href: '/finance' },
-        { label: t('finance.invoices', 'Invoices'), href: '/finance/invoices' },
-        { label: t('finance.create_invoice', 'Create Invoice') },
-      ]}
     >
       <Head title={t('finance.create_invoice', 'Create Invoice')} />
 

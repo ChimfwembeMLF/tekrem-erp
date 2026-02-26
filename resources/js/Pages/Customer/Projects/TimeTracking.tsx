@@ -72,9 +72,9 @@ export default function TimeTracking({ project, timeEntries, totalHours, totalAm
     };
 
     const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-US', {
+        return new Intl\.NumberFormat\('en-ZM', {
             style: 'currency',
-            currency: 'USD',
+            currency: 'ZMW',
         }).format(amount);
     };
 

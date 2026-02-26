@@ -136,9 +136,9 @@ export default function Create({ accounts, previewData }: Props) {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'ZMW',
     }).format(amount);
   };
 
@@ -147,8 +147,7 @@ export default function Create({ accounts, previewData }: Props) {
   };
 
   return (
-    <AppLayout>
-      <Head title={t('Import Bank Statement')} />
+    <AppLayout title={t('Import Bank Statement')}>
 
       <div className="space-y-6">
         {/* Header */}

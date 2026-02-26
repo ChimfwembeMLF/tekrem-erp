@@ -85,9 +85,9 @@ export default function Edit({ conversation }: Props) {
     };
 
     const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-US', {
+        return new Intl\.NumberFormat\('en-ZM', {
             style: 'currency',
-            currency: 'USD',
+            currency: 'ZMW',
             minimumFractionDigits: 4,
         }).format(amount);
     };

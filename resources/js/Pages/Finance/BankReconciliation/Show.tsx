@@ -36,12 +36,7 @@ export default function ShowBankReconciliation({ reconciliation, account, bankSt
   return (
     <AppLayout
       title={t('finance.bank_reconciliation_details', 'Bank Reconciliation Details')}
-      breadcrumbs={[
-        { label: t('finance.title', 'Finance'), href: '/finance' },
-        { label: t('finance.bank_reconciliations', 'Bank Reconciliations'), href: '/finance/bank-reconciliations' },
-        { label: t('finance.bank_reconciliation_details', 'Bank Reconciliation Details') },
-      ]}
-    >
+      >
       <Head title={t('finance.bank_reconciliation_details', 'Bank Reconciliation Details')} />
 
       <div className="space-y-6 max-w-2xl mx-auto">

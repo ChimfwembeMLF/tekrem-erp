@@ -126,4 +126,5 @@ class BoardCard extends Model
     {
         return $this->hasMany(CardReminder::class, 'card_id');
     }
+
 }

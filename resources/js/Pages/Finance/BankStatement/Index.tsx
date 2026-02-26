@@ -201,9 +201,9 @@ export default function Index({ statements, accounts, filters, statuses }: Props
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'ZMW',
     }).format(amount);
   };
 
@@ -212,8 +212,7 @@ export default function Index({ statements, accounts, filters, statuses }: Props
   };
 
   return (
-    <AppLayout>
-      <Head title={t('Bank Statements')} />
+    <AppLayout title={t('Bank Statements')} >
 
       <div className="space-y-6">
         {/* Header */}

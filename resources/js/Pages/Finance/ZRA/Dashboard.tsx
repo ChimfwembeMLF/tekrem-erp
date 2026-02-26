@@ -111,7 +111,7 @@ export default function Dashboard({ stats, recentInvoices, monthlyTrends, apiHea
   };
 
   const formatCurrency = (amount: number, currency: string = 'ZMW') => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
       currency: currency,
     }).format(amount);

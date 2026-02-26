@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
 import { toast } from 'sonner';
+import useRoute from '@/Hooks/useRoute';
 
 interface Payment {
   id: number;
@@ -69,6 +70,7 @@ interface Props {
 
 export default function Show({ payment, paymentMethods, statuses }: Props) {
   const { t } = useTranslate();
+  const route = useRoute();
 
   const handleDelete = () => {
     if (confirm(t('common.confirm_delete', 'Are you sure you want to delete this item?'))) {
@@ -83,8 +85,8 @@ export default function Show({ payment, paymentMethods, statuses }: Props) {
     }
   };
 
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
+  const formatCurrency = (amount: number, currency: string = 'ZMW') => {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
       currency: currency,
     }).format(amount);
@@ -130,11 +132,6 @@ export default function Show({ payment, paymentMethods, statuses }: Props) {
   return (
     <AppLayout
       title={payment.payment_number}
-      breadcrumbs={[
-        { label: t('finance.title', 'Finance'), href: '/finance' },
-        { label: t('finance.payments', 'Payments'), href: '/finance/payments' },
-        { label: payment.payment_number },
-      ]}
     >
       <Head title={payment.payment_number} />
 

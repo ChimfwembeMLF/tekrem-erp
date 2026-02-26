@@ -55,7 +55,7 @@ export default function Create({
     description: '',
     is_system_account: false,
     allow_manual_entries: true,
-    currency: 'USD',
+    currency: 'ZMW',
     initial_balance: '',
   });
 

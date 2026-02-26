@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
 import { toast } from 'sonner';
+import useRoute from '@/Hooks/useRoute';
 
 interface Lead {
   id: number;
@@ -67,6 +68,7 @@ interface Props {
 
 export default function Edit({ quotation, leads, currencies, statuses }: Props) {
   const { t } = useTranslate();
+  const route = useRoute();
   const [items, setItems] = useState<QuotationItem[]>(quotation.items || [
     { description: '', quantity: 1, unit_price: 0, total_price: 0 }
   ]);
@@ -136,7 +138,7 @@ export default function Edit({ quotation, leads, currencies, statuses }: Props) 
     };
 
     put(route('finance.quotations.update', quotation.id), {
-      data: formData,
+      data: formData as any,
       onSuccess: () => {
         toast.success(t('finance.quotation_updated', 'Quotation updated successfully'));
       },
@@ -147,7 +149,7 @@ export default function Edit({ quotation, leads, currencies, statuses }: Props) 
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
       currency: data.currency,
     }).format(amount);
@@ -156,14 +158,7 @@ export default function Edit({ quotation, leads, currencies, statuses }: Props) 
   return (
     <AppLayout
       title={`${t('common.edit', 'Edit')} ${t('finance.quotation', 'Quotation')} ${quotation.quotation_number}`}
-      breadcrumbs={[
-        { label: t('finance.title', 'Finance'), href: '/finance' },
-        { label: t('finance.quotations', 'Quotations'), href: '/finance/quotations' },
-        { label: quotation.quotation_number, href: `/finance/quotations/${quotation.id}` },
-        { label: t('common.edit', 'Edit') },
-      ]}
     >
-      <Head title={`${t('common.edit', 'Edit')} ${t('finance.quotation', 'Quotation')} ${quotation.quotation_number}`} />
 
       <div className="space-y-6">
         {/* Header */}

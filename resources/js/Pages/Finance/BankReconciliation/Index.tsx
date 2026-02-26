@@ -180,9 +180,9 @@ export default function Index({ reconciliations, accounts, filters, statuses }: 
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'ZMW',
     }).format(amount);
   };
 
@@ -191,9 +191,7 @@ export default function Index({ reconciliations, accounts, filters, statuses }: 
   };
 
   return (
-    <AppLayout>
-      <Head title={t('Bank Reconciliation')} />
-
+    <AppLayout title={t('Bank Reconciliation')} >
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

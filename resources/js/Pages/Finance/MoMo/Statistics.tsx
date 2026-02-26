@@ -128,7 +128,7 @@ export default function Statistics({ statistics, date_range, providers }: Props)
   };
 
   const formatCurrency = (amount: number, currency: string = 'ZMW') => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
       currency: currency,
     }).format(amount);
@@ -163,12 +163,7 @@ export default function Statistics({ statistics, date_range, providers }: Props)
   return (
     <AppLayout
       title={t('finance.momo.statistics', 'Mobile Money Statistics')}
-      breadcrumbs={[
-        { label: t('finance.title', 'Finance'), href: '/finance' },
-        { label: t('finance.momo.title', 'Mobile Money'), href: '/finance/momo' },
-        { label: t('finance.momo.statistics', 'Statistics') },
-      ]}
-    >
+      >
       <Head title={t('finance.momo.statistics', 'Mobile Money Statistics')} />
 
       <div className="space-y-6">

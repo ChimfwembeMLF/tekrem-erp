@@ -135,7 +135,7 @@ export default function Create({ providers, invoice }: Props) {
   };
 
   const formatCurrency = (amount: number, currency: string = 'ZMW') => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
       currency: currency,
     }).format(amount);
@@ -162,12 +162,7 @@ export default function Create({ providers, invoice }: Props) {
   return (
     <AppLayout
       title={t('finance.momo.new_transaction', 'New Mobile Money Transaction')}
-      breadcrumbs={[
-        { label: t('finance.title', 'Finance'), href: '/finance' },
-        { label: t('finance.momo.title', 'Mobile Money'), href: '/finance/momo' },
-        { label: t('finance.momo.new_transaction', 'New Transaction') },
-      ]}
-    >
+      >
       <Head title={t('finance.momo.new_transaction', 'New Mobile Money Transaction')} />
 
       <div className="space-y-6">

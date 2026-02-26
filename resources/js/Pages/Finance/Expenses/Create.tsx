@@ -96,8 +96,8 @@ export default function Create({ accounts = [], categories = [], statuses = {} }
     });
   };
 
-  const formatCurrency = (currency: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
+  const formatCurrency = (currency: string = 'ZMW') => {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
       currency: currency,
     }).format(0).replace('0.00', '');
@@ -131,12 +131,7 @@ export default function Create({ accounts = [], categories = [], statuses = {} }
   return (
     <AppLayout
       title={t('finance.add_expense', 'Add Expense')}
-      breadcrumbs={[
-        { label: t('finance.title', 'Finance'), href: '/finance' },
-        { label: t('finance.expenses', 'Expenses'), href: '/finance/expenses' },
-        { label: t('finance.add_expense', 'Add Expense') },
-      ]}
-    >
+      >
       <Head title={t('finance.add_expense', 'Add Expense')} />
 
       <div className="space-y-6">

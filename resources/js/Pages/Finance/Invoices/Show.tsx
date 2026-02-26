@@ -173,7 +173,7 @@ export default function Show({ invoice }: Props) {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
       currency: invoice.currency,
     }).format(amount);
@@ -247,12 +247,7 @@ export default function Show({ invoice }: Props) {
   return (
     <AppLayout
       title={`${t('finance.invoice', 'Invoice')} ${invoice.invoice_number}`}
-      breadcrumbs={[
-        { label: t('finance.title', 'Finance'), href: '/finance' },
-        { label: t('finance.invoices', 'Invoices'), href: '/finance/invoices' },
-        { label: invoice.invoice_number },
-      ]}
-    >
+      >
       <Head title={`${t('finance.invoice', 'Invoice')} ${invoice.invoice_number}`} />
 
       <div className="space-y-6">

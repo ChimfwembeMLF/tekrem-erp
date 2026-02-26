@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
 import { toast } from 'sonner';
+import useRoute from '@/Hooks/useRoute';
 
 interface Lead {
   id: number;
@@ -50,6 +51,7 @@ interface Props {
 
 export default function Create({ leads = [], currencies = {}, statuses = {}, selectedLead }: Props) {
   const { t } = useTranslate();
+  const route = useRoute();
   const [items, setItems] = useState<QuotationItem[]>([
     { description: '', quantity: 1, unit_price: 0, total_price: 0 }
   ]);
@@ -58,7 +60,7 @@ export default function Create({ leads = [], currencies = {}, statuses = {}, sel
     lead_id: selectedLead?.id?.toString() || '',
     issue_date: new Date().toISOString().split('T')[0],
     expiry_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
-    currency: 'USD',
+    currency: 'ZMW',
     status: 'draft',
     notes: '',
     terms: '',
@@ -117,7 +119,7 @@ export default function Create({ leads = [], currencies = {}, statuses = {}, sel
     };
 
     post(route('finance.quotations.store'), {
-      data: formData,
+      data: formData as any,
       onSuccess: () => {
         toast.success(t('finance.quotation_created', 'Quotation created successfully'));
       },
@@ -128,7 +130,7 @@ export default function Create({ leads = [], currencies = {}, statuses = {}, sel
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
       currency: data.currency,
     }).format(amount);
@@ -137,11 +139,6 @@ export default function Create({ leads = [], currencies = {}, statuses = {}, sel
   return (
     <AppLayout
       title={t('finance.create_quotation', 'Create Quotation')}
-      breadcrumbs={[
-        { label: t('finance.title', 'Finance'), href: '/finance' },
-        { label: t('finance.quotations', 'Quotations'), href: '/finance/quotations' },
-        { label: t('finance.create_quotation', 'Create Quotation') },
-      ]}
     >
       <Head title={t('finance.create_quotation', 'Create Quotation')} />
 

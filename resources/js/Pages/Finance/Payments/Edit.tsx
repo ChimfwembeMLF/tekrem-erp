@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
 import { toast } from 'sonner';
+import useRoute from '@/Hooks/useRoute';
 
 interface Account {
   id: number;
@@ -87,6 +88,7 @@ interface Props {
 
 export default function Edit({ payment, accounts, invoices, clients, leads, paymentMethods, statuses }: Props) {
   const { t } = useTranslate();
+  const route = useRoute();
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(payment.invoice || null);
 
   const { data, setData, put, processing, errors } = useForm({
@@ -137,8 +139,8 @@ export default function Edit({ payment, accounts, invoices, clients, leads, paym
     });
   };
 
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
+  const formatCurrency = (amount: number, currency: string = 'ZMW') => {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
       currency: currency,
     }).format(amount);
@@ -147,12 +149,6 @@ export default function Edit({ payment, accounts, invoices, clients, leads, paym
   return (
     <AppLayout
       title={t('finance.edit_payment', 'Edit Payment')}
-      breadcrumbs={[
-        { label: t('finance.title', 'Finance'), href: '/finance' },
-        { label: t('finance.payments', 'Payments'), href: '/finance/payments' },
-        { label: payment.payment_number, href: `/finance/payments/${payment.id}` },
-        { label: t('common.edit', 'Edit') },
-      ]}
     >
       <Head title={t('finance.edit_payment', 'Edit Payment')} />
 

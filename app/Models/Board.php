@@ -61,5 +61,5 @@ class Board extends Model
     public function invitations()
     {
         return $this->hasMany(BoardInvitation::class);
-    }
+    }    
 }

@@ -160,8 +160,8 @@ export default function Tree({ accountTree, categories, types, filters }: Props)
     }
   };
 
-  const formatBalance = (balance: number, currency: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
+  const formatBalance = (balance: number, currency: string = 'ZMW') => {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
       currency: currency,
     }).format(balance);

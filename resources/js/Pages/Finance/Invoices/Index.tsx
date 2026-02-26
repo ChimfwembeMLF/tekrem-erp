@@ -152,8 +152,8 @@ export default function Index({ invoices, filters, statuses, billables }: Props)
     });
   };
 
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
+  const formatCurrency = (amount: number, currency: string = 'ZMW') => {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
       currency: currency,
     }).format(amount);
@@ -212,7 +212,6 @@ export default function Index({ invoices, filters, statuses, billables }: Props)
 
   return (
     <AppLayout title={t('finance.invoices', 'Invoices')}>
-      <Head title={t('finance.invoices', 'Invoices')} />
 
       <div className="py-12">
         <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">

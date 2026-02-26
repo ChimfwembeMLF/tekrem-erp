@@ -100,8 +100,8 @@ export default function Show({ expense, statuses }: Props) {
     });
   };
 
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
+  const formatCurrency = (amount: number, currency: string = 'ZMW') => {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
       currency: currency,
     }).format(amount);
@@ -138,12 +138,7 @@ export default function Show({ expense, statuses }: Props) {
   return (
     <AppLayout
       title={expense.expense_number}
-      breadcrumbs={[
-        { label: t('finance.title', 'Finance'), href: '/finance' },
-        { label: t('finance.expenses', 'Expenses'), href: '/finance/expenses' },
-        { label: expense.expense_number },
-      ]}
-    >
+      >
       <Head title={expense.expense_number} />
 
       <div className="space-y-6">

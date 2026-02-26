@@ -17,6 +17,20 @@ import {
 import useRoute from '@/Hooks/useRoute';
 import { ProjectTask } from '@/types';
 
+interface BoardCard {
+  id: number;
+  title: string;
+  description?: string;
+  status: string;
+  priority?: string;
+  due_date?: string;
+  board?: { name: string };
+  column?: { name: string };
+  sprint?: { name: string };
+  epic?: { name: string };
+  assignee?: { name: string };
+}
+
 interface MyTasksProps {
   auth: {
     user: any;
@@ -30,13 +44,14 @@ interface MyTasksProps {
     to: number;
     total: number;
   };
+  cards: BoardCard[];
   filters: {
     status?: string;
     priority?: string;
   };
 }
 
-export default function MyTasks({ auth, tasks, filters }: MyTasksProps) {
+export default function MyTasks({ auth, tasks, cards = [], filters }: MyTasksProps) {
   console.log('tasks',tasks);
   const route = useRoute();
   const [status, setStatus] = useState(filters.status || 'all');
@@ -173,12 +188,14 @@ export default function MyTasks({ auth, tasks, filters }: MyTasksProps) {
                 </div>
               </div>
 
+
               {/* Tasks List */}
-              <div className="space-y-4">
+              <div className="space-y-4 mb-10">
                 {tasks.data.length > 0 ? (
                   tasks.data.map((task) => (
                     <Card key={task.id} className="hover:shadow-md transition-shadow">
                       <CardContent className="p-6">
+                        {/* ...existing code for tasks... */}
                         <div className="flex justify-between items-start mb-4">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
@@ -199,7 +216,6 @@ export default function MyTasks({ auth, tasks, filters }: MyTasksProps) {
                             )}
                           </div>
                         </div>
-
                         <div className="flex flex-wrap gap-2 mb-4">
                           <Badge className={getStatusColor(task.status)}>
                             {task.status.replace('-', ' ')}
@@ -211,7 +227,6 @@ export default function MyTasks({ auth, tasks, filters }: MyTasksProps) {
                             {task.type}
                           </Badge>
                         </div>
-
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
                           <div className="flex items-center">
                             <FolderOpen className="h-4 w-4 mr-2" />
@@ -222,14 +237,12 @@ export default function MyTasks({ auth, tasks, filters }: MyTasksProps) {
                               {task.project?.name || 'Project'}
                             </Link>
                           </div>
-                          
                           {task.milestone && (
                             <div className="flex items-center">
                               <Target className="h-4 w-4 mr-2" />
                               <span>{task.milestone.name}</span>
                             </div>
                           )}
-                          
                           <div className="flex items-center">
                             <Calendar className="h-4 w-4 mr-2" />
                             <span className={isOverdue(task.due_date, task.status) ? 'text-red-600 font-medium' : ''}>
@@ -237,7 +250,6 @@ export default function MyTasks({ auth, tasks, filters }: MyTasksProps) {
                             </span>
                           </div>
                         </div>
-
                         {/* Progress Bar */}
                         {task.progress > 0 && (
                           <div className="mt-4">
@@ -253,7 +265,6 @@ export default function MyTasks({ auth, tasks, filters }: MyTasksProps) {
                             </div>
                           </div>
                         )}
-
                         {/* Tags */}
                         {task.tags && task.tags.length > 0 && (
                           <div className="mt-4 flex flex-wrap gap-1">
@@ -279,6 +290,66 @@ export default function MyTasks({ auth, tasks, filters }: MyTasksProps) {
                     <CheckSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-500 text-lg">No tasks assigned to you.</p>
                     <p className="text-gray-400">Tasks will appear here when they are assigned to you.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Board Cards List */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg mb-2">My Board Cards</h3>
+                {cards.length > 0 ? (
+                  cards.map((card) => (
+                    <Card key={card.id} className="hover:shadow-md transition-shadow border-blue-200">
+                      <CardContent className="p-6">
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-lg font-semibold text-blue-700">
+                                {card.title}
+                              </span>
+                            </div>
+                            {card.description && (
+                              <p className="text-gray-600 mb-3 line-clamp-2">
+                                {card.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          <Badge className={getStatusColor(card.status)}>
+                            {card.status.replace('_', ' ')}
+                          </Badge>
+                          {card.priority && (
+                            <Badge className={getPriorityColor(card.priority)}>
+                              {card.priority}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                          {card.board && (
+                            <div className="flex items-center">
+                              <FolderOpen className="h-4 w-4 mr-2" />
+                              <span>{card.board.name}</span>
+                            </div>
+                          )}
+                          {card.column && (
+                            <div className="flex items-center">
+                              <Target className="h-4 w-4 mr-2" />
+                              <span>{card.column.name}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center">
+                            <Calendar className="h-4 w-4 mr-2" />
+                            <span>{formatDate(card.due_date)}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <CheckSquare className="h-10 w-10 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-500">No board cards assigned to you.</p>
                   </div>
                 )}
               </div>

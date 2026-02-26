@@ -99,9 +99,9 @@ export default function ChartOfAccounts({ reportData }: Props) {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'ZMW',
     }).format(amount);
   };
 
@@ -119,8 +119,7 @@ export default function ChartOfAccounts({ reportData }: Props) {
   }, {} as Record<string, Account[]>);
 
   return (
-    <AppLayout>
-      <Head title={reportData.title} />
+    <AppLayout title={reportData.title} >
 
       <div className="space-y-6">
         {/* Header */}

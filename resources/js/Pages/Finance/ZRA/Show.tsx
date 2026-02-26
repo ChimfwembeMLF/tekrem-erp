@@ -152,7 +152,7 @@ export default function Show({ zraInvoice }: Props) {
   };
 
   const formatCurrency = (amount: number, currency: string = 'ZMW') => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
       currency: currency,
     }).format(amount);
@@ -161,12 +161,7 @@ export default function Show({ zraInvoice }: Props) {
   return (
     <AppLayout
       title={t('finance.zra.smart_invoice_details', 'ZRA Smart Invoice Details')}
-      breadcrumbs={[
-        { label: t('finance.title', 'Finance'), href: '/finance' },
-        { label: t('finance.zra.title', 'ZRA Smart Invoices'), href: '/finance/zra' },
-        { label: zraInvoice.invoice.invoice_number },
-      ]}
-    >
+      >
       <Head title={t('finance.zra.smart_invoice_details', 'ZRA Smart Invoice Details')} />
 
       <div className="space-y-6">

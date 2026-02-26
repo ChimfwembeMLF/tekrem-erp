@@ -165,7 +165,7 @@ export default function Index({ transactions, providers, filters }: Props) {
   };
 
   const formatCurrency = (amount: number, currency: string = 'ZMW') => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
       currency: currency,
     }).format(amount);
@@ -184,11 +184,7 @@ export default function Index({ transactions, providers, filters }: Props) {
   return (
     <AppLayout
       title={t('finance.momo.title', 'Mobile Money')}
-      breadcrumbs={[
-        { label: t('finance.title', 'Finance'), href: '/finance' },
-        { label: t('finance.momo.title', 'Mobile Money') },
-      ]}
-    >
+      >
       <Head title={t('finance.momo.title', 'Mobile Money')} />
 
       <div className="space-y-6">

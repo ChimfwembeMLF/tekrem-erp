@@ -134,13 +134,7 @@ export default function Edit({ budget, accounts, categories, periodTypes, status
   return (
     <AppLayout
       title={t('finance.edit_budget', 'Edit Budget')}
-      breadcrumbs={[
-        { label: t('finance.title', 'Finance'), href: '/finance' },
-        { label: t('finance.budgets', 'Budgets'), href: '/finance/budgets' },
-        { label: budget.name, href: `/finance/budgets/${budget.id}` },
-        { label: t('common.edit', 'Edit') },
-      ]}
-    >
+      >
       <Head title={t('finance.edit_budget', 'Edit Budget')} />
 
       <div className="space-y-6">

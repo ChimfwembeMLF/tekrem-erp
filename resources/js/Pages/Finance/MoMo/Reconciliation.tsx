@@ -189,7 +189,7 @@ export default function Reconciliation({ reconciliation_items, summary, provider
   };
 
   const formatCurrency = (amount: number, currency: string = 'ZMW') => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
       currency: currency,
     }).format(amount);
@@ -212,12 +212,7 @@ export default function Reconciliation({ reconciliation_items, summary, provider
   return (
     <AppLayout
       title={t('finance.momo.reconciliation', 'Mobile Money Reconciliation')}
-      breadcrumbs={[
-        { label: t('finance.title', 'Finance'), href: '/finance' },
-        { label: t('finance.momo.title', 'Mobile Money'), href: '/finance/momo' },
-        { label: t('finance.momo.reconciliation', 'Reconciliation') },
-      ]}
-    >
+      >
       <Head title={t('finance.momo.reconciliation', 'Mobile Money Reconciliation')} />
 
       <div className="space-y-6">

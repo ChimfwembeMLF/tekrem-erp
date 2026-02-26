@@ -97,11 +97,11 @@ export default function Dashboard({
   const { t } = useTranslate();
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
+  return new Intl.NumberFormat('en-ZM', {
+    style: 'currency',
+    currency: 'ZMW',
+  }).format(amount);
+};
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -132,8 +132,7 @@ export default function Dashboard({
   };
 
   return (
-    <AppLayout>
-      <Head title={t('finance.title', 'Finance')} />
+    <AppLayout title={t('finance.title', 'Finance')}>
 
       <div className="space-y-6">
         {/* Header */}

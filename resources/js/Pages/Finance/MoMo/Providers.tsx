@@ -217,12 +217,7 @@ export default function Providers({ providers }: Props) {
   return (
     <AppLayout
       title={t('finance.momo.providers', 'Mobile Money Providers')}
-      breadcrumbs={[
-        { label: t('finance.title', 'Finance'), href: '/finance' },
-        { label: t('finance.momo.title', 'Mobile Money'), href: '/finance/momo' },
-        { label: t('finance.momo.providers', 'Providers') },
-      ]}
-    >
+      >
       <Head title={t('finance.momo.providers', 'Mobile Money Providers')} />
 
       <div className="space-y-6">

@@ -117,8 +117,8 @@ export default function Index({
   const [dateFrom, setDateFrom] = useState(filters.date_from || '');
   const [dateTo, setDateTo] = useState(filters.date_to || '');
 
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
+  const formatCurrency = (amount: number, currency: string = 'ZMW') => {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
       currency: currency,
     }).format(amount);
