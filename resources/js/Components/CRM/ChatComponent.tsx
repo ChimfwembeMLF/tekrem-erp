@@ -6,6 +6,8 @@ import { Textarea } from '@/Components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/Components/ui/avatar';
 import { Badge } from '@/Components/ui/badge';
 import { useTypedPage } from '@/Hooks/useTypedPage';
+import { subscribeLiveChatEvents } from '@/resources/js/echo';
+import useRoute from '@/Hooks/useRoute';
 
 interface ChatMessage {
   id: number;
@@ -34,6 +36,7 @@ export default function ChatComponent({
   recipientId,
   initialMessages = []
 }: ChatComponentProps) {
+  const route = useRoute();
   const page = useTypedPage();
   const currentUser = page.props.auth.user;
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
@@ -78,11 +81,34 @@ export default function ChatComponent({
           setMessages(prevMessages => [...prevMessages, e]);
         }
       });
-      
-      // Cleanup function
+
+      // Add listeners for all livechat events (in addition to existing message listeners)
+      const handlers = {
+        onEdit: (e) => setMessages(prev => prev.map(m => m.id === e.id ? { ...m, ...e } : m)),
+        onReaction: (e) => {/* handle reaction update */},
+        onPin: (e) => {/* handle pin update */},
+        onComment: (e) => {/* handle comment update */},
+        onTyping: (e) => {/* handle typing indicator */},
+        onRead: (e) => setMessages(prev => prev.map(m => m.id === e.id ? { ...m, is_read: true } : m)),
+      };
+
+      const liveChannel = subscribeLiveChatEvents(channelName, handlers);
+      const userLiveChannel = subscribeLiveChatEvents(`user.${currentUser.id}`, handlers);
+
+      // Cleanup function for new listeners
       return () => {
-        channel.stopListening('.chat.message');
-        userChannel.stopListening('.chat.message');
+        channel.stopListening('.chat.edit');
+        channel.stopListening('.chat.reaction');
+        channel.stopListening('.chat.pin');
+        channel.stopListening('.chat.comment');
+        channel.stopListening('.chat.typing');
+        channel.stopListening('.chat.read');
+        userChannel.stopListening('.chat.edit');
+        userChannel.stopListening('.chat.reaction');
+        userChannel.stopListening('.chat.pin');
+        userChannel.stopListening('.chat.comment');
+        userChannel.stopListening('.chat.typing');
+        userChannel.stopListening('.chat.read');
       };
     }
   }, [chattableType, chattableId, currentUser]);

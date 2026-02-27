@@ -4,6 +4,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\MomoWebhookController;
 
+
+Route::post('/auth/google', [\App\Http\Controllers\Auth\FirebaseSocialController::class, 'google']);
+
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');

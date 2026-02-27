@@ -1,6 +1,7 @@
 import React, { PropsWithChildren } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/Components/ui/card';
 import ApplicationLogo from '@/Components/ApplicationLogo';
+import GoogleAuthButton from './GoogleAuthButton';
 
 interface AuthCardProps {
   title?: string;
@@ -29,6 +30,9 @@ export default function AuthCard({
         )}
         <CardContent>
           {children}
+          <div style={{ margin: '24px 0', textAlign: 'center' }}>
+            <GoogleAuthButton />
+          </div>
         </CardContent>
         {footer && (
           <CardFooter className='dark:text-gray-800'>

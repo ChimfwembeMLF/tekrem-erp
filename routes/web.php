@@ -5,6 +5,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\WebsiteController;
 use Illuminate\Support\Facades\Route;
 
+
 // Public Website Routes
 Route::get('/', [WebsiteController::class, 'index'])->name('home');
 
