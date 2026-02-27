@@ -30,9 +30,9 @@ export default function AuthCard({
         )}
         <CardContent>
           {children}
-          <div style={{ margin: '24px 0', textAlign: 'center' }}>
+          {/* <div style={{ margin: '24px 0', textAlign: 'center' }}>
             <GoogleAuthButton />
-          </div>
+          </div> */}
         </CardContent>
         {footer && (
           <CardFooter className='dark:text-gray-800'>
