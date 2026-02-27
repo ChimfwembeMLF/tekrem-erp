@@ -6,8 +6,8 @@ import { Textarea } from '@/Components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/Components/ui/avatar';
 import { Badge } from '@/Components/ui/badge';
 import { useTypedPage } from '@/Hooks/useTypedPage';
-import { subscribeLiveChatEvents } from '@/resources/js/echo';
 import useRoute from '@/Hooks/useRoute';
+import { subscribeLiveChatEvents } from '@/echo';
 
 interface ChatMessage {
   id: number;
