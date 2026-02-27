@@ -178,7 +178,7 @@ export default function MainNav({ settings }: MainNavProps) {
           </NavigationMenuContent>
         </NavigationMenuItem>
 
-        <NavigationMenuItem>
+        {/* <NavigationMenuItem>
           <NavigationMenuLink asChild>
             <Link
               href={route('portfolio')}
@@ -190,7 +190,7 @@ export default function MainNav({ settings }: MainNavProps) {
               Portifolio
             </Link>
           </NavigationMenuLink>
-        </NavigationMenuItem>
+        </NavigationMenuItem> */}
 
          <NavigationMenuItem>
           <NavigationMenuLink asChild>

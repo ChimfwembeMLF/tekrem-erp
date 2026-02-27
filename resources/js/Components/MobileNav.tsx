@@ -22,15 +22,15 @@ export default function MobileNav({ settings }: MobileNavProps) {
     { href: route('home'), label: 'Home' },
     { href: route('about'), label: 'About' },
     { href: route('services'), label: 'Services' },
-    {
-      href: '/guest/portfolio',
-      label: 'Portfolio',
-      submenu: [
-        { href: '/guest/portfolio', label: 'View Projects' },
-        { href: '/guest/testimonials', label: 'Testimonials' },
-        { href: '/guest/portfolio/services', label: 'Service Examples' },
-      ]
-    },
+    // {
+    //   href: '/guest/portfolio',
+    //   label: 'Portfolio',
+    //   submenu: [
+    //     { href: '/guest/portfolio', label: 'View Projects' },
+    //     { href: '/guest/testimonials', label: 'Testimonials' },
+    //     { href: '/guest/portfolio/services', label: 'Service Examples' },
+    //   ]
+    // },
     {
       href: '/guest/inquiry',
       label: 'Get Started',

@@ -9,7 +9,7 @@ import { Button } from '@/Components/ui/button.jsx';
 import MobileNav from '@/Components/MobileNav';
 import MainNav from '@/Components/MainNav';
 import GuestChatWidget from '@/Components/GuestChat/GuestChatWidget';
-import { Facebook, Instagram, Linkedin, Twitter, X } from 'lucide-react';
+import { Contact, Facebook, Instagram, Linkedin, MailIcon, Settings2Icon, Twitter, X } from 'lucide-react';
 
 interface Props {
   title: string;
@@ -41,14 +41,18 @@ export default function GuestLayout({
 
         {/* Modern Header */}
         {showHeader && (
-          <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-white/10 dark:bg-gray-900/10 border-b border-white/20 dark:border-white/10 shadow-sm">
+          <header className="sticky top-0 z-50 w-full backdrop-blur-sm bg-transperant dark:bg-gray-900/10 border-b border-white/20 dark:border-white/10 shadow-sm">
             {/* Top Bar */}
-            <div className="border-b border-white/10 dark:border-white/5 bg-white/5 dark:bg-white/5">
+            <div className="border-b border-white/20 dark:border-white/10 bg-transperant dark:bg-white/5">
               <div className="container mx-auto px-4">
-                <div className="flex justify-between items-center py-2 text-sm">
-                  <div className="flex items-center gap-4 text-gray-600 dark:text-gray-400">
-                    <span className="hidden md:inline">📧 {settings.company_email || 'hello@tekrem.com'}</span>
-                    <span className="hidden md:inline">📞 {settings.company_phone || '+260 976607840'}</span>
+                <div className="flex justify-between items-center py-2 text-md">
+                  <div className="flex items-center gap-4 font-medium text-gray-800 dark:text-gray-200">
+                    <div className="flex items-center gap-1">
+                      <MailIcon className='w-4 h-4' /><span className="hidden md:inline"> {settings.company_email || 'hello@tekrem.com'}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Contact className='w-4 h-4' /> <span className="hidden md:inline">{settings.company_phone || '+260 976607840'}</span>
+                    </div>
                   </div>
                   <div className="flex gap-3">
                     <Link className="hover:text-blue-600 transition-colors duration-200" href="#">
@@ -94,7 +98,7 @@ export default function GuestLayout({
                   {/* Auth Links */}
                   <div className="flex items-center gap-3">
                     {page.props.auth.user ? (
-                      <Button asChild className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                      <Button asChild className="bg-gradient-to-r from-secondary to-primary hover:from-primary hover:to-secondary">
                         <Link href={route('dashboard')}>
                           Dashboard
                         </Link>
@@ -124,9 +128,9 @@ export default function GuestLayout({
         <main>{children}</main>
 
         {/* Modern Footer */}
-        <footer className="bg-gray-100 dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800">
+        <footer className="relative bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 py-20 overflow-hidden">
           {/* Glass overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 pointer-events-none" />
+          {/* <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 pointer-events-none" /> */}
 
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
             {/* Main Footer Content */}

@@ -5,21 +5,21 @@ import useTypedPage from '@/Hooks/useTypedPage';
 import { Link } from '@inertiajs/react';
 import useRoute from '@/Hooks/useRoute';
 import aboutUsIllustration from '../../../../public/assets/illustrations/about-us.png';
+import TeamCarousel from '@/Components/TeamCarousel';
 export default function About() {
   const page = useTypedPage();
   const route = useRoute();
   const settings: any = page.props.settings || {};
 
+  
   const orgData = [
     {
-      name: "Chimfwembe Kangwa",
+      name: "Kangwa Chimfwembe",
       initials: "CK",
       role: "CTO / Developer",
       bio: "Passionate about scalable systems and modern development practices.",
       color: "from-teal-500 to-cyan-600",
-      image: "/assets/team/chimfwembe-kangwa.png",
-      experience: "5+ years experience",
-      expertise: "Full-stack Development, System Architecture",
+      image: "/assets/team/chimfwembe-kangwa1.png",
       socials: [
         { platform: "linkedin", url: "#" },
         { platform: "github", url: "#" },
@@ -33,8 +33,6 @@ export default function About() {
       bio: "Focused on process optimization and reliable software delivery.",
       color: "from-emerald-500 to-green-600",
       image: "/assets/team/joseph-H-banda.png",
-      experience: "4+ years experience",
-      expertise: "Operations Management, Backend Development",
       socials: [
         { platform: "linkedin", url: "#" },
         { platform: "github", url: "#" },
@@ -48,8 +46,6 @@ export default function About() {
       bio: "Designing intuitive user experiences and modern interfaces.",
       color: "from-indigo-500 to-violet-600",
       image: "/assets/team/fackson-kangwa.png",
-      experience: "3+ years experience",
-      expertise: "UI/UX Design, Frontend Development",
       socials: [
         { platform: "linkedin", url: "#" },
         { platform: "github", url: "https://github.com/Kangwajr" },
@@ -63,8 +59,6 @@ export default function About() {
       bio: "Blending finance knowledge with creative marketing strategies.",
       color: "from-pink-500 to-rose-600",
       image: "/assets/team/joel-B-chamana.png",
-      experience: "4+ years experience",
-      expertise: "Digital Marketing, Financial Analysis",
       socials: [
         { platform: "linkedin", url: "#" },
         { platform: "github", url: "#" },
@@ -78,8 +72,6 @@ export default function About() {
       bio: "Driving growth through client relationships and financial insight.",
       color: "from-yellow-500 to-orange-600",
       image: "/assets/team/joseph-L-banda.png",
-      experience: "3+ years experience",
-      expertise: "Sales Strategy, Client Relations",
       socials: [
         { platform: "linkedin", url: "#" },
         { platform: "github", url: "#" },
@@ -93,8 +85,6 @@ export default function About() {
       bio: "Ensuring projects are delivered on time with high quality.",
       color: "from-fuchsia-500 to-purple-600",
       image: "/assets/team/temwani-tembo.png",
-      experience: "4+ years experience",
-      expertise: "Project Management, Agile Methodologies",
       socials: [
         { platform: "linkedin", url: "#" },
         { platform: "github", url: "#" },
@@ -106,10 +96,8 @@ export default function About() {
       initials: "SB",
       role: "Creative / Graphic Designer",
       bio: "Crafting unique visuals and brand identities that stand out.",
-      color: "from-sky-500 to-blue-600",
+      color: "from-sky-500 to-primary",
       image: "/assets/team/savior-banda.png",
-      experience: "3+ years experience",
-      expertise: "Graphic Design, Brand Identity",
       socials: [
         { platform: "linkedin", url: "#" },
         { platform: "github", url: "#" },
@@ -118,17 +106,18 @@ export default function About() {
     },
   ];
 
+
   return (
     <GuestLayout title="About Us">
       <Head title="About Us" />
 
       {/* Modern Hero Section with Gradient Background */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="relative overflow-hidden py-20 bg-white dark:bg-gray-900 -mt-32">
         {/* Animated background elements */}
-        <div className="absolute inset-0 overflow-hidden">
+        {/* <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -right-32 w-96 h-96 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute -bottom-40 -left-32 w-96 h-96 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        </div>
+          <div className="absolute bottom-32 left-10 w-96 h-96 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div> */}
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
           <div className="lg:grid lg:grid-cols-12 lg:gap-8 lg:items-center">
@@ -184,7 +173,7 @@ export default function About() {
               <div className="mt-10 flex flex-col sm:flex-row gap-4">
                 <Link
                   href={route('services')}
-                  className="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
+                  className="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-secondary to-primary hover:from-primary hover:to-secondary text-white font-semibold rounded-xl transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
                 >
                   Our Services
                   <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -207,10 +196,10 @@ export default function About() {
             <div className="lg:col-span-6 mt-12 lg:mt-0">
               <div className="relative">
                 {/* Decorative elements */}
-                <div className="absolute -top-4 -left-4 w-24 h-24 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full opacity-20 animate-pulse"></div>
-                <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full opacity-20 animate-pulse delay-500"></div>
+                <div className="absolute -top-4 -left-4 w-24 h-24 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full opacity-20 animate-pulse blur-3xl"></div>
+                <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full opacity-20 animate-pulse delay-500 blur-3xl"></div>
                 
-                <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-2xl">
+                <div className="relative">
                   <div className="text-center">
                     <div className="w-full h-96 flex items-center justify-center mx-auto mb-6">
                       {/* <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -218,7 +207,7 @@ export default function About() {
                       </svg> */}
                       <img src={aboutUsIllustration} alt="About us illustration" />
                     </div>
-                    <blockquote className="text-xl font-medium text-gray-900 dark:text-white mb-4">
+                    <blockquote className="text-xl font-medium text-gray-900 dark:text-white mb-4 mt-20">
                       "Our mission is to empower businesses with innovative technology solutions that drive growth and success."
                     </blockquote>
                     <cite className="text-blue-600 font-semibold">
@@ -233,7 +222,7 @@ export default function About() {
       </div>
 
       {/* Statistics Section */}
-      <div className="relative bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 py-20 overflow-hidden">
+      {/* <div className="relative bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 py-20 overflow-hidden">
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="absolute inset-0 opacity-40">
           <div className="absolute inset-0 bg-gray-800/20 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[length:20px_20px]"></div>
@@ -293,7 +282,7 @@ export default function About() {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Mission, Vision, Values Section */}
       <div className="py-20 bg-white dark:bg-gray-900">
@@ -381,12 +370,12 @@ export default function About() {
       </div>
 
       {/* Team Section */}
-      <div className="relative bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 py-20 overflow-hidden">
+      <div className="relative bg-gradient-to-br from-white dark:from-gray-900 dark:to-gray-800 py-20 overflow-hidden">
         {/* Background decorations */}
-        <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-10 w-40 h-40 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-xl animate-pulse delay-1000"></div>
+        <div className="absolute top-20 left-10 w-72 h-72 z-10  bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-10 w-64 h-64 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-xl z-10 animate-pulse delay-1000"></div>
         
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative w-full mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase mb-4">Our Team</h2>
             <p className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
@@ -397,133 +386,14 @@ export default function About() {
             </p>
           </div>
 
-          {/* Masonry Layout for Team */}
-          <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
-            {orgData.map((member, index) => {
-              // Create varying heights for masonry effect
-              const cardVariants = [
-                "min-h-[420px]", // Short card
-                "min-h-[480px]", // Medium card
-                "min-h-[520px]", // Tall card
-                "min-h-[460px]", // Medium-short card
-              ];
-              const cardHeight = cardVariants[index % cardVariants.length];
-              
-              return (
-                <div 
-                  key={index} 
-                  className={`group relative bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 break-inside-avoid mb-8 ${cardHeight}`}
-                  style={{ 
-                    animationDelay: `${index * 100}ms`,
-                  }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-purple-600/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  
-                  {/* Gradient top border */}
-                  <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${member.color} rounded-t-2xl`}></div>
-                  
-                  <div className="relative">
-                    {/* Team Member Photo */}
-                    <div className="flex justify-center mb-4">
-                      <div className="relative">
-                        {member.image ? (
-                          <img
-                            src={member.image}
-                            alt={member.name}
-                            className="w-20 h-20 rounded-2xl object-cover shadow-lg group-hover:scale-105 transition-transform duration-300"
-                          />
-                        ) : (
-                          <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${member.color} flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-300`}>
-                            <span className="text-white font-bold text-xl">
-                              {member.initials}
-                            </span>
-                          </div>
-                        )}
-                        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-800">
-                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Team Member Info */}
-                    <div className="text-center">
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                        {member.name}
-                      </h3>
-                      <p className="text-blue-600 dark:text-blue-400 font-semibold text-sm mb-2">
-                        {member.role}
-                      </p>
-                      
-                      {/* Experience Badge */}
-                      <div className="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-xs font-medium text-gray-700 dark:text-gray-300 mb-3">
-                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        {member.experience}
-                      </div>
-                      
-                      <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-4">
-                        {member.bio}
-                      </p>
-
-                      {/* Expertise Tags */}
-                      <div className="mb-4">
-                        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">EXPERTISE</p>
-                        <div className="flex flex-wrap justify-center gap-1">
-                          {member.expertise.split(', ').map((skill, skillIndex) => (
-                            <span 
-                              key={skillIndex}
-                              className="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-medium"
-                            >
-                              {skill}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Social Links */}
-                    <div className="flex justify-center space-x-2 mt-auto pt-4">
-                      {member.socials.map((social, socialIndex) => (
-                        <a
-                          key={socialIndex}
-                          href={social.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors duration-300 group/social"
-                        >
-                          {social.platform === 'linkedin' && (
-                            <svg className="w-4 h-4 text-gray-600 dark:text-gray-300 group-hover/social:text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.338 16.338H13.67V12.16c0-.995-.017-2.277-1.387-2.277-1.39 0-1.601 1.086-1.601 2.207v4.248H8.014v-8.59h2.559v1.174h.037c.356-.675 1.227-1.387 2.526-1.387 2.703 0 3.203 1.778 3.203 4.092v4.711zM5.005 6.575a1.548 1.548 0 11-.003-3.096 1.548 1.548 0 01.003 3.096zm-1.337 9.763H6.34v-8.59H3.667v8.59zM17.668 1H2.328C1.595 1 1 1.581 1 2.298v15.403C1 18.418 1.595 19 2.328 19h15.34c.734 0 1.332-.582 1.332-1.299V2.298C19 1.581 18.402 1 17.668 1z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                          {social.platform === 'github' && (
-                            <svg className="w-4 h-4 text-gray-600 dark:text-gray-300 group-hover/social:text-gray-900 dark:group-hover/social:text-white" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                          {social.platform === 'website' && (
-                            <svg className="w-4 h-4 text-gray-600 dark:text-gray-300 group-hover/social:text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0 3-4.03 3-9s-1.343-9-3-9m-9 9a9 9 0 019-9" />
-                            </svg>
-                          )}
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <TeamCarousel orgData={orgData} />
 
           {/* Call to Action */}
           <div className="text-center mt-16">
             <div className="inline-flex flex-col sm:flex-row items-center gap-4">
               <Link
                 href={route('contact')}
-                className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300"
+                className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-secondary to-primary hover:from-primary hover:to-secondary text-white font-semibold rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300"
               >
                 Work With Our Team
                 <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -563,7 +433,7 @@ export default function About() {
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Link
                 href={route('contact')}
-                className="inline-flex items-center justify-center px-10 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-2xl"
+                className="inline-flex items-center justify-center px-10 py-4 bg-gradient-to-r from-secondary to-primary hover:from-primary hover:to-secondary text-white font-semibold rounded-xl hover:from-blue-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 Get Started Today
                 <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

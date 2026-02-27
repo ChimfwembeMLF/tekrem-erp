@@ -199,21 +199,21 @@ export default function TeamCarousel({ orgData, autoPlayInterval = 5000 }: TeamC
 
                 {/* Center Card */}
                 <div className="relative w-full max-w-sm md:max-w-md mb-4">
-                    <AnimatePresence initial={false} custom={direction} mode="wait">
+                    <AnimatePresence initial={false} mode="wait">
                         <motion.div
                             key={currentTeamMember}
-                            custom={direction}
-                            variants={cardVariants}
-                            initial="enter"
+                            // custom={direction}
+                            // variants={cardVariants}
+                            initial="center"
                             animate="center"
                             exit="exit"
-                            transition={{
-                                y: { type: "spring", stiffness: 300, damping: 30 },
-                                opacity: { duration: 0.3 },
-                                scale: { duration: 0.3 },
-                                rotateY: { duration: 0.4 },
-                            }}
-                            className="border-secondary/40 bg-gray-50 shadow-sm hover:shadow-md transition-shadow duration-300 bg-card text-card-foreground dark:bg-card dark:text-card-foreground rounded-2xl p-6 md:p-8 w-full flex flex-col items-center z-20"
+                            // transition={{
+                            //     y: { type: "spring", stiffness: 300, damping: 30 },
+                            //     opacity: { duration: 0.3 },
+                            //     scale: { duration: 0.3 },
+                            //     rotateY: { duration: 0.4 },
+                            // }}
+                            className="border-secondary/40 bg-gray-50 shadow-sm hover:shadow-md transition-shadow duration-300  text-card-foreground dark:bg-gray-600 dark:text-card-foreground rounded-2xl p-6 md:p-8 w-full flex flex-col items-center z-20"
                             style={{ transformStyle: "flat" }}
                         >
                             {/* Profile Image */}

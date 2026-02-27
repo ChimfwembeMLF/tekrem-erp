@@ -339,18 +339,19 @@ export default function Home({ canLogin, canRegister }: Props) {
       <Head title="Home" />
 
       {/* Modern Hero Section with Gradient Background */}
-      <div
-        className="relative flex items-center overflow-hidden min-h-screen -mt-24 bg-white/10 dark:bg-gray-900/10"
-        style={{
-          backgroundImage: "url('/assets/illustrations/tekrem-hero-section-image.png')",
-          backgroundRepeat: 'no-repeat',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
+      <div className="relative flex items-center overflow-hidden min-h-screen -mt-28">
+
+        {/* Animated Background */}
+        <div
+          className="absolute inset-0 bg-cover bg-center animate-zoom"
+          style={{
+            backgroundImage: "url('/assets/illustrations/tekrem-hero-section-image.png')",
+            backgroundRepeat: 'no-repeat',
+          }}
+        />
 
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br  backdrop-blur-sm from-primary/90 via-black/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-br from-black/90 via-black/50 to-transparent" />
 
         <div className="relative z-10 container mx-auto px-6 pt-24 pb-16">
           <div className="lg:grid lg:grid-cols-12 lg:gap-8 lg:items-center">

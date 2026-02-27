@@ -14,10 +14,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Mail;
+use Google\Auth\Credentials\ServiceAccountCredentials;
 // 
 class GuestChatController extends Controller
 {
     /**
+    
      * Initialize or get existing guest chat session.
      */
     public function initializeSession(Request $request): JsonResponse
@@ -385,4 +389,88 @@ class GuestChatController extends Controller
             ];
         })->toArray();
     }
+
+     public function typingEvent(Request $request)
+        {
+            // Handle typing indicator event
+            // Broadcast typing event to other participants
+            // ...implementation...
+            return response()->json(['status' => 'ok']);
+        }
+
+        public function markMessagesRead(Request $request)
+        {
+            // Mark messages as read for the session/user
+            // ...implementation...
+            return response()->json(['status' => 'ok']);
+        }
+
+        public function rateConversation(Request $request)
+        {
+            // Store CSAT rating for the conversation
+            $rating = $request->input('rating');
+            $sessionId = $request->input('session_id');
+            // ...store rating logic...
+            return response()->json(['status' => 'ok']);
+        }
+
+        public function sendTranscript(Request $request)
+        {
+            // Send transcript to provided email
+            $email = $request->input('email');
+            $messages = $request->input('messages');
+            // ...send transcript logic (Mail::to($email)->send(...))...
+            return response()->json(['status' => 'ok']);
+        }
+
+        public function registerPushToken(Request $request)
+        {
+            // Register FCM push token for the session/user
+            $token = $request->input('token');
+            $sessionId = $request->input('session_id');
+            // ...store token logic...
+            return response()->json(['status' => 'ok']);
+        }
+
+
+            protected function sendPushNotification($token, $title, $body)
+            {
+                $projectId = 'tekrem-alerts'; // TODO: Replace with your actual Firebase project ID
+
+                $credentials = new ServiceAccountCredentials(
+                    ['https://www.googleapis.com/auth/firebase.messaging'],
+                    storage_path('app/firebase-service-account.json')
+                );
+
+                $accessToken = $credentials->fetchAuthToken()['access_token'];
+
+                $url = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
+
+                $payload = [
+                    'message' => [
+                        'token' => $token,
+                        'notification' => [
+                            'title' => $title,
+                            'body' => $body,
+                        ],
+                    ]
+                ];
+
+                $headers = [
+                    "Authorization: Bearer {$accessToken}",
+                    "Content-Type: application/json",
+                ];
+
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $url);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+
+                $result = curl_exec($ch);
+                curl_close($ch);
+
+                return $result;
+            }
 }

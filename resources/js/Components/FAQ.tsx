@@ -59,11 +59,12 @@ export default function FAQ() {
           </p>
         </div>
 
-        <div className="space-y-4">
+
+           <div className="max-w-4xl mx-auto space-y-4">
           {faqs.map((faq, index) => (
             <div
               key={index}
-              className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6 cursor-pointer"
+              className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 cursor-pointer"
               onClick={() => toggleFAQ(index)}
             >
               <div className="flex justify-between items-center">

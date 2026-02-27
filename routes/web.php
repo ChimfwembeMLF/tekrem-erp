@@ -37,6 +37,11 @@ Route::prefix('guest-chat')->name('guest-chat.')->group(function () {
     Route::post('/update-info', [App\Http\Controllers\GuestChatController::class, 'updateGuestInfo'])->name('update-info');
     Route::post('/send', [App\Http\Controllers\GuestChatController::class, 'sendMessage'])->name('send');
     Route::get('/messages', [App\Http\Controllers\GuestChatController::class, 'getMessages'])->name('messages');
+    Route::post('/typing', [App\Http\Controllers\GuestChatController::class, 'typingEvent'])->name('typing');
+    Route::post('/read', [App\Http\Controllers\GuestChatController::class, 'markMessagesRead'])->name('read');
+    Route::post('/rate', [App\Http\Controllers\GuestChatController::class, 'rateConversation'])->name('rate');
+    Route::post('/transcript', [App\Http\Controllers\GuestChatController::class, 'sendTranscript'])->name('transcript');
+    Route::post('/push-token', [App\Http\Controllers\GuestChatController::class, 'registerPushToken'])->name('push-token');
 });
 
 // Guest Feature Routes (no authentication required)
