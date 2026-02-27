@@ -23,6 +23,14 @@ class CardWatcherController extends Controller
             'user_id' => $userId,
         ]);
         $this->logCardActivity($card, 'watcher_added', ['user_id' => $userId]);
+
+        // Send notification to card owner (if not self)
+        if ($card->user_id && $card->user_id != $userId) {
+            $owner = $card->user;
+            $watcherUser = $watcher->user;
+            $owner->notify(new \App\Notifications\CardWatcherAdded($card, $watcherUser));
+        }
+
         return response()->json(['success' => true, 'watcher' => $watcher], 201);
     }
 
@@ -32,8 +40,16 @@ class CardWatcherController extends Controller
         $watcher = CardWatcher::where('card_id', $cardId)->where('id', $watcherId)->firstOrFail();
         $card = BoardCard::findOrFail($cardId);
         $userId = $watcher->user_id;
+        $watcherUser = $watcher->user;
         $watcher->delete();
         $this->logCardActivity($card, 'watcher_removed', ['user_id' => $userId]);
+
+        // Send notification to card owner (if not self)
+        if ($card->user_id && $card->user_id != $userId) {
+            $owner = $card->user;
+            $owner->notify(new \App\Notifications\CardWatcherRemoved($card, $watcherUser));
+        }
+
         return response()->json(['success' => true]);
     }
 }
