@@ -171,7 +171,7 @@ export default function Show({ conversation }: Props) {
     };
 
     const formatCurrency = (amount: number) => {
-        return new Intl\.NumberFormat\('en-ZM', {
+        return new Intl.NumberFormat('en-ZM', {
             style: 'currency',
             currency: 'ZMW',
             minimumFractionDigits: 4,

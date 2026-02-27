@@ -12,9 +12,12 @@ use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
+use App\Services\CardActivityTrait;
+
 
 class BoardCardController extends Controller
 {
+    use CardActivityTrait;
     public function index(Project $project, Board $board)
     {
         return inertia('PM/Boards/Cards/Index', [

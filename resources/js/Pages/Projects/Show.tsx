@@ -987,6 +987,8 @@ export default function ProjectShow({ auth, project, board, columns = [], cards 
                       </PrimaryButton>
                     ) : undefined}
                   />
+
+                  
                   {methodology === 'hybrid' && project.milestones?.length > 0 && (
                     <GlassCard className="p-4 flex items-start gap-3">
                       <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0">

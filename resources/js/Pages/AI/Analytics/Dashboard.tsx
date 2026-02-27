@@ -143,7 +143,7 @@ export default function Dashboard({ stats, services = [], analytics, quick_stats
     };
 
     const formatCurrency = (amount: number) => {
-        return new Intl\.NumberFormat\('en-ZM', {
+        return new Intl.NumberFormat('en-ZM', {
             style: 'currency',
             currency: 'ZMW',
             minimumFractionDigits: 4,

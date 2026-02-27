@@ -68,7 +68,15 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-      /**
+    /**
+     * Cards this user is watching.
+     */
+    public function cardWatchers()
+    {
+        return $this->hasMany(\App\Models\CardWatcher::class, 'user_id');
+    }
+
+    /**
      * Override hasPermissionTo so super_user and admin have all permissions.
      */
     public function hasPermissionTo($permission, $guardName = null): bool

@@ -379,6 +379,27 @@ Route::middleware([
             Route::post('/{card}/attachments', [\App\Http\Controllers\Agile\BoardCardController::class, 'storeAttachment'])->name('attachments.store');
             Route::delete('/{card}/attachments/{attachment}', [\App\Http\Controllers\Agile\BoardCardController::class, 'destroyAttachment'])->name('attachments.destroy');
             Route::delete('/{card}', [\App\Http\Controllers\Agile\BoardCardController::class, 'destroy'])->name('destroy');
+
+            // Card Votes
+            Route::post('/{card}/votes', [\App\Http\Controllers\CardVoteController::class, 'store'])->name('votes.store');
+            Route::delete('/{card}/votes/{vote}', [\App\Http\Controllers\CardVoteController::class, 'destroy'])->name('votes.destroy');
+
+            // Card Checklists
+            Route::post('/{card}/checklists', [\App\Http\Controllers\CardChecklistController::class, 'store'])->name('checklists.store');
+            Route::delete('/{card}/checklists/{checklist}', [\App\Http\Controllers\CardChecklistController::class, 'destroy'])->name('checklists.destroy');
+            Route::post('/{card}/checklists/{checklist}/items', [\App\Http\Controllers\CardChecklistController::class, 'storeItem'])->name('checklists.items.store');
+            Route::put('/{card}/checklists/{checklist}/items/{item}', [\App\Http\Controllers\CardChecklistController::class, 'updateItem'])->name('checklists.items.update');
+
+            // Card Subscribers
+            Route::post('/{card}/subscribers', [\App\Http\Controllers\CardSubscriberController::class, 'store'])->name('subscribers.store');
+            Route::delete('/{card}/subscribers/{subscriber}', [\App\Http\Controllers\CardSubscriberController::class, 'destroy'])->name('subscribers.destroy');
+
+            // Card Watchers
+            Route::post('/{card}/watchers', [\App\Http\Controllers\CardWatcherController::class, 'store'])->name('watchers.store');
+            Route::delete('/{card}/watchers/{watcher}', [\App\Http\Controllers\CardWatcherController::class, 'destroy'])->name('watchers.destroy');
+
+            // Card Time Tracking
+            Route::post('/{card}/time', [\App\Http\Controllers\CardTimeController::class, 'store'])->name('time.store');
         });
 
         // Sprints

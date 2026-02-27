@@ -35,6 +35,14 @@ class BoardCard extends Model
         'due_date' => 'date',
     ];
 
+    /**
+     * CardWatcher records for this card.
+     */
+    public function cardWatchers()
+    {
+        return $this->hasMany(\App\Models\CardWatcher::class, 'card_id');
+    }
+
     public function board()
     {
         return $this->belongsTo(Board::class);
