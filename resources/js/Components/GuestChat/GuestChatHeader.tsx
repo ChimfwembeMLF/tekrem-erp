@@ -32,16 +32,16 @@ interface GuestChatHeaderProps {
 }
 
 const INQUIRY_LABELS: Record<string, { label: string; color: string }> = {
-  support:  { label: 'Support',        color: '#f97316' },
-  sales:    { label: 'Sales',          color: '#10b981' },
-  general:  { label: 'General',        color: '#6366f1' },
+  support: { label: 'Support', color: '#f97316' },
+  sales: { label: 'Sales', color: '#10b981' },
+  general: { label: 'General', color: '#6366f1' },
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  active:   '#10b981',
-  closed:   '#ef4444',
+  active: '#10b981',
+  closed: '#ef4444',
   archived: '#6b7280',
-  open:     '#6366f1',
+  open: '#6366f1',
 };
 
 export default function GuestChatHeader({
@@ -59,150 +59,109 @@ export default function GuestChatHeader({
   const agentName = conversation?.assignee?.name;
 
   return (
-    <header className="chat-header">
-      {/* Animated gradient bar */}
-      <div className="header-gradient-bar" />
+    <header className="relative flex-shrink-0 overflow-hidden bg-gradient-to-br from-indigo-950 via-indigo-900 to-purple-900 select-none">
 
-      <div className="header-inner">
-        {/* Left: brand + info */}
-        <div className="header-left">
-          <div className="avatar-ring">
-            <img src={Logo} alt="TekRem" className="brand-logo" />
-            <span className="online-dot" style={{ background: statusColor }} />
+      {/* Animated top bar */}
+      <div className="h-[2px] bg-[linear-gradient(90deg,#818cf8,#a78bfa,#c084fc,#818cf8)] bg-[length:200%_100%] animate-[shimmer_3s_linear_infinite]" />
+
+      <div className="flex items-center justify-between gap-2 px-4 py-3">
+
+        {/* Left */}
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+
+          <div className="relative flex items-center justify-center w-9 h-9 rounded-full bg-white/10 border border-white/20">
+            <img src={Logo} alt="TekRem" className="w-5 h-5 object-contain" />
+            <span
+              className="absolute bottom-[1px] right-[1px] w-2 h-2 rounded-full border border-indigo-950"
+              style={{ background: statusColor }}
+            />
           </div>
 
-          <div className="header-text">
-            <div className="header-title-row">
-              <span className="header-title">TekRem Support</span>
+          <div className="flex-1 min-w-0">
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold tracking-tight text-violet-100 truncate">
+                TekRem Support
+              </span>
+
               {inquiry && !isMinimized && (
-                <span className="inquiry-badge" style={{ color: inquiry.color, borderColor: `${inquiry.color}33`, background: `${inquiry.color}11` }}>
+                <span
+                  className="text-[10px] font-semibold uppercase tracking-wider px-2 py-[1px] rounded-full border"
+                  style={{
+                    color: inquiry.color,
+                    borderColor: `${inquiry.color}33`,
+                    background: `${inquiry.color}11`,
+                  }}
+                >
                   {inquiry.label}
                 </span>
               )}
             </div>
 
             {!isMinimized && (
-              <div className="header-subtitle">
+              <div className="mt-0.5 text-[11px] flex items-center gap-1">
+
                 {connectionStatus === 'connecting' && (
-                  <span className="sub-connecting">
-                    <Loader2 size={10} className="spin-icon" /> Connecting…
+                  <span className="flex items-center gap-1 text-amber-300">
+                    <Loader2 size={10} className="animate-spin" />
+                    Connecting…
                   </span>
                 )}
+
                 {connectionStatus === 'connected' && agentName && (
-                  <span className="sub-agent">
-                    <span className="agent-dot" />
+                  <span className="flex items-center gap-1 text-emerald-300">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                     Chatting with {agentName}
                   </span>
                 )}
+
                 {connectionStatus === 'connected' && !agentName && (
-                  <span className="sub-waiting">AI assistant ready</span>
-                )}
-                {connectionStatus === 'disconnected' && (
-                  <span className="sub-disconnected">
-                    <WifiOff size={10} /> Reconnecting…
+                  <span className="text-violet-300">
+                    AI assistant ready
                   </span>
                 )}
+
+                {connectionStatus === 'disconnected' && (
+                  <span className="flex items-center gap-1 text-red-300">
+                    <WifiOff size={10} />
+                    Reconnecting…
+                  </span>
+                )}
+
               </div>
             )}
+
           </div>
         </div>
 
-        {/* Right: actions */}
-        <div className="header-actions">
+        {/* Actions */}
+        <div className="flex items-center gap-1 flex-shrink-0">
+
           {!isMinimized && guestSession && (
-            <button className="hdr-btn" onClick={onShowGuestForm} title="Update info">
+            <button
+              onClick={onShowGuestForm}
+              className="w-7 h-7 rounded-md flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition"
+            >
               <Settings2 size={14} />
             </button>
           )}
-          <button className="hdr-btn" onClick={onToggleMinimize} title={isMinimized ? 'Expand' : 'Minimize'}>
+
+          <button
+            onClick={onToggleMinimize}
+            className="w-7 h-7 rounded-md flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition"
+          >
             {isMinimized ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </button>
-          <button className="hdr-btn hdr-btn-close" onClick={onClose} title="Close">
+
+          <button
+            onClick={onClose}
+            className="w-7 h-7 rounded-md flex items-center justify-center text-white/60 hover:text-red-300 hover:bg-red-500/20 transition"
+          >
             <X size={14} />
           </button>
+
         </div>
       </div>
-
-      <style>{`
-        .chat-header {
-          position: relative;
-          border-radius: 16px 16px 0 0;
-          background: linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4c1d95 100%);
-          overflow: hidden;
-          user-select: none;
-          flex-shrink: 0;
-        }
-
-        .header-gradient-bar {
-          height: 2px;
-          background: linear-gradient(90deg, #818cf8, #a78bfa, #c084fc, #818cf8);
-          background-size: 200% 100%;
-          animation: shimmer 3s linear infinite;
-        }
-        @keyframes shimmer { to { background-position: -200% 0; } }
-
-        .header-inner {
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 12px 14px;
-          gap: 10px;
-        }
-
-        .header-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
-
-        .avatar-ring {
-          position: relative; flex-shrink: 0;
-          width: 38px; height: 38px;
-          border-radius: 50%;
-          background: rgba(255,255,255,0.1);
-          border: 1.5px solid rgba(255,255,255,0.2);
-          display: flex; align-items: center; justify-content: center;
-        }
-        .brand-logo { width: 22px; height: 22px; object-fit: contain; }
-        .online-dot {
-          position: absolute; bottom: 1px; right: 1px;
-          width: 9px; height: 9px; border-radius: 50%;
-          border: 1.5px solid #1e1b4b;
-          transition: background 0.3s;
-        }
-
-        .header-text { flex: 1; min-width: 0; }
-        .header-title-row { display: flex; align-items: center; gap: 6px; }
-        .header-title {
-          font-size: 14px; font-weight: 650; color: #f5f3ff;
-          letter-spacing: -0.01em; truncate;
-          font-family: 'Sora', 'DM Sans', system-ui, sans-serif;
-        }
-        .inquiry-badge {
-          font-size: 10px; font-weight: 600; letter-spacing: 0.04em;
-          text-transform: uppercase;
-          border: 1px solid; border-radius: 20px;
-          padding: 1px 6px; flex-shrink: 0;
-        }
-        .header-subtitle {
-          margin-top: 2px; font-size: 11px; display: flex; align-items: center; gap: 4px;
-        }
-        .sub-agent { color: #a5f3c0; display: flex; align-items: center; gap: 4px; }
-        .agent-dot {
-          width: 6px; height: 6px; border-radius: 50%;
-          background: #10b981; flex-shrink: 0;
-        }
-        .sub-waiting { color: #c4b5fd; }
-        .sub-connecting { color: #fcd34d; display: flex; align-items: center; gap: 4px; }
-        .sub-disconnected { color: #fca5a5; display: flex; align-items: center; gap: 4px; }
-        .spin-icon { animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .header-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
-        .hdr-btn {
-          width: 28px; height: 28px; border-radius: 8px;
-          display: flex; align-items: center; justify-content: center;
-          border: none; cursor: pointer;
-          background: transparent; color: rgba(255,255,255,0.6);
-          transition: background 0.15s, color 0.15s;
-        }
-        .hdr-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
-        .hdr-btn-close:hover { background: rgba(239,68,68,0.25); color: #fca5a5; }
-      `}</style>
     </header>
   );
 }

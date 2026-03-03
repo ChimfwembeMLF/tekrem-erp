@@ -84,7 +84,7 @@ function Lightbox({ url, name, onClose }: { url: string; name: string; onClose: 
       aria-modal="true"
     >
       <div
-        className="relative w-full max-w-[min(90vw,600px)] rounded-2xl bg-white p-3 shadow-[0_24px_64px_rgba(0,0,0,0.4)] animate-scale-in"
+        className="relative w-full max-w-[min(90vw,600px)] rounded-lg bg-white p-3 shadow-[0_24px_64px_rgba(0,0,0,0.4)] animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -554,7 +554,7 @@ export default function GuestChatInterface({
         />
 
         {showEmojiPicker && (
-          <div className="absolute bottom-[calc(100%+6px)] left-3 z-50 min-w-[200px] rounded-[14px] border border-gray-200 bg-white p-2.5 shadow-[0_8px_32px_rgba(0,0,0,0.12)] animate-popup">
+          <div className="absolute bottom-[calc(100%+6px)] left-3 z-50 min-w-[200px] rounded-lg border border-gray-200 bg-white p-2.5 shadow-[0_8px_32px_rgba(0,0,0,0.12)] animate-popup">
             <div className="mb-2 flex items-center justify-between text-[11px] font-semibold text-gray-500">
               <span>Quick Reactions</span>
               <button

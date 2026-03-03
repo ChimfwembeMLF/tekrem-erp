@@ -336,10 +336,9 @@ export default function Home({ canLogin, canRegister }: Props) {
 
   return (
     <GuestLayout title="Home">
-      <Head title="Home" />
 
       {/* Modern Hero Section with Gradient Background */}
-      <div className="relative flex items-center overflow-hidden min-h-screen -mt-28">
+      <div className="relative flex items-center overflow-hidden min-h-screen">
 
         {/* Animated Background */}
         <div
@@ -676,7 +675,7 @@ export default function Home({ canLogin, canRegister }: Props) {
       </div>
 
 
-      <TeamCarousel orgData={orgData} />
+      {/* <TeamCarousel orgData={orgData} /> */}
 
 
 

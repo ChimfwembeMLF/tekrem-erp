@@ -54,6 +54,9 @@ export default {
 				bounce: { '0%,80%,100%': { transform: 'translateY(0)' }, '40%': { transform: 'translateY(-5px)' } },
 				'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },
 				'scale-in': { from: { opacity: '0', transform: 'scale(0.92)' }, to: { opacity: '1', transform: 'none' } },
+				shimmer: {
+					to: { backgroundPosition: "-200% 0" },
+				},
 			},
 			animation: {
 				marquee: 'marquee 25s linear infinite',
@@ -70,6 +73,7 @@ export default {
 				bounce: 'bounce 1.2s ease-in-out infinite',
 				'fade-in': 'fade-in 0.2s ease-out both',
 				'scale-in': 'scale-in 0.2s ease-out both',
+				shimmer: "shimmer 3s linear infinite",
 			},
 			colors: {
 				primary: '#0D3A69',

@@ -726,9 +726,20 @@ Route::middleware([
         Route::get('orgchart', [\App\Http\Controllers\HR\OrgChartController::class, 'index'])->name('orgchart.index');
 
         // Payroll
-        Route::resource('payroll', \App\Http\Controllers\HR\PayrollController::class);
+        // Payroll CRUD routes
+        Route::get('payroll', [\App\Http\Controllers\HR\PayrollController::class, 'index'])->name('payroll.index');
+        Route::get('payroll/create', [\App\Http\Controllers\HR\PayrollController::class, 'create'])->name('payroll.create');
+        Route::post('payroll', [\App\Http\Controllers\HR\PayrollController::class, 'store'])->name('payroll.store');
+        Route::get('payroll/{payroll}', [\App\Http\Controllers\HR\PayrollController::class, 'show'])->name('payroll.show');
+        Route::get('payroll/{payroll}/edit', [\App\Http\Controllers\HR\PayrollController::class, 'edit'])->name('payroll.edit');
+        Route::put('payroll/{payroll}', [\App\Http\Controllers\HR\PayrollController::class, 'update'])->name('payroll.update');
+        Route::delete('payroll/{payroll}', [\App\Http\Controllers\HR\PayrollController::class, 'destroy'])->name('payroll.destroy');
+
+        // Custom payroll actions (if needed)
         Route::post('payroll/{payroll}/approve', [\App\Http\Controllers\HR\PayrollController::class, 'approve'])->name('payroll.approve');
         Route::post('payroll/{payroll}/reject', [\App\Http\Controllers\HR\PayrollController::class, 'reject'])->name('payroll.reject');
+        // Route::post('payroll/{payroll}/approve', [\App\Http\Controllers\HR\PayrollController::class, 'approve'])->name('payroll.approve');
+        // Route::post('payroll/{payroll}/reject', [\App\Http\Controllers\HR\PayrollController::class, 'reject'])->name('payroll.reject');
 
         // Onboarding
         Route::resource('onboarding', \App\Http\Controllers\HR\OnboardingController::class);

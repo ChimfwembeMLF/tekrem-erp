@@ -52,7 +52,7 @@ export default function MobileNav({ settings }: MobileNavProps) {
           <span className="sr-only">Toggle menu</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="top" className="dark:bg-secondary/70 w-full">
+      <SheetContent side="top" className="dark:bg-primary h-100 w-full rounded-b-xl">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <ApplicationMark />
@@ -77,20 +77,20 @@ export default function MobileNav({ settings }: MobileNavProps) {
             ))}
           </nav>
 
-          <div className="border-t border-border pt-4 mt-2">
+          <div className="border-t border-border border-gray-300 dark:border-gray-500 pt-4 mt-2">
             <div className="px-4 py-2">
-              <h3 className="text-sm font-medium mb-2">Theme</h3>
+              {/* <h3 className="text-sm font-medium mb-2">Theme</h3> */}
               <div className="flex items-center justify-between">
                 <span className="text-sm">Toggle theme:</span>
                 <ThemeToggle />
               </div>
-              <div className="mt-4">
+              {/* <div className="mt-4">
                 <ThemeSelect />
-              </div>
+              </div> */}
             </div>
           </div>
 
-          <div className="border-t border-border pt-4 mt-2">
+          <div className="border-t border-border border-gray-300 dark:border-gray-500 pt-4 mt-2">
             <div className="px-4 py-2">
               {page.props.auth.user ? (
                 <Link
@@ -103,13 +103,13 @@ export default function MobileNav({ settings }: MobileNavProps) {
                 <div className="flex flex-col gap-2">
                   <Link
                     href={route('login')}
-                    className="flex items-center px-4 py-2 text-base font-medium rounded-md text-foreground/70 hover:text-foreground hover:bg-accent"
+                    className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-primary dark:bg-secondary hover:bg-primary/90 hover:dark:bg-secondary/80"
                   >
                     Login
                   </Link>
                   <Link
                     href={route('register')}
-                    className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-primary hover:bg-primary/90"
+                    className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-white  bg-primary dark:bg-secondary hover:bg-primary/90 hover:dark:bg-secondary/80"
                   >
                     Register
                   </Link>
