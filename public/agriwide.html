@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgriWide AI — Test Interface</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Lora:wght@600;700&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --soil:   #3b2a1a;
+      --field:  #2d5a1b;
+      --leaf:   #4a7c2f;
+      --sprout: #6aaa3d;
+      --straw:  #c8a84b;
+      --parch:  #f5efe0;
+      --cream:  #fdfaf4;
+      --mist:   #e8f0e0;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Source Sans 3', sans-serif;
+      background: var(--parch);
+      min-height: 100vh;
+    }
+
+    h1, h2, .serif { font-family: 'Lora', serif; }
+    pre, code, .mono { font-family: 'IBM Plex Mono', monospace; }
+
+    /* ── Scrollbars ── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #c5bfae; border-radius: 4px; }
+
+    /* ── Sidebar ── */
+    #sidebar {
+      width: 300px;
+      min-width: 260px;
+      max-width: 320px;
+      flex-shrink: 0;
+    }
+
+    /* ── Chat bubbles ── */
+    .bubble-user {
+      background: var(--field);
+      color: #fff;
+      border-radius: 18px 18px 4px 18px;
+    }
+    .bubble-ai {
+      background: #fff;
+      color: var(--soil);
+      border: 1px solid #ddd8cc;
+      border-radius: 18px 18px 18px 4px;
+    }
+    .bubble-error {
+      background: #fef2f2;
+      color: #7f1d1d;
+      border: 1px solid #fecaca;
+      border-radius: 12px;
+    }
+
+    /* ── History items ── */
+    .history-item {
+      cursor: pointer;
+      transition: background 0.15s;
+      border-left: 3px solid transparent;
+    }
+    .history-item:hover { background: var(--mist); border-left-color: var(--sprout); }
+    .history-item.active  { background: var(--mist); border-left-color: var(--field); }
+
+    /* ── Inputs & focus ── */
+    .field-input {
+      background: #fff;
+      border: 1px solid #d6cfbf;
+      border-radius: 8px;
+      padding: 8px 12px;
+      width: 100%;
+      font-family: inherit;
+      font-size: 14px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      outline: none;
+    }
+    .field-input:focus {
+      border-color: var(--sprout);
+      box-shadow: 0 0 0 3px rgba(106,170,61,0.18);
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      font-family: inherit; font-size: 14px; font-weight: 600;
+      border-radius: 8px; padding: 8px 16px; cursor: pointer;
+      transition: background 0.15s, opacity 0.15s, transform 0.1s;
+      border: none; outline: none; line-height: 1;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn:focus-visible { box-shadow: 0 0 0 3px rgba(106,170,61,0.4); }
+    .btn-primary   { background: var(--field);  color: #fff; }
+    .btn-primary:hover { background: #234d16; }
+    .btn-secondary { background: var(--straw); color: var(--soil); }
+    .btn-secondary:hover { background: #b5943c; color: #fff; }
+    .btn-ghost     { background: transparent; color: #666; border: 1px solid #d6cfbf; }
+    .btn-ghost:hover { background: var(--mist); color: var(--soil); }
+    .btn-danger    { background: #dc2626; color: #fff; }
+    .btn-danger:hover { background: #b91c1c; }
+    .btn-sm { font-size: 12px; padding: 5px 10px; border-radius: 6px; }
+    .btn:disabled  { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+
+    /* ── Dot pulse loader ── */
+    .dot-pulse { display: inline-flex; gap: 4px; align-items: center; }
+    .dot-pulse span {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--sprout); display: inline-block;
+      animation: pulse 1.3s infinite ease-in-out;
+    }
+    .dot-pulse span:nth-child(2) { animation-delay: 0.2s; }
+    .dot-pulse span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes pulse { 0%,80%,100% { transform:scale(0.6); opacity:0.4; } 40% { transform:scale(1); opacity:1; } }
+
+    /* ── Config panel toggle ── */
+    #configPanel { transition: max-height 0.3s ease, opacity 0.3s ease; overflow: hidden; }
+    #configPanel.collapsed { max-height: 0; opacity: 0; }
+    #configPanel.expanded  { max-height: 600px; opacity: 1; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      #sidebar { width: 100%; max-width: 100%; min-width: unset; }
+      #app-layout { flex-direction: column; }
+      #sidebar-inner { max-height: 260px; overflow-y: auto; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+     TOP HEADER
+═══════════════════════════════════════════════ -->
+<header style="background: var(--field);" class="text-white px-6 py-4 flex items-center justify-between gap-4 shadow-md">
+  <div class="flex items-center gap-3">
+    <span class="text-3xl" aria-hidden="true">🌾</span>
+    <div>
+      <h1 class="text-xl font-bold leading-tight" style="font-family:'Lora',serif; letter-spacing:-0.3px;">AgriWide AI Assistant</h1>
+      <p class="text-xs mt-0.5" style="opacity:0.75;">n8n agricultural agent · test interface</p>
+    </div>
+  </div>
+  <div class="flex items-center gap-2 flex-wrap">
+    <span id="headerTitle" class="text-sm font-medium" style="color: #c8e6a4; font-style: italic; max-width:200px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;"></span>
+    <div id="sendingIndicator" class="dot-pulse hidden" aria-live="polite" aria-label="Sending message">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════════
+     MAIN LAYOUT
+═══════════════════════════════════════════════ -->
+<div id="app-layout" class="flex gap-0" style="min-height: calc(100vh - 64px);">
+
+  <!-- ── LEFT SIDEBAR: History ── -->
+  <aside id="sidebar" style="background:#fff; border-right: 1px solid #e2dbd0;">
+    <div id="sidebar-inner" class="flex flex-col h-full">
+
+      <!-- Sidebar Header -->
+      <div class="px-4 py-3 flex items-center justify-between" style="border-bottom: 1px solid #e2dbd0;">
+        <h2 class="text-sm font-bold uppercase tracking-wider" style="color: var(--soil); font-family:'IBM Plex Mono',monospace; letter-spacing:0.08em;">Conversations</h2>
+        <div class="flex gap-1">
+          <button id="newSessionBtn" class="btn btn-sm btn-primary" aria-label="New conversation" title="New conversation">+ New</button>
+          <button id="clearAllHistoryBtn" class="btn btn-sm btn-ghost" aria-label="Clear all history" title="Clear all history">🗑</button>
+        </div>
+      </div>
+
+      <!-- History List -->
+      <div id="historyList" class="flex-1 overflow-y-auto py-2" aria-label="Conversation history"></div>
+
+    </div>
+  </aside>
+
+  <!-- ── RIGHT: Chat + Config ── -->
+  <main class="flex flex-col flex-1 min-w-0" style="background: var(--cream);">
+
+    <!-- Config Panel -->
+    <section id="configSection" style="background: var(--parch); border-bottom: 1px solid #ddd6c8;">
+      <button id="configToggleBtn" class="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-yellow-50 transition-colors" aria-expanded="true" aria-controls="configPanel">
+        <span class="text-sm font-semibold" style="color:var(--soil);">⚙️ Configuration</span>
+        <span id="configChevron" class="text-xs text-gray-500 select-none">▲ collapse</span>
+      </button>
+      <div id="configPanel" class="expanded px-5 pb-5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-semibold mb-1" style="color:var(--soil);" for="apiEndpoint">API Endpoint</label>
+            <input id="apiEndpoint" class="field-input" type="url" placeholder="https://…/webhook/chat/message" value="https://n8n.tekreminnovations.com/webhook/chat/message" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold mb-1" style="color:var(--soil);" for="sessionIdInput">Session ID</label>
+            <input id="sessionIdInput" class="field-input mono text-xs" type="text" placeholder="uuid-v4" readonly />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold mb-1" style="color:var(--soil);" for="userNameInput">User Name</label>
+            <input id="userNameInput" class="field-input" type="text" placeholder="John Farmer" value="John Farmer" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold mb-1" style="color:var(--soil);" for="farmNameInput">Farm Name</label>
+            <input id="farmNameInput" class="field-input" type="text" placeholder="Green Valley Farm" value="Green Valley Farm" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold mb-1" style="color:var(--soil);" for="locationInput">Location</label>
+            <input id="locationInput" class="field-input" type="text" placeholder="Lusaka, Zambia" value="Lusaka, Zambia" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold mb-1" style="color:var(--soil);" for="languageInput">Language</label>
+            <input id="languageInput" class="field-input" type="text" placeholder="en" value="en" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Chat Messages -->
+    <section id="chatSection" class="flex-1 overflow-y-auto px-4 py-5 space-y-4" aria-label="Chat messages" aria-live="polite">
+      <div id="emptyState" class="flex flex-col items-center justify-center h-full py-20 text-center select-none">
+        <span style="font-size:3rem;">🌱</span>
+        <p class="mt-3 text-base font-semibold" style="color: var(--leaf);">Start a conversation</p>
+        <p class="text-sm mt-1" style="color:#9a8f80;">Ask about crops, weather, soil conditions, irrigation, and more.</p>
+      </div>
+    </section>
+
+    <!-- Input Area -->
+    <footer style="background:#fff; border-top: 1px solid #ddd6c8;" class="px-4 pt-3 pb-4">
+
+      <!-- Attachment Preview -->
+      <div id="attachmentPreview" class="hidden mb-3 px-3 py-2 rounded-lg flex items-center justify-between gap-3" style="background:#eff6e8; border: 1px solid #b4d89a;">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="text-base shrink-0">📎</span>
+          <span id="attachmentName" class="text-sm font-medium truncate" style="color:var(--soil);"></span>
+          <span id="attachmentSize" class="text-xs shrink-0" style="color:#7a7065;"></span>
+        </div>
+        <button id="removeAttachmentBtn" class="btn btn-sm btn-ghost shrink-0" aria-label="Remove attachment">✕ Remove</button>
+      </div>
+
+      <!-- Status Bar -->
+      <div id="statusBar" class="hidden text-xs mb-2 px-1" aria-live="polite"></div>
+
+      <!-- Input Row -->
+      <div class="flex gap-2 items-end">
+        <textarea id="messageInput"
+          class="field-input flex-1 resize-none"
+          placeholder="Ask about crops, weather, soil, irrigation…"
+          rows="1"
+          style="min-height:44px; max-height: 140px; overflow-y:auto;"
+          aria-label="Message input"></textarea>
+
+        <label for="fileInput" class="btn btn-ghost shrink-0" title="Attach file (PDF, TXT, DOC, DOCX)" aria-label="Attach file" style="height:44px; padding:0 14px;">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+          </svg>
+        </label>
+        <input type="file" id="fileInput" class="sr-only" accept=".pdf,.txt,.doc,.docx" aria-label="File input" />
+
+        <button id="sendBtn" class="btn btn-primary shrink-0" style="height:44px; padding:0 20px;" aria-label="Send message">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+          </svg>
+          <span>Send</span>
+        </button>
+      </div>
+    </footer>
+
+    <!-- Quick Test Buttons -->
+    <div style="background: var(--parch); border-top: 1px solid #ddd6c8;" class="px-4 py-3">
+      <p class="text-xs font-semibold mb-2 uppercase tracking-wide" style="color:#7a7065;">Quick Tests</p>
+      <div class="flex flex-wrap gap-2" id="quickTestBtns">
+        <button class="btn btn-sm btn-ghost" data-msg="Hello!">👋 Greeting</button>
+        <button class="btn btn-sm btn-ghost" data-msg="During what weather is it advisable to plant tomatoes?">🌦 Weather</button>
+        <button class="btn btn-sm btn-ghost" data-msg="What crops should I plant in Lusaka during this season?">🌱 Crops</button>
+        <button class="btn btn-sm btn-ghost" data-msg="How do I improve my soil for groundnuts?">🌾 Soil</button>
+        <button class="btn btn-sm btn-ghost" data-msg="What is the current date and time?">🕐 DateTime</button>
+        <button class="btn btn-sm btn-ghost" data-msg="Tell me about irrigation systems for small farms">💧 Irrigation</button>
+      </div>
+    </div>
+
+    <!-- Debug Panel -->
+    <details style="background: var(--soil); color: #c8e6a4;" class="text-xs">
+      <summary class="px-4 py-3 cursor-pointer font-semibold tracking-wide select-none hover:opacity-80" style="font-family:'IBM Plex Mono',monospace;">
+        🔍 DEBUG PANEL — click to expand
+      </summary>
+      <div class="px-4 pb-4 grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+        <div>
+          <p class="font-semibold mb-1 opacity-70" style="font-family:'IBM Plex Mono',monospace;">Last Request →</p>
+          <pre id="requestDebug" class="overflow-auto max-h-64 p-3 rounded text-xs leading-relaxed" style="background:rgba(0,0,0,0.35); color:#d4f7b0;">No request yet</pre>
+        </div>
+        <div>
+          <p class="font-semibold mb-1 opacity-70" style="font-family:'IBM Plex Mono',monospace;">Last Response ←</p>
+          <pre id="responseDebug" class="overflow-auto max-h-64 p-3 rounded text-xs leading-relaxed" style="background:rgba(0,0,0,0.35); color:#d4f7b0;">No response yet</pre>
+        </div>
+        <div>
+          <p class="font-semibold mb-1 opacity-70" style="font-family:'IBM Plex Mono',monospace; color:#f5d87a;">Title Request →</p>
+          <pre id="titleRequestDebug" class="overflow-auto max-h-64 p-3 rounded text-xs leading-relaxed" style="background:rgba(0,0,0,0.35); color:#f5e8a4;">No request yet</pre>
+        </div>
+        <div>
+          <p class="font-semibold mb-1 opacity-70" style="font-family:'IBM Plex Mono',monospace; color:#f5d87a;">Title Response ←</p>
+          <pre id="titleResponseDebug" class="overflow-auto max-h-64 p-3 rounded text-xs leading-relaxed" style="background:rgba(0,0,0,0.35); color:#f5e8a4;">No response yet</pre>
+        </div>
+      </div>
+    </details>
+
+  </main>
+</div><!-- end #app-layout -->
+
+<!-- ══════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+/* ─────────────────────────────────────────────
+   CONSTANTS
+───────────────────────────────────────────── */
+const STORAGE_KEY   = 'agriwide_conversations';
+const MAX_HISTORY   = 20;
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+const ACCEPTED_MIME = new Set([
+  'application/pdf',
+  'text/plain',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+]);
+
+/* ─────────────────────────────────────────────
+   STATE
+───────────────────────────────────────────── */
+const state = {
+  sessionId:         '',
+  messages:          [],   // { role, content, attachmentMeta? }
+  currentAttachment: null, // { file, name, size, type }
+  chatTitle:         null,
+  isSending:         false,
+  activeHistoryId:   null,
+};
+
+/* ─────────────────────────────────────────────
+   DOM REFERENCES
+───────────────────────────────────────────── */
+const $ = id => document.getElementById(id);
+const dom = {
+  // Config
+  apiEndpoint:       $('apiEndpoint'),
+  sessionIdInput:    $('sessionIdInput'),
+  userNameInput:     $('userNameInput'),
+  farmNameInput:     $('farmNameInput'),
+  locationInput:     $('locationInput'),
+  languageInput:     $('languageInput'),
+  configPanel:       $('configPanel'),
+  configToggleBtn:   $('configToggleBtn'),
+  configChevron:     $('configChevron'),
+  // Chat
+  chatSection:       $('chatSection'),
+  emptyState:        $('emptyState'),
+  messageInput:      $('messageInput'),
+  sendBtn:           $('sendBtn'),
+  fileInput:         $('fileInput'),
+  // Attachment
+  attachmentPreview: $('attachmentPreview'),
+  attachmentName:    $('attachmentName'),
+  attachmentSize:    $('attachmentSize'),
+  removeAttachmentBtn: $('removeAttachmentBtn'),
+  // Status / indicators
+  statusBar:         $('statusBar'),
+  sendingIndicator:  $('sendingIndicator'),
+  headerTitle:       $('headerTitle'),
+  // Debug
+  requestDebug:      $('requestDebug'),
+  responseDebug:     $('responseDebug'),
+  titleRequestDebug: $('titleRequestDebug'),
+  titleResponseDebug:$('titleResponseDebug'),
+  // Sidebar
+  historyList:       $('historyList'),
+  newSessionBtn:     $('newSessionBtn'),
+  clearAllHistoryBtn:$('clearAllHistoryBtn'),
+  // Quick tests
+  quickTestBtns:     $('quickTestBtns'),
+};
+
+/* ─────────────────────────────────────────────
+   UTILITY HELPERS
+───────────────────────────────────────────── */
+function newUUID() {
+  return crypto.randomUUID();
+}
+
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${units[i]}`;
+}
+
+function formatTimestamp(iso) {
+  const d = new Date(iso);
+  const now = new Date();
+  const diffDays = Math.floor((now - d) / 86400000);
+  if (diffDays === 0) return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7)  return d.toLocaleDateString([], { weekday: 'short' });
+  return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
+function truncate(str, max) {
+  if (!str) return '';
+  return str.length > max ? str.slice(0, max) + '…' : str;
+}
+
+function safeText(el, text) {
+  el.textContent = typeof text === 'string' ? text : String(text ?? '');
+}
+
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = () => reject(new Error('File read failed'));
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ─────────────────────────────────────────────
+   STORAGE HELPERS
+───────────────────────────────────────────── */
+function loadHistory() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    // Validate and sanitise each entry
+    return parsed.filter(c => c && typeof c.sessionId === 'string' && c.sessionId.length > 0);
+  } catch {
+    return [];
+  }
+}
+
+function saveHistory(conversations) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations.slice(0, MAX_HISTORY)));
+  } catch {
+    // Storage full or unavailable — silently continue
+  }
+}
+
+function upsertConversation(sessionId, { title, messages }) {
+  if (!sessionId) return;
+  const all = loadHistory();
+  const idx = all.findIndex(c => c.sessionId === sessionId);
+  const lastMsg = messages[messages.length - 1];
+  const entry = {
+    sessionId,
+    title:        title || 'Untitled',
+    date:         new Date().toISOString(),
+    messages:     messages,
+    lastMessage:  lastMsg ? truncate(lastMsg.content, 80) : '',
+    messageCount: messages.length,
+  };
+  if (idx > -1) all.splice(idx, 1);
+  all.unshift(entry);
+  saveHistory(all);
+}
+
+function deleteConversation(sessionId) {
+  const all = loadHistory().filter(c => c.sessionId !== sessionId);
+  saveHistory(all);
+}
+
+/* ─────────────────────────────────────────────
+   RENDERING FUNCTIONS
+───────────────────────────────────────────── */
+
+/** Show / hide the empty state placeholder */
+function syncEmptyState() {
+  dom.emptyState.style.display = state.messages.length === 0 ? '' : 'none';
+}
+
+/** Update the session ID field and header title display */
+function syncHeader() {
+  dom.sessionIdInput.value = state.sessionId;
+  safeText(dom.headerTitle, state.chatTitle || '');
+}
+
+/** Set loading/sending UI state */
+function setSending(active) {
+  state.isSending = active;
+  dom.sendBtn.disabled  = active;
+  dom.sendingIndicator.classList.toggle('hidden', !active);
+}
+
+/** Show a status message below the input */
+function showStatus(msg, isError = false) {
+  dom.statusBar.classList.remove('hidden');
+  safeText(dom.statusBar, msg);
+  dom.statusBar.style.color = isError ? '#dc2626' : '#5a7a3a';
+}
+function hideStatus() { dom.statusBar.classList.add('hidden'); }
+
+/** Append a single message bubble to the chat */
+function appendMessageBubble({ role, content, attachmentMeta }) {
+  // Remove empty state if visible
+  syncEmptyState();
+
+  const wrap = document.createElement('div');
+  wrap.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+
+  const bubble = document.createElement('div');
+  bubble.className = `px-4 py-3 max-w-xl shadow-sm ${
+    role === 'user'  ? 'bubble-user' :
+    role === 'error' ? 'bubble-error' : 'bubble-ai'
+  }`;
+
+  // Label row
+  const label = document.createElement('div');
+  label.className = 'text-xs font-semibold mb-1 opacity-75';
+  safeText(label,
+    role === 'user'  ? '👨‍🌾 You' :
+    role === 'error' ? '⚠️ Error'  : '🤖 AgriWide AI'
+  );
+  bubble.appendChild(label);
+
+  // Content
+  const body = document.createElement('div');
+  body.className = 'text-sm leading-relaxed whitespace-pre-wrap break-words';
+  safeText(body, content);
+  bubble.appendChild(body);
+
+  // Attachment badge (if present)
+  if (attachmentMeta && role === 'user') {
+    const badge = document.createElement('div');
+    badge.className = 'mt-2 text-xs flex items-center gap-1 opacity-80';
+    const clip = document.createElement('span');
+    safeText(clip, '📎 ');
+    const fname = document.createElement('span');
+    safeText(fname, attachmentMeta.name);
+    const fsize = document.createElement('span');
+    safeText(fsize, `(${formatFileSize(attachmentMeta.size)})`);
+    badge.append(clip, fname, fsize);
+    bubble.appendChild(badge);
+  }
+
+  wrap.appendChild(bubble);
+  dom.chatSection.appendChild(wrap);
+  dom.chatSection.scrollTop = dom.chatSection.scrollHeight;
+}
+
+/** Show a temporary "thinking" bubble that can be removed later */
+function showThinkingBubble() {
+  const wrap = document.createElement('div');
+  wrap.className = 'flex justify-start';
+  wrap.id = '_thinking';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble-ai px-4 py-3 shadow-sm';
+  bubble.innerHTML = `
+    <div class="text-xs font-semibold mb-2 opacity-75">🤖 AgriWide AI</div>
+    <div class="dot-pulse"><span></span><span></span><span></span></div>
+  `;
+  wrap.appendChild(bubble);
+  dom.chatSection.appendChild(wrap);
+  dom.chatSection.scrollTop = dom.chatSection.scrollHeight;
+}
+function removeThinkingBubble() {
+  const el = document.getElementById('_thinking');
+  if (el) el.remove();
+}
+
+/** Full re-render of history sidebar */
+function renderHistory() {
+  const all = loadHistory();
+  dom.historyList.textContent = ''; // safe clear
+
+  if (all.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'px-4 py-6 text-center text-xs';
+    empty.style.color = '#9a8f80';
+    safeText(empty, 'No previous conversations yet.');
+    dom.historyList.appendChild(empty);
+    return;
+  }
+
+  all.forEach(conv => {
+    const item = document.createElement('div');
+    item.className = `history-item px-4 py-3 ${conv.sessionId === state.activeHistoryId ? 'active' : ''}`;
+    item.dataset.sessionId = conv.sessionId;
+
+    // Title row
+    const row1 = document.createElement('div');
+    row1.className = 'flex items-start justify-between gap-2';
+
+    const titleEl = document.createElement('span');
+    titleEl.className = 'text-sm font-semibold leading-tight flex-1 min-w-0';
+    titleEl.style.color = 'var(--soil)';
+    safeText(titleEl, truncate(conv.title, 36));
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn btn-sm btn-ghost shrink-0 text-red-400 hover:text-red-600';
+    delBtn.style.padding = '1px 5px';
+    delBtn.textContent = '✕';
+    delBtn.setAttribute('aria-label', `Delete conversation: ${conv.title}`);
+    delBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      handleDeleteConversation(conv.sessionId);
+    });
+
+    row1.append(titleEl, delBtn);
+
+    // Preview + meta
+    const row2 = document.createElement('div');
+    row2.className = 'text-xs mt-1 leading-snug';
+    row2.style.color = '#7a7065';
+    if (conv.lastMessage) {
+      const preview = document.createElement('div');
+      preview.className = 'truncate';
+      safeText(preview, conv.lastMessage);
+      row2.appendChild(preview);
+    }
+
+    const meta = document.createElement('div');
+    meta.className = 'flex gap-2 mt-0.5 opacity-75';
+    const ts = document.createElement('span');
+    safeText(ts, formatTimestamp(conv.date));
+    const cnt = document.createElement('span');
+    safeText(cnt, `${conv.messageCount} msg${conv.messageCount !== 1 ? 's' : ''}`);
+    meta.append(ts, cnt);
+    row2.appendChild(meta);
+
+    item.append(row1, row2);
+
+    // Click to load
+    item.addEventListener('click', () => handleLoadConversation(conv.sessionId));
+
+    dom.historyList.appendChild(item);
+  });
+}
+
+/* ─────────────────────────────────────────────
+   API FUNCTIONS
+───────────────────────────────────────────── */
+async function generateTitle(apiEndpoint, sessionId, message) {
+  const titleEndpoint = apiEndpoint.replace('/chat/message', '/chat/generate-title');
+  const payload = { message, session_id: sessionId };
+  dom.titleRequestDebug.textContent = JSON.stringify(payload, null, 2);
+
+  try {
+    const res = await fetch(titleEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    let data;
+    const text = await res.text();
+    try { data = JSON.parse(text); } catch { data = { raw: text }; }
+    dom.titleResponseDebug.textContent = JSON.stringify(data, null, 2);
+
+    if (res.ok && data.title) return data.title;
+    return null;
+  } catch (err) {
+    dom.titleResponseDebug.textContent = `Error: ${err.message}`;
+    return null;
+  }
+}
+
+async function sendChatMessage(apiEndpoint, payload) {
+  dom.requestDebug.textContent = JSON.stringify(payload, null, 2);
+
+  const res = await fetch(apiEndpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); } catch {
+    throw new Error(`Non-JSON response (HTTP ${res.status}): ${text.slice(0, 200)}`);
+  }
+
+  dom.responseDebug.textContent = JSON.stringify(data, null, 2);
+
+  if (!res.ok) {
+    throw new Error(data.message || `HTTP ${res.status}: ${res.statusText}`);
+  }
+
+  return data;
+}
+
+/* ─────────────────────────────────────────────
+   CORE SEND FLOW
+───────────────────────────────────────────── */
+async function doSend(messageText) {
+  const apiEndpoint = dom.apiEndpoint.value.trim();
+  if (!apiEndpoint) { showStatus('Configure an API endpoint first.', true); return; }
+  if (!state.sessionId) { showStatus('No session ID — generate one first.', true); return; }
+  if (!messageText)     { showStatus('Please type a message.', true); return; }
+
+  setSending(true);
+  hideStatus();
+
+  // Build attachment info before clearing state
+  const attachmentMeta = state.currentAttachment
+    ? { name: state.currentAttachment.name, size: state.currentAttachment.size, type: state.currentAttachment.type }
+    : null;
+
+  // Add to messages state + render bubble
+  state.messages.push({ role: 'user', content: messageText, attachmentMeta });
+  appendMessageBubble({ role: 'user', content: messageText, attachmentMeta });
+
+  // Clear input + attachment
+  dom.messageInput.value = '';
+  dom.messageInput.style.height = 'auto';
+  clearAttachmentUI();
+
+  showThinkingBubble();
+  showStatus('Waiting for response…');
+
+  try {
+    // ── 1. Title generation (first message only) ──
+    if (state.messages.length === 1) {
+      const title = await generateTitle(apiEndpoint, state.sessionId, messageText);
+      state.chatTitle = title;
+      syncHeader();
+      upsertConversation(state.sessionId, { title: state.chatTitle, messages: state.messages });
+      renderHistory();
+    }
+
+    // ── 2. Build attachments payload ──
+    let attachments = [];
+    if (state.currentAttachment) { // (kept in case not yet cleared)
+      const b64 = await readFileAsBase64(state.currentAttachment.file);
+      attachments = [{ name: state.currentAttachment.name, type: state.currentAttachment.type, content: b64 }];
+    }
+
+    // ── 3. Send message ──
+    const payload = {
+      session_id: state.sessionId,
+      metadata: {
+        user_id:   'test_user_' + Date.now(),
+        user_name:  dom.userNameInput.value.trim(),
+        farm_name:  dom.farmNameInput.value.trim(),
+        location:   dom.locationInput.value.trim(),
+        language:   dom.languageInput.value.trim(),
+      },
+      messages:    state.messages.map(m => ({ role: m.role === 'error' ? 'assistant' : m.role, content: m.content })),
+      attachments,
+    };
+
+    const data = await sendChatMessage(apiEndpoint, payload);
+
+    removeThinkingBubble();
+
+    const aiContent = data?.message?.content ?? data?.content ?? '[Empty response]';
+    state.messages.push({ role: 'assistant', content: aiContent });
+    appendMessageBubble({ role: 'assistant', content: aiContent });
+
+    // ── 4. Status ──
+    const meta        = data.metadata || {};
+    const tokens      = meta.tokens_used      ? `${meta.tokens_used} tokens` : '';
+    const timing      = meta.processing_time_ms ? `${meta.processing_time_ms}ms` : '';
+    const attInfo     = data.attachments_processed > 0 ? `, ${data.attachments_processed} file(s)` : '';
+    const statusParts = [tokens, timing].filter(Boolean).join(', ');
+    showStatus(`✓ Response received${statusParts ? ' · ' + statusParts : ''}${attInfo}`);
+
+    // ── 5. Persist ──
+    upsertConversation(state.sessionId, { title: state.chatTitle, messages: state.messages });
+    renderHistory();
+
+  } catch (err) {
+    removeThinkingBubble();
+    console.error('[AgriWide]', err);
+    const errMsg = `Failed to send message: ${err.message}`;
+    appendMessageBubble({ role: 'error', content: errMsg });
+    showStatus(errMsg, true);
+    dom.responseDebug.textContent = `Error: ${err.message}\n\n${err.stack || ''}`;
+  } finally {
+    setSending(false);
+    dom.messageInput.focus();
+  }
+}
+
+/* ─────────────────────────────────────────────
+   ATTACHMENT HELPERS
+───────────────────────────────────────────── */
+function clearAttachmentUI() {
+  state.currentAttachment = null;
+  dom.attachmentPreview.classList.add('hidden');
+  dom.fileInput.value = '';
+}
+
+function applyAttachment(file) {
+  if (!ACCEPTED_MIME.has(file.type)) {
+    alert('Please select a PDF, TXT, DOC, or DOCX file.');
+    dom.fileInput.value = '';
+    return;
+  }
+  if (file.size > MAX_FILE_SIZE) {
+    alert('File size must be under 10 MB.');
+    dom.fileInput.value = '';
+    return;
+  }
+  state.currentAttachment = { file, name: file.name, size: file.size, type: file.type };
+  safeText(dom.attachmentName, file.name);
+  safeText(dom.attachmentSize, formatFileSize(file.size));
+  dom.attachmentPreview.classList.remove('hidden');
+  dom.fileInput.value = '';
+}
+
+/* ─────────────────────────────────────────────
+   SESSION / HISTORY HANDLERS
+───────────────────────────────────────────── */
+function startNewSession() {
+  if (state.messages.length > 0) {
+    upsertConversation(state.sessionId, { title: state.chatTitle, messages: state.messages });
+  }
+  state.sessionId       = newUUID();
+  state.messages        = [];
+  state.currentAttachment = null;
+  state.chatTitle       = null;
+  state.activeHistoryId = null;
+
+  // Clear chat area (keep only empty state node)
+  const nodes = [...dom.chatSection.children].filter(n => n.id !== 'emptyState');
+  nodes.forEach(n => n.remove());
+  syncEmptyState();
+  syncHeader();
+  clearAttachmentUI();
+  hideStatus();
+  dom.requestDebug.textContent      = 'No request yet';
+  dom.responseDebug.textContent     = 'No response yet';
+  dom.titleRequestDebug.textContent = 'No request yet';
+  dom.titleResponseDebug.textContent= 'No response yet';
+  renderHistory();
+  dom.messageInput.focus();
+}
+
+function handleLoadConversation(sessionId) {
+  const all  = loadHistory();
+  const conv = all.find(c => c.sessionId === sessionId);
+  if (!conv) return;
+
+  // Save current before switching
+  if (state.messages.length > 0 && state.sessionId !== sessionId) {
+    upsertConversation(state.sessionId, { title: state.chatTitle, messages: state.messages });
+  }
+
+  state.sessionId       = conv.sessionId;
+  state.messages        = conv.messages || [];
+  state.chatTitle       = conv.title !== 'Untitled' ? conv.title : null;
+  state.activeHistoryId = sessionId;
+  state.currentAttachment = null;
+
+  // Re-render chat
+  const nodes = [...dom.chatSection.children].filter(n => n.id !== 'emptyState');
+  nodes.forEach(n => n.remove());
+  syncEmptyState();
+  clearAttachmentUI();
+  hideStatus();
+
+  state.messages.forEach(m => appendMessageBubble(m));
+
+  syncHeader();
+  renderHistory();
+  dom.messageInput.focus();
+}
+
+function handleDeleteConversation(sessionId) {
+  const label = loadHistory().find(c => c.sessionId === sessionId)?.title || 'this conversation';
+  if (!confirm(`Delete "${label}"? This cannot be undone.`)) return;
+
+  deleteConversation(sessionId);
+
+  // If we deleted the active session, start fresh
+  if (state.sessionId === sessionId) {
+    startNewSession();
+  } else {
+    renderHistory();
+  }
+}
+
+function handleClearAllHistory() {
+  if (!confirm('Delete ALL conversation history? This cannot be undone.')) return;
+  saveHistory([]);
+  startNewSession();
+}
+
+/* ─────────────────────────────────────────────
+   CONFIG PANEL TOGGLE
+───────────────────────────────────────────── */
+let configExpanded = true;
+function toggleConfig() {
+  configExpanded = !configExpanded;
+  dom.configPanel.classList.toggle('expanded',  configExpanded);
+  dom.configPanel.classList.toggle('collapsed', !configExpanded);
+  dom.configToggleBtn.setAttribute('aria-expanded', String(configExpanded));
+  safeText(dom.configChevron, configExpanded ? '▲ collapse' : '▼ expand');
+}
+
+/* ─────────────────────────────────────────────
+   EVENT HANDLERS
+───────────────────────────────────────────── */
+// Send on button click
+dom.sendBtn.addEventListener('click', () => {
+  const msg = dom.messageInput.value.trim();
+  if (msg) doSend(msg);
+});
+
+// Send on Enter (Shift+Enter = new line)
+dom.messageInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    const msg = dom.messageInput.value.trim();
+    if (msg) doSend(msg);
+  }
+});
+
+// Auto-grow textarea
+dom.messageInput.addEventListener('input', () => {
+  dom.messageInput.style.height = 'auto';
+  dom.messageInput.style.height = `${Math.min(dom.messageInput.scrollHeight, 140)}px`;
+});
+
+// File select
+dom.fileInput.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (file) applyAttachment(file);
+});
+
+// Remove attachment
+dom.removeAttachmentBtn.addEventListener('click', clearAttachmentUI);
+
+// New session
+dom.newSessionBtn.addEventListener('click', () => {
+  if (state.messages.length > 0) {
+    if (!confirm('Start a new conversation? Your current chat will be saved to history.')) return;
+  }
+  startNewSession();
+});
+
+// Clear all history
+dom.clearAllHistoryBtn.addEventListener('click', handleClearAllHistory);
+
+// Config panel toggle
+dom.configToggleBtn.addEventListener('click', toggleConfig);
+
+// Quick test buttons
+dom.quickTestBtns.addEventListener('click', e => {
+  const btn = e.target.closest('[data-msg]');
+  if (btn) doSend(btn.dataset.msg);
+});
+
+/* ─────────────────────────────────────────────
+   INITIALIZATION
+───────────────────────────────────────────── */
+function init() {
+  state.sessionId = newUUID();
+  syncHeader();
+  syncEmptyState();
+  renderHistory();
+  dom.messageInput.focus();
+}
+
+init();
+</script>
+</body>
+</html>
