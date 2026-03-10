@@ -41,6 +41,71 @@ use App\Models\Permission;
 use App\Models\AI\PromptTemplate;
 use Illuminate\Support\Facades\DB;
 
+// Project Management & Agile
+use App\Models\Board;
+use App\Models\BoardColumn;
+use App\Models\BoardCard;
+use App\Models\Sprint;
+use App\Models\Epic;
+use App\Models\Backlog;
+use App\Models\Release;
+use App\Models\BoardMember;
+use App\Models\BoardInvitation;
+use App\Models\CardChecklist;
+use App\Models\CardChecklistItem;
+use App\Models\CardComment;
+use App\Models\CardLabel;
+use App\Models\CardVote;
+use App\Models\CardWatcher;
+use App\Models\CardActivityLog;
+use App\Models\CardRelation;
+use App\Models\CardSubscriber;
+use App\Models\CardReminder;
+use App\Models\CardAttachment;
+
+// Notification & Chat
+use App\Models\Notification;
+use App\Models\Chat;
+
+// Social Media
+use App\Models\SocialMedia\FacebookPage;
+use App\Models\SocialMedia\FacebookLead;
+use App\Models\SocialMedia\InstagramAccount;
+use App\Models\SocialMedia\InstagramMedia;
+use App\Models\SocialMedia\LinkedInCompany;
+use App\Models\SocialMedia\LinkedInLead;
+use App\Models\SocialMedia\SocialPost;
+use App\Models\SocialMedia\SocialWebhook;
+use App\Models\SocialMedia\Tweet;
+use App\Models\SocialMedia\TwitterAccount;
+use App\Models\SocialMedia\WhatsAppAccount;
+use App\Models\SocialMedia\WhatsAppChat;
+use App\Models\SocialMedia\WhatsAppContact;
+use App\Models\SocialMedia\WhatsAppMessage;
+
+// Approval
+use App\Models\Approval\ApprovalRequest;
+use App\Models\Approval\ApprovalStep;
+use App\Models\Approval\ApprovalWorkflow;
+
+// Guest
+use App\Models\Guest\GuestInquiry;
+use App\Models\Guest\GuestProjectInquiry;
+use App\Models\Guest\GuestQuoteRequest;
+use App\Models\Guest\GuestSupportTicket;
+
+// CMS
+use App\Models\CMS\Page;
+
+// AI
+use App\Models\AI\AIModel;
+use App\Models\AI\Conversation;
+use App\Models\AI\Service;
+use App\Models\AI\UsageLog;
+
+// Miscellaneous
+use App\Models\UserNotificationPreference;
+
 class AIContextService
 {
     /**
@@ -79,6 +144,30 @@ class AIContextService
                 'icon' => 'life-buoy',
                 'color' => 'red',
             ],
+            'social_media' => [
+                'label' => 'Social Media',
+                'description' => 'Access to social media accounts, posts, and integrations',
+                'icon' => 'share-2',
+                'color' => 'teal',
+            ],
+            'approval' => [
+                'label' => 'Approval',
+                'description' => 'Access to approval requests, steps, and workflows',
+                'icon' => 'check-square',
+                'color' => 'cyan',
+            ],
+            'guest' => [
+                'label' => 'Guest',
+                'description' => 'Access to guest inquiries, quote requests, and support tickets',
+                'icon' => 'user',
+                'color' => 'pink',
+            ],
+            'cms' => [
+                'label' => 'CMS',
+                'description' => 'Access to content management pages',
+                'icon' => 'file-text',
+                'color' => 'indigo',
+            ],
             'general' => [
                 'label' => 'General - System Wide',
                 'description' => 'General assistance without specific module context',
@@ -99,10 +188,62 @@ class AIContextService
             'projects' => $this->getProjectsSchema(),
             'hr' => $this->getHRSchema(),
             'support' => $this->getSupportSchema(),
+            'social_media' => $this->getSocialMediaSchema(),
+            'approval' => $this->getApprovalSchema(),
+            'guest' => $this->getGuestSchema(),
+            'cms' => $this->getCMSSchema(),
             'general' => $this->getGeneralSchema(),
             default => [],
         };
     }
+
+            /**
+         * Get CMS module schema
+         */
+        private function getCMSSchema(): array
+        {
+            return [
+                'Page' => [
+                    'table' => 'pages',
+                    'fillable' => (new Page())->getFillable(),
+                    'relationships' => [],
+                    'record_count' => Page::count(),
+                ],
+            ];
+        }
+    /**
+     * Get Guest module schema
+     */
+    private function getGuestSchema(): array
+    {
+        return [
+            'GuestInquiry' => [
+                'table' => 'guest_inquiries',
+                'fillable' => (new GuestInquiry())->getFillable(),
+                'relationships' => [],
+                'record_count' => GuestInquiry::count(),
+            ],
+            'GuestProjectInquiry' => [
+                'table' => 'guest_project_inquiries',
+                'fillable' => (new GuestProjectInquiry())->getFillable(),
+                'relationships' => [],
+                'record_count' => GuestProjectInquiry::count(),
+            ],
+            'GuestQuoteRequest' => [
+                'table' => 'guest_quote_requests',
+                'fillable' => (new GuestQuoteRequest())->getFillable(),
+                'relationships' => [],
+                'record_count' => GuestQuoteRequest::count(),
+            ],
+            'GuestSupportTicket' => [
+                'table' => 'guest_support_tickets',
+                'fillable' => (new GuestSupportTicket())->getFillable(),
+                'relationships' => [],
+                'record_count' => GuestSupportTicket::count(),
+            ],
+        ];
+    }
+
 
     /**
      * Build AI prompt with context
@@ -366,12 +507,131 @@ class AIContextService
         ];
     }
 
+            /**
+         * Get Approval module schema
+         */
+        private function getApprovalSchema(): array
+        {
+            return [
+                'ApprovalRequest' => [
+                    'table' => 'approval_requests',
+                    'fillable' => (new ApprovalRequest())->getFillable(),
+                    'relationships' => [],
+                    'record_count' => ApprovalRequest::count(),
+                ],
+                'ApprovalStep' => [
+                    'table' => 'approval_steps',
+                    'fillable' => (new ApprovalStep())->getFillable(),
+                    'relationships' => [],
+                    'record_count' => ApprovalStep::count(),
+                ],
+                'ApprovalWorkflow' => [
+                    'table' => 'approval_workflows',
+                    'fillable' => (new ApprovalWorkflow())->getFillable(),
+                    'relationships' => [],
+                    'record_count' => ApprovalWorkflow::count(),
+                ],
+            ];
+        }
+    /**
+     * Get Social Media module schema
+     */
+    private function getSocialMediaSchema(): array
+    {
+        return [
+            'FacebookPage' => [
+                'table' => 'facebook_pages',
+                'fillable' => (new FacebookPage())->getFillable(),
+                'relationships' => [],
+                'record_count' => FacebookPage::count(),
+            ],
+            'FacebookLead' => [
+                'table' => 'facebook_leads',
+                'fillable' => (new FacebookLead())->getFillable(),
+                'relationships' => [],
+                'record_count' => FacebookLead::count(),
+            ],
+            'InstagramAccount' => [
+                'table' => 'instagram_accounts',
+                'fillable' => (new InstagramAccount())->getFillable(),
+                'relationships' => [],
+                'record_count' => InstagramAccount::count(),
+            ],
+            'InstagramMedia' => [
+                'table' => 'instagram_media',
+                'fillable' => (new InstagramMedia())->getFillable(),
+                'relationships' => [],
+                'record_count' => InstagramMedia::count(),
+            ],
+            'LinkedInCompany' => [
+                'table' => 'linkedin_companies',
+                'fillable' => (new LinkedInCompany())->getFillable(),
+                'relationships' => [],
+                'record_count' => LinkedInCompany::count(),
+            ],
+            'LinkedInLead' => [
+                'table' => 'linkedin_leads',
+                'fillable' => (new LinkedInLead())->getFillable(),
+                'relationships' => [],
+                'record_count' => LinkedInLead::count(),
+            ],
+            'SocialPost' => [
+                'table' => 'social_posts',
+                'fillable' => (new SocialPost())->getFillable(),
+                'relationships' => [],
+                'record_count' => SocialPost::count(),
+            ],
+            'SocialWebhook' => [
+                'table' => 'social_webhooks',
+                'fillable' => (new SocialWebhook())->getFillable(),
+                'relationships' => [],
+                'record_count' => SocialWebhook::count(),
+            ],
+            'Tweet' => [
+                'table' => 'tweets',
+                'fillable' => (new Tweet())->getFillable(),
+                'relationships' => [],
+                'record_count' => Tweet::count(),
+            ],
+            'TwitterAccount' => [
+                'table' => 'twitter_accounts',
+                'fillable' => (new TwitterAccount())->getFillable(),
+                'relationships' => [],
+                'record_count' => TwitterAccount::count(),
+            ],
+            'WhatsAppAccount' => [
+                'table' => 'whatsapp_accounts',
+                'fillable' => (new WhatsAppAccount())->getFillable(),
+                'relationships' => [],
+                'record_count' => WhatsAppAccount::count(),
+            ],
+            'WhatsAppChat' => [
+                'table' => 'whatsapp_chats',
+                'fillable' => (new WhatsAppChat())->getFillable(),
+                'relationships' => [],
+                'record_count' => WhatsAppChat::count(),
+            ],
+            'WhatsAppContact' => [
+                'table' => 'whatsapp_contacts',
+                'fillable' => (new WhatsAppContact())->getFillable(),
+                'relationships' => [],
+                'record_count' => WhatsAppContact::count(),
+            ],
+            'WhatsAppMessage' => [
+                'table' => 'whatsapp_messages',
+                'fillable' => (new WhatsAppMessage())->getFillable(),
+                'relationships' => [],
+                'record_count' => WhatsAppMessage::count(),
+            ],
+        ];
+    }
     /**
      * Get Projects module schema
      */
     private function getProjectsSchema(): array
     {
         return [
+            // ...existing code for Project, ProjectTask, etc.
             'Project' => [
                 'table' => 'projects',
                 'fillable' => (new Project())->getFillable(),
@@ -426,6 +686,127 @@ class AIContextService
                 'fillable' => (new ProjectFile())->getFillable(),
                 'relationships' => ['project', 'uploadedBy'],
                 'record_count' => ProjectFile::count(),
+            ],
+            // Agile/Board models
+            'Board' => [
+                'table' => 'boards',
+                'fillable' => (new Board())->getFillable(),
+                'relationships' => ['project', 'owner', 'columns', 'cards', 'sprints', 'epics', 'members'],
+                'record_count' => Board::count(),
+            ],
+            'BoardColumn' => [
+                'table' => 'board_columns',
+                'fillable' => (new BoardColumn())->getFillable(),
+                'relationships' => ['board', 'cards'],
+                'record_count' => BoardColumn::count(),
+            ],
+            'BoardCard' => [
+                'table' => 'board_cards',
+                'fillable' => (new BoardCard())->getFillable(),
+                'relationships' => ['board', 'column', 'sprint', 'epic', 'assignee', 'reporter', 'attachments', 'comments', 'checklists', 'activityLogs', 'watchers', 'relations', 'votes', 'subscribers', 'reminders', 'labels'],
+                'record_count' => BoardCard::count(),
+            ],
+            'Sprint' => [
+                'table' => 'sprints',
+                'fillable' => (new Sprint())->getFillable(),
+                'relationships' => ['board', 'cards'],
+                'record_count' => Sprint::count(),
+            ],
+            'Epic' => [
+                'table' => 'epics',
+                'fillable' => (new Epic())->getFillable(),
+                'relationships' => ['board', 'cards'],
+                'record_count' => Epic::count(),
+            ],
+            'Backlog' => [
+                'table' => 'backlogs',
+                'fillable' => (new Backlog())->getFillable(),
+                'relationships' => ['board', 'cards'],
+                'record_count' => Backlog::count(),
+            ],
+            'Release' => [
+                'table' => 'releases',
+                'fillable' => (new Release())->getFillable(),
+                'relationships' => ['project', 'cards'],
+                'record_count' => Release::count(),
+            ],
+            'BoardMember' => [
+                'table' => 'board_members',
+                'fillable' => (new BoardMember())->getFillable(),
+                'relationships' => ['board', 'user'],
+                'record_count' => BoardMember::count(),
+            ],
+            'BoardInvitation' => [
+                'table' => 'board_invitations',
+                'fillable' => (new BoardInvitation())->getFillable(),
+                'relationships' => ['board', 'user'],
+                'record_count' => BoardInvitation::count(),
+            ],
+            'CardChecklist' => [
+                'table' => 'card_checklists',
+                'fillable' => (new CardChecklist())->getFillable(),
+                'relationships' => ['card', 'items'],
+                'record_count' => CardChecklist::count(),
+            ],
+            'CardChecklistItem' => [
+                'table' => 'card_checklist_items',
+                'fillable' => (new CardChecklistItem())->getFillable(),
+                'relationships' => ['checklist'],
+                'record_count' => CardChecklistItem::count(),
+            ],
+            'CardComment' => [
+                'table' => 'card_comments',
+                'fillable' => (new CardComment())->getFillable(),
+                'relationships' => ['card', 'user'],
+                'record_count' => CardComment::count(),
+            ],
+            'CardLabel' => [
+                'table' => 'card_labels',
+                'fillable' => (new CardLabel())->getFillable(),
+                'relationships' => ['card'],
+                'record_count' => CardLabel::count(),
+            ],
+            'CardVote' => [
+                'table' => 'card_votes',
+                'fillable' => (new CardVote())->getFillable(),
+                'relationships' => ['card', 'user'],
+                'record_count' => CardVote::count(),
+            ],
+            'CardWatcher' => [
+                'table' => 'card_watchers',
+                'fillable' => (new CardWatcher())->getFillable(),
+                'relationships' => ['card', 'user'],
+                'record_count' => CardWatcher::count(),
+            ],
+            'CardActivityLog' => [
+                'table' => 'card_activity_logs',
+                'fillable' => (new CardActivityLog())->getFillable(),
+                'relationships' => ['card', 'user'],
+                'record_count' => CardActivityLog::count(),
+            ],
+            'CardRelation' => [
+                'table' => 'card_relations',
+                'fillable' => (new CardRelation())->getFillable(),
+                'relationships' => ['card', 'relatedCard'],
+                'record_count' => CardRelation::count(),
+            ],
+            'CardSubscriber' => [
+                'table' => 'card_subscribers',
+                'fillable' => (new CardSubscriber())->getFillable(),
+                'relationships' => ['card', 'user'],
+                'record_count' => CardSubscriber::count(),
+            ],
+            'CardReminder' => [
+                'table' => 'card_reminders',
+                'fillable' => (new CardReminder())->getFillable(),
+                'relationships' => ['card', 'user'],
+                'record_count' => CardReminder::count(),
+            ],
+            'CardAttachment' => [
+                'table' => 'card_attachments',
+                'fillable' => (new CardAttachment())->getFillable(),
+                'relationships' => ['card', 'user'],
+                'record_count' => CardAttachment::count(),
             ],
         ];
     }
@@ -701,6 +1082,26 @@ class AIContextService
                 'fillable' => (new Module())->getFillable(),
                 'relationships' => [],
                 'record_count' => Module::count(),
+            ],
+            // Notification & Chat
+            'Notification' => [
+                'table' => 'notifications',
+                'fillable' => (new Notification())->getFillable(),
+                'relationships' => [],
+                'record_count' => Notification::count(),
+            ],
+            'Chat' => [
+                'table' => 'chats',
+                'fillable' => (new Chat())->getFillable(),
+                'relationships' => [],
+                'record_count' => Chat::count(),
+            ],
+            // Miscellaneous
+            'UserNotificationPreference' => [
+                'table' => 'user_notification_preferences',
+                'fillable' => (new UserNotificationPreference())->getFillable(),
+                'relationships' => [],
+                'record_count' => UserNotificationPreference::count(),
             ],
         ];
     }
