@@ -110,9 +110,19 @@ export default function About() {
   return (
     <GuestLayout title="About Us">
       <Head title="About Us" />
+      <div className="relative flex items-center overflow-hidden min-h-screen">
 
+
+      </div>
       {/* Modern Hero Section with Gradient Background */}
-      <div className="relative overflow-hidden py-20 bg-white dark:bg-gray-900">
+      <div 
+      // className="relative overflow-hidden py-20 bg-white dark:bg-gray-900"
+        className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: "url('/assets/illustrations/tekrem-hero-section-image.jpeg')",
+            backgroundRepeat: 'no-repeat',
+          }}
+      >
         {/* Animated background elements */}
         {/* <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -right-32 w-96 h-96 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse"></div>
