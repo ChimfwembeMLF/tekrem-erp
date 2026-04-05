@@ -754,18 +754,17 @@ PROMPT;
     private function getTicketResolutionPrompt(): string
     {
         return <<<'PROMPT'
-As a support expert, analyze this ticket and provide helpful suggestions:
+As a support expert, analyze this ticket and provide a helpful, non-technical draft response and suggestions that a customer support agent can use:
 
 {{ticket_context}}
 
 Please provide:
-1. Potential root causes
-2. Step-by-step resolution suggestions
-3. Similar known issues
-4. Preventive measures
-5. Estimated resolution time
+1. A draft empathetic response to the customer
+2. Basic, non-technical troubleshooting steps the customer can take
+3. Potential root causes (explained simply)
+4. Clear next steps for the support team
 
-Format your response as structured suggestions that a support agent can follow.
+Do NOT include deep technical troubleshooting steps (like checking server logs, terminal commands, or modifying code) unless explicitly requested by the user.
 PROMPT;
     }
 

@@ -344,7 +344,7 @@ export default function Home({ canLogin, canRegister }: Props) {
         <div
           className="absolute inset-0 bg-cover bg-center animate-zoom"
           style={{
-            backgroundImage: "url('/assets/illustrations/tekrem-hero-section-image.png')",
+            backgroundImage: "url('/assets/illustrations/tekrem-hero-section-image.jpeg')",
             backgroundRepeat: 'no-repeat',
           }}
         />
@@ -359,7 +359,7 @@ export default function Home({ canLogin, canRegister }: Props) {
               {/* Main heading */}
               <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl">
                 <span className="block text-white dark:text-gray-300 ">Technology Solutions for</span>
-                <span className="block bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent">
+                <span className="block text-white dark:text-gray-300 ">
                   Modern Businesses
                 </span>
               </h1>
@@ -375,10 +375,10 @@ export default function Home({ canLogin, canRegister }: Props) {
                   <Check className='text-green-500 h-4' />
                   24/7 Support
                 </div>
-                <div className="flex items-center">
+                {/* <div className="flex items-center">
                   <Check className='text-green-500 h-4' />
                   99.9% Uptime
-                </div>
+                </div> */}
                 <div className="flex items-center">
                   <Check className='text-green-500 h-4' />
                   Secure & Compliant
@@ -393,7 +393,7 @@ export default function Home({ canLogin, canRegister }: Props) {
               <div className="mt-10 flex flex-col sm:flex-row gap-4">
                 <Link
                   href={route('services')}
-                  className="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-secondary to-primary hover:from-primary hover:to-secondary text-white font-semibold rounded-xl transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
+                  className="inline-flex items-center justify-center px-8 py-4 border-2 border-gray-200 text-white font-semibold rounded-xl transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
                 >
                   Get Started Today
                   <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -413,7 +413,23 @@ export default function Home({ canLogin, canRegister }: Props) {
             </div>
           </div>
         </div>
+        {/* Waves */}
+        <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none">
+          <svg
+            viewBox="0 0 1440 350" height="350"
+            className="w-full h-[350px]"
+            preserveAspectRatio="none"
+          >
+            <path
+              fill="currentColor"
+              className="text-white dark:text-gray-900"
+              d="M0,200 C480,550 960,5 1440,200 L1440,350 L0,550 Z"
+            />
+          </svg>          
+        </div>
+
       </div>
+
 
       {/* Statistics Section with Modern Design */}
 

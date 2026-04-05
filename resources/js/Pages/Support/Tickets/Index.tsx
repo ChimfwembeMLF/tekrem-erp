@@ -26,6 +26,7 @@ interface TicketData {
   title: string;
   status: string;
   priority: string;
+  source?: string;
   created_at: string;
   due_date?: string;
   category?: {
@@ -66,6 +67,7 @@ interface Props {
   tickets: PaginatedTickets;
   categories: Category[];
   users: User[];
+  sources: string[];
   filters: {
     search?: string;
     status?: string;
@@ -73,10 +75,11 @@ interface Props {
     category_id?: string;
     assigned_to?: string;
     overdue?: string;
+    source?: string;
   };
 }
 
-export default function Index({ tickets, categories, users, filters }: Props) {
+export default function Index({ tickets, categories, users, sources, filters }: Props) {
   const { t } = useTranslate();
   const route = useRoute();
   const [searchTerm, setSearchTerm] = useState(filters.search || '');
@@ -139,7 +142,7 @@ export default function Index({ tickets, categories, users, filters }: Props) {
   };
 
   return (
-    <AppLayout>
+    <AppLayout title={t('support.tickets', 'Support Tickets')}>
       <Head title={t('support.tickets', 'Support Tickets')} />
 
       <div className="space-y-6">
@@ -237,11 +240,25 @@ export default function Index({ tickets, categories, users, filters }: Props) {
                 </SelectContent>
               </Select>
 
+              <Select value={filters.source || 'all'} onValueChange={(value) => handleFilterChange('source', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('support.source', 'Source')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('common.all', 'All Sources')}</SelectItem>
+                  {sources.map((src) => (
+                    <SelectItem key={src} value={src}>
+                      {src}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="overdue"
                   checked={filters.overdue === 'true'}
-                  onCheckedChange={(checked) => handleFilterChange('overdue', checked ? 'true' : '')}
+                  onCheckedChange={(checked: boolean) => handleFilterChange('overdue', checked ? 'true' : '')}
                 />
                 <label htmlFor="overdue" className="text-sm font-medium">
                   {t('support.overdue_only', 'Overdue Only')}
@@ -271,6 +288,11 @@ export default function Index({ tickets, categories, users, filters }: Props) {
                       <Badge className={getPriorityColor(ticket.priority)} variant="secondary">
                         {ticket.priority}
                       </Badge>
+                      {ticket.source && (
+                        <Badge variant="outline" className="border-primary text-primary">
+                          {ticket.source}
+                        </Badge>
+                      )}
                       {isOverdue(ticket.due_date || '') && (
                         <Badge variant="destructive">
                           <AlertTriangle className="h-3 w-3 mr-1" />

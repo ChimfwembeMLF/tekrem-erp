@@ -8,8 +8,8 @@ interface AppProviderProps {
   // Add any additional props here
 }
 
-export default function AppProvider({ 
-  children 
+export default function AppProvider({
+  children
 }: PropsWithChildren<AppProviderProps>) {
   return (
     <I18nextProvider i18n={i18n}>

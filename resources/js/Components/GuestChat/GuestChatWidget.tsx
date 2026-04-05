@@ -42,27 +42,27 @@ const CSRF = () =>
 
 /* ─── component ─────────────────────────────────────────────── */
 export default function GuestChatWidget() {
-  const [isOpen,        setIsOpen]        = useState(false);
-  const [isMinimized,   setIsMinimized]   = useState(false);
-  const [initialized,   setInitialized]   = useState(false);
-  const [messages,      setMessages]      = useState<Message[]>([]);
-  const [conversation,  setConversation]  = useState<Conversation | null>(null);
-  const [guestSession,  setGuestSession]  = useState<GuestSession | null>(null);
-  const [newMessage,    setNewMessage]    = useState('');
-  const [attachments,   setAttachments]   = useState<File[]>([]);
-  const [isLoading,     setIsLoading]     = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [initialized, setInitialized] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [conversation, setConversation] = useState<Conversation | null>(null);
+  const [guestSession, setGuestSession] = useState<GuestSession | null>(null);
+  const [newMessage, setNewMessage] = useState('');
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [showGuestForm, setShowGuestForm] = useState(false);
-  const [guestInfo,     setGuestInfo]     = useState({
+  const [guestInfo, setGuestInfo] = useState({
     guest_name: '', guest_email: '', guest_phone: '', inquiry_type: 'general',
   });
-  const [initError,     setInitError]     = useState<string | null>(null);
-  const [unreadCount,   setUnreadCount]   = useState(0);
-  const [isTyping,      setIsTyping]      = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isTyping, setIsTyping] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('connecting');
-  const [animateOpen,   setAnimateOpen]   = useState(false);
+  const [animateOpen, setAnimateOpen] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const pollRef        = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   /* ── init ─────────────────────────────────────────── */
   const initializeSession = useCallback(async () => {
@@ -243,7 +243,7 @@ export default function GuestChatWidget() {
     return (
       <div className="widget-launcher">
         <button className="launcher-btn" onClick={openWidget} title="Open chat">
-          <img src={Logo} alt="Chat" className="launcher-logo" />
+          <img src={Logo} alt="Chat" className="" />
           {unreadCount > 0 && (
             <span className="unread-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
           )}

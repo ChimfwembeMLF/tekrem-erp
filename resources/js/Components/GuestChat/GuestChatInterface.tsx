@@ -110,12 +110,11 @@ function MessageBubble({ msg, guestSession }: { msg: Message; guestSession: Gues
   const colCls = `flex max-w-[78%] flex-col gap-0.5 ${own ? 'items-end' : ''}`;
 
   const avatarCls = (kind: 'ai' | 'agent' | 'guest') =>
-    `mb-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white ${
-      kind === 'ai'
-        ? 'bg-gradient-to-br from-violet-500 to-indigo-500'
-        : kind === 'agent'
-          ? 'bg-gradient-to-br from-cyan-500 to-blue-500'
-          : 'bg-gradient-to-br from-emerald-500 to-emerald-600'
+    `mb-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white ${kind === 'ai'
+      ? 'bg-gradient-to-br from-violet-500 to-indigo-500'
+      : kind === 'agent'
+        ? 'bg-gradient-to-br from-cyan-500 to-blue-500'
+        : 'bg-gradient-to-br from-emerald-500 to-emerald-600'
     }`;
 
   const bubbleBase = 'relative rounded-2xl px-3.5 py-2.5 text-[13px] leading-6 break-words';
@@ -487,9 +486,8 @@ export default function GuestChatInterface({
 
   return (
     <div
-      className={`flex h-full flex-col overflow-hidden transition-all duration-300 ${
-        visible ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'
-      }`}
+      className={`flex h-full flex-col overflow-hidden transition-all duration-300 ${visible ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'
+        }`}
     >
       <div className="flex flex-1 flex-col gap-1 overflow-y-auto bg-gray-50 px-3.5 py-4 [scrollbar-width:thin]">
         {messages.length === 0 && <WelcomeScreen />}
@@ -554,7 +552,7 @@ export default function GuestChatInterface({
         />
 
         {showEmojiPicker && (
-          <div className="absolute bottom-[calc(100%+6px)] left-3 z-50 min-w-[200px] rounded-lg border border-gray-200 bg-white p-2.5 shadow-[0_8px_32px_rgba(0,0,0,0.12)] animate-popup">
+          <div className="absolute bottom-[calc(100%+6px)] left-3 z-50 min-w-[300px] rounded-lg border border-gray-200 bg-white p-2.5 shadow-[0_8px_32px_rgba(0,0,0,0.12)] animate-popup">
             <div className="mb-2 flex items-center justify-between text-[11px] font-semibold text-gray-500">
               <span>Quick Reactions</span>
               <button
@@ -570,9 +568,8 @@ export default function GuestChatInterface({
               {quickEmojis.map((e) => (
                 <button
                   key={e}
-                  className={`rounded-md bg-transparent p-1 text-[18px] transition-[background,transform] duration-100 hover:scale-110 hover:bg-gray-100 ${
-                    emojiAnim === e ? 'animate-pop' : ''
-                  }`}
+                  className={`rounded-md bg-transparent p-1 text-[18px] transition-[background,transform] duration-100 hover:scale-110 hover:bg-gray-100 ${emojiAnim === e ? 'animate-pop' : ''
+                    }`}
                   onClick={() => handleEmojiSelect(e)}
                   type="button"
                 >

@@ -1,4 +1,4 @@
-import React, { PropsWithChildren } from 'react';
+import React, { PropsWithChildren, useEffect, useState } from 'react';
 import { Link, Head } from '@inertiajs/react';
 import useRoute from '@/Hooks/useRoute';
 import useTypedPage from '@/Hooks/useTypedPage';
@@ -29,53 +29,66 @@ export default function GuestLayout({
   const page = useTypedPage();
   const route = useRoute();
   const { theme } = useTheme();
-
+  const [scrolled, setScrolled] = useState(false);
   // Get settings from Inertia shared props
   const settings: any = page.props.settings || {};
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10); // trigger blur after 10px scroll
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
   // console.log(settings);
   return (
     <AppProvider>
-      <div className={`min-h-screen ${settings.font_family || 'font-sans'}`}>
+      <div className={`${settings.font_family || 'font-sans'}`}>
         <Head title={title} />
 
         {/* Modern Header */}
         {showHeader && (
-          <header className="sticky top-0 z-50 w-full backdrop-blur-sm bg-transperant dark:bg-gray-900/10 border-b border-white/20 dark:border-white/10 shadow-sm">
-            {/* Top Bar */}
-            <div className="border-b border-white/20 dark:border-white/10 bg-transperant dark:bg-white/5">
+          <header
+            className={`sticky top-0 z-50 w-full shadow-sm transition-all duration-300 ${scrolled
+              ? 'backdrop-blur-sm bg-white/90 dark:bg-gray-900/30'
+              : 'bg-transparent  text-gray-200'
+              }`}
+          >
+            <div className="transition-colors duration-300">
               <div className="container mx-auto px-4">
                 <div className="flex justify-between items-center py-2 text-md">
-                  <div className="flex items-center gap-4 font-medium text-gray-800 dark:text-gray-200">
+                  <div className="flex items-center gap-4 font-medium">
                     <div className="flex items-center gap-1">
-                      <MailIcon className='w-4 h-4' /><span className="hidden md:inline"> {settings.company_email || 'hello@tekrem.com'}</span>
+                      <MailIcon className="w-4 h-4" />
+                      <span className="hidden md:inline">{settings.company_email || 'hello@tekrem.com'}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Contact className='w-4 h-4' /> <span className="hidden md:inline">{settings.company_phone || '+260 976607840'}</span>
+                      <Contact className="w-4 h-4" />
+                      <span className="hidden md:inline">{settings.company_phone || '+260 976607840'}</span>
                     </div>
                   </div>
+
                   <div className="flex gap-3">
-                    <Link className="hover:text-blue-600 transition-colors duration-200" href="#">
-                      <Facebook className='w-4 h-4' />
+                    <Link href="#" className="hover:text-blue-600 transition-colors duration-200">
+                      <Facebook className="w-4 h-4" />
                     </Link>
-                    <Link className="hover:text-blue-400 transition-colors duration-200" href="#">
-                      <Twitter className='w-4 h-4' />
+                    <Link href="#" className="hover:text-blue-400 transition-colors duration-200">
+                      <Twitter className="w-4 h-4" />
                     </Link>
-                    <Link className="hover:text-pink-500 transition-colors duration-200" href="#">
-                      <Instagram className='w-4 h-4' />
+                    <Link href="#" className="hover:text-pink-500 transition-colors duration-200">
+                      <Instagram className="w-4 h-4" />
                     </Link>
-                    <Link className="hover:text-blue-700 transition-colors duration-200" href="#">
-                      <Linkedin className='w-4 h-4' />
+                    <Link href="#" className="hover:text-blue-700 transition-colors duration-200">
+                      <Linkedin className="w-4 h-4" />
                     </Link>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Main Navigation */}
             <div className="container mx-auto px-4">
               <div className="flex h-16 items-center justify-between">
-                {/* Logo */}
                 <div className="flex items-center gap-4">
                   <MobileNav settings={settings} />
                   <Link href={route('home')} className="flex-shrink-0">
@@ -83,37 +96,27 @@ export default function GuestLayout({
                   </Link>
                 </div>
 
-                {/* Desktop Navigation */}
                 <div className="hidden md:flex items-center">
                   <MainNav settings={settings} />
                 </div>
 
-                {/* Right side items */}
                 <div className="flex items-center gap-4">
-                  {/* Theme Toggle */}
                   <div className="hidden md:flex">
                     <ThemeToggle />
                   </div>
 
-                  {/* Auth Links */}
                   <div className="flex items-center gap-3">
                     {page.props.auth.user ? (
                       <Button asChild className="bg-gradient-to-r from-secondary to-primary hover:from-primary hover:to-secondary">
-                        <Link href={route('dashboard')}>
-                          Dashboard
-                        </Link>
+                        <Link href={route('dashboard')}>Dashboard</Link>
                       </Button>
                     ) : (
                       <>
                         <Button variant="ghost" asChild className="hidden md:flex">
-                          <Link href={route('login')}>
-                            Login
-                          </Link>
+                          <Link href={route('login')}>Login</Link>
                         </Button>
                         <Button asChild className="bg-gradient-to-r from-secondary to-primary hover:from-primary hover:to-secondary">
-                          <Link href={route('register')}>
-                            Get Started
-                          </Link>
+                          <Link href={route('register')}>Get Started</Link>
                         </Button>
                       </>
                     )}
@@ -125,7 +128,9 @@ export default function GuestLayout({
         )}
 
         {/* Main Content */}
-        <main>{children}</main>
+        <main className='-mt-28'>
+          {children}
+        </main>
 
         {/* Modern Footer */}
         <footer className="relative bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 py-20 overflow-hidden">

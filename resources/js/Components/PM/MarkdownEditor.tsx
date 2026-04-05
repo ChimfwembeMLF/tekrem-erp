@@ -7,13 +7,12 @@
 //
 // Props: see MarkdownEditorProps below.
 // ─────────────────────────────────────────────────────────────────────────────
-
+import React from "react";
 import {
   useState,
   useRef,
   useEffect,
-  useCallback,
-  type FC,
+  useCallback, type FC,
   type ReactNode,
   type ChangeEvent,
 } from "react";
@@ -95,16 +94,6 @@ export interface MarkdownEditorProps {
    */
   onChange?: (value: string) => void;
   /**
-   * Controlled dark-mode override. When omitted the editor manages
-   * dark mode internally, seeded from `prefers-color-scheme`.
-   */
-  darkMode?: boolean;
-  /**
-   * Called when the user toggles the dark-mode button.
-   * Only relevant when `darkMode` is a controlled prop.
-   */
-  onDarkModeChange?: (dark: boolean) => void;
-  /**
    * Autosave debounce in milliseconds.
    * @default 700
    */
@@ -172,10 +161,10 @@ const LANG_MAP: LangLookup = {
 };
 
 const KEYWORD_PATTERNS: KeywordMap = {
-  js:     /\b(const|let|var|function|return|if|else|for|while|do|class|extends|import|export|default|from|as|async|await|new|this|typeof|instanceof|in|of|null|undefined|true|false|try|catch|finally|throw|switch|case|break|continue|delete|void)\b/g,
+  js: /\b(const|let|var|function|return|if|else|for|while|do|class|extends|import|export|default|from|as|async|await|new|this|typeof|instanceof|in|of|null|undefined|true|false|try|catch|finally|throw|switch|case|break|continue|delete|void)\b/g,
   python: /\b(def|class|import|from|return|if|elif|else|for|while|in|not|and|or|True|False|None|with|as|try|except|finally|lambda|yield|pass|break|continue|global|nonlocal|del|assert|raise|is)\b/g,
-  css:    /\b(important|inherit|initial|unset|auto|none|block|flex|grid|inline|absolute|relative|fixed|sticky|solid|transparent)\b/g,
-  bash:   /\b(echo|cd|ls|mkdir|rm|mv|cp|grep|awk|sed|cat|if|then|else|fi|for|do|done|while|export|source|alias)\b/g,
+  css: /\b(important|inherit|initial|unset|auto|none|block|flex|grid|inline|absolute|relative|fixed|sticky|solid|transparent)\b/g,
+  bash: /\b(echo|cd|ls|mkdir|rm|mv|cp|grep|awk|sed|cat|if|then|else|fi|for|do|done|while|export|source|alias)\b/g,
 };
 
 function highlight(code: string, lang: string): string {
@@ -533,7 +522,7 @@ const EDITOR_CSS = `
   box-shadow: 0 1px 4px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.04);
   transition: background .2s, border-color .2s;
 }
-.mde.dark {
+.dark .mde {
   --bg:    #0F0F0E; --surf:  #191917;  --surf2: #131312;
   --bdr:   #2A2927; --bdr2:  #3C3B38;
   --tx:    #F4F3EF; --tx2:   #72716C;  --tx3:   #484742;
@@ -617,18 +606,22 @@ interface TabsProps {
 }
 
 const TAB_DEFS: Array<{ mode: EditorMode; icon: keyof typeof Icons; label: string }> = [
-  { mode: "write",   icon: "pen",   label: "Write"   },
-  { mode: "preview", icon: "eye",   label: "Preview" },
-  { mode: "split",   icon: "split", label: "Split"   },
+  { mode: "write", icon: "pen", label: "Write" },
+  { mode: "preview", icon: "eye", label: "Preview" },
+  { mode: "split", icon: "split", label: "Split" },
 ];
 
 const Tabs: FC<TabsProps> = ({ mode, onModeChange }) => (
   <div className="mde-tabs">
     {TAB_DEFS.map(({ mode: m, icon, label }) => (
       <button
+        type="button"
         key={m}
         className={`mde-tab${mode === m ? " on" : ""}`}
-        onClick={() => onModeChange(m)}
+        onClick={(e) => {
+          e.preventDefault();
+          onModeChange(m);
+        }}
         aria-pressed={mode === m}
       >
         {Icons[icon]}
@@ -644,9 +637,9 @@ interface ToolbarGroupsProps {
 
 const TOOLBAR_GROUPS: ToolbarGroup[] = [
   [
-    { action: "bold",   title: "Bold",          label: <b>B</b>,         style: {} },
-    { action: "italic", title: "Italic",         label: "I",              style: { fontStyle: "italic" } },
-    { action: "strike", title: "Strikethrough",  label: "S",              style: { textDecoration: "line-through" } },
+    { action: "bold", title: "Bold", label: <b>B</b>, style: {} },
+    { action: "italic", title: "Italic", label: "I", style: { fontStyle: "italic" } },
+    { action: "strike", title: "Strikethrough", label: "S", style: { textDecoration: "line-through" } },
   ],
   [
     { action: "h1", title: "Heading 1", label: "H1" },
@@ -654,16 +647,16 @@ const TOOLBAR_GROUPS: ToolbarGroup[] = [
     { action: "h3", title: "Heading 3", label: "H3" },
   ],
   [
-    { action: "code",   title: "Inline code", label: Icons.code },
-    { action: "cblock", title: "Code block",  label: Icons.blockCode },
+    { action: "code", title: "Inline code", label: Icons.code },
+    { action: "cblock", title: "Code block", label: Icons.blockCode },
   ],
   [
     { action: "ul", title: "Unordered list", label: Icons.ul },
-    { action: "ol", title: "Ordered list",   label: Icons.ol },
+    { action: "ol", title: "Ordered list", label: Icons.ol },
   ],
   [
     { action: "bq", title: "Blockquote", label: Icons.quote },
-    { action: "hr", title: "Divider",    label: Icons.hr },
+    { action: "hr", title: "Divider", label: Icons.hr },
   ],
 ];
 
@@ -674,11 +667,15 @@ const Toolbar: FC<ToolbarGroupsProps> = ({ onAction }) => (
         <div key={`g-${gi}`} className="mde-tbg">
           {group.map((btn) => (
             <button
+              type="button"
               key={btn.action}
               className="mde-t"
               title={btn.title}
               style={btn.style}
-              onClick={() => onAction(btn.action)}
+              onClick={(e) => {
+                e.preventDefault();
+                onAction(btn.action);
+              }}
               aria-label={btn.title}
             >
               {btn.label}
@@ -704,29 +701,8 @@ const MarkdownEditor: FC<MarkdownEditorProps> = ({
   height = 500,
   className = "",
   onChange,
-  darkMode: controlledDark,
-  onDarkModeChange,
   autosaveDelay = 700,
 }) => {
-  // ── Dark mode ─────────────────────────────────────────────────────────────
-  const isControlled = controlledDark !== undefined;
-
-  const [internalDark, setInternalDark] = useState<boolean>(
-    () =>
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches,
-  );
-
-  const dark = isControlled ? (controlledDark as boolean) : internalDark;
-
-  const toggleDark = useCallback(() => {
-    if (isControlled) {
-      onDarkModeChange?.(!dark);
-    } else {
-      setInternalDark((d) => !d);
-    }
-  }, [isControlled, dark, onDarkModeChange]);
-
   // ── Editor state ──────────────────────────────────────────────────────────
   const [value, setValue] = useState<string>(() => {
     try {
@@ -782,10 +758,10 @@ const MarkdownEditor: FC<MarkdownEditorProps> = ({
     }
 
     const WRAP_MAP: Partial<Record<ToolbarAction, [string, string, string?]>> = {
-      bold:   ["**", "**"],
-      italic: ["*",  "*"],
+      bold: ["**", "**"],
+      italic: ["*", "*"],
       strike: ["~~", "~~"],
-      code:   ["`",  "`"],
+      code: ["`", "`"],
       cblock: ["```js\n", "\n```", "code here"],
     };
 
@@ -840,7 +816,7 @@ const MarkdownEditor: FC<MarkdownEditorProps> = ({
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className={`mde${dark ? " dark" : ""}${className ? ` ${className}` : ""}`}>
+    <div className={`mde${className ? ` ${className}` : ""}`}>
       <style>{EDITOR_CSS}</style>
 
       {/* ── Header ── */}
@@ -848,20 +824,16 @@ const MarkdownEditor: FC<MarkdownEditorProps> = ({
         <Tabs mode={mode} onModeChange={setMode} />
         <div className="mde-hdr">
           <button
+            type="button"
             className="mde-ibtn"
             title={copied ? "Copied!" : "Copy markdown"}
             aria-label={copied ? "Copied!" : "Copy markdown"}
-            onClick={handleCopy}
+            onClick={(e) => {
+              e.preventDefault();
+              handleCopy();
+            }}
           >
             {copied ? Icons.check : Icons.copy}
-          </button>
-          <button
-            className="mde-ibtn"
-            title="Toggle dark mode"
-            aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-            onClick={toggleDark}
-          >
-            {dark ? Icons.sun : Icons.moon}
           </button>
         </div>
       </div>

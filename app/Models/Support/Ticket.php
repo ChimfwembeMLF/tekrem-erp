@@ -44,6 +44,8 @@ class Ticket extends Model
         'first_response_at',
         'resolution_time_minutes',
         'response_time_minutes',
+        'source',
+        'external_reference_id',
     ];
 
     /**

@@ -11,6 +11,10 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/v1/tickets', [\App\Http\Controllers\Api\TicketController::class, 'store']);
+});
+
 // MoMo Webhook Routes (No authentication required for provider callbacks)
 Route::prefix('momo')->name('api.momo.')->group(function () {
     Route::post('webhook/{provider}', [MomoWebhookController::class, 'handle'])->name('webhook');

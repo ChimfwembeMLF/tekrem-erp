@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
@@ -7,34 +8,16 @@ import { Separator } from '@/Components/ui/separator';
 import {
   Brain,
   Lightbulb,
-  Clock,
-  Target,
-  TrendingUp,
   AlertTriangle,
-  CheckCircle,
   Loader2,
   RefreshCw,
   ThumbsUp,
-  ThumbsDown,
-  BookOpen,
-  FileText
+  ThumbsDown
 } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
 
 interface Suggestion {
   suggestions: string;
-  confidence: number;
-  similar_tickets: Array<{
-    id: number;
-    ticket_number: string;
-    title: string;
-    status: string;
-  }>;
-  recommended_articles: Array<{
-    id: number;
-    title: string;
-    excerpt?: string;
-  }>;
 }
 
 interface Props {
@@ -55,12 +38,13 @@ export default function AISuggestions({ ticketId, onApplySuggestion, className =
     setError(null);
 
     try {
-      const response = await fetch(`/support/ai/tickets/${ticketId}/suggestions`, {
-        method: 'GET',
+      const response = await fetch('/support/tickets/ai-suggestions', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
         },
+        body: JSON.stringify({ ticket_id: ticketId })
       });
 
       if (!response.ok) {
@@ -78,37 +62,14 @@ export default function AISuggestions({ ticketId, onApplySuggestion, className =
 
   const handleFeedback = async (isHelpful: boolean) => {
     try {
-      await fetch(`/support/ai/tickets/${ticketId}/suggestions/feedback`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-        },
-        body: JSON.stringify({
-          helpful: isHelpful,
-          suggestion_id: suggestions ? 'ai_suggestion' : null,
-        }),
-      });
-
+      // In a real implementation this would persist to the DB.
       setFeedback(isHelpful ? 'helpful' : 'not_helpful');
     } catch (err) {
       console.error('Failed to submit feedback:', err);
     }
   };
 
-  const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 80) return 'text-green-600 bg-green-100';
-    if (confidence >= 60) return 'text-yellow-600 bg-yellow-100';
-    return 'text-red-600 bg-red-100';
-  };
-
-  const getConfidenceIcon = (confidence: number) => {
-    if (confidence >= 80) return CheckCircle;
-    if (confidence >= 60) return AlertTriangle;
-    return AlertTriangle;
-  };
-
-  React.useEffect(() => {
+  useEffect(() => {
     fetchSuggestions();
   }, [ticketId]);
 
@@ -139,7 +100,7 @@ export default function AISuggestions({ ticketId, onApplySuggestion, className =
       </CardHeader>
       <CardContent>
         {loading && !suggestions && (
-          <div className="flex items-center justify-center py-8">
+          <div className="flex items-center justify-center py-8 text-muted-foreground">
             <Loader2 className="h-6 w-6 animate-spin mr-2" />
             <span>{t('support.analyzing_ticket', 'Analyzing ticket...')}</span>
           </div>
@@ -154,24 +115,17 @@ export default function AISuggestions({ ticketId, onApplySuggestion, className =
 
         {suggestions && (
           <div className="space-y-6">
-            {/* Confidence Score */}
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">{t('support.confidence_score', 'Confidence Score')}</span>
-              <Badge className={getConfidenceColor(suggestions.confidence)} variant="secondary">
-                {React.createElement(getConfidenceIcon(suggestions.confidence), { className: "h-3 w-3 mr-1" })}
-                {suggestions.confidence}%
-              </Badge>
-            </div>
-
             {/* AI Suggestions */}
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <Lightbulb className="h-4 w-4 text-yellow-500" />
+                <Lightbulb className="h-4 w-4 text-amber-500" />
                 <h4 className="font-medium">{t('support.resolution_suggestions', 'Resolution Suggestions')}</h4>
               </div>
               <div className="bg-muted p-4 rounded-lg">
-                <div className="whitespace-pre-wrap text-sm">{suggestions.suggestions}</div>
-                
+                <div className="prose prose-sm dark:prose-invert max-w-none">
+                  <ReactMarkdown>{suggestions.suggestions}</ReactMarkdown>
+                </div>
+
                 {onApplySuggestion && (
                   <div className="mt-4 flex gap-2">
                     <Button
@@ -184,56 +138,6 @@ export default function AISuggestions({ ticketId, onApplySuggestion, className =
                 )}
               </div>
             </div>
-
-            {/* Similar Tickets */}
-            {suggestions.similar_tickets.length > 0 && (
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Target className="h-4 w-4 text-blue-500" />
-                  <h4 className="font-medium">{t('support.similar_tickets', 'Similar Tickets')}</h4>
-                </div>
-                <div className="space-y-2">
-                  {suggestions.similar_tickets.map((ticket) => (
-                    <div key={ticket.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <div className="font-medium text-sm">#{ticket.ticket_number}</div>
-                        <div className="text-sm text-muted-foreground">{ticket.title}</div>
-                      </div>
-                      <Badge variant="outline">
-                        {ticket.status}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Recommended Articles */}
-            {suggestions.recommended_articles.length > 0 && (
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <BookOpen className="h-4 w-4 text-green-500" />
-                  <h4 className="font-medium">{t('support.recommended_articles', 'Recommended Articles')}</h4>
-                </div>
-                <div className="space-y-2">
-                  {suggestions.recommended_articles.map((article) => (
-                    <div key={article.id} className="p-3 border rounded-lg">
-                      <div className="flex items-start gap-2">
-                        <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
-                        <div>
-                          <div className="font-medium text-sm">{article.title}</div>
-                          {article.excerpt && (
-                            <div className="text-sm text-muted-foreground mt-1">
-                              {article.excerpt}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             <Separator />
 

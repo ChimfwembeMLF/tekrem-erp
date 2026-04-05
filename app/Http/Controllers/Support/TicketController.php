@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Support\Ticket;
 use App\Models\Support\TicketCategory;
 use App\Models\Support\TicketComment;
+use App\Models\AI\PromptTemplate;
 use App\Models\Support\SLA;
 use App\Models\User;
 use App\Models\Client;
@@ -62,6 +63,9 @@ class TicketController extends Controller
             })
             ->when($request->overdue === 'true', function ($query) {
                 $query->overdue();
+            })
+            ->when($request->source, function ($query, $source) {
+                $query->where('source', $source);
             });
 
         $tickets = $query->latest()->paginate(15)->withQueryString();
@@ -70,12 +74,14 @@ class TicketController extends Controller
         $users = User::whereHas('roles', function ($query) {
             $query->whereIn('name', ['super_user', 'admin', 'staff']);
         })->get(['id', 'name']);
+        $sources = \App\Models\Support\TicketSource::active()->pluck('name');
 
         return Inertia::render('Support/Tickets/Index', [
             'tickets' => $tickets,
             'categories' => $categories,
             'users' => $users,
-            'filters' => $request->only(['search', 'status', 'priority', 'category_id', 'assigned_to', 'overdue']),
+            'sources' => $sources,
+            'filters' => $request->only(['search', 'status', 'priority', 'category_id', 'assigned_to', 'overdue', 'source']),
         ]);
     }
 
@@ -419,32 +425,20 @@ class TicketController extends Controller
     /**
      * Add comment to ticket.
      */
-    public function addComment(Request $request, Ticket $ticket): JsonResponse
+    public function addComment(Request $request, Ticket $ticket): RedirectResponse
     {
         $validated = $request->validate([
             'content' => ['required', 'string'],
             'is_internal' => ['boolean'],
             'is_solution' => ['boolean'],
             'time_spent_minutes' => ['nullable', 'integer', 'min:0'],
-            'attachments' => ['nullable', 'array'],
-            'attachments.*' => ['file', 'max:10240'], // 10MB max
+            'existing_attachments' => ['nullable', 'array'],
         ]);
 
         $validated['user_id'] = Auth::id();
 
-        // Handle file attachments
-        if ($request->hasFile('attachments')) {
-            $attachments = [];
-            foreach ($request->file('attachments') as $file) {
-                $path = $file->store('support/comments', 'public');
-                $attachments[] = [
-                    'name' => $file->getClientOriginalName(),
-                    'path' => $path,
-                    'size' => $file->getSize(),
-                    'type' => $file->getMimeType(),
-                ];
-            }
-            $validated['attachments'] = $attachments;
+        if (!empty($validated['existing_attachments'])) {
+            $validated['attachments'] = $validated['existing_attachments'];
         }
 
         $comment = $ticket->comments()->create($validated);
@@ -459,10 +453,25 @@ class TicketController extends Controller
 
         $comment->load('user');
 
-        return response()->json([
-            'message' => 'Comment added successfully.',
-            'comment' => $comment,
+        return redirect()->back()->with('success', 'Comment added successfully.');
+    }
+
+    /**
+     * Update comment for ticket.
+     */
+    public function updateComment(Request $request, Ticket $ticket, TicketComment $comment): RedirectResponse
+    {
+        if ($comment->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $validated = $request->validate([
+            'content' => ['required', 'string'],
         ]);
+
+        $comment->update($validated);
+
+        return redirect()->back()->with('success', 'Comment updated successfully.');
     }
 
     /**
@@ -475,25 +484,13 @@ class TicketController extends Controller
             'is_internal' => ['boolean'],
             'is_solution' => ['boolean'],
             'time_spent_minutes' => ['nullable', 'integer', 'min:0'],
-            'attachments' => ['nullable', 'array'],
-            'attachments.*' => ['file', 'max:10240'], // 10MB max
+            'existing_attachments' => ['nullable', 'array'],
         ]);
 
         $validated['user_id'] = Auth::id();
 
-        // Handle file attachments
-        if ($request->hasFile('attachments')) {
-            $attachments = [];
-            foreach ($request->file('attachments') as $file) {
-                $path = $file->store('support/comments', 'public');
-                $attachments[] = [
-                    'name' => $file->getClientOriginalName(),
-                    'path' => $path,
-                    'size' => $file->getSize(),
-                    'type' => $file->getMimeType(),
-                ];
-            }
-            $validated['attachments'] = $attachments;
+        if (!empty($validated['existing_attachments'])) {
+            $validated['attachments'] = $validated['existing_attachments'];
         }
 
         $comment = $ticket->comments()->create($validated);
@@ -512,7 +509,7 @@ class TicketController extends Controller
     /**
      * Get AI suggestions for ticket resolution.
      */
-    public function getAISuggestions(Request $request): JsonResponse
+    public function aiSuggestions(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'ticket_id' => ['required', 'exists:tickets,id'],
@@ -535,7 +532,13 @@ class TicketController extends Controller
                 }
             }
 
-            $prompt = "Based on this support ticket information, provide helpful suggestions for resolution, similar issues, and next steps:\n\n{$context}";
+            $promptTemplate = PromptTemplate::where('slug', 'ticket-resolution-suggestions')->first();
+
+            if ($promptTemplate) {
+                $prompt = $promptTemplate->render(['ticket_context' => $context]);
+            } else {
+                $prompt = "Based on this support ticket information, provide a helpful, non-technical draft response and suggestions that a customer support agent can use. Do NOT include deep technical troubleshooting steps (like checking server logs, terminal commands, or modifying code). Focus on empathetic communication, clear next steps, and basic troubleshooting the end-user can do themselves:\n\n{$context}";
+            }
 
             $suggestions = $aiService->generateResponse($prompt);
 

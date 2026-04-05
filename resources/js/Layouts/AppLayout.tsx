@@ -4,7 +4,7 @@ import useTypedPage from '@/Hooks/useTypedPage';
 import Banner from '@/Components/Banner';
 import Sidebar from '@/Components/Sidebar';
 import TopNav from '@/Components/TopNav';
-import BreadcrumbNavigation from '@/Components/BreadcrumbNavigation';
+// import BreadcrumbNavigation from '@/Components/BreadcrumbNavigation';
 import AppProvider from '@/Providers/AppProvider';
 import { Toaster } from '@/Components/ui/sonner';
 
@@ -43,15 +43,14 @@ export default function AppLayout({
               <div className=" mx-auto py-6 px-4 sm:px-6 lg:px-8">
                 {renderHeader()}
                 {/* Breadcrumb Navigation */}
-              <BreadcrumbNavigation className="mb-6" />
+              {/* <BreadcrumbNavigation className="mb-6" /> */}
               </div>
             </header>
           )}
 
           {/* Page Content */}
           <main className="flex-1 p-4 md:p-6">
-            <div className="">
-              
+            <div className="">              
               {children}
             </div>
           </main>

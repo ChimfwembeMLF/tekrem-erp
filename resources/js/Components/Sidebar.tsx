@@ -283,6 +283,12 @@ export default function Sidebar({ settings }: SidebarProps) {
       active: route().current('support.categories.*')
     },
     {
+      href: route('support.ticket-sources.index'),
+      label: t('support.sources', 'External Sources'),
+      icon: <Link2 className="h-5 w-5" />,
+      active: route().current('support.ticket-sources.*')
+    },
+    {
       href: route('support.analytics.dashboard'),
       label: t('support.analytics', 'Analytics'),
       icon: <BarChart3 className="h-5 w-5" />,

@@ -76,8 +76,19 @@ Route::prefix('guest')->name('guest.')->group(function () {
     Route::get('/support/ticket/status', [\App\Http\Controllers\Guest\SupportController::class, 'ticketStatusForm'])->name('support.ticket.status-form');
     Route::post('/support/ticket/status', [\App\Http\Controllers\Guest\SupportController::class, 'ticketStatus'])->name('support.ticket.status');
 
-    // Portfolio
+    // Portfolio (Placeholder)
 });
+
+// Embeddable Ticket Form
+Route::get('/support/embed/ticket', function (\Illuminate\Http\Request $request) {
+    return \Inertia\Inertia::render('Support/Embed/TicketForm', [
+        'source' => $request->query('source', 'External System'),
+        'token' => $request->query('token', ''),
+        'theme' => $request->query('theme', 'light'),
+        'primary_color' => $request->query('primary_color', ''),
+        'categories' => \App\Models\Support\TicketCategory::all(['id', 'name']),
+    ]);
+})->name('support.embed.ticket')->middleware(\App\Http\Middleware\AllowIframe::class);
 
 // AI Service Test Route (for development/testing)
 Route::post('/test-ai-service', function (\Illuminate\Http\Request $request) {
@@ -757,6 +768,8 @@ Route::middleware([
         Route::post('tickets/{ticket}/close', [\App\Http\Controllers\Support\TicketController::class, 'close'])->name('tickets.close');
         Route::post('tickets/{ticket}/reopen', [\App\Http\Controllers\Support\TicketController::class, 'reopen'])->name('tickets.reopen');
         Route::post('tickets/{ticket}/comments', [\App\Http\Controllers\Support\TicketController::class, 'addComment'])->name('tickets.comments.store');
+        Route::put('tickets/{ticket}/comments/{comment}', [\App\Http\Controllers\Support\TicketController::class, 'updateComment'])->name('tickets.comments.update');
+        Route::patch('tickets/{ticket}/status', [\App\Http\Controllers\Support\TicketController::class, 'updateStatus'])->name('tickets.update-status');
         Route::post('tickets/ai-suggestions', [\App\Http\Controllers\Support\TicketController::class, 'aiSuggestions'])->name('tickets.ai-suggestions');
 
         // Knowledge Base
@@ -774,6 +787,10 @@ Route::middleware([
 
         // Categories
         Route::resource('categories', \App\Http\Controllers\Support\CategoryController::class);
+
+        // Sources (Whitelist)
+        Route::resource('ticket-sources', \App\Http\Controllers\Support\TicketSourceController::class)->parameters(['ticket-sources' => 'source']);
+        Route::post('ticket-sources/{source}/generate-token', [\App\Http\Controllers\Support\TicketSourceController::class, 'generateToken'])->name('ticket-sources.generate-token');
 
         // Analytics
         Route::prefix('analytics')->name('analytics.')->group(function () {

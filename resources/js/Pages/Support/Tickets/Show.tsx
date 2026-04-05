@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, Link, useForm, router } from '@inertiajs/react';
+import { Head, Link, useForm, router, usePage } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import AISuggestions from '@/Components/Support/AISuggestions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
@@ -9,6 +9,8 @@ import { Textarea } from '@/Components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { Separator } from '@/Components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/Components/ui/avatar';
+import MediaPicker from '@/Components/CMS/MediaPicker';
+import MarkdownEditor from '@/Components/PM/MarkdownEditor';
 import {
   ArrowLeft,
   Edit,
@@ -23,11 +25,18 @@ import {
   Paperclip,
   Bot,
   Calendar,
-  Building
+  Building,
+  Upload,
+  X,
+  Image as ImageIcon,
+  FileText
 } from 'lucide-react';
+import { Input } from '@/Components/ui/input';
+import { Label } from '@/Components/ui/label';
 import useTranslate from '@/Hooks/useTranslate';
 import useRoute from '@/Hooks/useRoute';
 import { toast } from 'sonner';
+import ReactMarkdown from 'react-markdown';
 
 interface TicketData {
   id: number;
@@ -43,6 +52,8 @@ interface TicketData {
   closed_at?: string;
   satisfaction_rating?: number;
   satisfaction_feedback?: string;
+  source?: string;
+  external_reference_id?: string;
   tags?: string[];
   escalation_level: number;
   category?: {
@@ -108,15 +119,20 @@ interface Props {
 export default function Show({ ticket, users, comments }: Props) {
   const { t } = useTranslate();
   const route = useRoute();
+  const { auth } = usePage<any>().props;
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
   const [showAISuggestions, setShowAISuggestions] = useState(false);
-  const [aiSuggestions, setAISuggestions] = useState<string>('');
+  const [mediaAttachments, setMediaAttachments] = useState<any[]>([]);
+  const [editorKey, setEditorKey] = useState(0);
+
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editingContent, setEditingContent] = useState('');
 
   const { data, setData, post, processing, reset } = useForm({
     content: '',
     is_internal: false,
     is_solution: false,
     time_spent_minutes: '',
-    attachments: [] as File[],
   });
 
   const getStatusColor = (status: string) => {
@@ -153,29 +169,36 @@ export default function Show({ ticket, users, comments }: Props) {
 
   const isOverdue = () => {
     return ticket.due_date && new Date(ticket.due_date) < new Date() &&
-           !['resolved', 'closed'].includes(ticket.status);
+      !['resolved', 'closed'].includes(ticket.status);
+  };
+
+  const removeAttachment = (index: number) => {
+    setMediaAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleAddComment = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const formData = new FormData();
-    formData.append('content', data.content);
-    formData.append('is_internal', data.is_internal ? '1' : '0');
-    formData.append('is_solution', data.is_solution ? '1' : '0');
-    if (data.time_spent_minutes) {
-      formData.append('time_spent_minutes', data.time_spent_minutes);
-    }
+    const mappedAttachments = mediaAttachments.map(m => ({
+      name: m.name || m.original_name,
+      path: m.file_path,
+      size: m.file_size,
+      type: m.mime_type,
+    }));
 
-    data.attachments.forEach((file, index) => {
-      formData.append(`attachments[${index}]`, file);
-    });
-
-    router.post(route('support.tickets.comments.store', ticket.id), formData, {
-      forceFormData: true,
+    router.post(route('support.tickets.comments.store', ticket.id), {
+      content: data.content,
+      is_internal: data.is_internal,
+      is_solution: data.is_solution,
+      time_spent_minutes: data.time_spent_minutes,
+      existing_attachments: mappedAttachments
+    }, {
+      preserveScroll: true,
       onSuccess: () => {
         reset();
-        // Refresh the page to show new comment
+        setMediaAttachments([]);
+        localStorage.removeItem(`ticket-${ticket.id}-comment`);
+        setEditorKey(prev => prev + 1);
         router.reload();
       },
     });
@@ -231,29 +254,8 @@ export default function Show({ ticket, users, comments }: Props) {
     }
   };
 
-  const getAISuggestions = async () => {
+  const getAISuggestions = () => {
     setShowAISuggestions(true);
-    try {
-      const response = await fetch(route('support.tickets.ai-suggestions'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-        },
-        body: JSON.stringify({
-          ticket_id: ticket.id,
-        }),
-      });
-
-      const result = await response.json();
-      if (result.suggestions) {
-        setAISuggestions(result.suggestions);
-      } else {
-        setAISuggestions(t('support.ai_suggestions_error', 'Unable to generate suggestions at this time.'));
-      }
-    } catch (error) {
-      setAISuggestions(t('support.ai_suggestions_error', 'Unable to generate suggestions at this time.'));
-    }
   };
 
   return (
@@ -281,6 +283,11 @@ export default function Show({ ticket, users, comments }: Props) {
                 <Badge className={getPriorityColor(ticket.priority)} variant="secondary">
                   {ticket.priority}
                 </Badge>
+                {ticket.source && (
+                  <Badge variant="outline" className="border-primary text-primary">
+                    {ticket.source}
+                  </Badge>
+                )}
                 {isOverdue() && (
                   <Badge variant="destructive">
                     <AlertTriangle className="h-3 w-3 mr-1" />
@@ -314,8 +321,8 @@ export default function Show({ ticket, users, comments }: Props) {
                 <CardTitle>{t('support.description', 'Description')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="prose max-w-none">
-                  <p className="whitespace-pre-wrap">{ticket.description}</p>
+                <div className="prose prose-sm dark:prose-invert max-w-none">
+                  <ReactMarkdown>{ticket.description}</ReactMarkdown>
                 </div>
               </CardContent>
             </Card>
@@ -366,11 +373,61 @@ export default function Show({ ticket, users, comments }: Props) {
                             Solution
                           </Badge>
                         )}
+                        {auth?.user?.id === comment.user.id && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setEditingCommentId(comment.id);
+                              setEditingContent(comment.content);
+                            }}
+                            className="h-6 px-2 text-xs"
+                          >
+                            <Edit className="h-3 w-3 mr-1" /> {t('common.edit', 'Edit')}
+                          </Button>
+                        )}
                       </div>
                     </div>
-                    <div className="prose max-w-none">
-                      <p className="whitespace-pre-wrap">{comment.content}</p>
-                    </div>
+                    {editingCommentId === comment.id ? (
+                      <div className="mt-3">
+                        <div className="rounded-md overflow-hidden mb-2 border">
+                          <MarkdownEditor
+                            key={`edit-${comment.id}`}
+                            storageKey={`edit-comment-${comment.id}`}
+                            initialValue={editingContent}
+                            onChange={(val) => setEditingContent(val)}
+                          // height={}
+                          />
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <Button variant="outline" size="sm" onClick={() => {
+                            localStorage.removeItem(`edit-comment-${comment.id}`);
+                            setEditingCommentId(null);
+                          }}>
+                            {t('common.cancel', 'Cancel')}
+                          </Button>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => {
+                              router.put(route('support.tickets.comments.update', { ticket: ticket.id, comment: comment.id }), { content: editingContent }, {
+                                preserveScroll: true,
+                                onSuccess: () => {
+                                  localStorage.removeItem(`edit-comment-${comment.id}`);
+                                  setEditingCommentId(null);
+                                }
+                              });
+                            }}
+                          >
+                            {t('common.save', 'Save')}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="prose prose-sm dark:prose-invert max-w-none mt-2 text-sm">
+                        <ReactMarkdown>{comment.content}</ReactMarkdown>
+                      </div>
+                    )}
                     {comment.time_spent_minutes && (
                       <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
                         <Clock className="h-3 w-3" />
@@ -378,24 +435,48 @@ export default function Show({ ticket, users, comments }: Props) {
                       </div>
                     )}
                     {comment.attachments && comment.attachments.length > 0 && (
-                      <div className="mt-2">
-                        <p className="text-sm font-medium mb-1">Attachments:</p>
-                        {comment.attachments.map((attachment, index) => (
-                          <div key={index} className="flex items-center gap-2 text-sm">
-                            <Paperclip className="h-3 w-3" />
-                            <a
-                              href={`/storage/${attachment.path}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary hover:underline"
-                            >
-                              {attachment.name}
-                            </a>
-                            <span className="text-muted-foreground">
-                              ({(attachment.size / 1024 / 1024).toFixed(2)} MB)
-                            </span>
-                          </div>
-                        ))}
+                      <div className="mt-3 border-t pt-3">
+                        <p className="text-xs font-medium mb-2 uppercase tracking-wide text-muted-foreground">
+                          {t('support.attachments', 'Attachments')}
+                        </p>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                          {comment.attachments.map((attachment, index) => {
+                            const isImage = attachment.type.startsWith('image/');
+                            const url = attachment.path.startsWith('http') || attachment.path.startsWith('/')
+                              ? attachment.path
+                              : `/storage/${attachment.path}`;
+
+                            return (
+                              <a
+                                key={index}
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="relative group rounded-md border overflow-hidden block hover:border-primary transition-colors"
+                              >
+                                {isImage ? (
+                                  <div className="aspect-video w-full bg-muted flex items-center justify-center overflow-hidden">
+                                    <img src={url} alt={attachment.name} className="w-full h-full object-cover" />
+                                  </div>
+                                ) : (
+                                  <div className="w-full h-full bg-muted flex flex-col items-center justify-center p-2 text-center group-hover:bg-muted/80 transition-colors">
+                                    <FileText className="h-5 w-5 text-muted-foreground mb-1" />
+                                    <span className="text-[10px] text-muted-foreground truncate w-full px-1">{attachment.name}</span>
+                                  </div>
+                                )}
+                                <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[1px]">
+                                  <div className="bg-white/80 dark:bg-black/60 shadow-sm rounded-full p-1 border border-white/30 truncate max-w-[80%]">
+                                    <span className="text-[10px] font-medium px-2 block truncate">View</span>
+                                  </div>
+                                </div>
+                                <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-1 text-[9px] text-white truncate px-1.5 flex justify-between">
+                                  <span className="truncate pr-1">{attachment.name}</span>
+                                  <span className="shrink-0 opacity-80">{(attachment.size / 1024 / 1024).toFixed(1)}MB</span>
+                                </div>
+                              </a>
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -417,13 +498,15 @@ export default function Show({ ticket, users, comments }: Props) {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleAddComment} className="space-y-4">
-                  <Textarea
-                    value={data.content}
-                    onChange={(e) => setData('content', e.target.value)}
-                    placeholder={t('support.comment_placeholder', 'Add your comment...')}
-                    rows={4}
-                    required
-                  />
+                  <div className="rounded-md overflow-hidden">
+                    <MarkdownEditor
+                      key={editorKey}
+                      storageKey={`ticket-${ticket.id}-comment`}
+                      onChange={(val) => setData('content', val)}
+                      placeholder={t('support.comment_placeholder', 'Add your comment (Markdown supported)...')}
+                      height={250}
+                    />
+                  </div>
 
                   <div className="flex gap-4 text-sm">
                     <label className="flex items-center gap-2">
@@ -444,7 +527,70 @@ export default function Show({ ticket, users, comments }: Props) {
                     </label>
                   </div>
 
-                  <Button type="submit" disabled={processing}>
+                  <div className="space-y-4 pt-2 border-t mt-4">
+                    <div>
+                      <Label htmlFor="attachments" className="block mb-2">{t('support.attach_files', 'Attach Files')}</Label>
+                      <Button type="button" variant="outline" onClick={() => setShowMediaPicker(true)}>
+                        <Upload className="h-4 w-4 mr-2" />
+                        {t('support.open_media_library', 'Open Media Library')}
+                      </Button>
+                      <MediaPicker
+                        isOpen={showMediaPicker}
+                        onSelect={(media) => {
+                          setMediaAttachments(prev => {
+                            if (!prev.find(m => m.id === media.id)) {
+                              return [...prev, media];
+                            }
+                            return prev;
+                          });
+                        }}
+                        onClose={() => setShowMediaPicker(false)}
+                        multiple={true}
+                        type="all"
+                      />
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {t('support.file_types_media', 'Select files via the CMS Media Library to attach them to this comment.')}
+                      </p>
+                    </div>
+
+                    {mediaAttachments.length > 0 && (
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+                        {mediaAttachments.map((file, index) => {
+                          const isImage = file.mime_type.startsWith('image/');
+                          return (
+                            <div key={index} className="relative group rounded-md border overflow-hidden">
+                              {isImage ? (
+                                <div className="aspect-video w-full bg-muted flex items-center justify-center overflow-hidden">
+                                  <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
+                                </div>
+                              ) : (
+                                <div className="aspect-video w-full bg-muted flex flex-col items-center justify-center p-2 text-center">
+                                  <FileText className="h-6 w-6 text-muted-foreground mb-1" />
+                                  <span className="text-xs text-muted-foreground truncate w-full">{file.name}</span>
+                                </div>
+                              )}
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="sm"
+                                  className="h-8 rounded-full px-3 shadow-md border border-white/20"
+                                  onClick={() => removeAttachment(index)}
+                                >
+                                  <X className="h-4 w-4 mr-1" /> Remove
+                                </Button>
+                              </div>
+                              <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-1 text-[10px] text-white truncate px-2">
+                                {file.name} ({file.human_file_size || (file.file_size / 1024 / 1024).toFixed(1) + ' MB'})
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  <Button type="submit" disabled={processing} className="mt-4">
                     <Send className="h-4 w-4 mr-2" />
                     {processing ? t('common.sending', 'Sending...') : t('support.add_comment', 'Add Comment')}
                   </Button>
@@ -567,6 +713,4 @@ export default function Show({ ticket, users, comments }: Props) {
   );
 }
 
-function Label({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <label className={className}>{children}</label>;
-}
+
