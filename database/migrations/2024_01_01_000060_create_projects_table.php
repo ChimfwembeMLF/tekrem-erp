@@ -31,7 +31,8 @@ return new class extends Migration
             
             // Relationships
             $table->foreignId('client_id')->nullable()->constrained('clients')->onDelete('set null');
-            $table->foreignId('manager_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('manager_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('owner_id')->nullable()->constrained('users')->onDelete('cascade');
             
             // Team and metadata
             $table->json('team_members')->nullable(); // Array of user IDs

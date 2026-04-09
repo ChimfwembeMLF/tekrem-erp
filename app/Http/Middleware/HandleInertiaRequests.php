@@ -36,6 +36,9 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $tenant = app()->bound('currentTenant') ? app('currentTenant') : null;
+        // Fallback: if tenant is not bound, try to get slug from route param
+        $slug = $tenant?->slug ?? $request->route('slug');
         return [
             ...parent::share($request),
             'auth' => [
@@ -45,6 +48,12 @@ class HandleInertiaRequests extends Middleware
                     'permissions' => $request->user()->user_permissions ?? [],
                 ] : null,
             ],
+            'slug' => $slug,
+            'tenant' => $tenant ? [
+                'slug' => $tenant->slug,
+                'id' => $tenant->id,
+                'company_name' => $tenant->company_name,
+            ] : ($slug ? [ 'slug' => $slug ] : null),
             'notifications' => $request->user() ? [
                 'recent' => $request->user()->notifications()
                     ->latest()

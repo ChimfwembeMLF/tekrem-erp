@@ -49,6 +49,14 @@ class User extends Authenticatable
     ];
 
     /**
+     * The table associated with the model.
+     * Uses the current schema for multi-tenancy.
+     *
+     * @var string
+     */
+    protected $table = 'users';
+
+    /**
      * The accessors to append to the model's array form.
      *
      * @var array<int, string>

@@ -4,8 +4,17 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\WebsiteController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TenantRegistrationController;
 
 
+// Tenant-aware authentication routes
+Route::group([
+    'prefix' => '{slug}',
+    'where' => ['slug' => '[a-zA-Z0-9_-]+'],
+    'middleware' => ['tenant'],
+], function () {
+    // Fortify handles /login and /register routes automatically
+}); 
 // Public Website Routes
 Route::get('/', [WebsiteController::class, 'index'])->name('home');
 
@@ -31,6 +40,10 @@ Route::get('/faq', [WebsiteController::class, 'faq'])->name('faq');
 Route::get('/quote-request', function () {
     return redirect()->route('guest.quote.create');
 })->name('quote-request');
+
+
+
+Route::post('/register-tenant', [TenantRegistrationController::class, 'register']);
 
 // Guest Chat Routes (no authentication required)
 Route::prefix('guest-chat')->name('guest-chat.')->group(function () {

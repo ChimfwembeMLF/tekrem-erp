@@ -31,6 +31,22 @@ return [
 
     'connections' => [
 
+        // Tenant connection for schema-based tenancy (stancl/tenancy)
+        'tenant' => [
+            'driver' => 'pgsql',
+            'host' => env('DB_HOST', '127.0.0.1'),
+            'port' => env('DB_PORT', '5432'),
+            'database' => env('DB_DATABASE', 'laravel'), // Will be set dynamically
+            'username' => env('DB_USERNAME', 'root'),
+            'password' => env('DB_PASSWORD', ''),
+            'charset' => env('DB_CHARSET', 'utf8'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'schema' => null, // Set dynamically by tenancy
+            'search_path' => null, // Set dynamically by tenancy
+            'sslmode' => 'prefer',
+        ],
+
         'sqlite' => [
             'driver' => 'sqlite',
             'url' => env('DB_URL'),
@@ -167,7 +183,7 @@ return [
             'password' => env('REDIS_PASSWORD'),
             'port' => env('REDIS_PORT', '6379'),
             'database' => env('REDIS_CACHE_DB', '1'),
-        ],
+        ],           
 
     ],
 

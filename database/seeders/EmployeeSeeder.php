@@ -58,6 +58,9 @@ class EmployeeSeeder extends Seeder
             Role::firstOrCreate(['name' => $role]);
         }
 
+        $department = \App\Models\HR\Department::first();
+        $departmentId = $department ? $department->id : null;
+
         foreach ($team as $member) {
             $user = User::firstOrCreate(
                 ['email' => $member['email']],
@@ -72,7 +75,7 @@ class EmployeeSeeder extends Seeder
                 ['user_id' => $user->id],
                 [
                     'employee_id' => strtoupper(substr($member['name'], 0, 2)) . rand(100, 999),
-                    'department_id' => 1,
+                    'department_id' => $departmentId,
                     'job_title' => $member['role'],
                     'employment_type' => 'full_time',
                     'employment_status' => 'active',

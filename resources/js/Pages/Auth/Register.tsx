@@ -1,161 +1,125 @@
-import { Link, useForm, Head } from '@inertiajs/react';
+
+import { Link, Head, useForm, router } from '@inertiajs/react';
 import React, { useState } from 'react';
-import useRoute from '@/Hooks/useRoute';
-import useTypedPage from '@/Hooks/useTypedPage';
 import { AuthCard, FormInput, FormCheckbox, AuthButton, LinkButton } from '@/Components/Auth';
 import ReCaptcha from '@/Components/ReCaptcha';
 
+
 export default function Register() {
-  const page = useTypedPage();
-  const route = useRoute();
-  const [recaptchaToken, setRecaptchaToken] = useState<string>('');
-  const recaptcha = page.props.recaptcha;
-  const form = useForm({
-    name: '',
-    email: '',
-    password: '',
+  const { data, setData, post, processing, errors, reset, wasSuccessful } = useForm({
+    company_name: '',
+    admin_name: '',
+    admin_email: '',
+    admin_password: '',
     password_confirmation: '',
     terms: false,
     recaptcha_token: '',
   });
+  const [recaptchaToken, setRecaptchaToken] = useState('');
 
-  function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  // Optionally get recaptcha config from props if needed
+  // const recaptcha = ...
 
-    // Set reCAPTCHA token if enabled
-    if (recaptcha?.enabled && recaptchaToken) {
-      form.setData('recaptcha_token', recaptchaToken);
-    }
-
-    form.post(route('register'), {
-      onFinish: () => {
-        form.reset('password', 'password_confirmation');
-        setRecaptchaToken('');
-      },
-    });
-  }
-
-  const handleRecaptchaVerify = (token: string) => {
-    setRecaptchaToken(token);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, type, checked, value } = e.target;
+    setData(name, type === 'checkbox' ? checked : value);
   };
 
-  const handleRecaptchaExpired = () => {
-    setRecaptchaToken('');
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Set reCAPTCHA token if enabled
+    if (recaptchaToken) {
+      setData('recaptcha_token', recaptchaToken);
+    }
+    post('/register-tenant', {
+      preserveScroll: true,
+      onSuccess: () => {
+        reset();
+        router.visit('/dashboard');
+      },
+    });
   };
 
   return (
     <AuthCard title="Register" description="Create a new account to get started.">
       <Head title="Register" />
-
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <FormInput
-          label="Name"
-          id="name"
+          label="Company Name"
+          id="company_name"
+          name="company_name"
           type="text"
-          value={form.data.name}
-          onChange={e => form.setData('name', e.currentTarget.value)}
-          error={form.errors.name}
+          value={data.company_name}
+          onChange={handleChange}
+          error={errors.company_name}
           required
-          autoFocus
-          autoComplete="name"
         />
-
         <FormInput
-          label="Email"
-          id="email"
-          type="email"
-          value={form.data.email}
-          onChange={e => form.setData('email', e.currentTarget.value)}
-          error={form.errors.email}
+          label="Admin Name"
+          id="admin_name"
+          name="admin_name"
+          type="text"
+          value={data.admin_name}
+          onChange={handleChange}
+          error={errors.admin_name}
           required
         />
-
+        <FormInput
+          label="Admin Email"
+          id="admin_email"
+          name="admin_email"
+          type="email"
+          value={data.admin_email}
+          onChange={handleChange}
+          error={errors.admin_email}
+          required
+        />
         <FormInput
           label="Password"
-          id="password"
+          id="admin_password"
+          name="admin_password"
           type="password"
-          value={form.data.password}
-          onChange={e => form.setData('password', e.currentTarget.value)}
-          error={form.errors.password}
+          value={data.admin_password}
+          onChange={handleChange}
+          error={errors.admin_password}
           required
-          autoComplete="new-password"
         />
-
+        {/* Add password confirmation if needed */}
         <FormInput
           label="Confirm Password"
           id="password_confirmation"
+          name="password_confirmation"
           type="password"
-          value={form.data.password_confirmation}
-          onChange={e => form.setData('password_confirmation', e.currentTarget.value)}
-          error={form.errors.password_confirmation}
+          value={data.password_confirmation}
+          onChange={handleChange}
+          error={errors.password_confirmation}
           required
-          autoComplete="new-password"
         />
-
-        {page.props.jetstream.hasTermsAndPrivacyPolicyFeature && (
-          <div className="space-y-2">
-            <FormCheckbox
-              id="terms"
-              name="terms"
-              checked={form.data.terms}
-              onChange={(checked) => form.setData('terms', checked)}
-              required
-              label={
-                <span className="text-sm text-muted-foreground">
-                  I agree to the{' '}
-                  <Link
-                    target="_blank"
-                    href={route('terms.show')}
-                    className="text-primary underline underline-offset-4 hover:text-primary/90"
-                  >
-                    Terms of Service
-                  </Link>
-                  {' '}and{' '}
-                  <Link
-                    target="_blank"
-                    href={route('policy.show')}
-                    className="text-primary underline underline-offset-4 hover:text-primary/90"
-                  >
-                    Privacy Policy
-                  </Link>
-                </span>
-              }
-            />
-            {form.errors.terms && (
-              <p className="text-sm font-medium text-destructive">{form.errors.terms}</p>
-            )}
-          </div>
+        {/* Terms checkbox if needed */}
+        <FormCheckbox
+          id="terms"
+          name="terms"
+          checked={data.terms}
+          onChange={checked => setData('terms', checked)}
+          label="I agree to the Terms and Privacy Policy"
+          required
+        />
+        {errors.general && <div className="text-red-500">{errors.general}</div>}
+        {Object.entries(errors).map(
+          ([field, msg]) =>
+            field !== 'general' && (
+              <div key={field} className="text-red-500">
+                {field}: {msg as string}
+              </div>
+            )
         )}
-
-        {recaptcha?.enabled && (
-          <ReCaptcha
-            siteKey={recaptcha.site_key}
-            theme={recaptcha.theme as 'light' | 'dark'}
-            size={recaptcha.size as 'normal' | 'compact'}
-            onVerify={handleRecaptchaVerify}
-            onExpired={handleRecaptchaExpired}
-            error={form.errors.recaptcha_token}
-            label="Security Verification"
-            required
-          />
-        )}
-
-        <div className="flex flex-col space-y-4 pt-2">
-          <AuthButton
-            type="submit"
-            isLoading={form.processing}
-            loadingText="Registering..."
-          >
-            Register
-          </AuthButton>
-
-          <div className="text-center">
-            <LinkButton href={route('login')}>
-              Already have an account? Sign in
-            </LinkButton>
-          </div>
+        {wasSuccessful && <div className="text-green-600">Registration successful!</div>}
+        <AuthButton type="submit" isLoading={processing}>Register</AuthButton>
+        <div className="text-center">
+          <LinkButton href="/login">Already have an account? Sign in</LinkButton>
         </div>
       </form>
     </AuthCard>
   );
 }
+

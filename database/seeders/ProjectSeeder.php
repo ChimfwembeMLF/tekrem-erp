@@ -4,22 +4,15 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Project;
-use App\Models\ProjectMilestone;
 use App\Models\ProjectTemplate;
 use App\Models\User;
 use App\Models\Client;
 
 class ProjectSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Get admin or super_user for relationships
-        $user = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['admin', 'super_user']);
-        })->first();
+        $user = User::whereHas('roles', fn($q) => $q->whereIn('name', ['admin', 'super_user']))->first();
         $clients = Client::all();
         $allUsers = User::all();
 
@@ -28,39 +21,18 @@ class ProjectSeeder extends Seeder
             return;
         }
 
-        // Create project templates
+        // Business-focused project templates
         $templates = [
             [
-                'name' => 'Web Development Project',
-                'description' => 'Standard web development project template',
-                'category' => 'Web Development',
+                'name' => 'Business Process Improvement',
+                'description' => 'Streamline operations to improve efficiency and reduce costs',
+                'category' => 'Operations',
                 'template_data' => [
                     'milestones' => [
-                        [
-                            'name' => 'Project Planning & Requirements',
-                            'description' => 'Define project scope, requirements, and create project plan',
-                            'priority' => 'high',
-                        ],
-                        [
-                            'name' => 'Design & Wireframes',
-                            'description' => 'Create UI/UX designs and wireframes',
-                            'priority' => 'medium',
-                        ],
-                        [
-                            'name' => 'Development Phase 1',
-                            'description' => 'Core functionality development',
-                            'priority' => 'high',
-                        ],
-                        [
-                            'name' => 'Testing & QA',
-                            'description' => 'Quality assurance and testing',
-                            'priority' => 'high',
-                        ],
-                        [
-                            'name' => 'Deployment & Launch',
-                            'description' => 'Deploy to production and launch',
-                            'priority' => 'critical',
-                        ],
+                        ['name' => 'Process Analysis', 'description' => 'Review existing processes', 'priority' => 'high'],
+                        ['name' => 'Workflow Redesign', 'description' => 'Propose optimized workflows', 'priority' => 'medium'],
+                        ['name' => 'Implementation', 'description' => 'Execute process improvements', 'priority' => 'high'],
+                        ['name' => 'Review & Optimization', 'description' => 'Measure results and fine-tune', 'priority' => 'high'],
                     ],
                     'default_budget' => 50000,
                     'estimated_duration' => 90,
@@ -68,81 +40,34 @@ class ProjectSeeder extends Seeder
                 'created_by' => $user->id,
             ],
             [
-                'name' => 'Mobile App Development',
-                'description' => 'Mobile application development template',
-                'category' => 'Mobile Development',
+                'name' => 'Marketing Campaign',
+                'description' => 'Plan and execute marketing initiatives to increase brand visibility',
+                'category' => 'Marketing',
                 'template_data' => [
                     'milestones' => [
-                        [
-                            'name' => 'App Concept & Planning',
-                            'description' => 'Define app concept, features, and technical requirements',
-                            'priority' => 'high',
-                        ],
-                        [
-                            'name' => 'UI/UX Design',
-                            'description' => 'Create app designs and user experience flow',
-                            'priority' => 'medium',
-                        ],
-                        [
-                            'name' => 'Backend Development',
-                            'description' => 'Develop backend APIs and services',
-                            'priority' => 'high',
-                        ],
-                        [
-                            'name' => 'Frontend Development',
-                            'description' => 'Develop mobile app frontend',
-                            'priority' => 'high',
-                        ],
-                        [
-                            'name' => 'Testing & Beta Release',
-                            'description' => 'Testing and beta version release',
-                            'priority' => 'high',
-                        ],
-                        [
-                            'name' => 'App Store Submission',
-                            'description' => 'Submit to app stores and launch',
-                            'priority' => 'critical',
-                        ],
+                        ['name' => 'Market Research', 'description' => 'Analyze target audience', 'priority' => 'high'],
+                        ['name' => 'Campaign Strategy', 'description' => 'Define marketing plan', 'priority' => 'medium'],
+                        ['name' => 'Content Creation', 'description' => 'Develop marketing assets', 'priority' => 'high'],
+                        ['name' => 'Launch & Monitor', 'description' => 'Execute and track campaign', 'priority' => 'critical'],
                     ],
-                    'default_budget' => 75000,
-                    'estimated_duration' => 120,
+                    'default_budget' => 30000,
+                    'estimated_duration' => 60,
                 ],
                 'created_by' => $user->id,
             ],
             [
-                'name' => 'AI Integration Project',
-                'description' => 'AI solution integration template',
-                'category' => 'AI Solutions',
+                'name' => 'Financial Audit',
+                'description' => 'Conduct internal financial review for compliance and reporting',
+                'category' => 'Finance',
                 'template_data' => [
                     'milestones' => [
-                        [
-                            'name' => 'AI Requirements Analysis',
-                            'description' => 'Analyze AI requirements and select appropriate models',
-                            'priority' => 'critical',
-                        ],
-                        [
-                            'name' => 'Data Preparation',
-                            'description' => 'Prepare and clean data for AI training',
-                            'priority' => 'high',
-                        ],
-                        [
-                            'name' => 'Model Development',
-                            'description' => 'Develop and train AI models',
-                            'priority' => 'high',
-                        ],
-                        [
-                            'name' => 'Integration & Testing',
-                            'description' => 'Integrate AI models and test performance',
-                            'priority' => 'high',
-                        ],
-                        [
-                            'name' => 'Deployment & Monitoring',
-                            'description' => 'Deploy AI solution and set up monitoring',
-                            'priority' => 'critical',
-                        ],
+                        ['name' => 'Data Collection', 'description' => 'Gather financial documents', 'priority' => 'high'],
+                        ['name' => 'Preliminary Review', 'description' => 'Identify risks or discrepancies', 'priority' => 'medium'],
+                        ['name' => 'Audit Fieldwork', 'description' => 'Perform detailed audit', 'priority' => 'high'],
+                        ['name' => 'Reporting', 'description' => 'Produce audit report', 'priority' => 'critical'],
                     ],
-                    'default_budget' => 100000,
-                    'estimated_duration' => 150,
+                    'default_budget' => 40000,
+                    'estimated_duration' => 45,
                 ],
                 'created_by' => $user->id,
             ],
@@ -152,163 +77,107 @@ class ProjectSeeder extends Seeder
             ProjectTemplate::create($templateData);
         }
 
-        // Create sample projects
+        // Sample business projects
         $projects = [
             [
-                'name' => 'TekRem ERP Enhancement',
-                'description' => 'Enhance the existing TekRem ERP system with new features and improvements',
+                'name' => 'Office Workflow Optimization',
+                'description' => 'Improve internal office processes and documentation',
                 'status' => 'active',
                 'priority' => 'high',
-                'category' => 'Web Development',
-                'start_date' => now()->subDays(30),
+                'category' => 'Operations',
+                'start_date' => now()->subDays(20),
                 'deadline' => now()->addDays(60),
-                'budget' => 75000,
-                'spent_amount' => 25000,
-                'progress' => 35,
-                'client_id' => $clients->random()->id,
-                'manager_id' => $allUsers->random()->id,
-                'team_members' => $allUsers->random(min(3, $allUsers->count()))->pluck('id')->toArray(),
-                'tags' => ['ERP', 'Enhancement', 'Web Development'],
-            ],
-            [
-                'name' => 'Mobile CRM App',
-                'description' => 'Develop a mobile application for CRM functionality',
-                'status' => 'active',
-                'priority' => 'medium',
-                'category' => 'Mobile Development',
-                'start_date' => now()->subDays(15),
-                'deadline' => now()->addDays(90),
-                'budget' => 60000,
-                'spent_amount' => 15000,
-                'progress' => 20,
-                'client_id' => $clients->random()->id,
-                'manager_id' => $allUsers->random()->id,
-                'team_members' => $allUsers->random(min(4, $allUsers->count()))->pluck('id')->toArray(),
-                'tags' => ['Mobile', 'CRM', 'React Native'],
-            ],
-            [
-                'name' => 'AI Chatbot Integration',
-                'description' => 'Integrate advanced AI chatbot capabilities into the existing system',
-                'status' => 'draft',
-                'priority' => 'critical',
-                'category' => 'AI Solutions',
-                'start_date' => now()->addDays(7),
-                'deadline' => now()->addDays(120),
-                'budget' => 85000,
-                'spent_amount' => 0,
-                'progress' => 0,
-                'client_id' => $clients->random()->id,
-                'manager_id' => $allUsers->random()->id,
-                'team_members' => $allUsers->random(min(2, $allUsers->count()))->pluck('id')->toArray(),
-                'tags' => ['AI', 'Chatbot', 'Machine Learning'],
-            ],
-            [
-                'name' => 'E-commerce Platform',
-                'description' => 'Build a comprehensive e-commerce platform with modern features',
-                'status' => 'completed',
-                'priority' => 'high',
-                'category' => 'Web Development',
-                'start_date' => now()->subDays(120),
-                'end_date' => now()->subDays(10),
-                'deadline' => now()->subDays(5),
-                'budget' => 95000,
-                'spent_amount' => 92000,
-                'progress' => 100,
-                'client_id' => $clients->random()->id,
-                'manager_id' => $allUsers->random()->id,
-                'team_members' => $allUsers->random(min(5, $allUsers->count()))->pluck('id')->toArray(),
-                'tags' => ['E-commerce', 'Laravel', 'React'],
-            ],
-            [
-                'name' => 'Data Analytics Dashboard',
-                'description' => 'Create an advanced analytics dashboard for business intelligence',
-                'status' => 'on-hold',
-                'priority' => 'medium',
-                'category' => 'Data Analytics',
-                'start_date' => now()->subDays(45),
-                'deadline' => now()->addDays(30),
-                'budget' => 45000,
+                'budget' => 55000,
                 'spent_amount' => 20000,
                 'progress' => 40,
                 'client_id' => $clients->random()->id,
                 'manager_id' => $allUsers->random()->id,
                 'team_members' => $allUsers->random(min(3, $allUsers->count()))->pluck('id')->toArray(),
-                'tags' => ['Analytics', 'Dashboard', 'BI'],
+                'tags' => ['Process', 'Efficiency'],
+            ],
+            [
+                'name' => 'Q2 Marketing Campaign',
+                'description' => 'Execute Q2 brand awareness and lead generation campaigns',
+                'status' => 'active',
+                'priority' => 'medium',
+                'category' => 'Marketing',
+                'start_date' => now()->subDays(10),
+                'deadline' => now()->addDays(50),
+                'budget' => 32000,
+                'spent_amount' => 10000,
+                'progress' => 25,
+                'client_id' => $clients->random()->id,
+                'manager_id' => $allUsers->random()->id,
+                'team_members' => $allUsers->random(min(4, $allUsers->count()))->pluck('id')->toArray(),
+                'tags' => ['Marketing', 'Campaign'],
+            ],
+            [
+                'name' => 'Annual Financial Audit',
+                'description' => 'Review the company’s financial statements for compliance and accuracy',
+                'status' => 'draft',
+                'priority' => 'critical',
+                'category' => 'Finance',
+                'start_date' => now()->addDays(5),
+                'deadline' => now()->addDays(40),
+                'budget' => 45000,
+                'spent_amount' => 0,
+                'progress' => 0,
+                'client_id' => $clients->random()->id,
+                'manager_id' => $allUsers->random()->id,
+                'team_members' => $allUsers->random(min(2, $allUsers->count()))->pluck('id')->toArray(),
+                'tags' => ['Audit', 'Finance'],
+            ],
+            [
+                'name' => 'Employee Onboarding Program',
+                'description' => 'Redesign and improve new employee onboarding process',
+                'status' => 'completed',
+                'priority' => 'high',
+                'category' => 'HR',
+                'start_date' => now()->subDays(90),
+                'end_date' => now()->subDays(5),
+                'deadline' => now()->subDays(2),
+                'budget' => 28000,
+                'spent_amount' => 27000,
+                'progress' => 100,
+                'client_id' => $clients->random()->id,
+                'manager_id' => $allUsers->random()->id,
+                'team_members' => $allUsers->random(min(5, $allUsers->count()))->pluck('id')->toArray(),
+                'tags' => ['HR', 'Training'],
             ],
         ];
 
         foreach ($projects as $projectData) {
             $project = Project::create($projectData);
-
-            // Create milestones for each project
             $this->createMilestonesForProject($project, $allUsers);
         }
 
-        $this->command->info('Projects seeded successfully!');
+        $this->command->info('Business projects seeded successfully!');
     }
 
-    /**
-     * Create milestones for a project.
-     */
     private function createMilestonesForProject(Project $project, $allUsers): void
     {
         $milestoneTemplates = [
-            [
-                'name' => 'Project Kickoff',
-                'description' => 'Initial project setup and team alignment',
-                'priority' => 'high',
-                'progress' => $project->status === 'completed' ? 100 : ($project->progress > 0 ? 100 : 0),
-                'status' => $project->status === 'completed' ? 'completed' : ($project->progress > 0 ? 'completed' : 'pending'),
-                'order' => 1,
-            ],
-            [
-                'name' => 'Requirements Analysis',
-                'description' => 'Detailed analysis of project requirements',
-                'priority' => 'high',
-                'progress' => $project->status === 'completed' ? 100 : ($project->progress > 20 ? 100 : ($project->progress > 0 ? 50 : 0)),
-                'status' => $project->status === 'completed' ? 'completed' : ($project->progress > 20 ? 'completed' : ($project->progress > 0 ? 'in-progress' : 'pending')),
-                'order' => 2,
-            ],
-            [
-                'name' => 'Development Phase',
-                'description' => 'Main development work',
-                'priority' => 'critical',
-                'progress' => $project->status === 'completed' ? 100 : ($project->progress > 50 ? 80 : ($project->progress > 20 ? 30 : 0)),
-                'status' => $project->status === 'completed' ? 'completed' : ($project->progress > 50 ? 'in-progress' : ($project->progress > 20 ? 'in-progress' : 'pending')),
-                'order' => 3,
-            ],
-            [
-                'name' => 'Testing & QA',
-                'description' => 'Quality assurance and testing phase',
-                'priority' => 'high',
-                'progress' => $project->status === 'completed' ? 100 : ($project->progress > 80 ? 60 : 0),
-                'status' => $project->status === 'completed' ? 'completed' : ($project->progress > 80 ? 'in-progress' : 'pending'),
-                'order' => 4,
-            ],
-            [
-                'name' => 'Deployment',
-                'description' => 'Final deployment and launch',
-                'priority' => 'critical',
-                'progress' => $project->status === 'completed' ? 100 : 0,
-                'status' => $project->status === 'completed' ? 'completed' : 'pending',
-                'order' => 5,
-            ],
+            ['name' => 'Kickoff', 'description' => 'Initial alignment and setup', 'priority' => 'high', 'order' => 1],
+            ['name' => 'Planning', 'description' => 'Define tasks and responsibilities', 'priority' => 'high', 'order' => 2],
+            ['name' => 'Execution', 'description' => 'Complete main activities', 'priority' => 'critical', 'order' => 3],
+            ['name' => 'Review', 'description' => 'Evaluate results and feedback', 'priority' => 'medium', 'order' => 4],
+            ['name' => 'Closure', 'description' => 'Finalize and report completion', 'priority' => 'critical', 'order' => 5],
         ];
 
-        foreach ($milestoneTemplates as $milestoneData) {
-            $milestone = $project->milestones()->create([
-                'name' => $milestoneData['name'],
-                'description' => $milestoneData['description'],
-                'priority' => $milestoneData['priority'],
-                'progress' => $milestoneData['progress'],
-                'status' => $milestoneData['status'],
-                'order' => $milestoneData['order'],
+        foreach ($milestoneTemplates as $data) {
+            $progress = $project->status === 'completed' ? 100 : rand(0, 80);
+            $status = $project->status === 'completed' ? 'completed' : ($progress > 50 ? 'in-progress' : 'pending');
+
+            $project->milestones()->create([
+                'name' => $data['name'],
+                'description' => $data['description'],
+                'priority' => $data['priority'],
+                'progress' => $progress,
+                'status' => $status,
+                'order' => $data['order'],
                 'assigned_to' => $allUsers->random()->id,
-                'due_date' => $project->deadline ?
-                    $project->start_date?->addDays($milestoneData['order'] * 15) :
-                    now()->addDays($milestoneData['order'] * 15),
-                'completion_date' => $milestoneData['status'] === 'completed' ?
-                    now()->subDays(rand(1, 30)) : null,
+                'due_date' => $project->start_date->addDays($data['order'] * 10),
+                'completion_date' => $status === 'completed' ? now()->subDays(rand(1, 10)) : null,
             ]);
         }
     }
