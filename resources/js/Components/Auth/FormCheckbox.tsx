@@ -2,6 +2,7 @@ import React from 'react';
 import { Checkbox } from '@/Components/ui/checkbox';
 import { Label } from '@/Components/ui/label';
 import { cn } from '@/lib/utils';
+import { Switch } from '../ui';
 
 interface FormCheckboxProps {
   id?: string;
@@ -30,18 +31,18 @@ export default function FormCheckbox({
 
   return (
     <div className={cn("flex items-center space-x-2", wrapperClassName)}>
-      <Checkbox
+      <Switch
         id={checkboxId}
         checked={checked}
         onCheckedChange={onChange}
         name={name}
-        className={className}
+        className={cn('bg-gray-200',className)}
         disabled={disabled}
       />
       {label && (
         <Label
           htmlFor={checkboxId}
-          className={cn("text-sm font-medium cursor-pointer text-black", labelClassName)}
+          className={cn("text-sm font-medium cursor-pointer text-black dark:text-gray-200", labelClassName)}
         >
           {label}
         </Label>

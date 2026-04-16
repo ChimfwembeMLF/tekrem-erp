@@ -16,16 +16,16 @@ export default function AuthCard({
   footer,
 }: PropsWithChildren<AuthCardProps>) {
   return (
-    <div className="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-white">
+    <Card className="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-white dark:bg-gray-800">
       <div className="mb-6">
         <ApplicationLogo />
       </div>
 
-      <Card className="w-full sm:max-w-md bg-white shadow-none border-none">
+      <Card className="w-full sm:max-w-md bg-white dark:bg-gray-800 shadow-none border-none">
         {(title || description) && (
           <CardHeader>
             {title && <CardTitle>{title}</CardTitle>}
-            {description && <CardDescription className='dark:text-gray-800'>{description}</CardDescription>}
+            {description && <CardDescription className='dark:text-gray-200'>{description}</CardDescription>}
           </CardHeader>
         )}
         <CardContent>
@@ -40,6 +40,6 @@ export default function AuthCard({
           </CardFooter>
         )}
       </Card>
-    </div>
+    </Card>
   );
 }

@@ -110,12 +110,12 @@ export default function Login({ canResetPassword, status }: Props) {
 
           <div className="flex flex-col space-y-2 sm:flex-row sm:justify-between sm:space-y-0 text-center sm:text-left">
             {canResetPassword && (
-              <LinkButton className='text-gray-800' href={route('password.request')}>
+              <LinkButton className='text-gray-800 dark:text-gray-50' href={route('password.request')}>
                 Forgot your password?
               </LinkButton>
             )}
 
-            <LinkButton className='text-gray-800' href={route('register')}>
+            <LinkButton className='text-gray-800 dark:text-gray-50' href={route('register')}>
               Need an account?
             </LinkButton>
           </div>

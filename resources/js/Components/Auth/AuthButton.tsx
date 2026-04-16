@@ -46,7 +46,7 @@ export default function AuthButton({
   }
   return (
     <Button
-      className={cn("w-full", className)}
+      className={cn("w-full bg-gradient-to-r from-secondary to-primary hover:from-primary hover:to-secondary", className)}
       disabled={isLoading || disabled}
       variant={variant}
       {...props}
