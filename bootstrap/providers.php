@@ -6,4 +6,5 @@ return [
     App\Providers\JetstreamServiceProvider::class,
     App\Providers\RouteServiceProvider::class,
     App\Providers\SettingsServiceProvider::class,
+    App\Providers\TenancyServiceProvider::class,
 ];

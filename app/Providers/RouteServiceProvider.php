@@ -30,12 +30,19 @@ class RouteServiceProvider extends ServiceProvider
         });
 
         $this->routes(function () {
+            // API routes are loaded in the tenant context via routes/tenant_api.php
+            // but we keep the base api.php for central/unauthenticated API calls too.
             Route::middleware('api')
                 ->prefix('api')
                 ->group(base_path('routes/api.php'));
 
-            Route::middleware('web')
-                ->group(base_path('routes/web.php'));
+            // Central web routes — scoped to central domains only.
+            // Tenant web routes are loaded by TenancyServiceProvider via routes/tenant.php.
+            foreach ($this->centralDomains() as $domain) {
+                Route::middleware('web')
+                    ->domain($domain)
+                    ->group(base_path('routes/web.php'));
+            }
         });
 
         // Register custom middleware
@@ -44,6 +51,14 @@ class RouteServiceProvider extends ServiceProvider
         Route::aliasMiddleware('customer', \App\Http\Middleware\CustomerMiddleware::class);
         Route::aliasMiddleware('recaptcha', \App\Http\Middleware\RecaptchaMiddleware::class);
         Route::aliasMiddleware('department.access', \App\Http\Middleware\EnsureUserBelongsToDepartment::class);
+        Route::aliasMiddleware('check.subscription', \App\Http\Middleware\CheckTenantSubscription::class);
+    }
 
+    /**
+     * Get the list of central (non-tenant) domains from tenancy config.
+     */
+    protected function centralDomains(): array
+    {
+        return config('tenancy.central_domains', [parse_url(config('app.url'), PHP_URL_HOST)]);
     }
 }
