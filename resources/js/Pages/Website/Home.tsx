@@ -414,7 +414,29 @@ export default function Home({ canLogin, canRegister }: Props) {
           </div>
         </div>
         {/* Waves */}
-        <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none">
+        <div className="absolute bottom-2 left-0 w-full overflow-hidden leading-none">
+          <svg
+            viewBox="0 0 1440 350"
+            height="350"
+            className="w-full h-[350px]"
+            preserveAspectRatio="none"
+          >
+            <defs>
+              <linearGradient id="waveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" className="text-secondary" stopColor="currentColor" />
+                <stop offset="100%" className="text-primary" stopColor="currentColor" />
+              </linearGradient>
+            </defs>
+
+            <path
+              fill="url(#waveGradient)"
+              className="text-secondary dark:text-primary"
+              d="M0,200 C580,550 960,5 1440,200 L1440,350 L0,550 Z"
+            />
+          </svg>
+        </div>
+
+        <div className="absolute bottom-0 z-0 left-0 w-full overflow-hidden leading-none">
           <svg
             viewBox="0 0 1440 350" height="350"
             className="w-full h-[350px]"
@@ -425,7 +447,7 @@ export default function Home({ canLogin, canRegister }: Props) {
               className="text-white dark:text-gray-900"
               d="M0,200 C480,550 960,5 1440,200 L1440,350 L0,550 Z"
             />
-          </svg>          
+          </svg>
         </div>
 
       </div>
