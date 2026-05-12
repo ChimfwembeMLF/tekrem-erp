@@ -66,6 +66,7 @@ Route::prefix('guest')->name('guest.')->group(function () {
     Route::get('/project/status', [\App\Http\Controllers\Guest\ProjectController::class, 'statusForm'])->name('project.status-form');
     Route::post('/project/status', [\App\Http\Controllers\Guest\ProjectController::class, 'status'])->name('project.status');
 
+
     // Support
     Route::get('/support', [\App\Http\Controllers\Guest\SupportController::class, 'index'])->name('support.index');
     Route::get('/support/knowledge-base', [\App\Http\Controllers\Guest\SupportController::class, 'knowledgeBase'])->name('support.knowledge-base');
@@ -1037,16 +1038,17 @@ Route::middleware([
 
         // Customer Communications
         Route::prefix('communications')->name('communications.')->group(function () {
+            // Chat functionality (placed before catch-all)
+            Route::get('/chats', [\App\Http\Controllers\Customer\CommunicationController::class, 'chats'])->name('chats');
+            Route::post('/chats', [\App\Http\Controllers\Customer\CommunicationController::class, 'storeChat'])->name('chats.store');
+            Route::get('/chats/{conversation}', [\App\Http\Controllers\Customer\CommunicationController::class, 'showChat'])->name('chats.show');
+            Route::post('/chats/{conversation}/messages', [\App\Http\Controllers\Customer\CommunicationController::class, 'sendMessage'])->name('chats.messages.store');
+
             Route::get('/', [\App\Http\Controllers\Customer\CommunicationController::class, 'index'])->name('index');
             Route::get('/create', [\App\Http\Controllers\Customer\CommunicationController::class, 'create'])->name('create');
             Route::post('/', [\App\Http\Controllers\Customer\CommunicationController::class, 'store'])->name('store');
             Route::get('/{communication}', [\App\Http\Controllers\Customer\CommunicationController::class, 'show'])->name('show');
             Route::get('/{communication}/attachments/{attachment}/download', [\App\Http\Controllers\Customer\CommunicationController::class, 'downloadAttachment'])->name('attachments.download');
-
-            // Chat functionality
-            Route::get('/chats', [\App\Http\Controllers\Customer\CommunicationController::class, 'chats'])->name('chats');
-            Route::get('/chats/{conversation}', [\App\Http\Controllers\Customer\CommunicationController::class, 'showChat'])->name('chats.show');
-            Route::post('/chats/{conversation}/messages', [\App\Http\Controllers\Customer\CommunicationController::class, 'sendMessage'])->name('chats.messages.store');
         });
 
         // Customer Support Portal
@@ -1062,6 +1064,8 @@ Route::middleware([
                 Route::post('{ticket}/comments', [\App\Http\Controllers\Customer\SupportController::class, 'addComment'])->name('comments.store');
                 Route::post('{ticket}/close', [\App\Http\Controllers\Customer\SupportController::class, 'close'])->name('close');
                 Route::post('{ticket}/reopen', [\App\Http\Controllers\Customer\SupportController::class, 'reopen'])->name('reopen');
+                // Edit comment (customer)
+                Route::put('{ticket}/comments/{comment}', [\App\Http\Controllers\Customer\SupportController::class, 'updateComment'])->name('comments.update');
             });
 
             // Knowledge Base

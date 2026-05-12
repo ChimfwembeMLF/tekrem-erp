@@ -132,8 +132,7 @@ export default function Create({ categories, users, clients, leads, requesterTyp
   };
 
   return (
-    <AppLayout>
-      <Head title={t('support.create_ticket', 'Create Support Ticket')} />
+    <AppLayout title={t('support.create_ticket', 'Create Support Ticket')} >
 
       <div className="space-y-6">
         {/* Header */}

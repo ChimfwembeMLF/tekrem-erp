@@ -7,7 +7,7 @@ use App\Models\Project;
 use App\Models\ProjectTask;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectTimeEntry;
-use App\Models\CRM\Conversation;
+use App\Models\Conversation;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,14 +23,12 @@ class ProjectController extends Controller
     {
         $user = Auth::user();
 
-        // Get projects where user is client or team member
-        $query = Project::where(function ($q) use ($user) {
-            $q->where('client_id', $user->id)
-              ->orWhereHas('teamMembers', function ($teamQ) use ($user) {
-                  $teamQ->where('user_id', $user->id);
-              })
-              ->orWhereJsonContains('team_members', $user->id);
-        })->with(['client', 'teamMembers.user', 'milestones']);
+        // Get the user's client (assuming one-to-one for now)
+        $client = $user->clients()->first();
+
+        // Only show projects for this client
+        $query = Project::where('client_id', $client ? $client->id : 0)
+            ->with(['client', 'teamMembers.user', 'milestones']);
 
         // Apply filters
         if ($request->filled('status')) {
@@ -51,13 +49,7 @@ class ProjectController extends Controller
         $projects = $query->orderBy('created_at', 'desc')->paginate(12);
 
         // Get project statistics for customer's accessible projects
-        $baseQuery = Project::where(function ($q) use ($user) {
-            $q->where('client_id', $user->id)
-              ->orWhereHas('teamMembers', function ($teamQ) use ($user) {
-                  $teamQ->where('user_id', $user->id);
-              })
-              ->orWhereJsonContains('team_members', $user->id);
-        });
+        $baseQuery = Project::where('client_id', $client ? $client->id : 0);
 
         $stats = [
             'total' => $baseQuery->count(),
@@ -100,7 +92,7 @@ class ProjectController extends Controller
             'timeEntries' => function ($query) {
                 $query->where('is_billable', true)
                       ->with(['user', 'task'])
-                      ->orderBy('date', 'desc');
+                      ->orderBy('log_date', 'desc');
             },
             'attachments',
             'communications' => function ($query) {
@@ -342,26 +334,17 @@ class ProjectController extends Controller
                 'client_id' => $user->id, // Customer is the client
             ]);
 
-            // Add customer as participant
-            $conversation->participants()->create([
-                'user_id' => $user->id,
-                'role' => 'customer',
-                'joined_at' => now(),
-            ]);
-
-            // Add project manager as participant if exists
+            // Add participants to the array-cast participants field
+            $participants = [$user->id];
             if ($project->manager_id) {
-                $conversation->participants()->create([
-                    'user_id' => $project->manager_id,
-                    'role' => 'staff',
-                    'joined_at' => now(),
-                ]);
+                $participants[] = $project->manager_id;
             }
+            $conversation->participants = $participants;
+            $conversation->save();
         }
 
-        // Load conversation with messages and participants
+        // Load conversation with messages
         $conversation->load([
-            'participants.user',
             'messages' => function ($query) {
                 $query->with(['user', 'attachments'])
                       ->orderBy('created_at', 'asc');
@@ -403,8 +386,8 @@ class ProjectController extends Controller
      */
     private function canAccessProject(Project $project, $user): bool
     {
-        // Check if user is the client
-        if ($project->client_id === $user->id) {
+        // Check if user is the owner of the client
+        if ($project->client && $project->client->user_id === $user->id) {
             return true;
         }
 

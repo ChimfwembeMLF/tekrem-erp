@@ -48,11 +48,11 @@ const navigation = [
         href: 'customer.dashboard',
         icon: Home,
     },
-    {
-        name: 'My Account',
-        href: 'customer.crm.index',
-        icon: User,
-    },
+    // {
+    //     name: 'My Account',
+    //     href: 'customer.crm.index',
+    //     icon: User,
+    // },
     {
         name: 'Projects',
         href: 'customer.projects.index',
@@ -78,11 +78,11 @@ const navigation = [
         href: 'customer.support.index',
         icon: HelpCircle,
     },
-    {
-        name: 'Content',
-        href: 'customer.cms.index',
-        icon: FileText,
-    },
+    // {
+    //     name: 'Content',
+    //     href: 'customer.cms.index',
+    //     icon: FileText,
+    // },
     {
         name: 'Profile',
         href: 'customer.profile.show',
@@ -105,7 +105,7 @@ export default function CustomerLayout({ children }: Props) {
     const SidebarContent = () => (
         <div className="flex h-full flex-col">
             {/* Logo */}
-            <div className="flex h-16 shrink-0 items-center px-6 border-b">
+            <div className="flex h-16 shrink-0 items-center px-6">
                 <Link href={route('customer.dashboard')} className="flex items-center space-x-2">
                     <ApplicationMark />
                 </Link>
@@ -136,9 +136,9 @@ export default function CustomerLayout({ children }: Props) {
             </nav>
 
             {/* User section */}
-            <div className="border-t p-4">
+            <div className=" p-4">
                 <div className="flex items-center space-x-3">
-                    <ThemeToggle />
+                    {/* <ThemeToggle /> */}
                     <Avatar className="h-8 w-8">
                         <AvatarImage src={user.profile_photo_url} alt={user.name} />
                         <AvatarFallback>
@@ -165,7 +165,7 @@ export default function CustomerLayout({ children }: Props) {
 
             {/* Desktop sidebar */}
             <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-64 lg:flex-col">
-                <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r bg-card">
+                <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-card">
                     <SidebarContent />
                 </div>
             </div>
@@ -173,7 +173,7 @@ export default function CustomerLayout({ children }: Props) {
             {/* Main content */}
             <div className="lg:pl-64">
                 {/* Top navigation */}
-                <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b bg-background px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+                <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 bg-background px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
                     {/* Mobile menu button */}
                     <Sheet>
                         <SheetTrigger asChild>
@@ -190,7 +190,7 @@ export default function CustomerLayout({ children }: Props) {
                     </Sheet>
 
                     {/* Separator */}
-                    <div className="h-6 w-px bg-border lg:hidden" />
+                    {/* <div className="h-6 w-px bg-border lg:hidden" /> */}
 
                     <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
                         {/* Spacer for right-aligned items */}
@@ -202,7 +202,7 @@ export default function CustomerLayout({ children }: Props) {
                             {/* Theme Toggle */}
                             <ThemeToggle />
                             {/* Separator */}
-                            <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-border" />
+                            {/* <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-border" /> */}
 
                             {/* Profile dropdown */}
                             <DropdownMenu>

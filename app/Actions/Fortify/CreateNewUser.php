@@ -55,6 +55,17 @@ class CreateNewUser implements CreatesNewUsers
             'password' => Hash::make($input['password']),
         ]);
 
+        // Automatically create a client for the user
+        $client = \App\Models\Client::create([
+            'name' => $user->name,
+            'email' => $user->email,
+            'user_id' => $user->id,
+            'status' => 'active',
+        ]);
+
+        // Optionally, you can add logic to associate the user with the client if you want a many-to-many relationship
+        // $user->clients()->attach($client->id);
+
         // Notify the user
         $user->notify(new UserRegistered($user));
 

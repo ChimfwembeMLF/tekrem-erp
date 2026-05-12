@@ -61,6 +61,47 @@ class Project extends Model
     ];
 
     /**
+     * Get the client that owns the project.
+     */
+    // public function client()
+    // {
+    //     return $this->belongsTo(\App\Models\Client::class);
+    // }
+
+
+    /**
+     * Get the communications for the project (morph).
+     */
+    public function communications(): MorphMany
+    {
+        return $this->morphMany(\App\Models\Communication::class, 'communicable');
+    }
+
+    /**
+     * Get the attachments for the project.
+     */
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(\App\Models\ProjectFile::class);
+    }
+
+    /**
+     * Get the billable time entries for the project.
+     */
+    public function timeEntries(): HasMany
+    {
+        return $this->hasMany(\App\Models\ProjectTimeLog::class);
+    }
+    
+    /**
+     * Get the user who owns the client for this project.
+     */
+    public function clientOwner()
+    {
+        return $this->hasOneThrough(\App\Models\User::class, \App\Models\Client::class, 'id', 'id', 'client_id', 'user_id');
+    }
+
+    /**
      * Get the epics for the project.
      */
     public function epics()

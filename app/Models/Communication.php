@@ -35,6 +35,7 @@ class Communication extends Model
      */
     protected $casts = [
         'communication_date' => 'datetime',
+        'attachments' => 'array',
     ];
 
     /**

@@ -279,10 +279,10 @@ export default function Index({ projects, stats, filters }: Props) {
                                             <Calendar className="h-4 w-4" />
                                             <span>{formatDate(project.start_date)} - {formatDate(project.end_date)}</span>
                                         </div>
-                                        {project.teamMembers.length > 0 && (
+                                        {(project.teamMembers?.length ?? 0) > 0 && (
                                             <div className="flex items-center gap-2">
                                                 <Users className="h-4 w-4" />
-                                                <span>{project.teamMembers.length} team member{project.teamMembers.length !== 1 ? 's' : ''}</span>
+                                                <span>{project.teamMembers?.length ?? 0} team member{(project.teamMembers?.length ?? 0) !== 1 ? 's' : ''}</span>
                                             </div>
                                         )}
                                     </div>

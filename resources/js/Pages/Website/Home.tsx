@@ -357,7 +357,7 @@ export default function Home({ canLogin, canRegister }: Props) {
             <div className="lg:col-span-6">
 
               {/* Main heading */}
-              <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl">
+              <h1 className="mt-6 text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl">
                 <span className="block text-white dark:text-gray-300 ">Technology Solutions for</span>
                 <span className="block text-white dark:text-gray-300 ">
                   Modern Businesses
@@ -366,7 +366,7 @@ export default function Home({ canLogin, canRegister }: Props) {
 
               {/* Description */}
               <p className="mt-6 text-xl tracking-tight text-white max-w-2xl">
-                {settings.company_name || 'Technology Remedies Innovations'} provides cutting-edge technology solutions to help businesses in Zambia and beyond thrive in the digital age.
+                {settings.company_name || 'Technology Remedies Innovations'} provides technology solutions to help businesses thrive in the digital age.
               </p>
 
               {/* Feature highlights */}
@@ -413,42 +413,49 @@ export default function Home({ canLogin, canRegister }: Props) {
             </div>
           </div>
         </div>
-        {/* Waves */}
-        <div className="absolute bottom-2 left-0 w-full overflow-hidden leading-none">
-          <svg
-            viewBox="0 0 1440 350"
-            height="350"
-            className="w-full h-[350px]"
-            preserveAspectRatio="none"
-          >
-            <defs>
-              <linearGradient id="waveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" className="text-secondary" stopColor="currentColor" />
-                <stop offset="100%" className="text-primary" stopColor="currentColor" />
-              </linearGradient>
-            </defs>
 
-            <path
-              fill="url(#waveGradient)"
-              className="text-secondary dark:text-primary"
-              d="M0,200 C580,550 960,5 1440,200 L1440,350 L0,550 Z"
-            />
-          </svg>
+
+
+        <div className=" hidden md:block">
+          {/* Waves */}
+          <div className="absolute bottom-2 left-0 w-full overflow-hidden leading-none">
+            <svg
+              viewBox="0 0 1440 350"
+              height="350"
+              className="w-full h-[350px]"
+              preserveAspectRatio="none"
+            >
+              <defs>
+                <linearGradient id="waveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" className="text-secondary" stopColor="currentColor" />
+                  <stop offset="100%" className="text-primary" stopColor="currentColor" />
+                </linearGradient>
+              </defs>
+
+              <path
+                fill="url(#waveGradient)"
+                className="text-secondary dark:text-primary"
+                d="M0,200 C580,550 960,5 1440,200 L1440,350 L0,550 Z"
+              />
+            </svg>
+          </div>
+
+          <div className="absolute bottom-0 z-0 left-0 w-full overflow-hidden leading-none">
+            <svg
+              viewBox="0 0 1440 350" height="350"
+              className="w-full h-[350px]"
+              preserveAspectRatio="none"
+            >
+              <path
+                fill="currentColor"
+                className="text-white dark:text-gray-900"
+                d="M0,200 C480,550 960,5 1440,200 L1440,350 L0,550 Z"
+              />
+            </svg>
+          </div>
         </div>
 
-        <div className="absolute bottom-0 z-0 left-0 w-full overflow-hidden leading-none">
-          <svg
-            viewBox="0 0 1440 350" height="350"
-            className="w-full h-[350px]"
-            preserveAspectRatio="none"
-          >
-            <path
-              fill="currentColor"
-              className="text-white dark:text-gray-900"
-              d="M0,200 C480,550 960,5 1440,200 L1440,350 L0,550 Z"
-            />
-          </svg>
-        </div>
+        
 
       </div>
 

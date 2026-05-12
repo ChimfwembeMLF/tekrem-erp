@@ -29,7 +29,8 @@ import {
   Upload,
   X,
   Image as ImageIcon,
-  FileText
+  FileText,
+  Eye
 } from 'lucide-react';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
@@ -78,6 +79,14 @@ interface TicketData {
     response_time_hours: number;
     resolution_time_hours: number;
   };
+  attachments?: TicketAttachment[];
+}
+
+interface TicketAttachment {
+  name: string;
+  path: string;
+  size: number;
+  type: string;
 }
 
 interface Comment {
@@ -167,6 +176,98 @@ export default function Show({ ticket, users, comments }: Props) {
     }
   };
 
+  // ─── Attachments Preview Component ───────────────────────────────────────────
+  function AttachmentsPreview({ attachments }: { attachments: TicketAttachment[] }) {
+    const [lightbox, setLightbox] = useState<string | null>(null);
+
+    const getFileUrl = (path: string) =>
+      path.startsWith('http') ? path : `/storage/${path}`;
+
+    const getExt = (name: string) =>
+      name.split('.').pop()?.toUpperCase() ?? 'FILE';
+
+    const formatSize = (bytes: number) => {
+      if (!bytes) return '';
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+      return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    };
+
+    const images = attachments.filter(f => f.type?.startsWith('image/'));
+    const files = attachments.filter(f => !f.type?.startsWith('image/'));
+
+    return (
+      <>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Paperclip className="h-4 w-4" />
+              Attachments
+              <Badge variant="secondary" className="ml-1 text-xs">
+                {attachments.length}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {images.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {images.map((file, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setLightbox(getFileUrl(file.path))}
+                    className="group relative aspect-video rounded-lg overflow-hidden border bg-muted hover:ring-2 hover:ring-primary transition-all"
+                  >
+                    <img src={getFileUrl(file.path)} alt={file.name} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                      <Eye className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5 translate-y-full group-hover:translate-y-0 transition-transform">
+                      <p className="text-[10px] text-white truncate">{file.name}</p>
+                      <p className="text-[9px] text-white/70">{formatSize(file.size)}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+            {files.length > 0 && (
+              <div className="space-y-1.5">
+                {files.map((file, idx) => (
+                  <a key={idx} href={getFileUrl(file.path)} target="_blank" rel="noopener noreferrer"
+                    className="group flex items-center gap-3 rounded-lg border bg-muted/40 hover:bg-muted p-2.5 transition-colors">
+                    <div className="flex-shrink-0 h-9 w-9 rounded-md bg-background border flex items-center justify-center">
+                      <span className="text-[9px] font-bold text-muted-foreground leading-none">{getExt(file.name)}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium truncate group-hover:text-primary transition-colors">{file.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{formatSize(file.size)}</p>
+                    </div>
+                    <Eye className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 flex-shrink-0 transition-opacity" />
+                  </a>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        {lightbox && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setLightbox(null)}>
+            <div className="relative max-w-4xl w-full" onClick={e => e.stopPropagation()}>
+              <button onClick={() => setLightbox(null)} className="absolute -top-10 right-0 text-white/70 hover:text-white transition-colors flex items-center gap-1.5 text-sm">
+                <XCircle className="h-5 w-5" /> Close
+              </button>
+              <img src={lightbox} alt="Preview" className="w-full max-h-[80vh] object-contain rounded-lg shadow-2xl" />
+              <a href={lightbox} target="_blank" rel="noopener noreferrer"
+                className="absolute -bottom-10 left-1/2 -translate-x-1/2 text-white/70 hover:text-white text-sm flex items-center gap-1.5 transition-colors whitespace-nowrap"
+                onClick={e => e.stopPropagation()}>
+                <Eye className="h-4 w-4" /> Open original
+              </a>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
+
   const isOverdue = () => {
     return ticket.due_date && new Date(ticket.due_date) < new Date() &&
       !['resolved', 'closed'].includes(ticket.status);
@@ -179,20 +280,36 @@ export default function Show({ ticket, users, comments }: Props) {
   const handleAddComment = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const mappedAttachments = mediaAttachments.map(m => ({
+    // Separate new uploads (with .file) and CMS/media files (without .file)
+    const newFiles = mediaAttachments.filter(m => m.file);
+    const cmsFiles = mediaAttachments.filter(m => !m.file);
+
+    // Map CMS/media files to metadata
+    const mappedCMS = cmsFiles.map(m => ({
       name: m.name || m.original_name,
-      path: m.file_path,
-      size: m.file_size,
-      type: m.mime_type,
+      path: m.file_path || m.path || m.url || '',
+      size: m.file_size || m.size || 0,
+      type: m.mime_type || m.type || '',
     }));
 
-    router.post(route('support.tickets.comments.store', ticket.id), {
-      content: data.content,
-      is_internal: data.is_internal,
-      is_solution: data.is_solution,
-      time_spent_minutes: data.time_spent_minutes,
-      existing_attachments: mappedAttachments
-    }, {
+    // Build FormData
+    const formData = new FormData();
+    formData.append('content', data.content);
+    formData.append('is_internal', data.is_internal ? '1' : '0');
+    formData.append('is_solution', data.is_solution ? '1' : '0');
+    if (data.time_spent_minutes) formData.append('time_spent_minutes', data.time_spent_minutes);
+    mappedCMS.forEach((att, idx) => {
+      formData.append(`existing_attachments[${idx}][name]`, att.name);
+      formData.append(`existing_attachments[${idx}][path]`, att.path);
+      formData.append(`existing_attachments[${idx}][size]`, att.size.toString());
+      formData.append(`existing_attachments[${idx}][type]`, att.type);
+    });
+    newFiles.forEach((m, idx) => {
+      formData.append('attachments[]', m.file, m.name);
+    });
+
+    router.post(route('support.tickets.comments.store', ticket.id), formData, {
+      forceFormData: true,
       preserveScroll: true,
       onSuccess: () => {
         reset();
@@ -327,6 +444,9 @@ export default function Show({ ticket, users, comments }: Props) {
               </CardContent>
             </Card>
 
+            {ticket.attachments && ticket.attachments.length > 0 && (
+              <AttachmentsPreview attachments={ticket.attachments} />
+            )}
             {/* AI Suggestions */}
             {showAISuggestions && (
               <AISuggestions
@@ -436,47 +556,7 @@ export default function Show({ ticket, users, comments }: Props) {
                     )}
                     {comment.attachments && comment.attachments.length > 0 && (
                       <div className="mt-3 border-t pt-3">
-                        <p className="text-xs font-medium mb-2 uppercase tracking-wide text-muted-foreground">
-                          {t('support.attachments', 'Attachments')}
-                        </p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                          {comment.attachments.map((attachment, index) => {
-                            const isImage = attachment.type.startsWith('image/');
-                            const url = attachment.path.startsWith('http') || attachment.path.startsWith('/')
-                              ? attachment.path
-                              : `/storage/${attachment.path}`;
-
-                            return (
-                              <a
-                                key={index}
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="relative group rounded-md border overflow-hidden block hover:border-primary transition-colors"
-                              >
-                                {isImage ? (
-                                  <div className="aspect-video w-full bg-muted flex items-center justify-center overflow-hidden">
-                                    <img src={url} alt={attachment.name} className="w-full h-full object-cover" />
-                                  </div>
-                                ) : (
-                                  <div className="w-full h-full bg-muted flex flex-col items-center justify-center p-2 text-center group-hover:bg-muted/80 transition-colors">
-                                    <FileText className="h-5 w-5 text-muted-foreground mb-1" />
-                                    <span className="text-[10px] text-muted-foreground truncate w-full px-1">{attachment.name}</span>
-                                  </div>
-                                )}
-                                <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[1px]">
-                                  <div className="bg-white/80 dark:bg-black/60 shadow-sm rounded-full p-1 border border-white/30 truncate max-w-[80%]">
-                                    <span className="text-[10px] font-medium px-2 block truncate">View</span>
-                                  </div>
-                                </div>
-                                <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-1 text-[9px] text-white truncate px-1.5 flex justify-between">
-                                  <span className="truncate pr-1">{attachment.name}</span>
-                                  <span className="shrink-0 opacity-80">{(attachment.size / 1024 / 1024).toFixed(1)}MB</span>
-                                </div>
-                              </a>
-                            );
-                          })}
-                        </div>
+                        <AttachmentsPreview attachments={comment.attachments} />
                       </div>
                     )}
                   </div>
@@ -499,13 +579,13 @@ export default function Show({ ticket, users, comments }: Props) {
               <CardContent>
                 <form onSubmit={handleAddComment} className="space-y-4">
                   <div className="rounded-md overflow-hidden">
-                    <MarkdownEditor
-                      key={editorKey}
-                      storageKey={`ticket-${ticket.id}-comment`}
-                      onChange={(val) => setData('content', val)}
-                      placeholder={t('support.comment_placeholder', 'Add your comment (Markdown supported)...')}
-                      height={250}
+                    <Textarea
+                      value={data.content}
+                      onChange={(e) => setData('content', e.target.value)}
+                      placeholder={t('support.comment_placeholder', 'Add your comment...')}
+                      rows={4}
                     />
+
                   </div>
 
                   <div className="flex gap-4 text-sm">
@@ -530,10 +610,38 @@ export default function Show({ ticket, users, comments }: Props) {
                   <div className="space-y-4 pt-2 border-t mt-4">
                     <div>
                       <Label htmlFor="attachments" className="block mb-2">{t('support.attach_files', 'Attach Files')}</Label>
-                      <Button type="button" variant="outline" onClick={() => setShowMediaPicker(true)}>
-                        <Upload className="h-4 w-4 mr-2" />
-                        {t('support.open_media_library', 'Open Media Library')}
-                      </Button>
+                      {/* Dropbox-style drag-and-drop area */}
+                      <div
+                        className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 bg-muted/40 hover:bg-muted/60 transition-colors cursor-pointer relative"
+                        onDragOver={e => { e.preventDefault(); e.stopPropagation(); }}
+                        onDrop={e => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const files = Array.from(e.dataTransfer.files);
+                          files.forEach(file => {
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                              setMediaAttachments(prev => [
+                                ...prev,
+                                {
+                                  id: Math.random().toString(36).substr(2, 9),
+                                  name: file.name,
+                                  url: ev.target?.result,
+                                  mime_type: file.type,
+                                  file_size: file.size,
+                                  file,
+                                }
+                              ]);
+                            };
+                            reader.readAsDataURL(file);
+                          });
+                        }}
+                        onClick={() => setShowMediaPicker(true)}
+                      >
+                        <Upload className="h-8 w-8 mb-2 text-primary" />
+                        <span className="font-medium text-sm mb-1">{t('support.drag_drop_files', 'Drag & drop files here or click to select')}</span>
+                        <span className="text-xs text-muted-foreground">{t('support.file_types_media', 'Select files via the CMS Media Library to attach them to this comment.')}</span>
+                      </div>
                       <MediaPicker
                         isOpen={showMediaPicker}
                         onSelect={(media) => {
@@ -548,15 +656,12 @@ export default function Show({ ticket, users, comments }: Props) {
                         multiple={true}
                         type="all"
                       />
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {t('support.file_types_media', 'Select files via the CMS Media Library to attach them to this comment.')}
-                      </p>
                     </div>
 
                     {mediaAttachments.length > 0 && (
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
                         {mediaAttachments.map((file, index) => {
-                          const isImage = file.mime_type.startsWith('image/');
+                          const isImage = file.mime_type?.startsWith('image/');
                           return (
                             <div key={index} className="relative group rounded-md border overflow-hidden">
                               {isImage ? (

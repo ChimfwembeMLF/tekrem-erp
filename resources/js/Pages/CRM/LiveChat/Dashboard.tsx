@@ -147,7 +147,7 @@ export default function LiveChatDashboard({
             )}
           </div>
           {userRole !== 'customer' && (
-            <Button onClick={() => router.get(route('crm.livechat.find-or-create'))}>
+            <Button onClick={() => router.post(route('crm.livechat.find-or-create'))}>
               <Plus className="h-4 w-4 mr-2" />
               New Conversation
             </Button>

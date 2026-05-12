@@ -16,7 +16,12 @@ class RolesAndPermissionsSeeder extends Seeder
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Create comprehensive permissions
+
+        // Define all modules that need CRUD for 'all' permissions
+        $allModules = [
+            'attendance', 'clients', 'communications', 'employees', 'expenses', 'invoices', 'leads', 'leave', 'payments', 'performance', 'projects', 'quotations', 'tasks', 'tickets', 'time logs'
+        ];
+
         $permissions = [
             // ========== MODULE ACCESS PERMISSIONS ==========
             // High-level module access permissions for route protection
@@ -497,83 +502,245 @@ class RolesAndPermissionsSeeder extends Seeder
 
         $managerPermissions = [
             // Module Access
-            'view crm', 'view finance', 'view projects', 'view hr', 'view support', 'view cms', 'view ai', 'view social_media',
+            'view crm',
+            'view finance',
+            'view projects',
+            'view hr',
+            'view support',
+            'view cms',
+            'view ai',
+            'view social_media',
 
             // User Management (limited)
             'view users',
             'view user activity',
 
             // CRM Module (full access)
-            'view clients', 'create clients', 'edit clients', 'delete clients',
-            'view all clients', 'export clients', 'import clients', 'view client analytics',
-            'view leads', 'create leads', 'edit leads', 'delete leads',
-            'view all leads', 'convert leads', 'assign leads', 'export leads', 'import leads', 'view lead analytics',
-            'view communications', 'create communications', 'edit communications', 'delete communications',
-            'view all communications', 'export communications',
-            'view livechat', 'participate livechat', 'manage livechat', 'view livechat analytics',
+            'view clients',
+            'create clients',
+            'edit clients',
+            'delete clients',
+            'view all clients',
+            'export clients',
+            'import clients',
+            'view client analytics',
+            'view leads',
+            'create leads',
+            'edit leads',
+            'delete leads',
+            'view all leads',
+            'convert leads',
+            'assign leads',
+            'export leads',
+            'import leads',
+            'view lead analytics',
+            'view communications',
+            'create communications',
+            'edit communications',
+            'delete communications',
+            'view all communications',
+            'export communications',
+            'view livechat',
+            'participate livechat',
+            'manage livechat',
+            'view livechat analytics',
 
             // Finance Module (most access, no deletion)
-            'view accounts', 'create accounts', 'edit accounts',
-            'view transactions', 'create transactions', 'edit transactions', 'approve transactions',
-            'view all transactions', 'export transactions', 'import transactions',
-            'view invoices', 'create invoices', 'edit invoices', 'send invoices', 'approve invoices',
-            'view all invoices', 'export invoices',
-            'view payments', 'create payments', 'edit payments', 'approve payments',
-            'view all payments', 'export payments',
-            'view quotations', 'create quotations', 'edit quotations', 'send quotations',
-            'approve quotations', 'convert quotations', 'view all quotations',
-            'view expenses', 'create expenses', 'edit expenses', 'approve expenses', 'view all expenses',
-            'view budgets', 'create budgets', 'edit budgets', 'approve budgets',
-            'view categories', 'create categories', 'edit categories',
-            'view financial reports', 'create financial reports', 'export financial reports',
+            'view accounts',
+            'create accounts',
+            'edit accounts',
+            'view transactions',
+            'create transactions',
+            'edit transactions',
+            'approve transactions',
+            'view all transactions',
+            'export transactions',
+            'import transactions',
+            'view invoices',
+            'create invoices',
+            'edit invoices',
+            'send invoices',
+            'approve invoices',
+            'view all invoices',
+            'export invoices',
+            'view payments',
+            'create payments',
+            'edit payments',
+            'approve payments',
+            'view all payments',
+            'export payments',
+            'view quotations',
+            'create quotations',
+            'edit quotations',
+            'send quotations',
+            'approve quotations',
+            'convert quotations',
+            'view all quotations',
+            'view expenses',
+            'create expenses',
+            'edit expenses',
+            'approve expenses',
+            'view all expenses',
+            'view budgets',
+            'create budgets',
+            'edit budgets',
+            'approve budgets',
+            'view categories',
+            'create categories',
+            'edit categories',
+            'view financial reports',
+            'create financial reports',
+            'export financial reports',
 
             // HR Module (full access)
-            'view employees', 'create employees', 'edit employees', 'delete employees',
-            'view all employees', 'manage employee documents', 'view employee analytics',
-            'view departments', 'create departments', 'edit departments', 'delete departments',
-            'view leave', 'create leave', 'edit leave', 'approve leave', 'view all leave', 'manage leave types',
-            'view performance', 'create performance', 'edit performance', 'approve performance', 'view all performance',
-            'view attendance', 'create attendance', 'edit attendance', 'view all attendance', 'manage attendance reports',
-            'view training', 'create training', 'edit training', 'enroll training', 'manage training programs',
+            'view employees',
+            'create employees',
+            'edit employees',
+            'delete employees',
+            'view all employees',
+            'manage employee documents',
+            'view employee analytics',
+            'view departments',
+            'create departments',
+            'edit departments',
+            'delete departments',
+            'view leave',
+            'create leave',
+            'edit leave',
+            'approve leave',
+            'view all leave',
+            'manage leave types',
+            'view performance',
+            'create performance',
+            'edit performance',
+            'approve performance',
+            'view all performance',
+            'view attendance',
+            'create attendance',
+            'edit attendance',
+            'view all attendance',
+            'manage attendance reports',
+            'view training',
+            'create training',
+            'edit training',
+            'enroll training',
+            'manage training programs',
 
             // Projects Module (full access)
-            'view projects', 'create projects', 'edit projects', 'delete projects',
-            'view all projects', 'manage project members', 'view project analytics', 'manage-project-settings',
-            'projects.create', 'projects.edit', 'projects.delete', 'projects.update',
-            'view milestones', 'create milestones', 'edit milestones', 'delete milestones', 'manage project milestones',
-            'projects.milestones.create', 'projects.milestones.edit', 'projects.milestones.delete', 'projects.milestones.update',
-            'view tasks', 'create tasks', 'edit tasks', 'delete tasks', 'assign tasks', 'view all tasks',
-            'projects.tasks.create', 'projects.tasks.edit', 'projects.tasks.delete',
-            'view project files', 'upload project files', 'edit project files', 'delete project files', 'download project files',
-            'projects.files.create', 'projects.files.edit', 'projects.files.delete',
-            'view time logs', 'create time logs', 'edit time logs', 'approve time logs', 'view all time logs',
-            'projects.time-logs.create', 'projects.time-logs.edit', 'projects.time-logs.delete',
-            'view project templates', 'create project templates', 'edit project templates', 'use project templates',
-            'projects.templates.create', 'projects.templates.edit', 'projects.templates.delete',
-            'projects.tags.create', 'projects.tags.edit', 'projects.tags.delete',
+            'view projects',
+            'create projects',
+            'edit projects',
+            'delete projects',
+            'view all projects',
+            'manage project members',
+            'view project analytics',
+            'manage-project-settings',
+            'projects.create',
+            'projects.edit',
+            'projects.delete',
+            'projects.update',
+            'view milestones',
+            'create milestones',
+            'edit milestones',
+            'delete milestones',
+            'manage project milestones',
+            'projects.milestones.create',
+            'projects.milestones.edit',
+            'projects.milestones.delete',
+            'projects.milestones.update',
+            'view tasks',
+            'create tasks',
+            'edit tasks',
+            'delete tasks',
+            'assign tasks',
+            'view all tasks',
+            'projects.tasks.create',
+            'projects.tasks.edit',
+            'projects.tasks.delete',
+            'view project files',
+            'upload project files',
+            'edit project files',
+            'delete project files',
+            'download project files',
+            'projects.files.create',
+            'projects.files.edit',
+            'projects.files.delete',
+            'view time logs',
+            'create time logs',
+            'edit time logs',
+            'approve time logs',
+            'view all time logs',
+            'projects.time-logs.create',
+            'projects.time-logs.edit',
+            'projects.time-logs.delete',
+            'view project templates',
+            'create project templates',
+            'edit project templates',
+            'use project templates',
+            'projects.templates.create',
+            'projects.templates.edit',
+            'projects.templates.delete',
+            'projects.tags.create',
+            'projects.tags.edit',
+            'projects.tags.delete',
 
             // Support Module (full access)
-            'view tickets', 'create tickets', 'edit tickets', 'delete tickets',
-            'assign tickets', 'close tickets', 'reopen tickets', 'escalate tickets', 'view all tickets', 'view ticket analytics',
-            'view knowledge base', 'create knowledge base', 'edit knowledge base', 'publish knowledge base', 'view knowledge analytics',
-            'view faq', 'create faq', 'edit faq', 'publish faq',
-            'view support categories', 'create support categories', 'edit support categories',
-            'view sla', 'create sla', 'edit sla', 'manage sla policies',
+            'view tickets',
+            'create tickets',
+            'edit tickets',
+            'delete tickets',
+            'assign tickets',
+            'close tickets',
+            'reopen tickets',
+            'escalate tickets',
+            'view all tickets',
+            'view ticket analytics',
+            'view knowledge base',
+            'create knowledge base',
+            'edit knowledge base',
+            'publish knowledge base',
+            'view knowledge analytics',
+            'view faq',
+            'create faq',
+            'edit faq',
+            'publish faq',
+            'view support categories',
+            'create support categories',
+            'edit support categories',
+            'view sla',
+            'create sla',
+            'edit sla',
+            'manage sla policies',
 
             // AI Module (limited access)
-            'view ai conversations', 'create ai conversations', 'edit ai conversations',
-            'view prompt templates', 'create prompt templates', 'edit prompt templates', 'use prompt templates',
+            'view ai conversations',
+            'create ai conversations',
+            'edit ai conversations',
+            'view prompt templates',
+            'create prompt templates',
+            'edit prompt templates',
+            'use prompt templates',
             'view ai analytics',
 
             // Analytics & Reports
-            'view reports', 'create reports', 'edit reports', 'export reports',
-            'view analytics dashboard', 'view system analytics',
+            'view reports',
+            'create reports',
+            'edit reports',
+            'export reports',
+            'view analytics dashboard',
+            'view system analytics',
 
             // Tags & General
-            'view tags', 'create tags', 'edit tags', 'manage tags',
+            'view tags',
+            'create tags',
+            'edit tags',
+            'manage tags',
 
             // Notifications
-            'view notifications', 'manage notifications', 'send notifications', 'view notification analytics',
+            'view notifications',
+            'manage notifications',
+            'send notifications',
+            'view notification analytics',
         ];
 
         $managerRole->givePermissionTo($managerPermissions);
@@ -588,66 +755,151 @@ class RolesAndPermissionsSeeder extends Seeder
 
         $staffPermissions = [
             // Module Access
-            'view crm', 'view finance', 'view projects', 'view hr', 'view support', 'view cms', 'view ai', 'view social_media',
+            'view crm',
+            'view finance',
+            'view projects',
+            'view hr',
+            'view support',
+            'view cms',
+            'view ai',
+            'view social_media',
 
             // User Management (view only)
             'view users',
 
             // CRM Module (most access, limited deletion)
-            'view clients', 'create clients', 'edit clients', 'view client analytics',
-            'view leads', 'create leads', 'edit leads', 'convert leads', 'view lead analytics',
-            'view communications', 'create communications', 'edit communications',
-            'view livechat', 'participate livechat',
+            'view clients',
+            'create clients',
+            'edit clients',
+            'view client analytics',
+            'view leads',
+            'create leads',
+            'edit leads',
+            'convert leads',
+            'view lead analytics',
+            'view communications',
+            'create communications',
+            'edit communications',
+            'view livechat',
+            'participate livechat',
 
             // Finance Module (limited access)
             'view accounts',
-            'view transactions', 'create transactions', 'edit transactions', 'export transactions',
-            'view invoices', 'create invoices', 'edit invoices', 'send invoices', 'export invoices',
-            'view payments', 'create payments', 'edit payments', 'export payments',
-            'view quotations', 'create quotations', 'edit quotations', 'send quotations',
-            'view expenses', 'create expenses', 'edit expenses',
+            'view transactions',
+            'create transactions',
+            'edit transactions',
+            'export transactions',
+            'view invoices',
+            'create invoices',
+            'edit invoices',
+            'send invoices',
+            'export invoices',
+            'view payments',
+            'create payments',
+            'edit payments',
+            'export payments',
+            'view quotations',
+            'create quotations',
+            'edit quotations',
+            'send quotations',
+            'view expenses',
+            'create expenses',
+            'edit expenses',
             'view budgets',
             'view categories',
             'view financial reports',
 
             // HR Module (limited access)
-            'view employees', 'view employee analytics',
+            'view employees',
+            'view employee analytics',
             'view departments',
-            'view leave', 'create leave', 'edit leave',
-            'view performance', 'create performance', 'edit performance',
-            'view attendance', 'create attendance', 'edit attendance',
-            'view training', 'enroll training',
+            'view leave',
+            'create leave',
+            'edit leave',
+            'view performance',
+            'create performance',
+            'edit performance',
+            'view attendance',
+            'create attendance',
+            'edit attendance',
+            'view training',
+            'enroll training',
 
-            // Projects Module (good access)
-            'view projects', 'create projects', 'edit projects', 'view project analytics',
-            'projects.create', 'projects.edit', 'projects.update',
-            'view milestones', 'create milestones', 'edit milestones',
-            'projects.milestones.create', 'projects.milestones.edit', 'projects.milestones.update',
-            'view tasks', 'create tasks', 'edit tasks', 'assign tasks',
-            'projects.tasks.create', 'projects.tasks.edit',
-            'view project files', 'upload project files', 'edit project files', 'download project files',
-            'projects.files.create', 'projects.files.edit',
-            'view time logs', 'create time logs', 'edit time logs',
-            'projects.time-logs.create', 'projects.time-logs.edit',
-            'view project templates', 'use project templates',
-            'projects.templates.create', 'projects.templates.edit',
-            'projects.tags.create', 'projects.tags.edit',
+            // Projects Module (good access) – all permissions now follow the same pattern
+            'view projects',
+            'create projects',
+            'edit projects',
+            'update projects',               // was projects.update
+            'delete projects',              // you may want to include this if staff can delete
+            'view project analytics',
+
+            // Milestones (formerly dot‑notation)
+            'view project milestones',      // was view milestones (but kept project prefix for clarity)
+            'create project milestones',    // was projects.milestones.create
+            'edit project milestones',      // was projects.milestones.edit
+            'update project milestones',    // was projects.milestones.update
+
+            // Tasks
+            'view project tasks',           // was view tasks
+            'create project tasks',         // was projects.tasks.create
+            'edit project tasks',           // was projects.tasks.edit
+            'assign project tasks',         // was assign tasks (makes the resource explicit)
+
+            // Project Files
+            'view project files',
+            'upload project files',
+            'edit project files',
+            'download project files',
+            'delete project files',         // you may want to add if staff can delete
+
+            // Time Logs
+            'view project time logs',       // was view time logs
+            'create project time logs',     // was projects.time-logs.create
+            'edit project time logs',       // was projects.time-logs.edit
+            'delete project time logs',     // optional, include if needed
+
+            // Project Templates
+            'view project templates',
+            'use project templates',
+            'create project templates',     // was projects.templates.create
+            'edit project templates',       // was projects.templates.edit
+            'delete project templates',     // optional
+
+            // Project Tags
+            'view project tags',            // was missing, but good to have
+            'create project tags',          // was projects.tags.create
+            'edit project tags',            // was projects.tags.edit
+            'delete project tags',          // optional
 
             // Support Module (good access)
-            'view tickets', 'create tickets', 'edit tickets', 'assign tickets', 'close tickets', 'reopen tickets',
-            'view knowledge base', 'create knowledge base', 'edit knowledge base',
-            'view faq', 'create faq', 'edit faq',
+            'view tickets',
+            'create tickets',
+            'edit tickets',
+            'assign tickets',
+            'close tickets',
+            'reopen tickets',
+            'view knowledge base',
+            'create knowledge base',
+            'edit knowledge base',
+            'view faq',
+            'create faq',
+            'edit faq',
             'view support categories',
 
             // AI Module (basic access)
-            'view ai conversations', 'create ai conversations',
-            'view prompt templates', 'use prompt templates',
+            'view ai conversations',
+            'create ai conversations',
+            'view prompt templates',
+            'use prompt templates',
 
             // Analytics & Reports (view only)
-            'view reports', 'view analytics dashboard',
+            'view reports',
+            'view analytics dashboard',
 
             // Tags & General
-            'view tags', 'create tags', 'edit tags',
+            'view tags',
+            'create tags',
+            'edit tags',
 
             // Notifications
             'view notifications',
@@ -693,7 +945,7 @@ class RolesAndPermissionsSeeder extends Seeder
         // ========== CREATE SUPER USER ==========
         $this->command->info('');
         $this->command->info('Creating super user account...');
-        
+
         $superUser = \App\Models\User::firstOrCreate(
             ['email' => 'superuser@tekrem.com'],
             [
@@ -702,7 +954,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
-        
+
         $superUser->assignRole('super_user');
         $this->command->info('✓ Super User account created (superuser@system.local / superuser123)');
 

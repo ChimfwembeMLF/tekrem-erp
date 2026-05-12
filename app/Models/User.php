@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use App\Models\HR\Department;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -14,13 +16,14 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-  
     use HasApiTokens;
 
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory;
     use HasProfilePhoto;
-    use HasRoles;
+    use HasRoles {
+        HasRoles::hasPermissionTo as spatieHasPermissionTo;
+    }
     use Notifiable;
     use TwoFactorAuthenticatable;
 
@@ -69,6 +72,22 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+        /**
+     * Get the client owned by the user (one-to-one).
+     */
+    public function client()
+    {
+        return $this->hasOne(Client::class);
+    }
+
+    /**
+     * Get all projects for the user's client.
+     */
+    public function clientProjects()
+    {
+        return $this->hasManyThrough(Project::class, Client::class, 'user_id', 'client_id', 'id', 'id');
+    }
+
     /**
      * Cards this user is watching.
      */
@@ -85,7 +104,7 @@ class User extends Authenticatable
         if ($this->hasRole(['super_user', 'admin'])) {
             return true;
         }
-        return parent::hasPermissionTo($permission, $guardName);
+        return $this->spatieHasPermissionTo($permission, $guardName);
     }
 
     /**

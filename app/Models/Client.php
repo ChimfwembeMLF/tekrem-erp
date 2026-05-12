@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Client extends Model
@@ -33,6 +34,23 @@ class Client extends Model
         'converted_from_lead_id',
     ];
 
+
+    /**
+     * Get all users (staff) for this client.
+     */
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
+
+    /**
+     * Get all projects for this client.
+     */
+    // public function projects()
+    // {
+    //     return $this->hasMany(\App\Models\Project::class);
+    // }
+
     /**
      * Get the user that owns the client.
      */
@@ -46,7 +64,7 @@ class Client extends Model
      */
     public function projects(): HasMany
     {
-        return $this->hasMany(Projects::class);
+        return $this->hasMany(Project::class);
     }
 
     /**

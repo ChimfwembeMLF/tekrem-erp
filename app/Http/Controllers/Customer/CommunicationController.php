@@ -15,17 +15,79 @@ use Inertia\Response;
 
 class CommunicationController extends Controller
 {
+
+
+    /**
+     * Store a new chat conversation (conversation thread).
+     */
+    public function storeChat(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'title' => ['nullable', 'string', 'max:255'],
+            'message' => ['required', 'string', 'max:2000'],
+            'assignee_id' => ['nullable', 'integer', 'exists:users,id'],
+            'attachments' => ['nullable', 'array'],
+            'attachments.*' => ['file', 'max:10240'], // 10MB max
+        ]);
+
+        // Create the conversation
+        $conversation = Conversation::create([
+            'title' => $validated['title'] ?? null,
+            'conversable_type' => get_class($user),
+            'conversable_id' => $user->id,
+            'creator_id' => $user->id,
+            'assignee_id' => $validated['assignee_id'] ?? null,
+            'status' => 'open',
+            'last_message_at' => now(),
+        ]);
+
+        // Handle attachments
+        $attachments = [];
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $path = $file->store('chat-attachments', 'public');
+                $attachments[] = [
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_path' => $path,
+                    'file_size' => $file->getSize(),
+                    'mime_type' => $file->getMimeType(),
+                ];
+            }
+        }
+
+        // Create the first message
+        Chat::create([
+            'conversation_id' => $conversation->id,
+            'user_id' => $user->id,
+            'message' => $validated['message'],
+            'message_type' => 'text',
+            'attachments' => $attachments,
+            'status' => 'sent',
+            'chattable_type' => get_class($user),
+            'chattable_id' => $user->id,
+        ]);
+
+        session()->flash('flash', [
+            'bannerStyle' => 'success',
+            'banner' => 'Conversation created successfully!'
+        ]);
+
+        return redirect()->route('customer.communications.chats.show', $conversation);
+    }
+
     /**
      * Display customer's communication history.
      */
     public function index(Request $request): Response
     {
         $user = Auth::user();
-        
+
         $query = Communication::where(function ($q) use ($user) {
-                $q->where('communicable_type', get_class($user))
-                  ->where('communicable_id', $user->id);
-            })
+            $q->where('communicable_type', get_class($user))
+                ->where('communicable_id', $user->id);
+        })
             ->orWhere(function ($q) use ($user) {
                 $q->whereHas('user', function ($subQ) use ($user) {
                     $subQ->where('user_id', $user->id);
@@ -41,7 +103,7 @@ class CommunicationController extends Controller
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('subject', 'like', '%' . $request->search . '%')
-                  ->orWhere('content', 'like', '%' . $request->search . '%');
+                    ->orWhere('content', 'like', '%' . $request->search . '%');
             });
         }
 
@@ -87,13 +149,13 @@ class CommunicationController extends Controller
     public function show(Communication $communication): Response
     {
         $user = Auth::user();
-        
+
         // Ensure user can access this communication
         if (!$this->canAccessCommunication($communication, $user)) {
             abort(403, 'Access denied.');
         }
 
-        $communication->load(['user', 'communicable', 'attachments']);
+        $communication->load(['user', 'communicable']);
 
         return Inertia::render('Customer/Communications/Show', [
             'communication' => $communication,
@@ -151,8 +213,10 @@ class CommunicationController extends Controller
         $user = Auth::user();
 
         // Ensure user can access this conversation
-        if ($conversation->conversable_type !== get_class($user) ||
-            $conversation->conversable_id !== $user->id) {
+        if (
+            $conversation->conversable_type !== get_class($user) ||
+            $conversation->conversable_id !== $user->id
+        ) {
             abort(403, 'Access denied.');
         }
 
@@ -204,8 +268,10 @@ class CommunicationController extends Controller
         $user = Auth::user();
 
         // Ensure user can access this conversation
-        if ($conversation->conversable_type !== get_class($user) ||
-            $conversation->conversable_id !== $user->id) {
+        if (
+            $conversation->conversable_type !== get_class($user) ||
+            $conversation->conversable_id !== $user->id
+        ) {
             abort(403, 'Access denied.');
         }
 
@@ -269,7 +335,7 @@ class CommunicationController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $user = Auth::user();
-        
+
         $validated = $request->validate([
             'type' => ['required', 'in:email,call,meeting'],
             'subject' => ['required', 'string', 'max:255'],
@@ -281,6 +347,19 @@ class CommunicationController extends Controller
             'attachments.*' => ['file', 'max:10240'], // 10MB max
         ]);
 
+        $attachments = [];
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $path = $file->store('communication-attachments', 'public');
+                $attachments[] = [
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_path' => $path,
+                    'file_size' => $file->getSize(),
+                    'mime_type' => $file->getMimeType(),
+                ];
+            }
+        }
+
         $communication = Communication::create([
             'user_id' => $user->id,
             'communicable_type' => get_class($user),
@@ -291,24 +370,11 @@ class CommunicationController extends Controller
             'status' => 'pending',
             'direction' => 'outbound',
             'priority' => $validated['priority'],
-            'scheduled_at' => $validated['preferred_date'] && $validated['preferred_time'] 
+            'scheduled_at' => (!empty($validated['preferred_date']) && !empty($validated['preferred_time']))
                 ? $validated['preferred_date'] . ' ' . $validated['preferred_time']
                 : null,
+            'attachments' => $attachments,
         ]);
-
-        // Handle attachments
-        if ($request->hasFile('attachments')) {
-            foreach ($request->file('attachments') as $file) {
-                $path = $file->store('communication-attachments', 'public');
-                
-                $communication->attachments()->create([
-                    'file_name' => $file->getClientOriginalName(),
-                    'file_path' => $path,
-                    'file_size' => $file->getSize(),
-                    'mime_type' => $file->getMimeType(),
-                ]);
-            }
-        }
 
         session()->flash('flash', [
             'bannerStyle' => 'success',
@@ -324,7 +390,7 @@ class CommunicationController extends Controller
     public function downloadAttachment(Communication $communication, $attachmentId)
     {
         $user = Auth::user();
-        
+
         // Ensure user can access this communication
         if (!$this->canAccessCommunication($communication, $user)) {
             abort(403, 'Access denied.');
@@ -346,8 +412,10 @@ class CommunicationController extends Controller
     private function canAccessCommunication(Communication $communication, $user): bool
     {
         // User can access if they are the communicable entity
-        if ($communication->communicable_type === get_class($user) && 
-            $communication->communicable_id === $user->id) {
+        if (
+            $communication->communicable_type === get_class($user) &&
+            $communication->communicable_id === $user->id
+        ) {
             return true;
         }
 

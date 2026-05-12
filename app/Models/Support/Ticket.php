@@ -29,6 +29,7 @@ class Ticket extends Model
         'category_id',
         'assigned_to',
         'created_by',
+        'client_id',
         'requester_type',
         'requester_id',
         'due_date',
@@ -46,7 +47,15 @@ class Ticket extends Model
         'response_time_minutes',
         'source',
         'external_reference_id',
+            'attachments',
     ];
+    /**
+     * Get the client that owns the ticket.
+     */
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Client::class);
+    }
 
     /**
      * The attributes that should be cast.
@@ -65,6 +74,7 @@ class Ticket extends Model
         'escalation_level' => 'integer',
         'resolution_time_minutes' => 'integer',
         'response_time_minutes' => 'integer',
+        'attachments' => 'array',
     ];
 
     /**

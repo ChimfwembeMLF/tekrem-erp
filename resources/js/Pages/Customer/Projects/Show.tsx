@@ -20,6 +20,7 @@ import {
     DollarSign,
     Paperclip
 } from 'lucide-react';
+import useRoute from '@/Hooks/useRoute';
 
 interface Project {
     id: number;
@@ -85,6 +86,8 @@ interface Props {
 }
 
 export default function Show({ project }: Props) {
+    const route = useRoute();
+    
     const getStatusVariant = (status: string) => {
         switch (status) {
             case 'completed':
@@ -127,7 +130,9 @@ export default function Show({ project }: Props) {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
-    const totalHours = project.timeEntries.reduce((sum, entry) => sum + entry.hours, 0);
+    const totalHours = (project.timeEntries ?? []).reduce((sum, entry) => sum + entry.hours, 0);
+        const safeLength = (arr: any[] | undefined | null) => Array.isArray(arr) ? arr.length : 0;
+        const safeMap = <T, R>(arr: T[] | undefined | null, fn: (item: T, idx: number) => R) => Array.isArray(arr) ? arr.map(fn) : [];
 
     return (
         <CustomerLayout>
@@ -171,7 +176,7 @@ export default function Show({ project }: Props) {
                             <Users className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{project.teamMembers.length}</div>
+                            <div className="text-2xl font-bold">{safeLength(project.teamMembers)}</div>
                         </CardContent>
                     </Card>
                     <Card>
@@ -234,7 +239,7 @@ export default function Show({ project }: Props) {
                             <CardContent>
                                 <div className="space-y-4">
                                     {project.milestones.length > 0 ? (
-                                        project.milestones.map((milestone) => (
+                                            safeMap(project.milestones, (milestone) => (
                                             <div key={milestone.id} className="p-4 border rounded-lg">
                                                 <div className="flex items-center justify-between mb-2">
                                                     <h4 className="font-medium">{milestone.title}</h4>
@@ -277,7 +282,7 @@ export default function Show({ project }: Props) {
                             <CardContent>
                                 <div className="space-y-3">
                                     {project.tasks.length > 0 ? (
-                                        project.tasks.slice(0, 5).map((task) => (
+                                            safeMap(project.tasks.slice(0, 5), (task) => (
                                             <div key={task.id} className="flex items-center justify-between p-3 border rounded-lg">
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2 mb-1">
@@ -328,7 +333,7 @@ export default function Show({ project }: Props) {
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-3">
-                                    {project.teamMembers.map((member) => (
+                                    {safeMap(project.teamMembers, (member) => (
                                         <div key={member.user.id} className="flex items-center gap-3">
                                             <Avatar className="h-8 w-8">
                                                 <AvatarImage src={member.user.profile_photo_url} alt={member.user.name} />
@@ -353,7 +358,7 @@ export default function Show({ project }: Props) {
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-3">
-                                    {project.timeEntries.slice(0, 5).map((entry) => (
+                                    {safeMap((project.timeEntries ?? []).slice(0, 5), (entry) => (
                                         <div key={entry.id} className="p-3 border rounded-lg">
                                             <div className="flex items-center justify-between mb-1">
                                                 <p className="text-sm font-medium">{entry.hours}h</p>

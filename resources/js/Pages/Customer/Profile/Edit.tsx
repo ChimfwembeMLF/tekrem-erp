@@ -20,6 +20,7 @@ import {
     Save,
     Upload
 } from 'lucide-react';
+import useRoute from '@/Hooks/useRoute';
 
 interface User {
     id: number;
@@ -45,6 +46,7 @@ interface Props {
 }
 
 export default function Edit({ user }: Props) {
+    const route = useRoute();
     const { data, setData, put, processing, errors, reset } = useForm({
         name: user.name || '',
         email: user.email || '',

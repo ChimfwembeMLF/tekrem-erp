@@ -124,6 +124,9 @@ class SupportController extends Controller
         }
 
         // Create ticket
+        // Get the user's client (assuming one-to-one for now)
+        $client = $user->clients()->first();
+
         $ticket = Ticket::create([
             'title' => $validated['title'],
             'description' => $validated['description'],
@@ -134,6 +137,7 @@ class SupportController extends Controller
             'requester_id' => $user->id,
             'requester_email' => $user->email,
             'created_by' => $user->id,
+            'client_id' => $client ? $client->id : null,
             'attachments' => $attachments,
         ]);
 
@@ -182,6 +186,7 @@ class SupportController extends Controller
 
         return Inertia::render('Customer/Support/ShowTicket', [
             'ticket' => $ticket,
+            'attachments' => $ticket->attachments ?? [],
         ]);
     }
 

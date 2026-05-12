@@ -209,10 +209,32 @@ class TicketController extends Controller
             $query->whereIn('name', ['super_user', 'admin', 'staff']);
         })->get(['id', 'name']);
 
+        $comments = $ticket->comments()->with('user')->latest()->paginate(10);
+        // Ensure attachments is always present and properly formatted
+        $comments->getCollection()->transform(function ($comment) {
+            // If attachments is null, set to empty array
+            $comment->attachments = $comment->attachments ?? [];
+            // If attachments is a string (JSON), decode it
+            if (is_string($comment->attachments)) {
+                $decoded = json_decode($comment->attachments, true);
+                $comment->attachments = is_array($decoded) ? $decoded : [];
+            }
+            // Ensure each attachment has required keys
+            $comment->attachments = array_map(function ($att) {
+                return [
+                    'name' => $att['name'] ?? '',
+                    'path' => $att['path'] ?? '',
+                    'size' => $att['size'] ?? 0,
+                    'type' => $att['type'] ?? '',
+                ];
+            }, $comment->attachments);
+            return $comment;
+        });
+
         return Inertia::render('Support/Tickets/Show', [
             'ticket' => $ticket,
             'users' => $users,
-            'comments' => $ticket->comments()->with('user')->latest()->paginate(10),
+            'comments' => $comments,
         ]);
     }
 
@@ -312,7 +334,7 @@ class TicketController extends Controller
     /**
      * Assign ticket to a user.
      */
-    public function assign(Request $request, Ticket $ticket): JsonResponse
+    public function assign(Request $request, Ticket $ticket): RedirectResponse
     {
         $validated = $request->validate([
             'assigned_to' => ['required', 'exists:users,id'],
@@ -327,13 +349,14 @@ class TicketController extends Controller
 
         NotificationService::notifyUsers([$assignedUser], 'ticket_assignment', $message, $link, $ticket);
 
-        return response()->json(['message' => 'Ticket assigned successfully.']);
+         return redirect()->route('support.tickets.show', $ticket)
+            ->with('success', 'Ticket assigned successfully.');
     }
 
     /**
      * Escalate ticket.
      */
-    public function escalate(Request $request, Ticket $ticket): JsonResponse
+    public function escalate(Request $request, Ticket $ticket): RedirectResponse
     {
         $validated = $request->validate([
             'escalated_to' => ['required', 'exists:users,id'],
@@ -365,7 +388,8 @@ class TicketController extends Controller
 
         NotificationService::notifyUsers([$escalatedUser], 'ticket_escalation', $message, $link, $ticket);
 
-        return response()->json(['message' => 'Ticket escalated successfully.']);
+         return redirect()->route('support.tickets.show', $ticket)
+            ->with('success', 'Ticket escalated successfully.');
     }
 
     /**
@@ -433,18 +457,36 @@ class TicketController extends Controller
             'is_solution' => ['boolean'],
             'time_spent_minutes' => ['nullable', 'integer', 'min:0'],
             'existing_attachments' => ['nullable', 'array'],
+            'attachments' => ['nullable', 'array'],
+            'attachments.*' => ['file', 'max:10240'], // 10MB max
         ]);
 
         $validated['user_id'] = Auth::id();
 
-        if (!empty($validated['existing_attachments'])) {
-            $validated['attachments'] = $validated['existing_attachments'];
+        // Handle file uploads (attachments[])
+        $uploadedAttachments = [];
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $path = $file->store('support/comments', 'public');
+                $uploadedAttachments[] = [
+                    'name' => $file->getClientOriginalName(),
+                    'path' => $path,
+                    'size' => $file->getSize(),
+                    'type' => $file->getMimeType(),
+                ];
+            }
         }
+
+        // Merge with any existing_attachments (from media picker, etc)
+        $validated['attachments'] = array_merge(
+            $validated['existing_attachments'] ?? [],
+            $uploadedAttachments
+        );
 
         $comment = $ticket->comments()->create($validated);
 
         // Update first response time if this is the first response
-        if (!$ticket->first_response_at && !$validated['is_internal']) {
+        if (!$ticket->first_response_at && empty($validated['is_internal'])) {
             $ticket->update([
                 'first_response_at' => now(),
                 'response_time_minutes' => $ticket->created_at->diffInMinutes(now()),
@@ -509,7 +551,7 @@ class TicketController extends Controller
     /**
      * Get AI suggestions for ticket resolution.
      */
-    public function aiSuggestions(Request $request): JsonResponse
+    public function aiSuggestions(Request $request)
     {
         $validated = $request->validate([
             'ticket_id' => ['required', 'exists:tickets,id'],
@@ -546,9 +588,8 @@ class TicketController extends Controller
                 'suggestions' => $suggestions,
             ]);
         } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Unable to generate AI suggestions at this time.',
-            ], 500);
+             return redirect()->back()
+            ->with('error', 'Unable to generate AI suggestions at this time.');
         }
     }
 }
