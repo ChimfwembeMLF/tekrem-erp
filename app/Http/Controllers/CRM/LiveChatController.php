@@ -10,7 +10,7 @@ use App\Models\Client;
 use App\Models\Lead;
 use App\Models\Project;
 use App\Models\User;
-use App\Events\ChatMessageSent;
+use App\Events\MessageSent;
 use App\Events\UserTyping;
 use App\Notifications\NewChatMessage;
 use Illuminate\Http\Request;
@@ -181,6 +181,11 @@ class LiveChatController extends Controller
         $user = Auth::user();
 
         // Create conversation
+        // Always add the customer as a participant
+        $participants = $request->participants ?? [];
+        if (!in_array($user->id, $participants)) {
+            $participants[] = $user->id;
+        }
         $conversation = Conversation::create([
             'title' => $request->title,
             'conversable_type' => $request->conversable_type,
@@ -189,10 +194,7 @@ class LiveChatController extends Controller
             'assigned_to' => $request->assigned_to,
             'priority' => $request->priority ?? 'normal',
             'is_internal' => $request->is_internal ?? false,
-            'participants' => array_unique(array_merge(
-                [$user->id],
-                $request->participants ?? []
-            )),
+            'participants' => array_unique($participants),
             'last_message_at' => now(),
         ]);
 
@@ -211,7 +213,7 @@ class LiveChatController extends Controller
         $message->load(['user', 'conversation']);
 
         // Broadcast the message
-        broadcast(new ChatMessageSent($message))->toOthers();
+        broadcast(new MessageSent($message))->toOthers();
 
         // Send notifications to participants
         $participants = User::whereIn('id', $conversation->participants ?? [])->get();
@@ -296,7 +298,7 @@ class LiveChatController extends Controller
         $message->load(['user', 'replyTo.user']);
 
         // Broadcast the message
-        broadcast(new ChatMessageSent($message))->toOthers();
+        broadcast(new MessageSent($message))->toOthers();
 
         // Send notifications to participants
         $participants = User::whereIn('id', $conversation->participants ?? [])->get();

@@ -25,7 +25,9 @@ interface Payment {
     invoice?: {
         id: number;
         invoice_number: string;
+        currency?: string;
     };
+    account_currency?: string;
     created_at: string;
 }
 
@@ -107,10 +109,10 @@ export default function Index({ payments, filters }: Props) {
         }
     };
 
-    const formatCurrency = (amount: number) => {
+    const formatCurrency = (amount: number, currency: string = 'ZMW') => {
         return new Intl.NumberFormat('en-ZM', {
             style: 'currency',
-            currency: 'ZMW',
+            currency,
         }).format(amount);
     };
 
@@ -207,7 +209,9 @@ export default function Index({ payments, filters }: Props) {
                                                 <CreditCard className="h-4 w-4" />
                                             </div>
                                             <div>
-                                                <div className="font-medium">{formatCurrency(payment.amount)}</div>
+                                                <div className="font-medium">
+                                                    {formatCurrency(payment.amount, payment.invoice?.currency || payment.account_currency || 'ZMW')}
+                                                </div>
                                                 <div className="text-sm text-muted-foreground">
                                                     {payment.invoice?.invoice_number || 'Direct Payment'}
                                                 </div>

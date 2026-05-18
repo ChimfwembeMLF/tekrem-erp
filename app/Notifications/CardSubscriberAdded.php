@@ -24,7 +24,16 @@ class CardSubscriberAdded extends Notification implements ShouldQueue
 
     public function via($notifiable)
     {
-        return ['mail', 'database'];
+        return ['mail', \App\Channels\CustomDatabaseChannel::class];
+    }
+    public function toCustomDatabase($notifiable)
+    {
+        return [
+            'card_id' => $this->card->id,
+            'subscriber_id' => $this->subscriber->id,
+            'subscriber_name' => $this->subscriber->name,
+            'message' => $this->subscriber->name . ' has subscribed to your card: ' . $this->card->title,
+        ];
     }
 
     public function toMail($notifiable)
@@ -37,12 +46,23 @@ class CardSubscriberAdded extends Notification implements ShouldQueue
             ->line('Thank you for using the project management module!');
     }
 
+    public function toDatabase($notifiable)
+    {
+        return [
+            'card_id' => $this->card->id,
+            'subscriber_id' => $this->subscriber->id,
+            'subscriber_name' => $this->subscriber->name,
+            'message' => $this->subscriber->name . ' has subscribed to your card: ' . $this->card->title,
+        ];
+    }
+
     public function toArray($notifiable)
     {
         return [
             'card_id' => $this->card->id,
             'subscriber_id' => $this->subscriber->id,
             'subscriber_name' => $this->subscriber->name,
+            'message' => $this->subscriber->name . ' has subscribed to your card: ' . $this->card->title,
         ];
     }
 }

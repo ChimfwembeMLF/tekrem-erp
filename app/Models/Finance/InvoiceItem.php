@@ -38,6 +38,12 @@ class InvoiceItem extends Model
         'discount_rate' => 'decimal:2',
     ];
 
+    // Ensure numeric fields are always returned as float in arrays/JSON
+    public function getUnitPriceAttribute($value) { return (float) $value; }
+    public function getTotalPriceAttribute($value) { return (float) $value; }
+    public function getTaxRateAttribute($value) { return (float) $value; }
+    public function getDiscountRateAttribute($value) { return (float) $value; }
+
     /**
      * Get the invoice that owns the item.
      */

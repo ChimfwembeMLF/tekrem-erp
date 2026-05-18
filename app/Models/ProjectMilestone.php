@@ -79,6 +79,14 @@ class ProjectMilestone extends Model
     }
 
     /**
+     * Get the tasks for this milestone.
+     */
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(ProjectTask::class, 'milestone_id');
+    }
+
+    /**
      * Get the milestones that this milestone depends on.
      */
     public function dependentMilestones()

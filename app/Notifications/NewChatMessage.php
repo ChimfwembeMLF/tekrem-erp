@@ -30,7 +30,19 @@ class NewChatMessage extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'broadcast'];
+        return [\App\Channels\CustomDatabaseChannel::class, 'broadcast'];
+    }
+    /**
+     * Get the custom database representation of the notification.
+     */
+    public function toCustomDatabase($notifiable)
+    {
+        return [
+            'message' => $this->message->message,
+            'conversation_id' => $this->message->conversation_id,
+            'sender_id' => $this->message->user_id,
+            // Add other fields as needed
+        ];
     }
 
     /**
@@ -51,23 +63,53 @@ class NewChatMessage extends Notification implements ShouldQueue
     }
 
     /**
-     * Get the array representation of the notification.
+     * Get the array representation of the notification (for broadcast).
      *
      * @return array<string, mixed>
      */
     public function toArray(object $notifiable): array
     {
         return [
-            'type' => 'new_chat_message',
-            'message_id' => $this->message->id,
+            'message' => $this->message->message,
             'conversation_id' => $this->message->conversation_id,
             'sender_id' => $this->message->user_id,
-            'sender_name' => $this->message->user?->name ?? 'Unknown',
-            'message_preview' => substr($this->message->message, 0, 100),
-            'conversation_title' => $this->message->conversation?->display_title ?? 'Chat',
+            'sender_name' => $this->message->user?->name,
             'created_at' => $this->message->created_at,
         ];
     }
+
+    /**
+     * Get the array representation of the notification for the database channel.
+     *
+     * @return array<string, mixed>
+     */
+    public function toDatabase(object $notifiable): array
+    {
+        return [
+            'message' => $this->message->message,
+            'conversation_id' => $this->message->conversation_id,
+            'sender_id' => $this->message->user_id,
+            'sender_name' => $this->message->user?->name,
+            'created_at' => $this->message->created_at,
+        ];
+    }
+
+    /**
+     * Get the database representation of the notification.
+     */
+    // public function toDatabase($notifiable)
+    // {
+    //     return [
+    //         'type' => 'new_chat_message',
+    //         'message' => $this->message->message,
+    //         'message_id' => $this->message->id,
+    //         'conversation_id' => $this->message->conversation_id,
+    //         'sender_id' => $this->message->user_id,
+    //         'sender_name' => $this->message->user?->name ?? 'Unknown',
+    //         'conversation_title' => $this->message->conversation?->display_title ?? 'Chat',
+    //         'created_at' => $this->message->created_at,
+    //     ];
+    // }
 
     /**
      * Get the broadcastable representation of the notification.

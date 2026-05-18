@@ -78,13 +78,13 @@ class InvoiceController extends Controller
     public function create()
     {
         // Get clients and leads for billable selection
-        $clients = Client::where('user_id', auth()->id())
-            ->where('status', 'active')
+        // $clients = Client::where('user_id', auth()->id())
+        $clients = Client::where('status', 'active')
             ->orderBy('name')
             ->get(['id', 'name', 'email']);
 
-        $leads = Lead::where('user_id', auth()->id())
-            ->where('status', 'qualified')
+        // $leads = Lead::where('user_id', auth()->id())
+        $leads = Lead::where('status', 'qualified')
             ->orderBy('name')
             ->get(['id', 'name', 'email']);
 
@@ -139,14 +139,17 @@ class InvoiceController extends Controller
         // Verify billable entity ownership
         $billableClass = $request->billable_type === 'client' ? Client::class : Lead::class;
         $billable = $billableClass::where('id', $request->billable_id)
-            ->where('user_id', auth()->id())
+            // ->where('user_id', auth()->id())
             ->first();
 
         if (!$billable) {
             return back()->with('error', 'Billable entity not found or access denied.');
         }
 
-        DB::transaction(function () use ($request, $billable) {
+
+
+        DB::beginTransaction();
+        try {
             // Calculate totals
             $subtotal = 0;
             foreach ($request->items as $item) {
@@ -186,7 +189,12 @@ class InvoiceController extends Controller
                     'total_price' => $item['quantity'] * $item['unit_price'],
                 ]);
             }
-        });
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to create invoice: ' . $e->getMessage());
+        }
 
         return redirect()->route('finance.invoices.index')
             ->with('success', 'Invoice created successfully.');
@@ -202,10 +210,11 @@ class InvoiceController extends Controller
             abort(403);
         }
 
-        $invoice->load(['billable', 'items', 'payments']);
+        $invoice->load(['billable', 'items', 'payments.account']);
 
         return Inertia::render('Finance/Invoices/Show', [
             'invoice' => $invoice,
+            'printInvoice' => $this->buildInvoicePrintPayload($invoice),
         ]);
     }
 
@@ -419,16 +428,88 @@ class InvoiceController extends Controller
             abort(403);
         }
 
-        $invoice->load(['billable', 'items']);
+        $invoice->load(['billable', 'items', 'payments.account']);
 
-        // TODO: Implement PDF generation logic here
-        // This would typically use a library like DomPDF or wkhtmltopdf
-        // For now, return a simple response
-
-        return response()->json([
-            'message' => 'PDF generation not yet implemented',
-            'invoice' => $invoice
+        return Inertia::render('Finance/Invoices/Print', [
+            'invoice' => $this->buildInvoicePrintPayload($invoice),
         ]);
+    }
+
+    private function buildInvoicePrintPayload(Invoice $invoice): array
+    {
+        $subtotal = (float) ($invoice->items->sum('total_price') ?: $invoice->subtotal);
+        $taxAmount = (float) ($invoice->tax_amount ?? 0);
+        $discountAmount = (float) ($invoice->discount_amount ?? 0);
+        $paidAmount = (float) ($invoice->payments->sum('amount') ?: $invoice->paid_amount);
+        $grandTotal = (float) ($subtotal + $taxAmount - $discountAmount);
+        $balanceDue = max($grandTotal - $paidAmount, 0);
+
+        $companyLogo = config('company.logo');
+        if (!$companyLogo || !is_string($companyLogo)) {
+            $companyLogo = asset('logo-blue.png');
+        }
+
+        return [
+            'id' => $invoice->id,
+            'invoiceNumber' => $invoice->invoice_number,
+            'orderNumber' => $invoice->order_number,
+            'issueDate' => optional($invoice->issue_date)->format('Y-m-d'),
+            'dueDate' => optional($invoice->due_date)->format('Y-m-d'),
+            'currency' => $invoice->currency,
+            'status' => $invoice->status,
+            'notes' => $invoice->notes,
+            'terms' => $invoice->terms,
+            'customer' => [
+                'name' => $invoice->billable->name ?? '',
+                'email' => $invoice->billable->email ?? '',
+                'phone' => $invoice->billable->phone ?? '',
+                'address' => $invoice->billable->address ?? '',
+                'taxNumber' => $invoice->billable->tax_number ?? '',
+            ],
+            'company' => [
+                'name' => config('company.name', config('app.name')),
+                'address' => config('company.address', ''),
+                'city' => config('company.city', ''),
+                'country' => config('company.country', ''),
+                'taxNumber' => config('company.tax_number', ''),
+                'phone' => config('company.phone', ''),
+                'email' => config('company.email', ''),
+                'website' => config('company.website', ''),
+                'logoUrl' => $companyLogo,
+                'bankName' => config('company.bank.name', ''),
+                'bankBranch' => config('company.bank.branch', ''),
+                'accountName' => config('company.bank.account_name', ''),
+                'accountNumber' => config('company.bank.account_number', ''),
+            ],
+            'items' => $invoice->items->map(fn ($item) => [
+                'id' => $item->id,
+                'description' => $item->description,
+                'quantity' => (float) $item->quantity,
+                'unitPrice' => (float) $item->unit_price,
+                'totalPrice' => (float) $item->total_price,
+            ])->values()->all(),
+            'payments' => $invoice->payments->map(fn ($payment) => [
+                'id' => $payment->id,
+                'paymentNumber' => $payment->payment_number,
+                'paymentDate' => optional($payment->payment_date)->format('Y-m-d'),
+                'amount' => (float) $payment->amount,
+                'method' => $payment->payment_method,
+                'status' => $payment->status,
+                'account' => $payment->account ? [
+                    'name' => $payment->account->name ?? '',
+                    'type' => $payment->account->type ?? '',
+                    'number' => $payment->account->account_number ?? '',
+                ] : null,
+            ])->values()->all(),
+            'totals' => [
+                'subtotal' => $subtotal,
+                'taxAmount' => $taxAmount,
+                'discountAmount' => $discountAmount,
+                'paidAmount' => $paidAmount,
+                'balanceDue' => $balanceDue,
+                'grandTotal' => $grandTotal,
+            ],
+        ];
     }
 
     /**

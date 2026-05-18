@@ -80,8 +80,9 @@ export default function ConversationView({
   project,
   teamMembers = [],
   isProjectChat = false,
-  isCustomerView = false
-}: ConversationProps) {
+  isCustomerView = false,
+  messages: messagesProp
+}: ConversationProps & { messages?: any[] }) {
   const route = useRoute();
   const page = useTypedPage();
   const [message, setMessage] = useState('');
@@ -142,7 +143,7 @@ export default function ConversationView({
 
   useEffect(() => {
     scrollToBottom();
-  }, [conversation.messages]);
+  }, [isCustomerView ? messagesProp : conversation.messages]);
 
   // Close emoji picker when clicking outside
   useEffect(() => {
@@ -584,6 +585,29 @@ export default function ConversationView({
     </div>
   );
 
+
+  // Use messages from props if provided (customer view), else from conversation
+  const [liveMessages, setLiveMessages] = useState<any[]>(isCustomerView && messagesProp ? messagesProp : conversation.messages || []);
+
+  // Echo: Listen for MessageSent events
+  useEffect(() => {
+    const channel = window.Echo && window.Echo.private(`conversation.${conversation.id}`)
+      .listen('MessageSent', (e: any) => {
+        setLiveMessages(prev => {
+          // Avoid duplicates
+          if (!prev.some(m => m.id === e.message.id)) {
+            return [...prev, e.message];
+          }
+          return prev;
+        });
+      });
+    return () => {
+      if (window.Echo) window.Echo.leave(`private-conversation.${conversation.id}`);
+    };
+  }, [conversation.id]);
+
+  const messages = liveMessages;
+
   const chatContent = (
     <div>
       <Head title={`Chat - ${conversation.display_title}`} />
@@ -681,7 +705,7 @@ export default function ConversationView({
 
             {/* Messages Area */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {conversation.messages?.map((msg) => (
+              {messages.map((msg) => (
                 <div
                   key={msg.id}
                   id={`message-${msg.id}`}
@@ -1247,10 +1271,10 @@ export default function ConversationView({
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-2">
-                          {conversation.messages?.filter(msg => msg.attachments && msg.attachments.length > 0).length === 0 ? (
+                          {messages.filter(msg => msg.attachments && msg.attachments.length > 0).length === 0 ? (
                             <p className="text-sm text-gray-500">No files shared yet</p>
                           ) : (
-                            conversation.messages
+                            messages
                               ?.filter(msg => msg.attachments && msg.attachments.length > 0)
                               .map(msg =>
                                 msg.attachments?.map((attachment, index) => (
@@ -1303,10 +1327,10 @@ export default function ConversationView({
 
                         {/* Existing Notes */}
                         <div className="space-y-2">
-                          {conversation.messages?.filter(msg => msg.is_internal_note).length === 0 ? (
+                          {messages.filter(msg => msg.is_internal_note).length === 0 ? (
                             <p className="text-sm text-gray-500">No internal notes yet</p>
                           ) : (
-                            conversation.messages
+                            messages
                               ?.filter(msg => msg.is_internal_note)
                               .map(note => (
                                 <div key={note.id} className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">

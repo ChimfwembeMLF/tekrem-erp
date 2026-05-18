@@ -5,13 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Com
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Separator } from '@/Components/ui/separator';
-import { 
+import useRoute from '@/Hooks/useRoute';
+import {
     ArrowLeft,
     Download,
+    FileText,
     Check,
     X,
     Calendar,
-    FileText,
     DollarSign,
     Building,
     User,
@@ -23,9 +24,20 @@ import {
 interface QuotationItem {
     id: number;
     description: string;
-    quantity: number;
-    unit_price: number;
-    total: number;
+    quantity: number | string;
+    unit_price: number | string;
+    total_price: number | string;
+}
+
+interface BillableParty {
+    name?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    country?: string;
 }
 
 interface Quotation {
@@ -33,41 +45,39 @@ interface Quotation {
     quotation_number: string;
     status: string;
     issue_date: string;
-    valid_until: string;
-    subtotal: number;
-    tax_amount: number;
-    total_amount: number;
+    expiry_date?: string;
+    valid_until?: string;
+    subtotal: number | string;
+    tax_amount: number | string;
+    discount_amount?: number | string;
+    total_amount: number | string;
+    currency?: string;
     notes?: string;
     terms?: string;
-    client: {
-        name: string;
-        email: string;
-        phone?: string;
-        address?: string;
-        city?: string;
-        state?: string;
-        zip?: string;
-        country?: string;
-    };
-    company: {
-        name: string;
-        email: string;
-        phone?: string;
-        address?: string;
-        city?: string;
-        state?: string;
-        zip?: string;
-        country?: string;
-        logo?: string;
-    };
+    billable?: BillableParty;
     items: QuotationItem[];
+}
+
+interface Company {
+    name: string;
+    email: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    postal_code?: string;
+    country?: string;
+    website?: string;
+    tax_number?: string;
+    logo?: string;
 }
 
 interface Props {
     quotation: Quotation;
+    company: Company;
 }
 
-export default function Show({ quotation }: Props) {
+export default function Show({ quotation, company }: Props) {
     const getStatusVariant = (status: string) => {
         switch (status) {
             case 'accepted':
@@ -93,15 +103,34 @@ export default function Show({ quotation }: Props) {
         });
     };
 
-    const formatCurrency = (amount: number) => {
+    const route = useRoute();
+
+
+
+    const safeNumber = (val: any): number => {
+        if (val === undefined || val === null || val === '') return 0;
+        if (typeof val === 'number') return val;
+        if (typeof val === 'string') {
+            const parsed = parseFloat(val);
+            if (!isNaN(parsed)) return parsed;
+            console.warn('Non-numeric string passed to formatCurrency:', val);
+            return 0;
+        }
+        console.warn('Non-numeric value passed to formatCurrency:', val);
+        return 0;
+    };
+
+    const formatCurrency = (amount: number | string) => {
         return new Intl.NumberFormat('en-ZM', {
             style: 'currency',
             currency: 'ZMW',
-        }).format(amount);
+        }).format(safeNumber(amount));
     };
 
+    // Support both valid_until and expiry_date for compatibility
     const isExpired = () => {
-        return new Date(quotation.valid_until) < new Date();
+        const expiry = quotation.valid_until || quotation.expiry_date;
+        return expiry ? new Date(expiry) < new Date() : false;
     };
 
     const canAccept = () => {
@@ -110,6 +139,10 @@ export default function Show({ quotation }: Props) {
 
     const handleDownloadPDF = () => {
         window.open(route('customer.finance.quotations.download', quotation.id), '_blank');
+    };
+
+    const handlePrintQuotation = () => {
+        window.open(route('customer.finance.quotations.print', quotation.id), '_blank');
     };
 
     const handleAccept = () => {
@@ -158,10 +191,14 @@ export default function Show({ quotation }: Props) {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Button variant="outline" onClick={handleDownloadPDF}>
+                        <Button variant="outline" onClick={handlePrintQuotation}>
+                            <FileText className="h-4 w-4 mr-2" />
+                            Print View
+                        </Button>
+                        {/* <Button variant="outline" onClick={handleDownloadPDF}>
                             <Download className="h-4 w-4 mr-2" />
                             Download PDF
-                        </Button>
+                        </Button> */}
                         {canAccept() && (
                             <>
                                 <Button variant="outline" onClick={handleReject}>
@@ -204,7 +241,7 @@ export default function Show({ quotation }: Props) {
                         </CardHeader>
                         <CardContent>
                             <div className={`text-lg font-bold ${isExpired() ? 'text-destructive' : ''}`}>
-                                {formatDate(quotation.valid_until)}
+                                {formatDate(quotation.valid_until || quotation.expiry_date || '')}
                             </div>
                         </CardContent>
                     </Card>
@@ -243,23 +280,23 @@ export default function Show({ quotation }: Props) {
                         <Card>
                             <CardHeader>
                                 <div className="flex items-center justify-between">
-                                    <div>
+                                    {company.logo && (
+                                        <img 
+                                            src={company.logo} 
+                                            alt={company.name}
+                                            className="h-16 w-auto"
+                                        />
+                                    )}
+                                    <div className="text-right">
                                         <CardTitle>Quotation Details</CardTitle>
                                         <CardDescription>
                                             Complete breakdown of proposed services and pricing
                                         </CardDescription>
                                     </div>
-                                    {quotation.company.logo && (
-                                        <img 
-                                            src={quotation.company.logo} 
-                                            alt={quotation.company.name}
-                                            className="h-12 w-auto"
-                                        />
-                                    )}
                                 </div>
                             </CardHeader>
                             <CardContent>
-                                {/* Company and Client Info */}
+                                {/* Company and Billable Info */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                     <div>
                                         <h4 className="font-semibold mb-2 flex items-center gap-2">
@@ -267,25 +304,24 @@ export default function Show({ quotation }: Props) {
                                             From
                                         </h4>
                                         <div className="text-sm space-y-1">
-                                            <p className="font-medium">{quotation.company.name}</p>
-                                            {quotation.company.address && <p>{quotation.company.address}</p>}
-                                            {(quotation.company.city || quotation.company.state || quotation.company.zip) && (
+                                            <p className="font-medium">{company.name}</p>
+                                            {company.address && <p>{company.address}</p>}
+                                            {(company.city || company.state || company.postal_code) && (
                                                 <p>
-                                                    {[quotation.company.city, quotation.company.state, quotation.company.zip]
-                                                        .filter(Boolean).join(', ')}
+                                                    {[company.city, company.state, company.postal_code].filter(Boolean).join(', ')}
                                                 </p>
                                             )}
-                                            {quotation.company.country && <p>{quotation.company.country}</p>}
-                                            {quotation.company.email && (
+                                            {company.country && <p>{company.country}</p>}
+                                            {company.email && (
                                                 <p className="flex items-center gap-1">
                                                     <Mail className="h-3 w-3" />
-                                                    {quotation.company.email}
+                                                    {company.email}
                                                 </p>
                                             )}
-                                            {quotation.company.phone && (
+                                            {company.phone && (
                                                 <p className="flex items-center gap-1">
                                                     <Phone className="h-3 w-3" />
-                                                    {quotation.company.phone}
+                                                    {company.phone}
                                                 </p>
                                             )}
                                         </div>
@@ -296,23 +332,22 @@ export default function Show({ quotation }: Props) {
                                             Quote For
                                         </h4>
                                         <div className="text-sm space-y-1">
-                                            <p className="font-medium">{quotation.client.name}</p>
-                                            {quotation.client.address && <p>{quotation.client.address}</p>}
-                                            {(quotation.client.city || quotation.client.state || quotation.client.zip) && (
+                                            <p className="font-medium">{quotation.billable?.name || 'N/A'}</p>
+                                            {quotation.billable?.address && <p>{quotation.billable.address}</p>}
+                                            {(quotation.billable?.city || quotation.billable?.state || quotation.billable?.zip) && (
                                                 <p>
-                                                    {[quotation.client.city, quotation.client.state, quotation.client.zip]
-                                                        .filter(Boolean).join(', ')}
+                                                    {[quotation.billable?.city, quotation.billable?.state, quotation.billable?.zip].filter(Boolean).join(', ')}
                                                 </p>
                                             )}
-                                            {quotation.client.country && <p>{quotation.client.country}</p>}
+                                            {quotation.billable?.country && <p>{quotation.billable.country}</p>}
                                             <p className="flex items-center gap-1">
                                                 <Mail className="h-3 w-3" />
-                                                {quotation.client.email}
+                                                {quotation.billable?.email || 'N/A'}
                                             </p>
-                                            {quotation.client.phone && (
+                                            {quotation.billable?.phone && (
                                                 <p className="flex items-center gap-1">
                                                     <Phone className="h-3 w-3" />
-                                                    {quotation.client.phone}
+                                                    {quotation.billable.phone}
                                                 </p>
                                             )}
                                         </div>
@@ -340,7 +375,7 @@ export default function Show({ quotation }: Props) {
                                                         <td className="p-3">{item.description}</td>
                                                         <td className="p-3 text-right">{item.quantity}</td>
                                                         <td className="p-3 text-right">{formatCurrency(item.unit_price)}</td>
-                                                        <td className="p-3 text-right font-medium">{formatCurrency(item.total)}</td>
+                                                        <td className="p-3 text-right font-medium">{formatCurrency(item.total_price)}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -424,10 +459,10 @@ export default function Show({ quotation }: Props) {
                                 <CardTitle>Quick Actions</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-2">
-                                <Button variant="outline" className="w-full justify-start" onClick={handleDownloadPDF}>
+                                {/* <Button variant="outline" className="w-full justify-start" onClick={handleDownloadPDF}>
                                     <Download className="mr-2 h-4 w-4" />
                                     Download PDF
-                                </Button>
+                                </Button> */}
                                 <Link href={route('customer.communications.create')} className="block">
                                     <Button variant="outline" className="w-full justify-start">
                                         <Mail className="mr-2 h-4 w-4" />

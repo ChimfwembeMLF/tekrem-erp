@@ -319,7 +319,7 @@ export default function Show({ invoice }: Props) {
             <Button variant="outline" asChild>
               <Link href={route('finance.invoices.pdf', invoice.id)} target="_blank">
                 <Download className="h-4 w-4 mr-2" />
-                {t('finance.download_pdf', 'Download PDF')}
+                {t('finance.print_view', 'Print View')}
               </Link>
             </Button>
             {!invoice.is_zra_locked && (
@@ -631,7 +631,7 @@ export default function Show({ invoice }: Props) {
                   <Button variant="outline" asChild className="w-full">
                     <Link href={route('finance.invoices.pdf', invoice.id)} target="_blank">
                       <Download className="h-4 w-4 mr-2" />
-                      {t('finance.download_pdf', 'Download PDF')}
+                      {t('finance.print_view', 'Print View')}
                     </Link>
                   </Button>
                 </div>

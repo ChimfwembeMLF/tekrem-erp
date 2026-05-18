@@ -3,82 +3,82 @@
 use App\Models\Client;
 use App\Models\Lead;
 use App\Models\User;
+use App\Models\Conversation;
 use Illuminate\Support\Facades\Broadcast;
-
-/*
-|--------------------------------------------------------------------------
-| Broadcast Channels
-|--------------------------------------------------------------------------
-|
-| Here you may register all of the event broadcasting channels that your
-| application supports. The given channel authorization callbacks are
-| used to check if an authenticated user can listen to the channel.
-|
-*/
 
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
 
-// Client chat channel
 Broadcast::channel('client.{clientId}', function (User $user, $clientId) {
-    // Check if the user has permission to access this client
     $client = Client::find($clientId);
-
-    if (!$client) {
-        return false;
-    }
-
-    // Allow access if the user is an admin, staff, or the assigned user
+    if (!$client) return false;
     return $user->hasRole(['super_user', 'admin', 'staff']) || $user->id === $client->user_id;
 });
 
-// Lead chat channel
 Broadcast::channel('lead.{leadId}', function (User $user, $leadId) {
-    // Check if the user has permission to access this lead
     $lead = Lead::find($leadId);
-
-    if (!$lead) {
-        return false;
-    }
-
-    // Allow access if the user is an admin, staff, or the assigned user
+    if (!$lead) return false;
     return $user->hasRole(['super_user', 'admin', 'staff']) || $user->id === $lead->user_id;
 });
 
-// User private channel for receiving messages
 Broadcast::channel('user.{userId}', function (User $user, $userId) {
     return (int) $user->id === (int) $userId;
 });
 
-// Conversation channel for LiveChat
+// ─── Conversation channel ─────────────────────────────────────────────────────
+// Covers: staff/admin, CRM participants, AND customer portal users
 Broadcast::channel('conversation.{conversationId}', function (User $user, $conversationId) {
-    $conversation = \App\Models\Conversation::find($conversationId);
+    $conversation = Conversation::with('conversable')->find($conversationId);
+    if (!$conversation) return false;
 
-    if (!$conversation) {
-        return false;
+    // ── Staff / CRM side ──────────────────────────────────────────────────────
+    if ($user->hasRole(['super_user', 'admin', 'staff'])) {
+        return ['id' => $user->id, 'name' => $user->name];
     }
 
-    // Allow access if the user is a participant, creator, assignee, or has admin/staff role
-    return $user->hasRole(['super_user', 'admin', 'staff']) ||
-           $conversation->created_by === $user->id ||
-           $conversation->assigned_to === $user->id ||
-           $conversation->hasParticipant($user->id);
+    if ($conversation->created_by === $user->id || $conversation->assigned_to === $user->id) {
+        return ['id' => $user->id, 'name' => $user->name];
+    }
+
+    if ($conversation->hasParticipant($user->id)) {
+        return ['id' => $user->id, 'name' => $user->name];
+    }
+
+    // ── Customer portal side ──────────────────────────────────────────────────
+    // Conversation belongs directly to this user
+    if ($conversation->conversable_type === get_class($user)
+        && $conversation->conversable_id === $user->id) {
+        return ['id' => $user->id, 'name' => $user->name];
+    }
+
+    // Conversation belongs to the user's client
+    $client = $user->client ?? $user->clients()->first();
+
+    if ($client
+        && $conversation->conversable_type === get_class($client)
+        && $conversation->conversable_id === $client->id) {
+        return ['id' => $user->id, 'name' => $user->name];
+    }
+
+    // Conversation belongs to a project under the user's client
+    if ($client && $conversation->conversable_type === 'App\\Models\\Project') {
+        $projectIds = $client->projects()->pluck('id')->toArray();
+        if (in_array($conversation->conversable_id, $projectIds)) {
+            return ['id' => $user->id, 'name' => $user->name];
+        }
+    }
+
+    return false;
 });
 
-// Guest chat channel - allows staff to receive guest messages
 Broadcast::channel('guest-chat', function (User $user) {
-    // Only staff and admin can listen to guest chat notifications
     return $user->hasRole(['super_user', 'admin', 'staff']);
 });
 
-// Guest session channel - for specific guest conversations
 Broadcast::channel('guest-session.{sessionId}', function ($user, $sessionId) {
-    // Allow access for staff/admin or if it's a guest session (no user)
     if ($user instanceof User) {
         return $user->hasRole(['super_user', 'admin', 'staff']);
     }
-
-    // For guest users, we'll handle this differently in the frontend
     return true;
 });

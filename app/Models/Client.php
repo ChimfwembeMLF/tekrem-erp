@@ -84,10 +84,10 @@ class Client extends Model
     }
 
     /**
-     * Get the chats for the client.
+     * Get the conversations for the client.
      */
-    public function chats(): MorphMany
+    public function conversations(): MorphMany
     {
-        return $this->morphMany(Chat::class, 'chattable');
+        return $this->morphMany(Conversation::class, 'conversable');
     }
 }

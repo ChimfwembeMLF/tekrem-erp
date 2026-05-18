@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Head, useForm } from '@inertiajs/react';
 import CustomerLayout from '@/Layouts/CustomerLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
@@ -47,6 +47,10 @@ interface Props {
 
 export default function Edit({ user }: Props) {
     const route = useRoute();
+    const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+    const [photoUploadError, setPhotoUploadError] = useState<string | null>(null);
+    const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
     const { data, setData, put, processing, errors, reset } = useForm({
         name: user.name || '',
         email: user.email || '',
@@ -71,8 +75,36 @@ export default function Edit({ user }: Props) {
         password_confirmation: '',
     });
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (data.profile_photo) {
+            setUploadingPhoto(true);
+            setPhotoUploadError(null);
+
+            try {
+                const axios = (await import('axios')).default;
+                const formData = new FormData();
+                formData.append('photo', data.profile_photo);
+
+                await axios.post(route('customer.profile.photo.update'), formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+            } catch (error: any) {
+                const message = error?.response?.data?.errors?.photo?.[0]
+                    || error?.response?.data?.message
+                    || 'Failed to upload profile photo.';
+                setPhotoUploadError(message);
+                setUploadingPhoto(false);
+                return;
+            }
+
+            setUploadingPhoto(false);
+        }
+
         put(route('customer.profile.update'), {
             onSuccess: () => {
                 // Handle success
@@ -101,9 +133,23 @@ export default function Edit({ user }: Props) {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            if (photoPreview) {
+                URL.revokeObjectURL(photoPreview);
+            }
+
             setData('profile_photo', file);
+            setPhotoUploadError(null);
+            setPhotoPreview(URL.createObjectURL(file));
         }
     };
+
+    useEffect(() => {
+        return () => {
+            if (photoPreview) {
+                URL.revokeObjectURL(photoPreview);
+            }
+        };
+    }, [photoPreview]);
 
     return (
         <CustomerLayout>
@@ -137,7 +183,7 @@ export default function Edit({ user }: Props) {
                                     {/* Profile Photo */}
                                     <div className="flex items-center gap-4">
                                         <Avatar className="h-20 w-20">
-                                            <AvatarImage src={user.profile_photo_url} alt={user.name} />
+                                            <AvatarImage src={photoPreview || user.profile_photo_url} alt={user.name} />
                                             <AvatarFallback className="text-lg">
                                                 {user.name.split(' ').map(n => n[0]).join('')}
                                             </AvatarFallback>
@@ -159,6 +205,16 @@ export default function Edit({ user }: Props) {
                                             <p className="text-xs text-muted-foreground mt-1">
                                                 JPG, PNG or GIF. Max size 2MB.
                                             </p>
+                                            {uploadingPhoto && (
+                                                <p className="text-xs text-muted-foreground mt-1">
+                                                    Uploading selected photo...
+                                                </p>
+                                            )}
+                                            {photoUploadError && (
+                                                <p className="text-xs text-destructive mt-1">
+                                                    {photoUploadError}
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
 
@@ -263,9 +319,9 @@ export default function Edit({ user }: Props) {
                                         />
                                     </div>
 
-                                    <Button type="submit" disabled={processing}>
+                                    <Button type="submit" disabled={processing || uploadingPhoto}>
                                         <Save className="mr-2 h-4 w-4" />
-                                        {processing ? 'Saving...' : 'Save Changes'}
+                                        {processing || uploadingPhoto ? 'Saving...' : 'Save Changes'}
                                     </Button>
                                 </form>
                             </CardContent>

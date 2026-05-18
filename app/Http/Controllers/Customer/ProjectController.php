@@ -346,7 +346,7 @@ class ProjectController extends Controller
         // Load conversation with messages
         $conversation->load([
             'messages' => function ($query) {
-                $query->with(['user', 'attachments'])
+                $query->with(['user'])
                       ->orderBy('created_at', 'asc');
             }
         ]);
@@ -354,7 +354,7 @@ class ProjectController extends Controller
         // Get pinned messages
         $pinnedMessages = $conversation->messages()
             ->where('is_pinned', true)
-            ->with(['user', 'attachments'])
+            ->with(['user'])
             ->orderBy('pinned_at', 'desc')
             ->limit(3)
             ->get();

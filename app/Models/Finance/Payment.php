@@ -76,6 +76,7 @@ class Payment extends Model
         return $this->belongsTo(User::class);
     }
 
+
     /**
      * Scope a query to only include payments with a specific status.
      */

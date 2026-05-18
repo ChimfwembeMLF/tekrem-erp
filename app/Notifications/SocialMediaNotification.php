@@ -27,7 +27,11 @@ class SocialMediaNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'mail'];
+        return [\App\Channels\CustomDatabaseChannel::class, 'mail'];
+    }
+    public function toCustomDatabase($notifiable)
+    {
+        return $this->notificationData;
     }
 
     /**

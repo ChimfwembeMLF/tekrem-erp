@@ -14,7 +14,11 @@ class PdfService
      */
     public function generateQuotationPdf(Quotation $quotation, $download = false)
     {
-        $quotation->load(['lead', 'items', 'user']);
+        $quotation->load(['billable', 'items', 'user']);
+
+        // Backward compatibility: existing quotation PDF template still references
+        // $quotation->lead, while finance quotations now use polymorphic billable.
+        $quotation->setRelation('lead', $quotation->billable);
         
         $data = [
             'quotation' => $quotation,
@@ -70,7 +74,10 @@ class PdfService
      */
     public function saveQuotationPdf(Quotation $quotation, $path = null)
     {
-        $quotation->load(['lead', 'items', 'user']);
+        $quotation->load(['billable', 'items', 'user']);
+
+        // Backward compatibility for existing PDF template fields.
+        $quotation->setRelation('lead', $quotation->billable);
         
         $data = [
             'quotation' => $quotation,
@@ -135,6 +142,10 @@ class PdfService
             'website' => config('company.website', 'www.tekrem.com'),
             'tax_number' => config('company.tax_number', 'TAX123456789'),
             'logo' => config('company.logo', null),
+            'bank_name' => config('company.bank.name', ''),
+            'bank_branch' => config('company.bank.branch', ''),
+            'account_name' => config('company.bank.account_name', ''),
+            'account_number' => config('company.bank.account_number', ''),
         ];
     }
 

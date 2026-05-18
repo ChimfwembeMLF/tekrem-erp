@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
@@ -61,15 +61,16 @@ interface Props {
   invoices?: Invoice[];
   clients?: Client[];
   leads?: Lead[];
+  selectedInvoice?: Invoice | null;
   paymentMethods?: Record<string, string>;
   statuses?: Record<string, string>;
 }
 
-export default function Create({ accounts = [], invoices = [], clients = [], leads = [], paymentMethods = {}, statuses = {} }: Props) {
+export default function Create({ accounts = [], invoices = [], clients = [], leads = [], selectedInvoice = null, paymentMethods = {}, statuses = {} }: Props) {
   const { t } = useTranslate();
     const route = useRoute();
 
-  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [selectedInvoiceState, setSelectedInvoiceState] = useState<Invoice | null>(selectedInvoice);
 
   const { data, setData, post, processing, errors } = useForm({
     account_id: '',
@@ -84,29 +85,33 @@ export default function Create({ accounts = [], invoices = [], clients = [], lea
     notes: '',
   });
 
+  useEffect(() => {
+    if (selectedInvoice) {
+      setSelectedInvoiceState(selectedInvoice);
+      setData('invoice_id', selectedInvoice.id.toString());
+      setData('amount', selectedInvoice.total_amount.toString());
+      setData('payable_type', 'client');
+      setData('payable_id', selectedInvoice.billable.id.toString());
+    }
+  }, [selectedInvoice]);
+
   const handleInvoiceSelect = (invoiceId: string) => {
     if (invoiceId === 'none') {
-      setSelectedInvoice(null);
-      setData({
-        ...data,
-        invoice_id: '',
-        amount: '',
-        payable_type: '',
-        payable_id: '',
-      });
+      setSelectedInvoiceState(null);
+      setData('invoice_id', '');
+      setData('amount', '');
+      setData('payable_type', '');
+      setData('payable_id', '');
       return;
     }
 
     const invoice = invoices?.find(inv => inv.id.toString() === invoiceId);
     if (invoice) {
-      setSelectedInvoice(invoice);
-      setData({
-        ...data,
-        invoice_id: invoiceId,
-        amount: invoice.total_amount.toString(),
-        payable_type: 'client',
-        payable_id: invoice.billable.id.toString(),
-      });
+      setSelectedInvoiceState(invoice);
+      setData('invoice_id', invoiceId);
+      setData('amount', invoice.total_amount.toString());
+      setData('payable_type', 'client');
+      setData('payable_id', invoice.billable.id.toString());
     }
   };
 
@@ -384,16 +389,16 @@ export default function Create({ accounts = [], invoices = [], clients = [], lea
                   </>
                 )}
 
-                {selectedInvoice && (
+                {selectedInvoiceState && (
                   <div className="p-4 bg-muted rounded-lg">
                     <h4 className="font-medium mb-2 flex items-center gap-2">
                       <FileText className="h-4 w-4" />
                       {t('finance.selected_invoice', 'Selected Invoice')}
                     </h4>
                     <div className="space-y-1 text-sm">
-                      <p><strong>{t('finance.invoice_number', 'Invoice #')}:</strong> {selectedInvoice.invoice_number}</p>
-                      <p><strong>{t('finance.client', 'Client')}:</strong> {selectedInvoice.billable.name}</p>
-                      <p><strong>{t('finance.amount', 'Amount')}:</strong> {formatCurrency(selectedInvoice.total_amount, selectedInvoice.currency)}</p>
+                      <p><strong>{t('finance.invoice_number', 'Invoice #')}:</strong> {selectedInvoiceState.invoice_number}</p>
+                      <p><strong>{t('finance.client', 'Client')}:</strong> {selectedInvoiceState.billable.name}</p>
+                      <p><strong>{t('finance.amount', 'Amount')}:</strong> {formatCurrency(selectedInvoiceState.total_amount, selectedInvoiceState.currency)}</p>
                     </div>
                   </div>
                 )}

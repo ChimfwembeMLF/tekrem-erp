@@ -14,7 +14,7 @@ TekRem ERP is a comprehensive enterprise resource planning system built with Lar
 - **RBAC**: spatie/laravel-permission
 - **Localization**: mcamara/laravel-localization
 - **Logging**: spatie/laravel-activitylog
-- **Realtime**: Laravel WebSockets or Pusher (optional)
+- **Realtime**: Laravel Reverb (WebSockets)
 
 ## Features
 
@@ -94,7 +94,7 @@ npm run dev
 
 ## Real-time Communication
 
-The system uses Laravel Echo and Pusher for real-time communication:
+The system uses Laravel Echo and Reverb for real-time communication:
 - Live chat functionality in the CRM service
 - Real-time notifications
 - WebSocket connections for instant updates

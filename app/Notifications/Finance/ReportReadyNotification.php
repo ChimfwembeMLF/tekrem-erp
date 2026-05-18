@@ -34,6 +34,17 @@ class ReportReadyNotification extends Notification implements ShouldQueue
             ->line('Thank you for using our system!');
     }
 
+    public function toDatabase($notifiable)
+    {
+        return [
+            'report_id' => $this->report->id,
+            'name' => $this->report->name,
+            'type' => $this->report->type,
+            'download_url' => url(route('reports.download', $this->report)),
+            'message' => 'Your report "' . $this->report->name . '" is ready for download.',
+        ];
+    }
+
     public function toArray($notifiable)
     {
         return [
@@ -41,6 +52,7 @@ class ReportReadyNotification extends Notification implements ShouldQueue
             'name' => $this->report->name,
             'type' => $this->report->type,
             'download_url' => url(route('reports.download', $this->report)),
+            'message' => 'Your report "' . $this->report->name . '" is ready for download.',
         ];
     }
 

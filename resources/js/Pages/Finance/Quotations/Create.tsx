@@ -28,6 +28,14 @@ import useTranslate from '@/Hooks/useTranslate';
 import { toast } from 'sonner';
 import useRoute from '@/Hooks/useRoute';
 
+
+interface Client {
+  id: number;
+  name: string;
+  email: string;
+  company?: string | null;
+}
+
 interface Lead {
   id: number;
   name: string;
@@ -43,21 +51,27 @@ interface QuotationItem {
 }
 
 interface Props {
+  clients?: Client[];
   leads?: Lead[];
   currencies?: Record<string, string>;
   statuses?: Record<string, string>;
+  selectedClient?: Client | null;
   selectedLead?: Lead | null;
 }
 
-export default function Create({ leads = [], currencies = {}, statuses = {}, selectedLead }: Props) {
+export default function Create({ clients = [], leads = [], currencies = {}, statuses = {}, selectedClient, selectedLead }: Props) {
   const { t } = useTranslate();
   const route = useRoute();
   const [items, setItems] = useState<QuotationItem[]>([
     { description: '', quantity: 1, unit_price: 0, total_price: 0 }
   ]);
 
+  const [billableType, setBillableType] = useState<'client' | 'lead'>('client');
+  const [selectedBillableId, setSelectedBillableId] = useState<string>('');
+
   const { data, setData, post, processing, errors } = useForm({
-    lead_id: selectedLead?.id?.toString() || '',
+    billable_type: 'client',
+    billable_id: '',
     issue_date: new Date().toISOString().split('T')[0],
     expiry_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
     currency: 'ZMW',
@@ -109,9 +123,15 @@ export default function Create({ leads = [], currencies = {}, statuses = {}, sel
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Update billable_type and billable_id in form data
+    setData('billable_type', billableType);
+    setData('billable_id', selectedBillableId);
+
     // Update items in form data
     const formData = {
       ...data,
+      billable_type: billableType,
+      billable_id: selectedBillableId,
       items: items,
       subtotal: calculateSubtotal(),
       tax_amount: calculateTaxAmount(),
@@ -255,54 +275,88 @@ export default function Create({ leads = [], currencies = {}, statuses = {}, sel
               </CardContent>
             </Card>
 
-            {/* Lead Details */}
+            {/* Billable Details (Client/Lead) */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  {t('finance.lead_details', 'Lead Details')}
+                  {t('finance.billable_details', 'Billable Details')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="lead_id">
-                    {t('crm.lead', 'Lead')} *
+                  <Label htmlFor="billable_type">
+                    {t('finance.billable_type', 'Type')} *
                   </Label>
-                  <Select value={data.lead_id} onValueChange={(value) => setData('lead_id', value)}>
+                  <Select value={billableType} onValueChange={(value) => { setBillableType(value as 'client' | 'lead'); setSelectedBillableId(''); }}>
                     <SelectTrigger>
-                      <SelectValue placeholder={t('finance.select_lead', 'Select a lead')} />
+                      <SelectValue placeholder={t('finance.select_billable_type', 'Select type')} />
                     </SelectTrigger>
                     <SelectContent>
-                      {leads?.map((lead) => (
-                        <SelectItem key={lead.id} value={lead.id.toString()}>
-                          <div>
-                            <p className="font-medium">{lead.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {lead.company ? `${lead.company} • ${lead.email}` : lead.email}
-                            </p>
-                          </div>
-                        </SelectItem>
-                      )) || []}
+                      <SelectItem value="client">{t('crm.client', 'Client')}</SelectItem>
+                      <SelectItem value="lead">{t('crm.lead', 'Lead')}</SelectItem>
                     </SelectContent>
                   </Select>
-                  {errors.lead_id && (
-                    <p className="text-sm text-red-600">{errors.lead_id}</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="billable_id">
+                    {billableType === 'client' ? t('crm.client', 'Client') : t('crm.lead', 'Lead')} *
+                  </Label>
+                  <Select value={selectedBillableId} onValueChange={(value) => { setSelectedBillableId(value); setData('billable_id', value); }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={billableType === 'client' ? t('finance.select_client', 'Select a client') : t('finance.select_lead', 'Select a lead')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {billableType === 'client'
+                        ? clients.map((client) => (
+                            <SelectItem key={client.id} value={client.id.toString()}>
+                              <div>
+                                <p className="font-medium">{client.name}</p>
+                                <p className="text-xs text-muted-foreground">{client.email}</p>
+                              </div>
+                            </SelectItem>
+                          ))
+                        : leads.map((lead) => (
+                            <SelectItem key={lead.id} value={lead.id.toString()}>
+                              <div>
+                                <p className="font-medium">{lead.name}</p>
+                                <p className="text-xs text-muted-foreground">{lead.company ? `${lead.company} • ${lead.email}` : lead.email}</p>
+                              </div>
+                            </SelectItem>
+                          ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.billable_id && (
+                    <p className="text-sm text-red-600">{errors.billable_id}</p>
                   )}
                 </div>
 
-                {data.lead_id && (
+                {selectedBillableId && (
                   <div className="p-3 bg-muted rounded-lg">
                     {(() => {
-                      const selectedLeadData = leads?.find(l => l.id.toString() === data.lead_id);
-                      return selectedLeadData ? (
-                        <div>
-                          <h4 className="font-medium">{selectedLeadData.name}</h4>
-                          <p className="text-sm text-muted-foreground">{selectedLeadData.email}</p>
-                          {selectedLeadData.company && (
-                            <p className="text-sm text-muted-foreground">{selectedLeadData.company}</p>
-                          )}
-                        </div>
-                      ) : null;
+                      if (billableType === 'client') {
+                        const selectedClientData = clients.find(c => c.id.toString() === selectedBillableId);
+                        return selectedClientData ? (
+                          <div>
+                            <h4 className="font-medium">{selectedClientData.name}</h4>
+                            <p className="text-sm text-muted-foreground">{selectedClientData.email}</p>
+                            {selectedClientData.company && (
+                              <p className="text-sm text-muted-foreground">{selectedClientData.company}</p>
+                            )}
+                          </div>
+                        ) : null;
+                      } else {
+                        const selectedLeadData = leads.find(l => l.id.toString() === selectedBillableId);
+                        return selectedLeadData ? (
+                          <div>
+                            <h4 className="font-medium">{selectedLeadData.name}</h4>
+                            <p className="text-sm text-muted-foreground">{selectedLeadData.email}</p>
+                            {selectedLeadData.company && (
+                              <p className="text-sm text-muted-foreground">{selectedLeadData.company}</p>
+                            )}
+                          </div>
+                        ) : null;
+                      }
                     })()}
                   </div>
                 )}

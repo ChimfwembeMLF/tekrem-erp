@@ -1,9 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/Components/ui/alert-dialog';
 import {
   Table,
   TableBody,
@@ -55,13 +65,20 @@ interface Quotation {
   currency: string;
   notes: string;
   terms: string;
-  lead: {
+  lead?: {
     id: number;
     name: string;
     email: string;
     phone?: string;
     company?: string;
-  };
+  } | null;
+  billable?: {
+    id: number;
+    name?: string;
+    email?: string;
+    phone?: string;
+    company?: string;
+  } | null;
   items: QuotationItem[];
   is_expired: boolean;
   days_until_expiry: number;
@@ -80,6 +97,8 @@ interface Props {
 export default function Show({ quotation }: Props) {
   const { t } = useTranslate();
   const route = useRoute();
+  const [convertDialogOpen, setConvertDialogOpen] = useState(false);
+  const contact = quotation.lead ?? quotation.billable;
 
   const handleSend = () => {
     router.post(route('finance.quotations.send', quotation.id), {}, {
@@ -114,16 +133,29 @@ export default function Show({ quotation }: Props) {
     });
   };
 
-  const handleConvertToInvoice = () => {
-    if (confirm(t('finance.confirm_convert_to_invoice', 'Are you sure you want to convert this quotation to an invoice?'))) {
-      router.post(route('finance.quotations.convert-to-invoice', quotation.id), {}, {
-        onSuccess: () => {
-          toast.success(t('finance.quotation_converted', 'Quotation converted to invoice successfully'));
-        },
-        onError: () => {
-          toast.error(t('common.error_occurred', 'An error occurred'));
-        },
-      });
+  const handleConvertToInvoice = async () => {
+    try {
+      const axios = (await import('axios')).default;
+      const { data } = await axios.post(
+        route('finance.quotations.convert-to-invoice', quotation.id),
+        {},
+        {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            Accept: 'application/json',
+          },
+        }
+      );
+
+      setConvertDialogOpen(false);
+      toast.success(data?.message ?? t('finance.quotation_converted', 'Quotation converted to invoice successfully'));
+
+      if (data?.redirect_url) {
+        window.location.href = data.redirect_url;
+      }
+    } catch (error: any) {
+      const message = error?.response?.data?.message ?? t('common.error_occurred', 'An error occurred');
+      toast.error(message);
     }
   };
 
@@ -133,6 +165,20 @@ export default function Show({ quotation }: Props) {
       currency: quotation.currency,
     }).format(amount);
   };
+
+  const convertDisabledReason = (() => {
+    if (quotation.is_converted) {
+      return t('finance.already_converted', 'Already converted');
+    }
+
+    if (quotation.status !== 'accepted') {
+      return t('finance.accept_before_convert', 'Accept quotation first');
+    }
+
+    return null;
+  })();
+
+  const canConvert = !convertDisabledReason;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -248,12 +294,23 @@ export default function Show({ quotation }: Props) {
                 </Button>
               </>
             )}
-            {quotation.can_convert_to_invoice && (
-              <Button onClick={handleConvertToInvoice} variant="default">
+            {!quotation.is_converted && (
+              <Button
+                onClick={() => setConvertDialogOpen(true)}
+                variant="default"
+                disabled={!canConvert}
+                title={convertDisabledReason ?? undefined}
+              >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 {t('finance.convert_to_invoice', 'Convert to Invoice')}
               </Button>
             )}
+            <Button variant="outline" asChild>
+              <Link href={route('finance.quotations.print', quotation.id)} target="_blank">
+                <FileText className="h-4 w-4 mr-2" />
+                {t('finance.print_view', 'Print View')}
+              </Link>
+            </Button>
             <Button variant="outline" asChild>
               <Link href={route('finance.quotations.pdf', quotation.id)} target="_blank">
                 <Download className="h-4 w-4 mr-2" />
@@ -285,20 +342,20 @@ export default function Show({ quotation }: Props) {
               <CardContent>
                 <div className="space-y-3">
                   <div>
-                    <h3 className="font-semibold text-lg">{quotation.lead.name}</h3>
-                    {quotation.lead.company && (
-                      <p className="text-muted-foreground">{quotation.lead.company}</p>
+                    <h3 className="font-semibold text-lg">{contact?.name ?? t('common.not_available', 'Not available')}</h3>
+                    {contact?.company && (
+                      <p className="text-muted-foreground">{contact.company}</p>
                     )}
                   </div>
                   <div className="grid gap-2 text-sm">
                     <div className="flex items-center gap-2">
                       <Mail className="h-4 w-4 text-muted-foreground" />
-                      <span>{quotation.lead.email}</span>
+                      <span>{contact?.email ?? t('common.not_available', 'Not available')}</span>
                     </div>
-                    {quotation.lead.phone && (
+                    {contact?.phone && (
                       <div className="flex items-center gap-2">
                         <Phone className="h-4 w-4 text-muted-foreground" />
-                        <span>{quotation.lead.phone}</span>
+                        <span>{contact.phone}</span>
                       </div>
                     )}
                   </div>
@@ -484,8 +541,13 @@ export default function Show({ quotation }: Props) {
                     </div>
                   )}
 
-                  {quotation.can_convert_to_invoice && (
-                    <Button onClick={handleConvertToInvoice} className="w-full">
+                  {!quotation.is_converted && (
+                    <Button
+                      onClick={() => setConvertDialogOpen(true)}
+                      className="w-full"
+                      disabled={!canConvert}
+                      title={convertDisabledReason ?? undefined}
+                    >
                       <RefreshCw className="h-4 w-4 mr-2" />
                       {t('finance.convert_to_invoice', 'Convert to Invoice')}
                     </Button>
@@ -503,6 +565,28 @@ export default function Show({ quotation }: Props) {
           </div>
         </div>
       </div>
+
+      <AlertDialog open={convertDialogOpen} onOpenChange={setConvertDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t('finance.convert_to_invoice', 'Convert to Invoice')}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t(
+                'finance.confirm_convert_to_invoice',
+                'Are you sure you want to convert this quotation to an invoice?'
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel', 'Cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConvertToInvoice}>
+              {t('finance.convert_to_invoice', 'Convert to Invoice')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppLayout>
   );
 }

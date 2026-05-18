@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
-use App\Models\Communication;
 use App\Models\Chat;
-use App\Models\ChatMessage;
+use App\Models\Communication;
 use App\Models\Conversation;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -15,68 +14,6 @@ use Inertia\Response;
 
 class CommunicationController extends Controller
 {
-
-
-    /**
-     * Store a new chat conversation (conversation thread).
-     */
-    public function storeChat(Request $request)
-    {
-        $user = Auth::user();
-
-        $validated = $request->validate([
-            'title' => ['nullable', 'string', 'max:255'],
-            'message' => ['required', 'string', 'max:2000'],
-            'assignee_id' => ['nullable', 'integer', 'exists:users,id'],
-            'attachments' => ['nullable', 'array'],
-            'attachments.*' => ['file', 'max:10240'], // 10MB max
-        ]);
-
-        // Create the conversation
-        $conversation = Conversation::create([
-            'title' => $validated['title'] ?? null,
-            'conversable_type' => get_class($user),
-            'conversable_id' => $user->id,
-            'creator_id' => $user->id,
-            'assignee_id' => $validated['assignee_id'] ?? null,
-            'status' => 'open',
-            'last_message_at' => now(),
-        ]);
-
-        // Handle attachments
-        $attachments = [];
-        if ($request->hasFile('attachments')) {
-            foreach ($request->file('attachments') as $file) {
-                $path = $file->store('chat-attachments', 'public');
-                $attachments[] = [
-                    'file_name' => $file->getClientOriginalName(),
-                    'file_path' => $path,
-                    'file_size' => $file->getSize(),
-                    'mime_type' => $file->getMimeType(),
-                ];
-            }
-        }
-
-        // Create the first message
-        Chat::create([
-            'conversation_id' => $conversation->id,
-            'user_id' => $user->id,
-            'message' => $validated['message'],
-            'message_type' => 'text',
-            'attachments' => $attachments,
-            'status' => 'sent',
-            'chattable_type' => get_class($user),
-            'chattable_id' => $user->id,
-        ]);
-
-        session()->flash('flash', [
-            'bannerStyle' => 'success',
-            'banner' => 'Conversation created successfully!'
-        ]);
-
-        return redirect()->route('customer.communications.chats.show', $conversation);
-    }
-
     /**
      * Display customer's communication history.
      */
@@ -88,12 +25,12 @@ class CommunicationController extends Controller
             $q->where('communicable_type', get_class($user))
                 ->where('communicable_id', $user->id);
         })
-            ->orWhere(function ($q) use ($user) {
-                $q->whereHas('user', function ($subQ) use ($user) {
-                    $subQ->where('user_id', $user->id);
-                });
-            })
-            ->with(['user', 'communicable']);
+        ->orWhere(function ($q) use ($user) {
+            $q->whereHas('user', function ($subQ) use ($user) {
+                $subQ->where('user_id', $user->id);
+            });
+        })
+        ->with(['user', 'communicable']);
 
         // Apply filters
         if ($request->filled('type')) {
@@ -117,7 +54,6 @@ class CommunicationController extends Controller
 
         $communications = $query->orderBy('created_at', 'desc')->paginate(20);
 
-        // Get communication statistics
         $stats = [
             'total' => Communication::where('communicable_type', get_class($user))
                 ->where('communicable_id', $user->id)
@@ -150,7 +86,6 @@ class CommunicationController extends Controller
     {
         $user = Auth::user();
 
-        // Ensure user can access this communication
         if (!$this->canAccessCommunication($communication, $user)) {
             abort(403, 'Access denied.');
         }
@@ -163,170 +98,22 @@ class CommunicationController extends Controller
     }
 
     /**
-     * Display customer's chat conversations.
-     */
-    public function chats(Request $request): Response
-    {
-        $user = Auth::user();
-
-        // Get conversations where the customer is the conversable entity
-        $query = Conversation::where('conversable_type', get_class($user))
-            ->where('conversable_id', $user->id)
-            ->with(['creator', 'assignee']);
-
-        // Apply filters
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('search')) {
-            $query->where('title', 'like', '%' . $request->search . '%');
-        }
-
-        $conversations = $query->orderBy('last_message_at', 'desc')->paginate(20);
-
-        // Transform conversations to match expected chat structure
-        $chats = $conversations->through(function ($conversation) {
-            return [
-                'id' => $conversation->id,
-                'title' => $conversation->title ?: 'Conversation #' . $conversation->id,
-                'status' => $conversation->status,
-                'created_at' => $conversation->created_at,
-                'updated_at' => $conversation->updated_at,
-                'participants' => $this->getConversationParticipants($conversation),
-                'lastMessage' => $this->getLastMessage($conversation),
-                'unread_count' => $conversation->unread_count,
-            ];
-        });
-
-        return Inertia::render('Customer/Communications/Chats', [
-            'chats' => $chats,
-            'filters' => $request->only(['status', 'search']),
-        ]);
-    }
-
-    /**
-     * Display the specified chat conversation.
-     */
-    public function showChat(Conversation $conversation): Response
-    {
-        $user = Auth::user();
-
-        // Ensure user can access this conversation
-        if (
-            $conversation->conversable_type !== get_class($user) ||
-            $conversation->conversable_id !== $user->id
-        ) {
-            abort(403, 'Access denied.');
-        }
-
-        $conversation->load(['creator', 'assignee']);
-
-        // Get messages for this conversation
-        $messages = Chat::where('conversation_id', $conversation->id)
-            ->with(['user'])
-            ->orderBy('created_at', 'asc')
-            ->get()
-            ->map(function ($message) {
-                return [
-                    'id' => $message->id,
-                    'message' => $message->message,
-                    'message_type' => $message->message_type,
-                    'created_at' => $message->created_at,
-                    'user' => $message->user,
-                    'attachments' => $message->attachments ?: [],
-                ];
-            });
-
-        // Mark messages as read for the customer
-        Chat::where('conversation_id', $conversation->id)
-            ->where('user_id', '!=', $user->id)
-            ->where('read_at', null)
-            ->update(['read_at' => now()]);
-
-        // Transform conversation to match expected chat structure
-        $chat = [
-            'id' => $conversation->id,
-            'title' => $conversation->title ?: 'Conversation #' . $conversation->id,
-            'status' => $conversation->status,
-            'created_at' => $conversation->created_at,
-            'updated_at' => $conversation->updated_at,
-            'participants' => $this->getConversationParticipants($conversation),
-            'messages' => $messages,
-        ];
-
-        return Inertia::render('Customer/Communications/ShowChat', [
-            'chat' => $chat,
-        ]);
-    }
-
-    /**
-     * Send a message in the chat.
-     */
-    public function sendMessage(Conversation $conversation, Request $request): RedirectResponse
-    {
-        $user = Auth::user();
-
-        // Ensure user can access this conversation
-        if (
-            $conversation->conversable_type !== get_class($user) ||
-            $conversation->conversable_id !== $user->id
-        ) {
-            abort(403, 'Access denied.');
-        }
-
-        $validated = $request->validate([
-            'message' => ['required', 'string', 'max:2000'],
-            'attachments' => ['nullable', 'array'],
-            'attachments.*' => ['file', 'max:10240'], // 10MB max
-        ]);
-
-        // Handle attachments
-        $attachments = [];
-        if ($request->hasFile('attachments')) {
-            foreach ($request->file('attachments') as $file) {
-                $path = $file->store('chat-attachments', 'public');
-
-                $attachments[] = [
-                    'file_name' => $file->getClientOriginalName(),
-                    'file_path' => $path,
-                    'file_size' => $file->getSize(),
-                    'mime_type' => $file->getMimeType(),
-                ];
-            }
-        }
-
-        $message = Chat::create([
-            'conversation_id' => $conversation->id,
-            'user_id' => $user->id,
-            'message' => $validated['message'],
-            'message_type' => 'text',
-            'attachments' => $attachments,
-            'status' => 'sent',
-            'chattable_type' => get_class($user),
-            'chattable_id' => $user->id,
-        ]);
-
-        // Update conversation timestamp
-        $conversation->update([
-            'last_message_at' => now(),
-        ]);
-
-        session()->flash('flash', [
-            'bannerStyle' => 'success',
-            'banner' => 'Message sent successfully!'
-        ]);
-
-        return redirect()->route('customer.communications.chats.show', $conversation);
-    }
-
-    /**
      * Create a new communication request.
      */
     public function create(): Response
     {
-        // 
-        return Inertia::render('Customer/Communications/Create');
+        return Inertia::render('Customer/Communications/Create', [
+            'types' => [
+                ['value' => 'email', 'label' => 'Email'],
+                ['value' => 'call', 'label' => 'Phone Call'],
+                ['value' => 'meeting', 'label' => 'Meeting'],
+            ],
+            'priorities' => [
+                ['value' => 'low', 'label' => 'Low'],
+                ['value' => 'medium', 'label' => 'Medium'],
+                ['value' => 'high', 'label' => 'High'],
+            ],
+        ]);
     }
 
     /**
@@ -344,7 +131,7 @@ class CommunicationController extends Controller
             'preferred_time' => ['nullable', 'string'],
             'priority' => ['required', 'in:low,medium,high'],
             'attachments' => ['nullable', 'array'],
-            'attachments.*' => ['file', 'max:10240'], // 10MB max
+            'attachments.*' => ['file', 'max:10240'],
         ]);
 
         $attachments = [];
@@ -391,7 +178,6 @@ class CommunicationController extends Controller
     {
         $user = Auth::user();
 
-        // Ensure user can access this communication
         if (!$this->canAccessCommunication($communication, $user)) {
             abort(403, 'Access denied.');
         }
@@ -407,15 +193,212 @@ class CommunicationController extends Controller
     }
 
     /**
+     * Display customer's chat conversations.
+     */
+    public function chats(Request $request): Response
+    {
+        $user = Auth::user();
+
+        $query = Conversation::where('conversable_type', get_class($user))
+            ->where('conversable_id', $user->id)
+            ->with(['creator', 'assignee']);
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('search')) {
+            $query->where('title', 'like', '%' . $request->search . '%');
+        }
+
+        $conversations = $query->orderBy('last_message_at', 'desc')->paginate(20);
+
+        $chats = $conversations->through(function ($conversation) {
+            return [
+                'id' => $conversation->id,
+                'title' => $conversation->title ?: 'Conversation #' . $conversation->id,
+                'status' => $conversation->status,
+                'created_at' => $conversation->created_at,
+                'updated_at' => $conversation->updated_at,
+                'participants' => $this->getConversationParticipants($conversation),
+                'lastMessage' => $this->getLastMessage($conversation),
+                'unread_count' => $conversation->unread_count,
+            ];
+        });
+
+        return Inertia::render('Customer/Communications/Chats', [
+            'chats' => $chats,
+            'filters' => $request->only(['status', 'search']),
+        ]);
+    }
+
+    /**
+     * Display the specified chat conversation.
+     */
+    public function showChat(Conversation $conversation): Response
+    {
+        $user = Auth::user();
+
+        if ($conversation->conversable_type !== get_class($user) ||
+            $conversation->conversable_id !== $user->id) {
+            abort(403, 'Access denied.');
+        }
+
+        $conversation->load(['creator', 'assignee']);
+
+        $messages = Chat::where('conversation_id', $conversation->id)
+            ->with(['user'])
+            ->orderBy('created_at', 'asc')
+            ->get()
+            ->map(function ($message) {
+                return [
+                    'id' => $message->id,
+                    'message' => $message->message,
+                    'message_type' => $message->message_type,
+                    'created_at' => $message->created_at,
+                    'user' => $message->user,
+                    'attachments' => $message->attachments ?: [],
+                ];
+            });
+
+        // Mark messages as read for the customer
+        Chat::where('conversation_id', $conversation->id)
+            ->where('user_id', '!=', $user->id)
+            ->where('read_at', null)
+            ->update(['read_at' => now()]);
+
+        $chat = [
+            'id' => $conversation->id,
+            'title' => $conversation->title ?: 'Conversation #' . $conversation->id,
+            'status' => $conversation->status,
+            'created_at' => $conversation->created_at,
+            'updated_at' => $conversation->updated_at,
+            'participants' => $this->getConversationParticipants($conversation),
+            'messages' => $messages,
+        ];
+
+        return Inertia::render('Customer/Communications/ShowChat', [
+            'chat' => $chat,
+        ]);
+    }
+
+    /**
+     * Send a message in the chat.
+     */
+    public function sendMessage(Conversation $conversation, Request $request): RedirectResponse
+    {
+        $user = Auth::user();
+
+        if ($conversation->conversable_type !== get_class($user) ||
+            $conversation->conversable_id !== $user->id) {
+            abort(403, 'Access denied.');
+        }
+
+        $validated = $request->validate([
+            'message' => ['required', 'string', 'max:2000'],
+            'attachments' => ['nullable', 'array'],
+            'attachments.*' => ['file', 'max:10240'],
+        ]);
+
+        $attachments = [];
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $path = $file->store('chat-attachments', 'public');
+                $attachments[] = [
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_path' => $path,
+                    'file_size' => $file->getSize(),
+                    'mime_type' => $file->getMimeType(),
+                ];
+            }
+        }
+
+        Chat::create([
+            'conversation_id' => $conversation->id,
+            'user_id' => $user->id,
+            'message' => $validated['message'],
+            'message_type' => 'text',
+            'attachments' => $attachments,
+            'status' => 'sent',
+            'chattable_type' => get_class($user),
+            'chattable_id' => $user->id,
+        ]);
+
+        $conversation->update(['last_message_at' => now()]);
+
+        session()->flash('flash', [
+            'bannerStyle' => 'success',
+            'banner' => 'Message sent successfully!'
+        ]);
+
+        return redirect()->route('customer.communications.chats.show', $conversation);
+    }
+
+    /**
+     * Store a new chat conversation (conversation thread).
+     */
+    public function storeChat(Request $request): RedirectResponse
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'title' => ['nullable', 'string', 'max:255'],
+            'message' => ['required', 'string', 'max:2000'],
+            'assignee_id' => ['nullable', 'integer', 'exists:users,id'],
+            'attachments' => ['nullable', 'array'],
+            'attachments.*' => ['file', 'max:10240'],
+        ]);
+
+        $conversation = Conversation::create([
+            'title' => $validated['title'] ?? null,
+            'conversable_type' => get_class($user),
+            'conversable_id' => $user->id,
+            'creator_id' => $user->id,
+            'assignee_id' => $validated['assignee_id'] ?? null,
+            'status' => 'open',
+            'last_message_at' => now(),
+        ]);
+
+        $attachments = [];
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $path = $file->store('chat-attachments', 'public');
+                $attachments[] = [
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_path' => $path,
+                    'file_size' => $file->getSize(),
+                    'mime_type' => $file->getMimeType(),
+                ];
+            }
+        }
+
+        Chat::create([
+            'conversation_id' => $conversation->id,
+            'user_id' => $user->id,
+            'message' => $validated['message'],
+            'message_type' => 'text',
+            'attachments' => $attachments,
+            'status' => 'sent',
+            'chattable_type' => get_class($user),
+            'chattable_id' => $user->id,
+        ]);
+
+        session()->flash('flash', [
+            'bannerStyle' => 'success',
+            'banner' => 'Conversation created successfully!'
+        ]);
+
+        return redirect()->route('customer.communications.chats.show', $conversation);
+    }
+
+    /**
      * Check if user can access the communication.
      */
     private function canAccessCommunication(Communication $communication, $user): bool
     {
         // User can access if they are the communicable entity
-        if (
-            $communication->communicable_type === get_class($user) &&
-            $communication->communicable_id === $user->id
-        ) {
+        if ($communication->communicable_type === get_class($user) &&
+            $communication->communicable_id === $user->id) {
             return true;
         }
 
@@ -435,7 +418,6 @@ class CommunicationController extends Controller
     {
         $participants = [];
 
-        // Add creator if exists
         if ($conversation->creator) {
             $participants[] = [
                 'id' => $conversation->creator->id,
@@ -448,7 +430,6 @@ class CommunicationController extends Controller
             ];
         }
 
-        // Add assignee if exists and different from creator
         if ($conversation->assignee && $conversation->assignee->id !== $conversation->creator?->id) {
             $participants[] = [
                 'id' => $conversation->assignee->id,
@@ -461,7 +442,6 @@ class CommunicationController extends Controller
             ];
         }
 
-        // Add customer (conversable entity)
         if ($conversation->conversable) {
             $participants[] = [
                 'id' => $conversation->conversable->id,

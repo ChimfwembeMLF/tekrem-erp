@@ -12,16 +12,16 @@ return [
     |
     */
 
-    'name' => env('COMPANY_NAME', 'TekRem ERP'),
-    'address' => env('COMPANY_ADDRESS', '123 Business Street'),
-    'city' => env('COMPANY_CITY', 'Business City'),
-    'postal_code' => env('COMPANY_POSTAL_CODE', '12345'),
-    'country' => env('COMPANY_COUNTRY', 'United States'),
-    'phone' => env('COMPANY_PHONE', '+1 (555) 123-4567'),
-    'email' => env('COMPANY_EMAIL', 'info@tekrem.com'),
-    'website' => env('COMPANY_WEBSITE', 'www.tekrem.com'),
-    'tax_number' => env('COMPANY_TAX_NUMBER', 'TAX123456789'),
-    'logo' => env('COMPANY_LOGO', null),
+    'name' => env('COMPANY_NAME', 'Tekrem Innovations Solutions'),
+    'address' => env('COMPANY_ADDRESS', 'PLOT NO 03/84 ESTHER LUNGU ROAD MISISI COMPOUND Lusaka'),
+    'city' => env('COMPANY_CITY', 'Lusaka'),
+    'postal_code' => env('COMPANY_POSTAL_CODE', '10101'),
+    'country' => env('COMPANY_COUNTRY', 'Zambia'),
+    'phone' => env('COMPANY_PHONE', '+260 976607840'),
+    'email' => env('COMPANY_EMAIL', 'tekremsolutions@gmail.com'),
+    'website' => env('COMPANY_WEBSITE', 'www.tekreminnovations.com'),
+    'tax_number' => env('COMPANY_TAX_NUMBER', '2003620656'),
+    'logo' => env('COMPANY_LOGO', 'https://www.tekreminnovations.com/logo-blue.png'),
 
     /*
     |--------------------------------------------------------------------------

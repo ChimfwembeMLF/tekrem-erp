@@ -24,7 +24,16 @@ class CardWatcherRemoved extends Notification implements ShouldQueue
 
     public function via($notifiable)
     {
-        return ['mail', 'database'];
+        return ['mail', \App\Channels\CustomDatabaseChannel::class];
+    }
+    public function toCustomDatabase($notifiable)
+    {
+        return [
+            'card_id' => $this->card->id,
+            'watcher_id' => $this->watcher->id,
+            'watcher_name' => $this->watcher->name,
+            'message' => $this->watcher->name . ' is no longer watching your card: ' . $this->card->title,
+        ];
     }
 
     public function toMail($notifiable)
@@ -37,12 +46,23 @@ class CardWatcherRemoved extends Notification implements ShouldQueue
             ->line('Thank you for using the project management module!');
     }
 
+    public function toDatabase($notifiable)
+    {
+        return [
+            'card_id' => $this->card->id,
+            'watcher_id' => $this->watcher->id,
+            'watcher_name' => $this->watcher->name,
+            'message' => $this->watcher->name . ' is no longer watching your card: ' . $this->card->title,
+        ];
+    }
+
     public function toArray($notifiable)
     {
         return [
             'card_id' => $this->card->id,
             'watcher_id' => $this->watcher->id,
             'watcher_name' => $this->watcher->name,
+            'message' => $this->watcher->name . ' is no longer watching your card: ' . $this->card->title,
         ];
     }
 }

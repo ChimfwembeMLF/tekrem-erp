@@ -1,11 +1,12 @@
 import React from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import CustomerLayout from '@/Layouts/CustomerLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Separator } from '@/Components/ui/separator';
-import { 
+import useRoute from '@/Hooks/useRoute';
+import {
     ArrowLeft,
     Download,
     CreditCard,
@@ -16,7 +17,6 @@ import {
     User,
     Mail,
     Phone,
-    MapPin
 } from 'lucide-react';
 
 interface InvoiceItem {
@@ -24,7 +24,34 @@ interface InvoiceItem {
     description: string;
     quantity: number;
     unit_price: number;
-    total: number;
+    total_price: number; // fixed: was "total"
+}
+
+interface Company {
+    name: string;
+    email: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    country?: string;
+    logo?: string;
+}
+
+interface Payment {
+    id: number;
+    amount: number | string;
+    payment_date: string;
+    payment_method: string;
+    reference_number?: string;
+    reference?: string;
+    account_type?: string;
+    account_name?: string;
+    account?: {
+        name: string;
+        type: string;
+    };
 }
 
 interface Invoice {
@@ -33,11 +60,13 @@ interface Invoice {
     status: string;
     issue_date: string;
     due_date: string;
-    subtotal: number;
-    tax_amount: number;
-    total_amount: number;
-    paid_amount: number;
-    balance: number;
+    subtotal: number | string;
+    tax_amount: number | string;
+    discount_amount?: number | string;
+    total_amount: number | string;
+    paid_amount: number | string;
+    balance?: number | string;
+    currency?: string;
     notes?: string;
     terms?: string;
     client: {
@@ -50,68 +79,75 @@ interface Invoice {
         zip?: string;
         country?: string;
     };
-    company: {
-        name: string;
-        email: string;
-        phone?: string;
-        address?: string;
-        city?: string;
-        state?: string;
-        zip?: string;
-        country?: string;
-        logo?: string;
-    };
     items: InvoiceItem[];
-    payments: Array<{
-        id: number;
-        amount: number;
-        payment_date: string;
-        payment_method: string;
-        reference?: string;
-    }>;
+    payments: Payment[];
 }
 
 interface Props {
     invoice: Invoice;
+    company: Company;
 }
 
-export default function Show({ invoice }: Props) {
-    const getStatusVariant = (status: string) => {
-        switch (status) {
-            case 'paid':
-                return 'secondary';
-            case 'pending':
-                return 'default';
-            case 'overdue':
-                return 'destructive';
-            case 'draft':
-                return 'outline';
-            default:
-                return 'outline';
-        }
+export default function Show({ invoice, company }: Props) {
+    const route = useRoute();
+
+    const safeNumber = (val: any): number => {
+        if (typeof val === 'number') return val;
+        if (typeof val === 'string') return parseFloat(val) || 0;
+        return 0;
     };
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
+    // Compute balance in case the backend doesn't send it
+    const balance =
+        safeNumber(invoice.balance) ||
+        safeNumber(invoice.total_amount) - safeNumber(invoice.paid_amount);
+
+    const formatCurrency = (amount: number | string) =>
+        new Intl.NumberFormat('en-ZM', {
+            style: 'currency',
+            currency: invoice.currency || 'ZMW',
+        }).format(safeNumber(amount));
+
+    const formatDate = (dateString: string) =>
+        new Date(dateString).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
         });
+
+    const getStatusVariant = (status: string) => {
+        switch (status) {
+            case 'paid':     return 'secondary';
+            case 'pending':  return 'default';
+            case 'overdue':  return 'destructive';
+            case 'draft':    return 'outline';
+            default:         return 'outline';
+        }
     };
 
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-ZM', {
-            style: 'currency',
-            currency: 'ZMW',
-        }).format(amount);
-    };
+    // const handleDownloadPDF = () => {
+    //     window.open(route('customer.finance.invoices.download', invoice.id), '_blank');
+    // };
 
-    const handleDownloadPDF = () => {
-        window.open(route('customer.finance.invoices.download', invoice.id), '_blank');
+    const handlePrintInvoice = () => {
+        window.open(route('customer.finance.invoices.print', invoice.id), '_blank');
     };
 
     const handlePayNow = () => {
-        window.location.href = route('customer.finance.invoices.pay', invoice.id);
+        router.visit(route('customer.finance.invoices.pay', invoice.id));
+    };
+
+    const lightPageStyle: React.CSSProperties = {
+        ['--background' as any]: '0 0% 100%',
+        ['--foreground' as any]: '240 10% 3.9%',
+        ['--card' as any]: '0 0% 100%',
+        ['--card-foreground' as any]: '240 10% 3.9%',
+        ['--popover' as any]: '0 0% 100%',
+        ['--popover-foreground' as any]: '240 10% 3.9%',
+        ['--muted' as any]: '240 4.8% 95.9%',
+        ['--muted-foreground' as any]: '240 3.8% 46.1%',
+        ['--border' as any]: '240 5.9% 90%',
+        ['--input' as any]: '240 5.9% 90%',
     };
 
     return (
@@ -119,7 +155,8 @@ export default function Show({ invoice }: Props) {
             <Head title={`Invoice ${invoice.invoice_number}`} />
 
             <div className="space-y-6">
-                {/* Header */}
+
+                {/* ── PAGE HEADER ── */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <Link href={route('customer.finance.index')}>
@@ -142,12 +179,17 @@ export default function Show({ invoice }: Props) {
                             </p>
                         </div>
                     </div>
+
                     <div className="flex items-center gap-2">
-                        <Button variant="outline" onClick={handleDownloadPDF}>
+                        <Button variant="outline" onClick={handlePrintInvoice}>
+                            <FileText className="h-4 w-4 mr-2" />
+                            Print View
+                        </Button>
+                        {/* <Button variant="outline" onClick={handleDownloadPDF}>
                             <Download className="h-4 w-4 mr-2" />
                             Download PDF
-                        </Button>
-                        {invoice.status !== 'paid' && invoice.balance > 0 && (
+                        </Button> */}
+                        {invoice.status !== 'paid' && balance > 0 && (
                             <Button onClick={handlePayNow}>
                                 <CreditCard className="h-4 w-4 mr-2" />
                                 Pay Now
@@ -156,7 +198,7 @@ export default function Show({ invoice }: Props) {
                     </div>
                 </div>
 
-                {/* Invoice Overview */}
+                {/* ── OVERVIEW CARDS ── */}
                 <div className="grid gap-6 md:grid-cols-4">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -167,6 +209,7 @@ export default function Show({ invoice }: Props) {
                             <div className="text-2xl font-bold">{formatCurrency(invoice.total_amount)}</div>
                         </CardContent>
                     </Card>
+
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Paid Amount</CardTitle>
@@ -176,15 +219,17 @@ export default function Show({ invoice }: Props) {
                             <div className="text-2xl font-bold">{formatCurrency(invoice.paid_amount)}</div>
                         </CardContent>
                     </Card>
+
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Balance Due</CardTitle>
                             <FileText className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{formatCurrency(invoice.balance)}</div>
+                            <div className="text-2xl font-bold">{formatCurrency(balance)}</div>
                         </CardContent>
                     </Card>
+
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Due Date</CardTitle>
@@ -197,29 +242,30 @@ export default function Show({ invoice }: Props) {
                 </div>
 
                 <div className="grid gap-6 lg:grid-cols-3">
-                    {/* Main Invoice Content */}
+
+                    {/* ── MAIN CONTENT ── */}
                     <div className="lg:col-span-2 space-y-6">
-                        {/* Invoice Details */}
                         <Card>
                             <CardHeader>
                                 <div className="flex items-center justify-between">
-                                    <div>
+                                    {company.logo && (
+                                        <img
+                                            src={company.logo}
+                                            alt={company.name || 'Company Logo'}
+                                            className="h-16 w-auto"
+                                        />
+                                    )}
+                                    <div className="text-right">
                                         <CardTitle>Invoice Details</CardTitle>
                                         <CardDescription>
                                             Complete breakdown of charges and services
                                         </CardDescription>
                                     </div>
-                                    {invoice.company.logo && (
-                                        <img 
-                                            src={invoice.company.logo} 
-                                            alt={invoice.company.name}
-                                            className="h-12 w-auto"
-                                        />
-                                    )}
                                 </div>
                             </CardHeader>
+
                             <CardContent>
-                                {/* Company and Client Info */}
+                                {/* From / Bill To */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                     <div>
                                         <h4 className="font-semibold mb-2 flex items-center gap-2">
@@ -227,49 +273,47 @@ export default function Show({ invoice }: Props) {
                                             From
                                         </h4>
                                         <div className="text-sm space-y-1">
-                                            <p className="font-medium">{invoice.company.name}</p>
-                                            {invoice.company.address && <p>{invoice.company.address}</p>}
-                                            {(invoice.company.city || invoice.company.state || invoice.company.zip) && (
-                                                <p>
-                                                    {[invoice.company.city, invoice.company.state, invoice.company.zip]
-                                                        .filter(Boolean).join(', ')}
-                                                </p>
+                                            <p className="font-medium">{company.name}</p>
+                                            {company.address && <p>{company.address}</p>}
+                                            {(company.city || company.state || company.zip) && (
+                                                <p>{[company.city, company.state, company.zip].filter(Boolean).join(', ')}</p>
                                             )}
-                                            {invoice.company.country && <p>{invoice.company.country}</p>}
-                                            {invoice.company.email && (
+                                            {company.country && <p>{company.country}</p>}
+                                            {company.email && (
                                                 <p className="flex items-center gap-1">
                                                     <Mail className="h-3 w-3" />
-                                                    {invoice.company.email}
+                                                    {company.email}
                                                 </p>
                                             )}
-                                            {invoice.company.phone && (
+                                            {company.phone && (
                                                 <p className="flex items-center gap-1">
                                                     <Phone className="h-3 w-3" />
-                                                    {invoice.company.phone}
+                                                    {company.phone}
                                                 </p>
                                             )}
                                         </div>
                                     </div>
+
                                     <div>
                                         <h4 className="font-semibold mb-2 flex items-center gap-2">
                                             <User className="h-4 w-4" />
                                             Bill To
                                         </h4>
                                         <div className="text-sm space-y-1">
-                                            <p className="font-medium">{invoice.client.name}</p>
-                                            {invoice.client.address && <p>{invoice.client.address}</p>}
-                                            {(invoice.client.city || invoice.client.state || invoice.client.zip) && (
+                                            <p className="font-medium">{invoice.client?.name || 'No client'}</p>
+                                            {invoice.client?.address && <p>{invoice.client.address}</p>}
+                                            {(invoice.client?.city || invoice.client?.state || invoice.client?.zip) && (
                                                 <p>
-                                                    {[invoice.client.city, invoice.client.state, invoice.client.zip]
+                                                    {[invoice.client?.city, invoice.client?.state, invoice.client?.zip]
                                                         .filter(Boolean).join(', ')}
                                                 </p>
                                             )}
-                                            {invoice.client.country && <p>{invoice.client.country}</p>}
+                                            {invoice.client?.country && <p>{invoice.client.country}</p>}
                                             <p className="flex items-center gap-1">
                                                 <Mail className="h-3 w-3" />
-                                                {invoice.client.email}
+                                                {invoice.client?.email || 'No email'}
                                             </p>
-                                            {invoice.client.phone && (
+                                            {invoice.client?.phone && (
                                                 <p className="flex items-center gap-1">
                                                     <Phone className="h-3 w-3" />
                                                     {invoice.client.phone}
@@ -281,7 +325,7 @@ export default function Show({ invoice }: Props) {
 
                                 <Separator className="my-6" />
 
-                                {/* Invoice Items */}
+                                {/* Items table */}
                                 <div className="space-y-4">
                                     <h4 className="font-semibold">Items</h4>
                                     <div className="border rounded-lg overflow-hidden">
@@ -300,7 +344,9 @@ export default function Show({ invoice }: Props) {
                                                         <td className="p-3">{item.description}</td>
                                                         <td className="p-3 text-right">{item.quantity}</td>
                                                         <td className="p-3 text-right">{formatCurrency(item.unit_price)}</td>
-                                                        <td className="p-3 text-right font-medium">{formatCurrency(item.total)}</td>
+                                                        <td className="p-3 text-right font-medium">
+                                                            {formatCurrency(item.total_price)} {/* fixed */}
+                                                        </td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -309,25 +355,48 @@ export default function Show({ invoice }: Props) {
 
                                     {/* Totals */}
                                     <div className="flex justify-end">
-                                        <div className="w-64 space-y-2">
+                                        <div className="w-64 space-y-2 text-sm">
                                             <div className="flex justify-between">
-                                                <span>Subtotal:</span>
+                                                <span className="text-muted-foreground">Subtotal</span>
                                                 <span>{formatCurrency(invoice.subtotal)}</span>
                                             </div>
-                                            <div className="flex justify-between">
-                                                <span>Tax:</span>
-                                                <span>{formatCurrency(invoice.tax_amount)}</span>
-                                            </div>
+                                            {safeNumber(invoice.tax_amount) > 0 && (
+                                                <div className="flex justify-between">
+                                                    <span className="text-muted-foreground">VAT (16%)</span>
+                                                    <span>{formatCurrency(invoice.tax_amount)}</span>
+                                                </div>
+                                            )}
+                                            {safeNumber(invoice.discount_amount) > 0 && (
+                                                <div className="flex justify-between">
+                                                    <span className="text-muted-foreground">Discount</span>
+                                                    <span>-{formatCurrency(invoice.discount_amount!)}</span>
+                                                </div>
+                                            )}
                                             <Separator />
-                                            <div className="flex justify-between font-bold text-lg">
-                                                <span>Total:</span>
+                                            <div className="flex justify-between font-bold text-base">
+                                                <span>Total</span>
                                                 <span>{formatCurrency(invoice.total_amount)}</span>
                                             </div>
+                                            {safeNumber(invoice.paid_amount) > 0 && (
+                                                <>
+                                                    <div className="flex justify-between text-green-600">
+                                                        <span>Paid</span>
+                                                        <span>-{formatCurrency(invoice.paid_amount)}</span>
+                                                    </div>
+                                                    <Separator />
+                                                    <div className="flex justify-between font-bold text-base">
+                                                        <span>Balance Due</span>
+                                                        <span className={balance <= 0 ? 'text-green-600' : 'text-destructive'}>
+                                                            {formatCurrency(balance)}
+                                                        </span>
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Notes and Terms */}
+                                {/* Notes & Terms */}
                                 {(invoice.notes || invoice.terms) && (
                                     <>
                                         <Separator className="my-6" />
@@ -335,13 +404,17 @@ export default function Show({ invoice }: Props) {
                                             {invoice.notes && (
                                                 <div>
                                                     <h4 className="font-semibold mb-2">Notes</h4>
-                                                    <p className="text-sm text-muted-foreground">{invoice.notes}</p>
+                                                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                                                        {invoice.notes}
+                                                    </p>
                                                 </div>
                                             )}
                                             {invoice.terms && (
                                                 <div>
                                                     <h4 className="font-semibold mb-2">Terms & Conditions</h4>
-                                                    <p className="text-sm text-muted-foreground">{invoice.terms}</p>
+                                                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                                                        {invoice.terms}
+                                                    </p>
                                                 </div>
                                             )}
                                         </div>
@@ -351,15 +424,14 @@ export default function Show({ invoice }: Props) {
                         </Card>
                     </div>
 
-                    {/* Sidebar */}
+                    {/* ── SIDEBAR ── */}
                     <div className="space-y-6">
+
                         {/* Payment History */}
                         <Card>
                             <CardHeader>
                                 <CardTitle>Payment History</CardTitle>
-                                <CardDescription>
-                                    All payments made for this invoice
-                                </CardDescription>
+                                <CardDescription>All payments made for this invoice</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-3">
@@ -372,10 +444,23 @@ export default function Show({ invoice }: Props) {
                                                         {formatDate(payment.payment_date)}
                                                     </span>
                                                 </div>
-                                                <div className="text-sm text-muted-foreground">
+                                                <div className="text-sm text-muted-foreground space-y-0.5">
                                                     <p>Method: {payment.payment_method}</p>
-                                                    {payment.reference && <p>Ref: {payment.reference}</p>}
+                                                    {(payment.account_type ?? payment.account?.type) && (
+                                                        <p>Account Type: {payment.account_type ?? payment.account?.type}</p>
+                                                    )}
+                                                    {(payment.account_name ?? payment.account?.name) && (
+                                                        <p>Account: {payment.account_name ?? payment.account?.name}</p>
+                                                    )}
+                                                    {(payment.reference_number ?? payment.reference) && (
+                                                        <p>Ref: {payment.reference_number ?? payment.reference}</p>
+                                                    )}
                                                 </div>
+                                                <Link href={route('customer.finance.payments.show', payment.id)}>
+                                                    <Button variant="outline" size="sm" className="mt-2 w-full">
+                                                        View Payment
+                                                    </Button>
+                                                </Link>
                                             </div>
                                         ))
                                     ) : (
@@ -393,10 +478,10 @@ export default function Show({ invoice }: Props) {
                                 <CardTitle>Quick Actions</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-2">
-                                <Button variant="outline" className="w-full justify-start" onClick={handleDownloadPDF}>
+                                {/* <Button variant="outline" className="w-full justify-start" onClick={handleDownloadPDF}>
                                     <Download className="mr-2 h-4 w-4" />
                                     Download PDF
-                                </Button>
+                                </Button> */}
                                 <Link href={route('customer.communications.create')} className="block">
                                     <Button variant="outline" className="w-full justify-start">
                                         <Mail className="mr-2 h-4 w-4" />

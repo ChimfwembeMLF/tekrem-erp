@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -113,11 +114,35 @@ class ProfileController extends Controller
         ]);
 
         $user = Auth::user();
-        
-        // Store notification preferences in user meta or settings table
-        foreach ($validated as $key => $value) {
-            $user->setMeta("notification_preferences.{$key}", $value);
+
+        $preferences = $user->getNotificationPreferences();
+
+        // Persist direct columns on user_notification_preferences
+        $columnPreferences = Arr::only($validated, [
+            'email_notifications',
+            'sms_notifications',
+            'push_notifications',
+            'marketing_emails',
+        ]);
+
+        if (!empty($columnPreferences)) {
+            $preferences->update($columnPreferences);
         }
+
+        // Store customer-specific toggles that don't have dedicated columns
+        $customPreferences = array_merge(
+            $preferences->custom_preferences ?? [],
+            Arr::only($validated, [
+                'ticket_updates',
+                'project_updates',
+                'invoice_notifications',
+                'payment_confirmations',
+            ])
+        );
+
+        $preferences->update([
+            'custom_preferences' => $customPreferences,
+        ]);
 
         session()->flash('flash', [
             'bannerStyle' => 'success',

@@ -5,10 +5,12 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Models\HR\Department;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
@@ -72,6 +74,27 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+    /**
+     * Return a safe profile photo URL. If the stored file is missing, fall back
+     * to the default avatar URL instead of returning a broken /storage URL.
+     */
+    protected function profilePhotoUrl(): Attribute
+    {
+        return Attribute::get(function (): string {
+            if (! $this->profile_photo_path) {
+                return $this->defaultProfilePhotoUrl();
+            }
+
+            $disk = $this->profilePhotoDisk();
+
+            if (! Storage::disk($disk)->exists($this->profile_photo_path)) {
+                return $this->defaultProfilePhotoUrl();
+            }
+
+            return Storage::url($this->profile_photo_path);
+        });
+    }
+
         /**
      * Get the client owned by the user (one-to-one).
      */
@@ -85,7 +108,14 @@ class User extends Authenticatable
      */
     public function clientProjects()
     {
-        return $this->hasManyThrough(Project::class, Client::class, 'user_id', 'client_id', 'id', 'id');
+        return $this->hasManyThrough(
+            Project::class,    // The final model
+            Client::class,     // The intermediate model
+            'user_id',         // Foreign key on Client table...
+            'client_id',       // Foreign key on Project table...
+            'id',              // Local key on User table...
+            'id'               // Local key on Client table...
+        );
     }
 
     /**

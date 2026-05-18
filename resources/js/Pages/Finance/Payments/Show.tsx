@@ -59,7 +59,7 @@ interface Payment {
     name: string;
     currency: string;
     type: string;
-  };
+  } | null;
 }
 
 interface Props {
@@ -206,7 +206,7 @@ export default function Show({ payment, paymentMethods, statuses }: Props) {
                     {t('finance.amount', 'Amount')}
                   </div>
                   <p className="text-2xl font-bold">
-                    {formatCurrency(payment.amount, payment.account.currency)}
+                    {formatCurrency(payment.amount, payment.account?.currency || payment.invoice?.currency || 'ZMW')}
                   </p>
                 </div>
               </div>
@@ -265,10 +265,16 @@ export default function Show({ payment, paymentMethods, statuses }: Props) {
                   {t('finance.account', 'Account')}
                 </div>
                 <div className="p-3 bg-muted rounded-lg">
-                  <p className="font-medium">{payment.account.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {payment.account.type} - {payment.account.currency}
-                  </p>
+                  {payment.account ? (
+                    <>
+                      <p className="font-medium">{payment.account.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {payment.account.type} - {payment.account.currency}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No account linked</p>
+                  )}
                 </div>
               </div>
             </CardContent>

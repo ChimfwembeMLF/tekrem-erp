@@ -19,28 +19,20 @@ class Chat extends Model
      */
     protected $fillable = [
         'conversation_id',
+        'user_id',
         'message',
-        'message_type',
         'attachments',
-        'is_read',
-        'delivered_at',
         'read_at',
         'status',
         'reply_to_id',
-        'is_internal_note',
-        'metadata',
-        'chattable_id',
-        'chattable_type',
-        'user_id',
-        'recipient_id',
         'is_pinned',
         'pinned_at',
-        'pinned_by',
         'is_edited',
         'edited_at',
         'original_message',
         'edit_history',
         'reactions',
+        'metadata',
     ];
 
     /**
@@ -63,13 +55,7 @@ class Chat extends Model
         'edited_at' => 'datetime',
     ];
 
-    /**
-     * Get the parent chattable model (client or lead).
-     */
-    public function chattable(): MorphTo
-    {
-        return $this->morphTo();
-    }
+
 
     /**
      * Get the user that sent the chat message.
@@ -79,13 +65,7 @@ class Chat extends Model
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Get the recipient user of the chat message.
-     */
-    public function recipient(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'recipient_id');
-    }
+
 
     /**
      * Get the conversation this message belongs to.

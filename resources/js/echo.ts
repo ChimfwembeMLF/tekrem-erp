@@ -1,30 +1,40 @@
-import Echo from 'laravel-echo';
-import Pusher from 'pusher-js';
+declare global {
+    interface Window {
+        Echo: any;
+    }
+}
 
-window.Pusher = Pusher;
+import Echo from 'laravel-echo';
 
 const echo = new Echo({
-    broadcaster: 'pusher',
-    key: '79e6bb61450790bc0624', // Replace with your PUSHER_APP_KEY
-    wsHost: window.location.hostname,
-    wsPort: 6001,
-    forceTLS: false,
-    disableStats: true,
+    broadcaster:       'reverb',
+    key:               import.meta.env.VITE_REVERB_APP_KEY,
+    wsHost:            import.meta.env.VITE_REVERB_HOST,
+    wsPort:            Number(import.meta.env.VITE_REVERB_PORT) || 8080,
+    wssPort:           Number(import.meta.env.VITE_REVERB_PORT) || 443,
+    forceTLS:          (import.meta.env.VITE_REVERB_SCHEME ?? 'http') === 'https',
     enabledTransports: ['ws', 'wss'],
 });
 
 window.Echo = echo;
 
-// Helper: subscribe to all livechat events for a channel
-export function subscribeLiveChatEvents(channelName, handlers) {
+export function subscribeLiveChatEvents(channelName: string, handlers: {
+    onMessage?:  (e: any) => void;
+    onEdit?:     (e: any) => void;
+    onReaction?: (e: any) => void;
+    onPin?:      (e: any) => void;
+    onComment?:  (e: any) => void;
+    onTyping?:   (e: any) => void;
+    onRead?:     (e: any) => void;
+}) {
     const channel = echo.private(channelName);
-    channel.listen('.chat.message', handlers.onMessage || (() => {}));
-    channel.listen('.chat.edit', handlers.onEdit || (() => {}));
-    channel.listen('.chat.reaction', handlers.onReaction || (() => {}));
-    channel.listen('.chat.pin', handlers.onPin || (() => {}));
-    channel.listen('.chat.comment', handlers.onComment || (() => {}));
-    channel.listen('.chat.typing', handlers.onTyping || (() => {}));
-    channel.listen('.chat.read', handlers.onRead || (() => {}));
+    channel.listen('.chat.message',  (e: any) => { handlers.onMessage?.(e); });
+    channel.listen('.chat.edit',     handlers.onEdit     ?? (() => {}));
+    channel.listen('.chat.reaction', handlers.onReaction ?? (() => {}));
+    channel.listen('.chat.pin',      handlers.onPin      ?? (() => {}));
+    channel.listen('.chat.comment',  handlers.onComment  ?? (() => {}));
+    channel.listen('.chat.typing',   handlers.onTyping   ?? (() => {}));
+    channel.listen('.chat.read',     handlers.onRead     ?? (() => {}));
     return channel;
 }
 

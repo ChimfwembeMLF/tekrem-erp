@@ -21,7 +21,17 @@ class UserRegistered extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        return ['mail', \App\Channels\CustomDatabaseChannel::class];
+    }
+    public function toCustomDatabase($notifiable)
+    {
+        return [
+            'type' => 'user_registered',
+            'user_id' => $this->user->id,
+            'user_name' => $this->user->name,
+            'registered_at' => $this->user->created_at,
+            'message' => 'Welcome ' . $this->user->name . '! Thank you for registering with TekRem.',
+        ];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -35,6 +45,17 @@ class UserRegistered extends Notification implements ShouldQueue
             ->line('Let us know if you need any help getting started.');
     }
 
+    public function toDatabase(object $notifiable): array
+    {
+        return [
+            'type' => 'user_registered',
+            'user_id' => $this->user->id,
+            'user_name' => $this->user->name,
+            'registered_at' => $this->user->created_at,
+            'message' => 'Welcome ' . $this->user->name . '! Thank you for registering with TekRem.',
+        ];
+    }
+
     public function toArray(object $notifiable): array
     {
         return [
@@ -42,6 +63,7 @@ class UserRegistered extends Notification implements ShouldQueue
             'user_id' => $this->user->id,
             'user_name' => $this->user->name,
             'registered_at' => $this->user->created_at,
+            'message' => 'Welcome ' . $this->user->name . '! Thank you for registering with TekRem.',
         ];
     }
 }

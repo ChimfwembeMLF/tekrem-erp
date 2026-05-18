@@ -24,6 +24,8 @@ import {
     Menu,
     Users,
     FileText,
+    Megaphone,
+    Mail,
 } from 'lucide-react';
 import NotificationComponent from '@/Components/NotificationComponent';
 import useRoute from '@/Hooks/useRoute';
@@ -41,55 +43,43 @@ interface User {
 interface Props {
     children: React.ReactNode;
 }
-
 const navigation = [
-    {
-        name: 'Dashboard',
-        href: 'customer.dashboard',
-        icon: Home,
-    },
-    // {
-    //     name: 'My Account',
-    //     href: 'customer.crm.index',
-    //     icon: User,
-    // },
-    {
-        name: 'Projects',
-        href: 'customer.projects.index',
-        icon: FolderOpen,
-    },
-    {
-        name: 'Finance',
-        href: 'customer.finance.index',
-        icon: CreditCard,
-    },
-    {
-        name: 'Communications',
-        href: 'customer.communications.index',
-        icon: MessageSquare,
-    },
-    // {
-    //     name: 'HR Portal',
-    //     href: 'customer.hr.index',
-    //     icon: Users,
-    // },
-    {
-        name: 'Support',
-        href: 'customer.support.index',
-        icon: HelpCircle,
-    },
-    // {
-    //     name: 'Content',
-    //     href: 'customer.cms.index',
-    //     icon: FileText,
-    // },
-    {
-        name: 'Profile',
-        href: 'customer.profile.show',
-        icon: Settings,
-    },
+  {
+    name: 'Dashboard',
+    href: 'customer.dashboard',
+    icon: Home,
+  },
+  {
+    name: 'Projects',
+    href: 'customer.projects.index',
+    icon: FolderOpen,
+  },
+  {
+    name: 'Finance',
+    href: 'customer.finance.index',
+    icon: CreditCard,
+  },
+  {
+    name: 'Messages',
+    href: 'customer.conversations.index',
+    icon: Mail, // changed from MessageSquare
+  },
+  {
+    name: 'Communications',
+    href: 'customer.communications.index',
+    icon: Megaphone, // distinct from Messages
+  },
+  {
+    name: 'Support',
+    href: 'customer.support.index',
+    icon: HelpCircle,
+  },
+  {
+    name: 'Profile',
+    href: 'customer.profile.show',
+    icon: Settings,
+  },
 ];
-
 export default function CustomerLayout({ children }: Props) {
     const { auth } = usePage().props as any;
     const user = auth.user as User;

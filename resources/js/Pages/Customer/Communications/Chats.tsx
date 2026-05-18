@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import CustomerChat from './CustomerChat';
 import { Head, Link, router } from '@inertiajs/react';
 import CustomerLayout from '@/Layouts/CustomerLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
@@ -50,12 +51,23 @@ interface Props {
     status?: string;
     search?: string;
   };
+  projectChats?: {
+    data: Chat[];
+    links: any[];
+    current_page: number;
+    last_page: number;
+    from: number;
+    to: number;
+    total: number;
+  };
 }
 
-export default function Chats({ chats, filters }: Props) {
+export default function Chats({ chats, filters, projectChats }: Props) {
   const { t } = useTranslate();
   const [searchTerm, setSearchTerm] = useState(filters.search || '');
   const [statusFilter, setStatusFilter] = useState(filters.status || '');
+  const [activeTab, setActiveTab] = useState<'support' | 'projects'>('support');
+  const [activeChat, setActiveChat] = useState<null | Chat>(null);
 
   const handleSearch = () => {
     router.get(route('customer.communications.chats'), {
@@ -111,7 +123,6 @@ export default function Chats({ chats, filters }: Props) {
   return (
     <CustomerLayout>
       <Head title="Chat Conversations" />
-
       <div className="space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
@@ -130,7 +141,7 @@ export default function Chats({ chats, filters }: Props) {
                 {t('All Communications')}
               </Button>
             </Link>
-            <Link href={route('customer.communications.create')}>
+            <Link href={route('customer.communications.chats.create')}>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
                 {t('New Request')}
@@ -139,141 +150,106 @@ export default function Chats({ chats, filters }: Props) {
           </div>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder={t('Search conversations...')}
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <div className="sm:w-48">
-                <Select value={statusFilter || 'all'} onValueChange={(value) => handleFilterChange('status', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('All Statuses')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t('All Statuses')}</SelectItem>
-                    <SelectItem value="active">{t('Active')}</SelectItem>
-                    <SelectItem value="pending">{t('Pending')}</SelectItem>
-                    <SelectItem value="closed">{t('Closed')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button onClick={handleSearch}>
-                {t('Search')}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Tabs for Support/Project Conversations */}
+        <div className="flex gap-2 mb-4">
+          <Button variant={activeTab === 'support' ? 'default' : 'outline'} size="sm" onClick={() => setActiveTab('support')}>
+            Support Conversations
+          </Button>
+          <Button variant={activeTab === 'projects' ? 'default' : 'outline'} size="sm" onClick={() => setActiveTab('projects')}>
+            Project Conversations
+          </Button>
+        </div>
 
-        {/* Chat List */}
-        <div className="space-y-4">
-          {chats.data.length > 0 ? (
-            chats.data.map((chat) => (
-              <Card key={chat.id} className="hover:shadow-md transition-shadow cursor-pointer">
-                <CardContent className="p-4">
-                  <Link href={route('customer.communications.chats.show', chat.id)}>
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start space-x-4 flex-1">
-                        <div className="relative">
-                          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                            <MessageCircle className="h-6 w-6 text-blue-600" />
-                          </div>
-                          {chat.unread_count && chat.unread_count > 0 && (
-                            <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                              {chat.unread_count}
-                            </div>
-                          )}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Conversation List */}
+          <div className="col-span-1 space-y-2">
+            {(activeTab === 'support' ? chats.data : (projectChats?.data || [])).length > 0 ? (
+              (activeTab === 'support' ? chats.data : (projectChats?.data || [])).map((chat) => (
+                <Card key={chat.id} className={`hover:shadow-md transition-shadow cursor-pointer ${activeChat?.id === chat.id ? 'ring-2 ring-blue-500' : ''}`}
+                  onClick={() => setActiveChat(chat)}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start space-x-4 flex-1">
+                      <div className="relative">
+                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                          <MessageCircle className="h-6 w-6 text-blue-600" />
                         </div>
-                        
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-1">
-                            <h3 className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                              {chat.title}
-                            </h3>
-                            <div className="flex items-center space-x-2">
-                              <Badge className={getStatusColor(chat.status)}>
-                                {t(chat.status.charAt(0).toUpperCase() + chat.status.slice(1))}
-                              </Badge>
-                              <span className="text-xs text-gray-500">
-                                {formatTime(chat.updated_at)}
-                              </span>
-                            </div>
+                        {chat.unread_count && chat.unread_count > 0 && (
+                          <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                            {chat.unread_count}
                           </div>
-                          
-                          {chat.lastMessage && (
-                            <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                              {chat.lastMessage.user?.name && (
-                                <span className="font-medium">{chat.lastMessage.user.name}: </span>
-                              )}
-                              {chat.lastMessage.message}
-                            </p>
-                          )}
-                          
-                          <div className="flex items-center mt-2 space-x-4 text-xs text-gray-500">
-                            <div className="flex items-center">
-                              <Users className="h-3 w-3 mr-1" />
-                              {chat.participants.length} {t('participants')}
-                            </div>
-                            <div className="flex items-center">
-                              <Clock className="h-3 w-3 mr-1" />
-                              {t('Created')} {new Date(chat.created_at).toLocaleDateString()}
-                            </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <h3 className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                            {chat.title}
+                          </h3>
+                          <div className="flex items-center space-x-2">
+                            <Badge className={getStatusColor(chat.status)}>
+                              {t(chat.status.charAt(0).toUpperCase() + chat.status.slice(1))}
+                            </Badge>
+                            <span className="text-xs text-gray-500">
+                              {formatTime(chat.updated_at)}
+                            </span>
+                          </div>
+                        </div>
+                        {chat.lastMessage && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                            {chat.lastMessage.user?.name && (
+                              <span className="font-medium">{chat.lastMessage.user.name}: </span>
+                            )}
+                            {chat.lastMessage.message}
+                          </p>
+                        )}
+                        <div className="flex items-center mt-2 space-x-4 text-xs text-gray-500">
+                          <div className="flex items-center">
+                            <Users className="h-3 w-3 mr-1" />
+                            {chat.participants.length} {t('participants')}
+                          </div>
+                          <div className="flex items-center">
+                            <Clock className="h-3 w-3 mr-1" />
+                            {t('Created')} {new Date(chat.created_at).toLocaleDateString()}
                           </div>
                         </div>
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                    {t('No conversations found')}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                    {t('You haven\'t started any chat conversations yet.')}
+                  </p>
+                  <Link href={route('customer.communications.create')}>
+                    <Button asChild>
+                      <Link href={route('customer.communications.chats.create')}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        {t('Start a Conversation')}
+                      </Link>
+                    </Button>
                   </Link>
                 </CardContent>
               </Card>
-            ))
-          ) : (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  {t('No conversations found')}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  {t('You haven\'t started any chat conversations yet.')}
-                </p>
-                <Link href={route('customer.communications.create')}>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    {t('Start a Conversation')}
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* Pagination */}
-        {chats.last_page > 1 && (
-          <div className="flex justify-center">
-            <div className="flex space-x-2">
-              {chats.links.map((link, index) => (
-                <Button
-                  key={index}
-                  variant={link.active ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => link.url && router.get(link.url)}
-                  disabled={!link.url}
-                  dangerouslySetInnerHTML={{ __html: link.label }}
-                />
-              ))}
-            </div>
+            )}
           </div>
-        )}
+
+          {/* Chat UI */}
+          <div className="col-span-2">
+            {activeChat ? (
+              <CustomerChat chat={activeChat} />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-400">
+                <span>Select a conversation to view messages</span>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </CustomerLayout>
   );

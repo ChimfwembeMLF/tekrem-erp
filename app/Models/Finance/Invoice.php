@@ -52,6 +52,13 @@ class Invoice extends Model
         'paid_amount' => 'decimal:2',
     ];
 
+    // Ensure numeric fields are always returned as float in arrays/JSON
+    public function getSubtotalAttribute($value) { return (float) $value; }
+    public function getTaxAmountAttribute($value) { return (float) $value; }
+    public function getDiscountAmountAttribute($value) { return (float) $value; }
+    public function getTotalAmountAttribute($value) { return (float) $value; }
+    public function getPaidAmountAttribute($value) { return (float) $value; }
+
     /**
      * Get the billable entity (client or lead).
      */

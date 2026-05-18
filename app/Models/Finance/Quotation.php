@@ -4,6 +4,7 @@ namespace App\Models\Finance;
 
 use App\Models\Lead;
 use App\Models\User;
+use App\Models\Client;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -30,7 +31,8 @@ class Quotation extends Model
         'currency',
         'notes',
         'terms',
-        'lead_id',
+        'billable_id',
+        'billable_type',
         'user_id',
         'converted_to_invoice_id',
         'converted_at',
@@ -59,12 +61,13 @@ class Quotation extends Model
         return $this->belongsTo(User::class);
     }
 
+
     /**
-     * Get the lead associated with the quotation.
+     * Get the billable entity (client or lead).
      */
-    public function lead(): BelongsTo
+    public function billable(): \Illuminate\Database\Eloquent\Relations\MorphTo
     {
-        return $this->belongsTo(Lead::class);
+        return $this->morphTo();
     }
 
     /**
@@ -106,7 +109,7 @@ class Quotation extends Model
         $month = date('m');
         
         // Get the last quotation number for this month
-        $lastQuotation = static::where('quotation_number', 'like', "QUO-{$year}{$month}-%")
+        $lastQuotation = static::query()->where('quotation_number', 'like', "QUO-{$year}{$month}-%")
             ->orderBy('quotation_number', 'desc')
             ->first();
 
@@ -210,16 +213,22 @@ class Quotation extends Model
             throw new \Exception('Quotation cannot be converted to invoice.');
         }
 
-        // If no client ID provided, try to get from lead's converted client
-        if (!$clientId && $this->lead->converted_to_client) {
-            $clientId = $this->lead->converted_to_client_id;
-        }
+        $this->loadMissing('billable');
 
-        if (!$clientId) {
-            throw new \Exception('Lead must be converted to client before creating invoice.');
+        // Keep billable consistent with quotation unless a converted client is available.
+        $invoiceBillableId = $this->billable_id;
+        $invoiceBillableType = $this->billable_type;
+
+        if ($clientId) {
+            $invoiceBillableId = $clientId;
+            $invoiceBillableType = Client::class;
+        } elseif ($this->billable instanceof Lead && $this->billable->converted_to_client && $this->billable->converted_to_client_id) {
+            $invoiceBillableId = $this->billable->converted_to_client_id;
+            $invoiceBillableType = Client::class;
         }
 
         $invoice = Invoice::create([
+            'invoice_number' => Invoice::generateInvoiceNumber(),
             'status' => 'draft',
             'issue_date' => now()->toDateString(),
             'due_date' => now()->addDays(30)->toDateString(),
@@ -230,8 +239,8 @@ class Quotation extends Model
             'currency' => $this->currency,
             'notes' => $this->notes,
             'terms' => $this->terms,
-            'billable_id' => $clientId,
-            'billable_type' => 'App\Models\Client',
+            'billable_id' => $invoiceBillableId,
+            'billable_type' => $invoiceBillableType,
             'user_id' => $this->user_id,
         ]);
 

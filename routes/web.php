@@ -244,7 +244,7 @@ Route::middleware([
 
     // Projects routes
     Route::prefix('projects')->name('projects.')->middleware('permission:view projects')->group(function () {
-            Route::get('/{project}/users', [\App\Http\Controllers\ProjectController::class, 'users'])->name('project.users');
+        Route::get('/{project}/users', [\App\Http\Controllers\ProjectController::class, 'users'])->name('project.users');
         // Dashboard
         Route::get('/', [\App\Http\Controllers\ProjectController::class, 'dashboard'])->name('dashboard');
         Route::get('/analytics', [\App\Http\Controllers\ProjectController::class, 'analytics'])->name('analytics');
@@ -417,7 +417,7 @@ Route::middleware([
             Route::delete('/{card}/watchers/{watcher}', [\App\Http\Controllers\CardWatcherController::class, 'destroy'])->name('watchers.destroy');
 
             // Card Time Tracking
-            Route::post('/{card}/time', [\App\Http\Controllers\CardTimeController::class, 'store'])->name('time.store');
+            // Route removed: CardTimeController does not exist
         });
 
         // Sprints
@@ -560,6 +560,7 @@ Route::middleware([
         Route::post('quotations/{quotation}/reject', [\App\Http\Controllers\Finance\QuotationController::class, 'reject'])->name('quotations.reject');
         Route::post('quotations/{quotation}/convert-to-invoice', [\App\Http\Controllers\Finance\QuotationController::class, 'convertToInvoice'])->name('quotations.convert-to-invoice');
         Route::get('quotations/{quotation}/pdf', [\App\Http\Controllers\Finance\QuotationController::class, 'pdf'])->name('quotations.pdf');
+        Route::get('quotations/{quotation}/print', [\App\Http\Controllers\Finance\QuotationController::class, 'print'])->name('quotations.print');
 
         // Analytics
         Route::prefix('analytics')->name('analytics.')->group(function () {
@@ -994,6 +995,9 @@ Route::middleware([
             Route::get('/invoices', [\App\Http\Controllers\Customer\FinanceController::class, 'invoices'])->name('invoices.index');
             Route::get('/invoices/{invoice}', [\App\Http\Controllers\Customer\FinanceController::class, 'showInvoice'])->name('invoices.show');
             Route::get('/invoices/{invoice}/download', [\App\Http\Controllers\Customer\FinanceController::class, 'downloadInvoice'])->name('invoices.download');
+            Route::get('/invoices/{invoice}/print', [\App\Http\Controllers\Customer\FinanceController::class, 'printInvoice'])->name('invoices.print');
+            Route::get('/invoices/{invoice}/pay', [\App\Http\Controllers\Customer\FinanceController::class, 'payInvoice'])->name('invoices.pay');
+            Route::post('/invoices/{invoice}/pay', [\App\Http\Controllers\Customer\FinanceController::class, 'storeInvoicePayment'])->name('invoices.pay.store');
 
             // Payments
             Route::get('/payments', [\App\Http\Controllers\Customer\FinanceController::class, 'payments'])->name('payments');
@@ -1002,6 +1006,7 @@ Route::middleware([
             // Quotations
             Route::get('/quotations', [\App\Http\Controllers\Customer\FinanceController::class, 'quotations'])->name('quotations');
             Route::get('/quotations/{quotation}', [\App\Http\Controllers\Customer\FinanceController::class, 'showQuotation'])->name('quotations.show');
+            Route::get('/quotations/{quotation}/print', [\App\Http\Controllers\Customer\FinanceController::class, 'printQuotation'])->name('quotations.print');
             Route::post('/quotations/{quotation}/accept', [\App\Http\Controllers\Customer\FinanceController::class, 'acceptQuotation'])->name('quotations.accept');
             Route::get('/quotations/{quotation}/download', [\App\Http\Controllers\Customer\FinanceController::class, 'downloadQuotation'])->name('quotations.download');
         });
@@ -1036,10 +1041,19 @@ Route::middleware([
             Route::get('/menu', [\App\Http\Controllers\Customer\CMSController::class, 'menu'])->name('menu');
         });
 
+        // Customer Conversations (Chat)
+        Route::resource('conversations', App\Http\Controllers\Customer\ConversationController::class);
+        Route::post('/conversations/{conversation}/messages', [\App\Http\Controllers\Customer\ConversationController::class, 'sendMessage'])->name('conversations.messages.store');
+        // GET route for fetching conversation messages (RESTful and polling)
+        Route::get('/conversations/{conversation}/messages', [\App\Http\Controllers\Customer\ConversationController::class, 'getMessages']);        
+
         // Customer Communications
+
         Route::prefix('communications')->name('communications.')->group(function () {
             // Chat functionality (placed before catch-all)
+
             Route::get('/chats', [\App\Http\Controllers\Customer\CommunicationController::class, 'chats'])->name('chats');
+            Route::get('/chats/create', [\App\Http\Controllers\Customer\CommunicationController::class, 'createChat'])->name('chats.create');
             Route::post('/chats', [\App\Http\Controllers\Customer\CommunicationController::class, 'storeChat'])->name('chats.store');
             Route::get('/chats/{conversation}', [\App\Http\Controllers\Customer\CommunicationController::class, 'showChat'])->name('chats.show');
             Route::post('/chats/{conversation}/messages', [\App\Http\Controllers\Customer\CommunicationController::class, 'sendMessage'])->name('chats.messages.store');

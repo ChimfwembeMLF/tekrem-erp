@@ -21,7 +21,18 @@ class NewUserRegisteredAdmin extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
-        return ['mail', 'database', 'broadcast'];
+        return ['mail', \App\Channels\CustomDatabaseChannel::class, 'broadcast'];
+    }
+    public function toCustomDatabase($notifiable)
+    {
+        return [
+            'type' => 'admin_new_user_registered',
+            'message' => "A new user registered: {$this->user->name} ({$this->user->email})",
+            'user_id' => $this->user->id,
+            'user_name' => $this->user->name,
+            'user_email' => $this->user->email,
+            'registered_at' => $this->user->created_at,
+        ];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -40,6 +51,18 @@ class NewUserRegisteredAdmin extends Notification implements ShouldQueue
     {
         return [
             'type' => 'admin_new_user_registered',
+            'user_id' => $this->user->id,
+            'user_name' => $this->user->name,
+            'user_email' => $this->user->email,
+            'registered_at' => $this->user->created_at,
+        ];
+    }
+
+    public function toDatabase($notifiable)
+    {
+        return [
+            'type' => 'admin_new_user_registered',
+            'message' => "A new user registered: {$this->user->name} ({$this->user->email})",
             'user_id' => $this->user->id,
             'user_name' => $this->user->name,
             'user_email' => $this->user->email,

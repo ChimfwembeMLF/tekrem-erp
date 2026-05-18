@@ -27,14 +27,21 @@ class ZraSubmissionStatusChanged extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
-        $channels = ['database', 'broadcast'];
-        
+        $channels = [\App\Channels\CustomDatabaseChannel::class, 'broadcast'];
         // Add email for important status changes
         if ($this->shouldSendEmail()) {
             $channels[] = 'mail';
         }
-
         return $channels;
+    }
+    public function toCustomDatabase($notifiable)
+    {
+        return [
+            'zra_invoice_id' => $this->zraInvoice->id,
+            'old_status' => $this->oldStatus,
+            'new_status' => $this->newStatus,
+            'message' => $this->getStatusMessage(),
+        ];
     }
 
     public function toMail(object $notifiable): MailMessage

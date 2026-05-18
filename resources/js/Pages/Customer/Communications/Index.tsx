@@ -20,6 +20,7 @@ import {
     AlertCircle,
     User
 } from 'lucide-react';
+import useRoute from '@/Hooks/useRoute';
 
 interface Communication {
     id: number;
@@ -72,6 +73,7 @@ interface Props {
 }
 
 export default function Index({ communications, stats, filters }: Props) {
+    const route = useRoute();
     const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);

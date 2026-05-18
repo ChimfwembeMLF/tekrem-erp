@@ -123,10 +123,11 @@ export default function Create({ types, priorities }: Props) {
                                             <SelectValue placeholder="Select communication type" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="email">Email</SelectItem>
-                                            <SelectItem value="call">Phone Call</SelectItem>
-                                            <SelectItem value="meeting">Meeting</SelectItem>
-                                            <SelectItem value="note">Note</SelectItem>
+                                            {types?.map((type) => (
+                                                <SelectItem key={type.value} value={type.value}>
+                                                    {type.label}
+                                                </SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                     {errors.type && (

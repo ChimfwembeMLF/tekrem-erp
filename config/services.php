@@ -56,4 +56,14 @@ return [
         'model' => env('MISTRAL_MODEL', 'mistral-small'),
     ],
 
+    'pawapay' => [
+        'base_url' => env('PAWAPAY_BASE_URL', 'https://api.sandbox.pawapay.io'),
+        'api_key' => env('PAWAPAY_API_KEY'),
+        'callback_url' => env('PAWAPAY_CALLBACK_URL', env('APP_URL')),
+        'deposit_url' => env('PAWAPAY_DEPOSIT_URL', '/deposits'),
+        'payout_url' => env('PAWAPAY_PAYOUT_URL', '/payouts'),
+        'timeout' => (int) env('PAWAPAY_TIMEOUT', 30),
+        'enable_logging' => env('PAWAPAY_ENABLE_LOGGING', true),
+    ],
+
 ];

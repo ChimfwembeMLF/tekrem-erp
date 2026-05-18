@@ -30,6 +30,10 @@ interface Payment {
         id: number;
         invoice_number: string;
         total_amount: number;
+        currency?: string;
+    };
+    account?: {
+        currency?: string;
     };
     payment_method_details?: {
         type: string;
@@ -73,10 +77,10 @@ export default function Show({ payment }: Props) {
         }
     };
 
-    const formatCurrency = (amount: number) => {
+    const formatCurrency = (amount: number, currency: string = 'ZMW') => {
         return new Intl.NumberFormat('en-ZM', {
             style: 'currency',
-            currency: 'ZMW',
+            currency,
         }).format(amount);
     };
 
@@ -138,7 +142,9 @@ export default function Show({ payment }: Props) {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-sm font-medium text-muted-foreground">Amount</label>
-                                    <div className="text-2xl font-bold">{formatCurrency(payment.amount)}</div>
+                                    <div className="text-2xl font-bold">
+                                        {formatCurrency(payment.amount, payment.invoice?.currency || payment.account?.currency || 'ZMW')}
+                                    </div>
                                 </div>
                                 <div>
                                     <label className="text-sm font-medium text-muted-foreground">Status</label>
@@ -217,7 +223,7 @@ export default function Show({ payment }: Props) {
                                     <div>
                                         <div className="font-medium">{payment.invoice.invoice_number}</div>
                                         <div className="text-sm text-muted-foreground">
-                                            Total: {formatCurrency(payment.invoice.total_amount)}
+                                            Total: {formatCurrency(payment.invoice.total_amount, payment.invoice.currency || payment.account?.currency || 'ZMW')}
                                         </div>
                                     </div>
                                     <Link href={route('customer.finance.invoices.show', payment.invoice.id)}>

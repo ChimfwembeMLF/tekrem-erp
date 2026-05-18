@@ -25,7 +25,15 @@ class ReconciliationCompleted extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
-        return ['mail', 'database', 'broadcast'];
+        return ['mail', \App\Channels\CustomDatabaseChannel::class, 'broadcast'];
+    }
+    public function toCustomDatabase($notifiable)
+    {
+        return [
+            'reconciliation_id' => $this->reconciliation->id,
+            'summary' => $this->summary,
+            'message' => 'MoMo reconciliation completed.',
+        ];
     }
 
     public function toMail(object $notifiable): MailMessage

@@ -217,6 +217,12 @@ export default function Index({ quotations, filters }: Props) {
                                                         <span className="text-destructive ml-2">(Expired)</span>
                                                     )}
                                                 </div>
+                                                {/* Show client name if available */}
+                                                {quotation.client && quotation.client.name ? (
+                                                    <div className="text-xs text-muted-foreground mt-1">
+                                                        Client: {quotation.client.name}
+                                                    </div>
+                                                ) : null}
                                                 {quotation.description && (
                                                     <div className="text-xs text-muted-foreground mt-1">
                                                         {quotation.description}

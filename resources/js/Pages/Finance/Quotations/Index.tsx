@@ -331,9 +331,9 @@ export default function Index({ quotations, filters, statuses, leads }: Props) {
                           </td>
                           <td className="p-2">
                             <div>
-                              <p className="font-medium">{quotation.lead.name}</p>
+                              <p className="font-medium">{quotation.billable?.name || 'N/A'}</p>
                               <p className="text-xs text-muted-foreground">
-                                {quotation.lead.company || quotation.lead.email}
+                                {quotation.billable?.company || quotation.billable?.email || 'N/A'}
                               </p>
                             </div>
                           </td>

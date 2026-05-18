@@ -19,7 +19,7 @@ class QuotationController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Quotation::with(['lead', 'user'])
+        $query = Quotation::with(['billable', 'user'])
             ->where('user_id', auth()->id())
             ->orderBy('created_at', 'desc');
 
@@ -28,9 +28,11 @@ class QuotationController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('quotation_number', 'like', "%{$search}%")
-                  ->orWhereHas('lead', function ($leadQuery) use ($search) {
-                      $leadQuery->where('name', 'like', "%{$search}%")
-                               ->orWhere('company', 'like', "%{$search}%");
+                  ->orWhereHas('billable', function ($billableQuery) use ($search) {
+                      $billableQuery->where('name', 'like', "%{$search}%");
+                      if (method_exists($billableQuery->getModel(), 'company')) {
+                          $billableQuery->orWhere('company', 'like', "%{$search}%");
+                      }
                   });
             });
         }
@@ -39,8 +41,8 @@ class QuotationController extends Controller
             $query->where('status', $request->status);
         }
 
-        if ($request->filled('lead')) {
-            $query->where('lead_id', $request->lead);
+        if ($request->filled('billable_id')) {
+            $query->where('billable_id', $request->billable_id);
         }
 
         if ($request->filled('date_from')) {
@@ -58,10 +60,8 @@ class QuotationController extends Controller
 
         $quotations = $query->paginate(15)->withQueryString();
 
-        // Get filter options
-        $leads = Lead::where('user_id', auth()->id())
-            ->orderBy('name')
-            ->get(['id', 'name', 'company']);
+        $clients = Client::where('user_id', auth()->id())->orderBy('name')->get(['id', 'name']);
+        $leads = Lead::where('user_id', auth()->id())->orderBy('name')->get(['id', 'name', 'company']);
 
         $statuses = [
             'draft' => 'Draft',
@@ -73,9 +73,10 @@ class QuotationController extends Controller
 
         return Inertia::render('Finance/Quotations/Index', [
             'quotations' => $quotations,
+            'clients' => $clients,
             'leads' => $leads,
             'statuses' => $statuses,
-            'filters' => $request->only(['search', 'status', 'lead', 'date_from', 'date_to']),
+            'filters' => $request->only(['search', 'status', 'billable_id', 'date_from', 'date_to']),
         ]);
     }
 
@@ -84,9 +85,14 @@ class QuotationController extends Controller
      */
     public function create(Request $request)
     {
-        // Get leads that are not converted to clients yet
-        $leads = Lead::where('user_id', auth()->id())
-            ->where('converted_to_client', false)
+        // Get all active clients for selection
+        // $clients = Client::where('user_id', auth()->id())
+        $clients = Client::where('status', 'active')
+            ->orderBy('name')
+            ->get(['id', 'name', 'email']);
+
+        // $leads = Lead::where('user_id', auth()->id())
+        $leads = Lead::where('converted_to_client', false)
             ->orderBy('name')
             ->get(['id', 'name', 'email', 'company']);
 
@@ -114,6 +120,7 @@ class QuotationController extends Controller
         }
 
         return Inertia::render('Finance/Quotations/Create', [
+            'clients' => $clients,
             'leads' => $leads,
             'currencies' => $currencies,
             'statuses' => $statuses,
@@ -127,7 +134,8 @@ class QuotationController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'lead_id' => 'required|exists:leads,id',
+            'billable_type' => 'required|string|in:client,lead',
+            'billable_id' => 'required|integer',
             'issue_date' => 'required|date',
             'expiry_date' => 'required|date|after:issue_date',
             'currency' => 'required|string|max:3',
@@ -146,16 +154,24 @@ class QuotationController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
-        // Verify lead belongs to authenticated user
-        $lead = Lead::where('id', $request->lead_id)
-            ->where('user_id', auth()->id())
-            ->first();
+        // Verify billable entity ownership
 
-        if (!$lead) {
-            return back()->withErrors(['lead_id' => 'Invalid lead selected.'])->withInput();
+
+        if ($request->billable_type === 'client') {
+            $billable = Client::where('id', $request->billable_id)->first();
+            $billableClass = Client::class;
+        } else {
+            $billable = Lead::where('id', $request->billable_id)
+                ->where('user_id', auth()->id())
+                ->first();
+            $billableClass = Lead::class;
         }
 
-        DB::transaction(function () use ($request) {
+        if (!$billable) {
+            return back()->withErrors(['billable_id' => 'Invalid billable entity selected.'])->withInput();
+        }
+
+        DB::transaction(function () use ($request, $billableClass) {
             // Calculate totals
             $subtotal = 0;
             foreach ($request->items as $item) {
@@ -177,7 +193,8 @@ class QuotationController extends Controller
                 'currency' => $request->currency,
                 'notes' => $request->notes,
                 'terms' => $request->terms,
-                'lead_id' => $request->lead_id,
+                'billable_id' => $request->billable_id,
+                'billable_type' => $billableClass,
                 'user_id' => auth()->id(),
             ]);
 
@@ -206,7 +223,7 @@ class QuotationController extends Controller
             abort(403);
         }
 
-        $quotation->load(['lead', 'items', 'convertedToInvoice']);
+        $quotation->load(['billable', 'items', 'convertedToInvoice']);
 
         // Check if quotation is expired and update status
         $quotation->checkAndUpdateExpiry();
@@ -232,9 +249,14 @@ class QuotationController extends Controller
                 ->with('error', 'Only draft and sent quotations can be edited.');
         }
 
-        $quotation->load(['lead', 'items']);
+        $quotation->load(['billable', 'items']);
 
         // Get leads that are not converted to clients yet
+        $clients = Client::where('user_id', auth()->id())
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get(['id', 'name', 'email']);
+
         $leads = Lead::where('user_id', auth()->id())
             ->where('converted_to_client', false)
             ->orderBy('name')
@@ -279,7 +301,8 @@ class QuotationController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'lead_id' => 'required|exists:leads,id',
+            'billable_type' => 'required|string|in:client,lead',
+            'billable_id' => 'required|integer',
             'issue_date' => 'required|date',
             'expiry_date' => 'required|date|after:issue_date',
             'currency' => 'required|string|max:3',
@@ -298,16 +321,17 @@ class QuotationController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
-        // Verify lead belongs to authenticated user
-        $lead = Lead::where('id', $request->lead_id)
+        // Verify billable entity ownership
+        $billableClass = $request->billable_type === 'client' ? Client::class : Lead::class;
+        $billable = $billableClass::where('id', $request->billable_id)
             ->where('user_id', auth()->id())
             ->first();
 
-        if (!$lead) {
-            return back()->withErrors(['lead_id' => 'Invalid lead selected.'])->withInput();
+        if (!$billable) {
+            return back()->withErrors(['billable_id' => 'Invalid billable entity selected.'])->withInput();
         }
 
-        DB::transaction(function () use ($request, $quotation) {
+        DB::transaction(function () use ($request, $quotation, $billableClass) {
             // Calculate totals
             $subtotal = 0;
             foreach ($request->items as $item) {
@@ -329,7 +353,8 @@ class QuotationController extends Controller
                 'currency' => $request->currency,
                 'notes' => $request->notes,
                 'terms' => $request->terms,
-                'lead_id' => $request->lead_id,
+                'billable_id' => $request->billable_id,
+                'billable_type' => $billableClass,
             ]);
 
             // Delete existing items and create new ones
@@ -435,7 +460,7 @@ class QuotationController extends Controller
     /**
      * Convert quotation to invoice.
      */
-    public function convertToInvoice(Quotation $quotation)
+    public function convertToInvoice(Request $request, Quotation $quotation)
     {
         // Ensure user can only convert their own quotations
         if ($quotation->user_id !== auth()->id()) {
@@ -443,17 +468,118 @@ class QuotationController extends Controller
         }
 
         if (!$quotation->can_convert_to_invoice) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Quotation cannot be converted to invoice.',
+                ], 422);
+            }
+
             return back()->with('error', 'Quotation cannot be converted to invoice.');
         }
 
         try {
             $invoice = $quotation->convertToInvoice();
 
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Quotation converted to invoice successfully.',
+                    'redirect_url' => route('finance.invoices.show', $invoice),
+                    'invoice_id' => $invoice->id,
+                ]);
+            }
+
             return redirect()->route('finance.invoices.show', $invoice)
                 ->with('success', 'Quotation converted to invoice successfully.');
         } catch (\Exception $e) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ], 422);
+            }
+
             return back()->with('error', $e->getMessage());
         }
+    }
+
+    /**
+     * Display quotation print view.
+     */
+    public function print(Quotation $quotation)
+    {
+        // Ensure user can only view their own quotations
+        if ($quotation->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $quotation->load(['billable', 'items']);
+        $company = config('company');
+        if (empty($company['logo'])) {
+            $company['logo'] = '/logo.png';
+        }
+
+        // Build normalized print payload
+        $payload = $this->buildQuotationPrintPayload($quotation);
+
+        return Inertia::render('Finance/Quotations/Print', ['quotation' => $payload]);
+    }
+
+    /**
+     * Build normalized quotation print payload.
+     */
+    private function buildQuotationPrintPayload(Quotation $quotation): array
+    {
+        $company = config('company');
+        if (empty($company['logo'])) {
+            $company['logo'] = '/logo.png';
+        }
+
+        return [
+            'id' => $quotation->id,
+            'quotationNumber' => $quotation->quotation_number,
+            'issueDate' => $quotation->issue_date,
+            'expiryDate' => $quotation->expiry_date,
+            'currency' => $quotation->currency ?? 'ZMW',
+            'status' => $quotation->status,
+            'notes' => $quotation->notes,
+            'terms' => $quotation->terms,
+            'customer' => [
+                'name' => $quotation->billable?->name,
+                'email' => $quotation->billable?->email,
+                'phone' => $quotation->billable?->phone,
+                'address' => $quotation->billable?->address,
+            ],
+            'company' => [
+                'name' => $company['name'] ?? 'Company',
+                'address' => $company['address'] ?? '',
+                'city' => $company['city'] ?? '',
+                'country' => $company['country'] ?? '',
+                'taxNumber' => $company['tax_number'] ?? '',
+                'phone' => $company['phone'] ?? '',
+                'email' => $company['email'] ?? '',
+                'website' => $company['website'] ?? '',
+                'logoUrl' => $company['logo'],
+                'bankName' => $company['bank']['name'] ?? '',
+                'bankBranch' => $company['bank']['branch'] ?? '',
+                'accountName' => $company['bank']['account_name'] ?? '',
+                'accountNumber' => $company['bank']['account_number'] ?? '',
+            ],
+            'items' => collect($quotation->items)->map(fn($item) => [
+                'id' => $item->id,
+                'description' => $item->description,
+                'quantity' => $item->quantity,
+                'unitPrice' => $item->unit_price,
+                'totalPrice' => $item->total_price,
+            ])->toArray(),
+            'totals' => [
+                'subtotal' => $quotation->subtotal,
+                'taxAmount' => $quotation->tax_amount,
+                'discountAmount' => $quotation->discount_amount ?? 0,
+                'grandTotal' => $quotation->total_amount,
+            ],
+        ];
     }
 
     /**

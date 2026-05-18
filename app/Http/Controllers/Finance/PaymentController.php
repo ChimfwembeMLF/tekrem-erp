@@ -7,6 +7,8 @@ use App\Models\Finance\Payment;
 use App\Models\Finance\Invoice;
 use App\Models\Finance\Account;
 use App\Models\Finance\Transaction;
+use App\Models\Client;
+use App\Models\Lead;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Validator;
@@ -86,17 +88,24 @@ class PaymentController extends Controller
     {
         // Get unpaid or partially paid invoices
         $invoices = Invoice::where('user_id', auth()->id())
-            ->whereIn('status', ['sent', 'overdue'])
-            ->where('paid_amount', '<', DB::raw('total_amount'))
+            ->where(function ($query) {
+                $query->whereIn('status', ['draft', 'sent', 'overdue', 'partial'])
+                    ->orWhereRaw('paid_amount < total_amount');
+            })
             ->with('billable')
             ->orderBy('due_date')
             ->get();
 
         // Get active accounts
-        $accounts = Account::where('user_id', auth()->id())
-            ->where('is_active', true)
+        $accounts = Account::where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'currency']);
+
+        $clients = Client::orderBy('name')
+            ->get(['id', 'name', 'email']);
+
+        $leads = Lead::orderBy('name')
+            ->get(['id', 'name', 'email']);
 
         $paymentMethods = [
             'cash' => 'Cash',
@@ -125,6 +134,8 @@ class PaymentController extends Controller
         return Inertia::render('Finance/Payments/Create', [
             'invoices' => $invoices,
             'accounts' => $accounts,
+            'clients' => $clients,
+            'leads' => $leads,
             'paymentMethods' => $paymentMethods,
             'statuses' => $statuses,
             'selectedInvoice' => $selectedInvoice,
@@ -228,10 +239,29 @@ class PaymentController extends Controller
             abort(403);
         }
 
-        $payment->load(['invoice.billable', 'account', 'transaction']);
+        $payment->load(['invoice.billable', 'account']);
+
+        $paymentMethods = [
+            'cash' => 'Cash',
+            'check' => 'Check',
+            'bank_transfer' => 'Bank Transfer',
+            'credit_card' => 'Credit Card',
+            'paypal' => 'PayPal',
+            'stripe' => 'Stripe',
+            'other' => 'Other'
+        ];
+
+        $statuses = [
+            'pending' => 'Pending',
+            'completed' => 'Completed',
+            'failed' => 'Failed',
+            'refunded' => 'Refunded'
+        ];
 
         return Inertia::render('Finance/Payments/Show', [
             'payment' => $payment,
+            'paymentMethods' => $paymentMethods,
+            'statuses' => $statuses,
         ]);
     }
 

@@ -35,8 +35,8 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        // Projects feature removed
-        $projects = collect([]); // or use a static array if needed
+        // Get projects from user-client relationship
+        $projects = $user->clientProjects()->with('client')->orderBy('created_at', 'desc')->limit(5)->get();
 
         // Get customer's invoices
         $invoices = Invoice::whereHasMorph(
@@ -91,7 +91,7 @@ class DashboardController extends Controller
 
         return Inertia::render('Customer/Dashboard', [
             'tickets' => $tickets,
-            // 'projects' => $projects, // removed
+            'projects' => $projects,
             'invoices' => $invoices,
             'payments' => $payments,
             'stats' => $stats,

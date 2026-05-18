@@ -24,7 +24,16 @@ class CardWatcherAdded extends Notification implements ShouldQueue
 
     public function via($notifiable)
     {
-        return ['mail', 'database'];
+        return ['mail', \App\Channels\CustomDatabaseChannel::class];
+    }
+    public function toCustomDatabase($notifiable)
+    {
+        return [
+            'message' => $this->watcher->name . ' is now watching your card: ' . $this->card->title,
+            'card_id' => $this->card->id,
+            'watcher_id' => $this->watcher->id,
+            'watcher_name' => $this->watcher->name,
+        ];
     }
 
     public function toMail($notifiable)
@@ -40,6 +49,16 @@ class CardWatcherAdded extends Notification implements ShouldQueue
     public function toArray($notifiable)
     {
         return [
+            'card_id' => $this->card->id,
+            'watcher_id' => $this->watcher->id,
+            'watcher_name' => $this->watcher->name,
+        ];
+    }
+
+    public function toDatabase($notifiable)
+    {
+        return [
+            'message' => $this->watcher->name . ' is now watching your card: ' . $this->card->title,
             'card_id' => $this->card->id,
             'watcher_id' => $this->watcher->id,
             'watcher_name' => $this->watcher->name,

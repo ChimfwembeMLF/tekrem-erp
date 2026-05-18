@@ -434,7 +434,7 @@ export default function Index({ invoices, filters, statuses, billables }: Props)
                               <DropdownMenuItem asChild>
                                 <Link href={route('finance.invoices.pdf', invoice.id)} target="_blank">
                                   <Download className="mr-2 h-4 w-4" />
-                                  {t('finance.download_pdf', 'Download PDF')}
+                                  {t('finance.print_view', 'Print View')}
                                 </Link>
                               </DropdownMenuItem>
                               <DropdownMenuItem
