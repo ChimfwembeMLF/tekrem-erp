@@ -111,7 +111,7 @@ export default function GuestChatWidget() {
             body: JSON.stringify({ session_id: guestSession.session_id, token }),
           });
         }
-        listenForForegroundMessages(payload => {
+        listenForForegroundMessages((payload: any) => {
           // Optionally show toast or notification in-app
           toast('New chat message', { description: payload?.notification?.body });
         });
@@ -297,10 +297,10 @@ export default function GuestChatWidget() {
   if (initError) {
     return (
       <div className="widget-error-wrap">
-        <div className="widget-error-card">
+        <div className="widget-error-card bg-white dark:bg-gray-900 border border-red-100 dark:border-red-900/40">
           <div className="error-icon">⚠️</div>
-          <h3>Connection Error</h3>
-          <p>{initError}</p>
+          <h3 className="text-gray-900 dark:text-gray-100">Connection Error</h3>
+          <p className="text-gray-500 dark:text-gray-300">{initError}</p>
           <button className="error-retry" onClick={initializeSession}>
             {isLoading ? 'Retrying…' : 'Try Again'}
           </button>
@@ -311,14 +311,14 @@ export default function GuestChatWidget() {
             position: fixed; bottom: 24px; right: 24px; z-index: 1000;
           }
           .widget-error-card {
-            width: 320px; background: #fff; border-radius: 16px;
+            width: 320px; background: transparent; border-radius: 16px;
             padding: 28px 24px; text-align: center;
             box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-            border: 1px solid #fee2e2;
+            border: none;
           }
           .error-icon { font-size: 32px; margin-bottom: 10px; }
-          .widget-error-card h3 { font-size: 15px; font-weight: 700; color: #111827; margin: 0 0 6px; }
-          .widget-error-card p { font-size: 13px; color: #6b7280; margin: 0 0 20px; line-height: 1.5; }
+          .widget-error-card h3 { font-size: 15px; font-weight: 700; margin: 0 0 6px; }
+          .widget-error-card p { font-size: 13px; margin: 0 0 20px; line-height: 1.5; }
           .error-retry {
             width: 100%; height: 40px; border-radius: 10px;
             background: linear-gradient(135deg, #8b5cf6, #6366f1);
@@ -337,7 +337,7 @@ export default function GuestChatWidget() {
   /* ── chat panel ───────────────────────────────────── */
   return (
     <div className={`widget-wrap ${animateOpen ? 'widget-open' : ''}`}>
-      <div className={`widget-panel ${isMinimized ? 'panel-minimized' : ''}`}>
+      <div className={`widget-panel bg-white dark:bg-gray-900 ${isMinimized ? 'panel-minimized' : ''}`}>
         <GuestChatHeader
           guestSession={guestSession}
           conversation={conversation}
@@ -397,7 +397,7 @@ export default function GuestChatWidget() {
           width: 100%;
           height: 100dvh;
           max-width: 100%;
-          background: #fff;
+          background: transparent;
           border-radius: 0;
           display: flex; flex-direction: column;
           overflow: hidden;

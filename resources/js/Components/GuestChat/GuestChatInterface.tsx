@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Bot, User, Sparkles, CheckCheck, Check, FileText, ZoomIn, X } from 'lucide-react';
+import { Bot, User, Sparkles, CheckCheck, Check, FileText, ZoomIn, X, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import ChatInput from './ChatInput';
 
 const quickEmojis = ['👍', '❤️', '😂', '😮', '😢', '😡', '👏', '🎉', '🙏', '🔥', '✅', '💯'];
+const quickReplies = ['Track my order', 'Return policy', 'Talk to a human'];
 
 interface Message {
   id: number;
@@ -84,11 +85,11 @@ function Lightbox({ url, name, onClose }: { url: string; name: string; onClose: 
       aria-modal="true"
     >
       <div
-        className="relative w-full max-w-[min(90vw,600px)] rounded-lg bg-white p-3 shadow-[0_24px_64px_rgba(0,0,0,0.4)] animate-scale-in"
+        className="relative w-full max-w-[min(90vw,600px)] rounded-lg bg-white dark:bg-gray-900 p-3 shadow-[0_24px_64px_rgba(0,0,0,0.4)] animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         <button
-          className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 text-gray-700 transition-colors hover:bg-gray-200"
+          className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
           onClick={onClose}
           aria-label="Close"
         >
@@ -103,6 +104,7 @@ function Lightbox({ url, name, onClose }: { url: string; name: string; onClose: 
 
 function MessageBubble({ msg, guestSession }: { msg: Message; guestSession: GuestSession | null }) {
   const [lightbox, setLightbox] = useState<{ url: string; name: string } | null>(null);
+  const [feedback, setFeedback] = useState<'up' | 'down' | null>(null);
   const own = isGuest(msg);
   const ai = isAI(msg);
 
@@ -111,18 +113,18 @@ function MessageBubble({ msg, guestSession }: { msg: Message; guestSession: Gues
 
   const avatarCls = (kind: 'ai' | 'agent' | 'guest') =>
     `mb-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white ${kind === 'ai'
-      ? 'bg-gradient-to-br from-violet-500 to-indigo-500'
+      ? 'bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--secondary))]'
       : kind === 'agent'
-        ? 'bg-gradient-to-br from-cyan-500 to-blue-500'
-        : 'bg-gradient-to-br from-emerald-500 to-emerald-600'
+        ? 'bg-gradient-to-br from-[hsl(var(--chart-3))] to-[hsl(var(--secondary))]'
+        : 'bg-gradient-to-br from-[hsl(var(--chart-2))] to-[hsl(var(--chart-2)/0.85)]'
     }`;
 
   const bubbleBase = 'relative rounded-2xl px-3.5 py-2.5 text-[13px] leading-6 break-words';
   const bubbleCls = own
-    ? `${bubbleBase} text-white bg-gradient-to-br from-violet-500 to-indigo-500 rounded-br-[16px] rounded-bl-[2px] shadow-sm`
+    ? `${bubbleBase} `
     : ai
-      ? `${bubbleBase} text-indigo-950 bg-violet-50 border border-violet-100 rounded-tl-[2px]`
-      : `${bubbleBase} text-gray-900 bg-white border border-gray-200 rounded-tl-[2px] shadow-[0_1px_3px_rgba(0,0,0,0.06)]`;
+      ? `${bubbleBase} text-foreground bg-[hsl(var(--muted)/0.55)] border border-border rounded-tl-[2px]`
+      : `${bubbleBase} text-foreground bg-card border border-border rounded-tl-[2px] shadow-[0_1px_3px_rgba(0,0,0,0.06)]`;
 
   return (
     <div className={rowCls}>
@@ -133,14 +135,14 @@ function MessageBubble({ msg, guestSession }: { msg: Message; guestSession: Gues
       <div className={colCls}>
         {!own && (
           <span
-            className={`px-1 text-[10.5px] font-semibold ${ai ? 'text-violet-700' : 'text-blue-600'}`}
+            className={`px-1 text-[10.5px] font-semibold ${ai ? 'text-primary' : 'text-[hsl(var(--chart-3))]'}`}
           >
             {senderName(msg, guestSession)}
           </span>
         )}
 
         <div className={bubbleCls}>
-          <div className="prose prose-sm max-w-none prose-p:my-0 prose-p:leading-6 prose-ul:my-2 prose-ol:my-2 prose-a:text-violet-700">
+          <div className="prose prose-sm max-w-none prose-p:my-0 prose-p:leading-6 prose-ul:my-2 prose-ol:my-2 prose-a:text-primary dark:prose-invert">
             <ReactMarkdown>{msg.message}</ReactMarkdown>
           </div>
 
@@ -169,7 +171,7 @@ function MessageBubble({ msg, guestSession }: { msg: Message; guestSession: Gues
                     href={att.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-black/5 px-2.5 py-1 text-[11.5px] transition-colors hover:bg-black/10"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-[hsl(var(--muted)/0.55)] px-2.5 py-1 text-[11.5px] transition-colors hover:bg-[hsl(var(--muted)/0.8)]"
                   >
                     <FileText size={13} />
                     <span>{att.name || 'Download'}</span>
@@ -185,6 +187,27 @@ function MessageBubble({ msg, guestSession }: { msg: Message; guestSession: Gues
               <span className="flex opacity-65">{msg.status === 'read' ? <CheckCheck size={12} /> : <Check size={12} />}</span>
             )}
           </div>
+
+          {ai && (
+            <div className="mt-1.5 flex items-center gap-1 text-[hsl(var(--muted-foreground))]">
+              <button
+                type="button"
+                onClick={() => setFeedback('up')}
+                className={`rounded-md p-1 transition ${feedback === 'up' ? 'bg-[hsl(var(--primary)/0.15)] text-primary' : 'hover:bg-[hsl(var(--muted)/0.7)]'}`}
+                aria-label="Helpful response"
+              >
+                <ThumbsUp size={12} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setFeedback('down')}
+                className={`rounded-md p-1 transition ${feedback === 'down' ? 'bg-[hsl(var(--destructive)/0.15)] text-destructive' : 'hover:bg-[hsl(var(--muted)/0.7)]'}`}
+                aria-label="Not helpful response"
+              >
+                <ThumbsDown size={12} />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -211,23 +234,23 @@ function GuestForm({
   onSkip: () => void;
 }) {
   return (
-    <div className="flex h-full flex-col overflow-y-auto bg-gradient-to-b from-violet-500/5 to-transparent px-5 pb-5 pt-6">
+    <div className="flex h-full flex-col overflow-y-auto px-5 pb-5 pt-6">
       <div className="mb-6 text-center">
-        <div className="mx-auto mb-3 flex h-[52px] w-[52px] items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-500 text-white shadow-[0_8px_20px_rgba(139,92,246,0.3)]">
+        <div className="mx-auto mb-3 flex h-[52px] w-[52px] items-center justify-center rounded-2xl bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-[hsl(var(--primary-foreground))] shadow-[0_8px_20px_rgba(139,92,246,0.3)]">
           <Bot size={24} />
         </div>
-        <h3 className="mb-1 text-base font-bold text-indigo-950">Before we start…</h3>
-        <p className="text-xs text-gray-500">Help us personalise your experience</p>
+        <h3 className="mb-1 text-base font-bold text-foreground">Before we start...</h3>
+        <p className="text-xs text-muted-foreground">Help us personalise your experience</p>
       </div>
 
       <div className="flex flex-1 flex-col gap-3.5">
         <div className="flex flex-col gap-1">
-          <Label htmlFor="gf_name" className="text-xs font-semibold text-gray-700">
+          <Label htmlFor="gf_name" className="text-xs font-semibold text-foreground">
             Name
           </Label>
           <Input
             id="gf_name"
-            className="h-[38px] rounded-[10px] border-gray-200 text-[13px] focus-visible:ring-2 focus-visible:ring-violet-500/20"
+            className="h-[38px] rounded-[10px] border-border text-[13px] focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary)/0.3)]"
             value={guestInfo.guest_name}
             placeholder="Your name"
             onChange={(e) => setGuestInfo({ ...guestInfo, guest_name: e.target.value })}
@@ -235,13 +258,13 @@ function GuestForm({
         </div>
 
         <div className="flex flex-col gap-1">
-          <Label htmlFor="gf_email" className="text-xs font-semibold text-gray-700">
+          <Label htmlFor="gf_email" className="text-xs font-semibold text-foreground">
             Email
           </Label>
           <Input
             id="gf_email"
             type="email"
-            className="h-[38px] rounded-[10px] border-gray-200 text-[13px] focus-visible:ring-2 focus-visible:ring-violet-500/20"
+            className="h-[38px] rounded-[10px] border-border text-[13px] focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary)/0.3)]"
             value={guestInfo.guest_email}
             placeholder="you@email.com"
             onChange={(e) => setGuestInfo({ ...guestInfo, guest_email: e.target.value })}
@@ -249,12 +272,12 @@ function GuestForm({
         </div>
 
         <div className="flex flex-col gap-1">
-          <Label htmlFor="gf_phone" className="text-xs font-semibold text-gray-700">
-            Phone <span className="font-normal text-gray-400">(optional)</span>
+          <Label htmlFor="gf_phone" className="text-xs font-semibold text-foreground">
+            Phone <span className="font-normal text-muted-foreground">(optional)</span>
           </Label>
           <Input
             id="gf_phone"
-            className="h-[38px] rounded-[10px] border-gray-200 text-[13px] focus-visible:ring-2 focus-visible:ring-violet-500/20"
+            className="h-[38px] rounded-[10px] border-border text-[13px] focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary)/0.3)]"
             value={guestInfo.guest_phone}
             placeholder="+260 XXX XXX XXX"
             onChange={(e) => setGuestInfo({ ...guestInfo, guest_phone: e.target.value })}
@@ -262,9 +285,9 @@ function GuestForm({
         </div>
 
         <div className="flex flex-col gap-1">
-          <Label className="text-xs font-semibold text-gray-700">How can we help?</Label>
+          <Label className="text-xs font-semibold text-foreground">How can we help?</Label>
           <Select value={guestInfo.inquiry_type} onValueChange={(v) => setGuestInfo({ ...guestInfo, inquiry_type: v })}>
-            <SelectTrigger className="h-[38px] rounded-[10px] border-gray-200 text-[13px] focus:ring-2 focus:ring-violet-500/20">
+            <SelectTrigger className="h-[38px] rounded-[10px] border-border text-[13px] focus:ring-2 focus:ring-[hsl(var(--primary)/0.3)]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -278,14 +301,14 @@ function GuestForm({
 
       <div className="mt-5 flex flex-col gap-2">
         <button
-          className="h-[42px] w-full rounded-xl bg-gradient-to-br from-violet-500 to-indigo-500 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(139,92,246,0.35)] transition-all duration-150 hover:-translate-y-[1px] hover:shadow-[0_6px_18px_rgba(139,92,246,0.45)]"
+          className="h-[42px] w-full rounded-xl bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-sm font-semibold text-[hsl(var(--primary-foreground))] shadow-[0_4px_12px_rgba(139,92,246,0.35)] transition-all duration-150 hover:-translate-y-[1px] hover:shadow-[0_6px_18px_rgba(139,92,246,0.45)]"
           onClick={onSubmit}
           type="button"
         >
           Start Chat →
         </button>
         <button
-          className="h-9 w-full rounded-xl text-[13px] text-gray-400 transition-colors hover:text-gray-500"
+          className="h-9 w-full rounded-xl text-[13px] text-muted-foreground transition-colors hover:text-foreground"
           onClick={onSkip}
           type="button"
         >
@@ -299,14 +322,14 @@ function GuestForm({
 function WelcomeScreen() {
   return (
     <div className="relative flex flex-col items-center px-6 py-10 text-center">
-      <div className="pointer-events-none absolute left-1/2 top-0 h-[180px] w-[180px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(139,92,246,0.12)_0%,transparent_70%)]" />
+      <div className="pointer-events-none absolute left-1/2 top-0 h-[180px] w-[180px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,hsl(var(--primary)/0.14)_0%,transparent_70%)]" />
 
-      <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-[18px] bg-gradient-to-br from-violet-500 to-indigo-500 text-white shadow-[0_8px_24px_rgba(139,92,246,0.3)] animate-float">
+      <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-[18px] bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-[hsl(var(--primary-foreground))] shadow-[0_8px_24px_rgba(139,92,246,0.3)] animate-float">
         <Sparkles size={26} />
       </div>
 
-      <h3 className="mb-2 text-lg font-bold text-indigo-950">Hi there! 👋</h3>
-      <p className="mb-5 max-w-[260px] text-[13px] leading-6 text-gray-500">
+      <h3 className="mb-2 text-lg font-bold text-foreground">Hi there! 👋</h3>
+      <p className="mb-5 max-w-[260px] text-[13px] leading-6 text-muted-foreground">
         We're here to help with web development, mobile apps, and AI solutions. Ask us anything!
       </p>
 
@@ -314,7 +337,7 @@ function WelcomeScreen() {
         {['Web Development', 'Mobile Apps', 'AI Solutions', 'Technical Support'].map((t) => (
           <span
             key={t}
-            className="rounded-full border border-violet-500/20 bg-violet-500/10 px-2.5 py-1 text-[11px] font-medium text-violet-700"
+            className="rounded-full border border-[hsl(var(--primary)/0.25)] bg-[hsl(var(--primary)/0.12)] px-2.5 py-1 text-[11px] font-medium text-primary"
           >
             {t}
           </span>
@@ -327,16 +350,16 @@ function WelcomeScreen() {
 function TypingIndicator({ name }: { name: string }) {
   return (
     <div className="flex items-end gap-1.5 px-1">
-      <div className="mb-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-500 text-white">
+      <div className="mb-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-[hsl(var(--primary-foreground))]">
         <Sparkles size={10} />
       </div>
 
-      <div className="flex items-center gap-2 rounded-[14px] rounded-bl-[2px] border border-violet-100 bg-violet-50 px-3 py-2">
-        <span className="text-[11px] font-semibold text-violet-700">{name}</span>
+      <div className="flex items-center gap-2 rounded-[14px] rounded-bl-[2px] border border-border bg-[hsl(var(--muted)/0.55)] px-3 py-2">
+        <span className="text-[11px] font-semibold text-primary">{name}</span>
         <div className="flex items-center gap-1">
-          <span className="h-1.5 w-1.5 rounded-full bg-violet-300 animate-bounce [animation-delay:0ms]" />
-          <span className="h-1.5 w-1.5 rounded-full bg-violet-300 animate-bounce [animation-delay:200ms]" />
-          <span className="h-1.5 w-1.5 rounded-full bg-violet-300 animate-bounce [animation-delay:400ms]" />
+          <span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--primary)/0.6)] animate-bounce [animation-delay:0ms]" />
+          <span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--primary)/0.6)] animate-bounce [animation-delay:200ms]" />
+          <span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--primary)/0.6)] animate-bounce [animation-delay:400ms]" />
         </div>
       </div>
     </div>
@@ -346,9 +369,60 @@ function TypingIndicator({ name }: { name: string }) {
 function DateDivider({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-2 py-1">
-      <span className="h-px flex-1 bg-gray-100" />
-      <span className="whitespace-nowrap bg-white px-1 text-[10.5px] text-gray-400">{label}</span>
-      <span className="h-px flex-1 bg-gray-100" />
+      <span className="h-px flex-1 bg-border" />
+      <span className="whitespace-nowrap bg-white dark:bg-gray-900 px-1 text-[10.5px] text-muted-foreground">{label}</span>
+      <span className="h-px flex-1 bg-border" />
+    </div>
+  );
+}
+
+function SystemNoticeBubble({
+  title,
+  detail,
+  actions,
+  tone = 'neutral',
+}: {
+  title: string;
+  detail?: string;
+  actions?: { label: string; onClick: () => void; variant?: 'primary' | 'secondary' | 'destructive' }[];
+  tone?: 'neutral' | 'warning' | 'destructive';
+}) {
+  const toneClasses = tone === 'destructive'
+    ? 'border-[hsl(var(--destructive)/0.35)] bg-[hsl(var(--destructive)/0.08)]'
+    : tone === 'warning'
+      ? 'border-[hsl(var(--chart-1)/0.35)] bg-[hsl(var(--chart-1)/0.08)]'
+      : 'border-border bg-[hsl(var(--muted)/0.45)]';
+
+  const actionClass = (variant: 'primary' | 'secondary' | 'destructive' = 'secondary') => {
+    if (variant === 'primary') {
+      return 'border-[hsl(var(--primary)/0.3)] bg-[hsl(var(--primary)/0.12)] text-primary hover:bg-[hsl(var(--primary)/0.18)]';
+    }
+    if (variant === 'destructive') {
+      return 'border-[hsl(var(--destructive)/0.32)] bg-[hsl(var(--destructive)/0.08)] text-destructive hover:bg-[hsl(var(--destructive)/0.14)]';
+    }
+    return 'border-border bg-white dark:bg-gray-900 text-foreground hover:bg-[hsl(var(--muted)/0.55)]';
+  };
+
+  return (
+    <div className="px-1 py-1.5">
+      <div className={`mx-auto max-w-[88%] rounded-xl border px-3 py-2 text-center ${toneClasses}`}>
+        <p className="text-[11px] font-semibold text-foreground">{title}</p>
+        {detail && <p className="mt-0.5 text-[10.5px] text-muted-foreground">{detail}</p>}
+        {actions && actions.length > 0 && (
+          <div className="mt-2 flex flex-wrap justify-center gap-1.5">
+            {actions.map((action) => (
+              <button
+                key={action.label}
+                type="button"
+                onClick={action.onClick}
+                className={`rounded-full border px-2 py-1 text-[10.5px] font-medium transition-colors ${actionClass(action.variant)}`}
+              >
+                {action.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -386,6 +460,7 @@ export default function GuestChatInterface({
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [emojiAnim, setEmojiAnim] = useState<string | null>(null);
   const [visible, setVisible] = useState(false);
+  const [recoverableError, setRecoverableError] = useState<string | null>(null);
   const [showRating, setShowRating] = useState(false);
   const [rating, setRating] = useState<number | null>(null);
   const [ratingSubmitted, setRatingSubmitted] = useState(false);
@@ -459,6 +534,46 @@ export default function GuestChatInterface({
     setAttachments((prev: File[]) => [...prev, ...arr].slice(0, 5));
   };
 
+  const handleQuickReply = (reply: string) => {
+    setNewMessage(reply);
+    setShowEmojiPicker(false);
+  };
+
+  const handleSendMessage = async () => {
+    setRecoverableError(null);
+    try {
+      await Promise.resolve(onSendMessage());
+    } catch {
+      setRecoverableError('I could not send that message right now. Please try again.');
+    }
+  };
+
+  const handleRetrySend = () => {
+    void handleSendMessage();
+  };
+
+  const handleRephrase = () => {
+    setNewMessage('Could you help me with this in a different way?');
+  };
+
+  const handleEscalate = () => {
+    handleQuickReply('Talk to a human');
+  };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (!isLoading) {
+        void handleSendMessage();
+      }
+      return;
+    }
+    onKeyPress(e);
+  };
+
+  const isResponseInterrupted = connectionStatus === 'disconnected' && (isLoading || isTyping);
+  const showConnectionError = connectionStatus === 'disconnected' && !isResponseInterrupted;
+
   const grouped = useMemo(() => {
     const out: { date: string; msgs: Message[] }[] = [];
     let last = '';
@@ -489,7 +604,7 @@ export default function GuestChatInterface({
       className={`flex h-full flex-col overflow-hidden transition-all duration-300 ${visible ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'
         }`}
     >
-      <div className="flex flex-1 flex-col gap-1 overflow-y-auto bg-gray-50 px-3.5 py-4 [scrollbar-width:thin]">
+      <div className="flex flex-1 flex-col gap-1 overflow-y-auto bg-[hsl(var(--muted)/0.3)] px-3.5 py-4 [scrollbar-width:thin]">
         {messages.length === 0 && <WelcomeScreen />}
 
         {grouped.map((group) => (
@@ -501,14 +616,68 @@ export default function GuestChatInterface({
           </React.Fragment>
         ))}
 
+        {connectionStatus === 'connecting' && (
+          <SystemNoticeBubble
+            tone="warning"
+            title="Reconnecting to chat..."
+            detail="Messages will continue once the connection is restored."
+          />
+        )}
+
+        {isLoading && connectionStatus === 'connected' && (
+          <SystemNoticeBubble
+            title="Searching for the best response..."
+            detail="This usually takes only a few seconds."
+          />
+        )}
+
+        {isResponseInterrupted && (
+          <SystemNoticeBubble
+            tone="destructive"
+            title="Response interrupted"
+            detail="The connection dropped before the response finished."
+            actions={[
+              { label: 'Retry', onClick: handleRetrySend, variant: 'primary' },
+              { label: 'Rephrase', onClick: handleRephrase },
+              { label: 'Talk to human', onClick: handleEscalate, variant: 'destructive' },
+            ]}
+          />
+        )}
+
+        {showConnectionError && (
+          <SystemNoticeBubble
+            tone="destructive"
+            title="Message delivery issue"
+            detail="I am having trouble connecting right now."
+            actions={[
+              { label: 'Retry', onClick: handleRetrySend, variant: 'primary' },
+              { label: 'Rephrase', onClick: handleRephrase },
+              { label: 'Talk to human', onClick: handleEscalate, variant: 'destructive' },
+            ]}
+          />
+        )}
+
+        {recoverableError && (
+          <SystemNoticeBubble
+            tone="destructive"
+            title="Something went wrong"
+            detail={recoverableError}
+            actions={[
+              { label: 'Retry', onClick: handleRetrySend, variant: 'primary' },
+              { label: 'Rephrase', onClick: handleRephrase },
+              { label: 'Talk to human', onClick: handleEscalate, variant: 'destructive' },
+            ]}
+          />
+        )}
+
         {isTyping && <TypingIndicator name="Remy" />}
         <div ref={messagesEndRef} />
       </div>
 
       {/* CSAT Rating UI & Transcript */}
       {showRating && (
-        <div className="absolute left-0 right-0 bottom-20 bg-white border-t border-gray-100 shadow-[0_-2px_16px_rgba(0,0,0,0.06)] py-4 text-center z-50">
-          <div className="text-base font-semibold text-indigo-950 mb-2">How was your chat experience?</div>
+        <div className="absolute left-0 right-0 bottom-20 bg-white dark:bg-gray-900 border-t border-border shadow-[0_-2px_16px_rgba(0,0,0,0.06)] py-4 text-center z-50">
+          <div className="mb-2 text-base font-semibold text-foreground">How was your chat experience?</div>
           <div className="flex justify-center gap-2 mb-1">
             {[1, 2, 3, 4, 5].map(val => (
               <button
@@ -523,10 +692,10 @@ export default function GuestChatInterface({
               </button>
             ))}
           </div>
-          {ratingSubmitted && <div className="text-sm text-emerald-600 mt-1">Thank you for your feedback!</div>}
+          {ratingSubmitted && <div className="mt-1 text-sm text-[hsl(var(--chart-2))]">Thank you for your feedback!</div>}
           <div className="mt-3">
             <button
-              className="inline-flex items-center gap-1 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-medium text-violet-700 hover:bg-violet-100 disabled:opacity-60"
+              className="inline-flex items-center gap-1 rounded-lg border border-[hsl(var(--primary)/0.25)] bg-[hsl(var(--primary)/0.1)] px-3 py-1.5 text-xs font-medium text-primary hover:bg-[hsl(var(--primary)/0.16)] disabled:opacity-60"
               onClick={sendTranscript}
               disabled={transcriptSent || transcriptLoading}
               type="button"
@@ -537,13 +706,26 @@ export default function GuestChatInterface({
         </div>
       )}
 
-      <div className="relative shrink-0 border-t border-gray-100 bg-white px-3 py-2">
+      <div className="relative shrink-0 border-t border-border bg-white dark:bg-gray-900 px-3 py-2">
+        <div className="mb-2 flex flex-wrap gap-1.5">
+          {quickReplies.map((reply) => (
+            <button
+              key={reply}
+              type="button"
+              onClick={() => handleQuickReply(reply)}
+              className="rounded-full border border-[hsl(var(--primary)/0.24)] bg-[hsl(var(--primary)/0.09)] px-2.5 py-1 text-[11px] font-medium text-primary transition-colors hover:bg-[hsl(var(--primary)/0.16)]"
+            >
+              {reply}
+            </button>
+          ))}
+        </div>
+
         <ChatInput
           value={newMessage}
           onChange={setNewMessage}
-          onSend={() => onSendMessage()}
+          onSend={handleSendMessage}
           isLoading={isLoading}
-          onKeyDown={onKeyPress}
+          onKeyDown={handleInputKeyDown}
           onEmojiClick={() => setShowEmojiPicker((v) => !v)}
           showEmojiPicker={showEmojiPicker}
           onFileUpload={handleFileUpload}
@@ -552,11 +734,11 @@ export default function GuestChatInterface({
         />
 
         {showEmojiPicker && (
-          <div className="absolute bottom-[calc(100%+6px)] left-3 z-50 min-w-[300px] rounded-lg border border-gray-200 bg-white p-2.5 shadow-[0_8px_32px_rgba(0,0,0,0.12)] animate-popup">
-            <div className="mb-2 flex items-center justify-between text-[11px] font-semibold text-gray-500">
+          <div className="absolute bottom-[calc(100%+6px)] left-3 z-50 min-w-[300px] rounded-lg border border-border bg-white dark:bg-gray-900 p-2.5 shadow-[0_8px_32px_rgba(0,0,0,0.12)] animate-popup">
+            <div className="mb-2 flex items-center justify-between text-[11px] font-semibold text-muted-foreground">
               <span>Quick Reactions</span>
               <button
-                className="inline-flex items-center text-gray-400 transition-colors hover:text-gray-500"
+                className="inline-flex items-center text-muted-foreground transition-colors hover:text-foreground"
                 onClick={() => setShowEmojiPicker(false)}
                 type="button"
               >
@@ -568,7 +750,7 @@ export default function GuestChatInterface({
               {quickEmojis.map((e) => (
                 <button
                   key={e}
-                  className={`rounded-md bg-transparent p-1 text-[18px] transition-[background,transform] duration-100 hover:scale-110 hover:bg-gray-100 ${emojiAnim === e ? 'animate-pop' : ''
+                  className={`rounded-md bg-transparent p-1 text-[18px] transition-[background,transform] duration-100 hover:scale-110 hover:bg-[hsl(var(--muted)/0.8)] ${emojiAnim === e ? 'animate-pop' : ''
                     }`}
                   onClick={() => handleEmojiSelect(e)}
                   type="button"
@@ -582,23 +764,20 @@ export default function GuestChatInterface({
 
         <div className="mt-1 min-h-4 text-center text-[10.5px]">
           {connectionStatus === 'connected' && conversation?.assignee && (
-            <span className="inline-flex items-center gap-1 text-emerald-600">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            <span className="inline-flex items-center gap-1 text-[hsl(var(--chart-2))]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--chart-2))]" />
               Chatting with {conversation.assignee.name}
             </span>
           )}
 
           {connectionStatus === 'connected' && !conversation?.assignee && (
-            <span className="inline-flex items-center gap-1 text-violet-700">
+            <span className="inline-flex items-center gap-1 text-primary">
               <Sparkles size={10} /> Assisted by Remy AI
             </span>
           )}
-
-          {connectionStatus === 'connecting' && <span className="text-amber-600">Connecting…</span>}
-          {connectionStatus === 'disconnected' && (
-            <span className="text-red-600">Connection lost. Trying to reconnect…</span>
-          )}
         </div>
+
+        <p className="mt-1 text-center text-[10px] text-muted-foreground">Enter sends. Shift+Enter adds a new line.</p>
       </div>
     </div>
   );

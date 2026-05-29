@@ -4,7 +4,38 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\WebsiteController;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
+// Legal pages
+Route::get('/terms-of-service', function () {
+    return Inertia::render('TermsOfService', [
+        'terms' => Str::markdown(
+            file_get_contents(
+                resource_path('markdown/terms.md')
+            )
+        ),
+    ]);
+})->name('terms.show');
+
+Route::get('/privacy-policy', function () {
+    return Inertia::render('PrivacyPolicy', [
+        'policy' => Str::markdown(
+            file_get_contents(
+                resource_path('markdown/policy.md')
+            )
+        ),
+    ]);
+})->name('privacy-policy.show');
+
+Route::get('/refund-policy', function () {
+    return Inertia::render('RefundPolicy', [
+        'refund' => Str::markdown(
+            file_get_contents(
+                resource_path('markdown/refund-policy.md')
+            )
+        ),
+    ]);
+})->name('refund-policy.show');
 
 // Public Website Routes
 Route::get('/', [WebsiteController::class, 'index'])->name('home');
@@ -1092,6 +1123,8 @@ Route::middleware([
 
             // FAQ
             Route::get('/faq', [\App\Http\Controllers\Customer\SupportController::class, 'viewFAQ'])->name('faq');
+            Route::post('/faq/{faq}/helpful', [\App\Http\Controllers\Customer\SupportController::class, 'markFAQHelpful'])->name('faq.helpful');
+            Route::post('/faq/{faq}/not-helpful', [\App\Http\Controllers\Customer\SupportController::class, 'markFAQNotHelpful'])->name('faq.not-helpful');
         });
     });
 

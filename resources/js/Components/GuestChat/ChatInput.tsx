@@ -166,13 +166,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
         }
         .attach-chip {
           display: flex; align-items: center; gap: 4px;
-          background: rgba(139,92,246,0.08);
-          border: 1px solid rgba(139,92,246,0.2);
+          background: hsl(var(--primary) / 0.08);
+          border: 1px solid hsl(var(--primary) / 0.2);
           border-radius: 8px;
           padding: 3px 6px 3px 4px;
           max-width: 130px;
           font-size: 11px;
-          color: #7c3aed;
+          color: hsl(var(--primary));
         }
         .attach-thumb {
           width: 22px; height: 22px;
@@ -180,33 +180,33 @@ const ChatInput: React.FC<ChatInputProps> = ({
         }
         .attach-file-icon {
           width: 22px; height: 22px;
-          background: rgba(139,92,246,0.15);
+          background: hsl(var(--primary) / 0.14);
           border-radius: 4px; display: flex;
           align-items: center; justify-content: center; flex-shrink: 0;
-          color: #7c3aed;
+          color: hsl(var(--primary));
         }
         .attach-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .attach-remove {
           width: 16px; height: 16px; border-radius: 50%;
-          background: rgba(139,92,246,0.15);
+          background: hsl(var(--primary) / 0.14);
           border: none; cursor: pointer; display: flex;
           align-items: center; justify-content: center;
-          color: #7c3aed; flex-shrink: 0;
+          color: hsl(var(--primary)); flex-shrink: 0;
           transition: background 0.15s;
         }
-        .attach-remove:hover { background: rgba(139,92,246,0.3); }
+        .attach-remove:hover { background: hsl(var(--primary) / 0.28); }
 
         .input-pill {
           display: flex; align-items: flex-end; gap: 2px;
-          background: #ffffff;
-          border: 1.5px solid #e5e7eb;
+          background: hsl(var(--card));
+          border: 1.5px solid hsl(var(--border));
           border-radius: 24px;
           padding: 6px 6px 6px 8px;
           transition: border-color 0.2s, box-shadow 0.2s;
         }
         .input-pill.focused {
-          border-color: #8b5cf6;
-          box-shadow: 0 0 0 3px rgba(139,92,246,0.1);
+          border-color: hsl(var(--primary));
+          box-shadow: 0 0 0 3px hsl(var(--primary) / 0.18);
         }
         .input-pill.pill-disabled { opacity: 0.6; pointer-events: none; }
 
@@ -218,35 +218,35 @@ const ChatInput: React.FC<ChatInputProps> = ({
           width: 28px; height: 28px; border-radius: 50%;
           display: flex; align-items: center; justify-content: center;
           border: none; cursor: pointer;
-          background: transparent; color: #9ca3af;
+          background: transparent; color: hsl(var(--muted-foreground));
           transition: color 0.15s, background 0.15s;
         }
-        .action-btn:hover:not(:disabled) { color: #7c3aed; background: rgba(139,92,246,0.08); }
+        .action-btn:hover:not(:disabled) { color: hsl(var(--primary)); background: hsl(var(--primary) / 0.08); }
         .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        .action-btn-active { color: #7c3aed !important; background: rgba(139,92,246,0.1) !important; }
+        .action-btn-active { color: hsl(var(--primary)) !important; background: hsl(var(--primary) / 0.12) !important; }
 
         .pill-textarea {
           flex: 1; background: transparent; border: none; outline: none;
           resize: none; font-size: 13.5px; line-height: 1.5;
-          color: #111827; min-height: 28px; max-height: 120px;
+          color: hsl(var(--foreground)); min-height: 28px; max-height: 120px;
           padding: 4px 4px; overflow-y: auto;
           font-family: inherit;
         }
-        .pill-textarea::placeholder { color: #9ca3af; }
+        .pill-textarea::placeholder { color: hsl(var(--muted-foreground)); }
         .pill-textarea::-webkit-scrollbar { width: 3px; }
-        .pill-textarea::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
+        .pill-textarea::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 10px; }
 
         .send-btn {
           width: 32px; height: 32px; border-radius: 50%;
           display: flex; align-items: center; justify-content: center;
           border: none; cursor: pointer;
-          background: #e5e7eb; color: #9ca3af;
+          background: hsl(var(--muted)); color: hsl(var(--muted-foreground));
           transition: background 0.2s, color 0.2s, transform 0.15s;
           flex-shrink: 0;
         }
         .send-btn.send-btn-active {
-          background: linear-gradient(135deg, #8b5cf6, #6366f1);
-          color: #fff;
+          background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+          color: hsl(var(--primary-foreground));
         }
         .send-btn.send-btn-active:hover { transform: scale(1.08); }
         .send-btn:disabled { cursor: not-allowed; }

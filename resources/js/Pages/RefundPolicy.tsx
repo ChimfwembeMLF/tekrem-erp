@@ -4,15 +4,14 @@ import { Head } from '@inertiajs/react';
 import GuestLayout from '@/Layouts/GuestLayout';
 
 interface Props {
-  terms: string;
+  refund: string;
 }
 
-export default function TermsOfService({ terms }: Props) {
+export default function RefundPolicy({ refund }: Props) {
   return (
-    <GuestLayout title="Terms of Service">
+    <GuestLayout title="Refund Policy">
       <div className="font-sans text-gray-900 antialiased">
-        <Head title="Terms of Service" />
-
+        <Head title="Refund Policy" />
         <div className="pt-4 bg-gray-100">
           <div className="min-h-screen flex flex-col items-center pt-6 sm:pt-0">
             <div>
@@ -20,8 +19,8 @@ export default function TermsOfService({ terms }: Props) {
             </div>
 
             <div
-              className="w-full mt-6 p-6 bg-white shadow-md overflow-hidden sm:rounded-lg prose"
-              dangerouslySetInnerHTML={{ __html: terms }}
+              className="w-full sm:max-w-2xl mt-6 p-6 bg-white shadow-md overflow-hidden sm:rounded-lg prose"
+              dangerouslySetInnerHTML={{ __html: refund }}
             />
           </div>
         </div>

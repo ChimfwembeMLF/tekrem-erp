@@ -263,7 +263,7 @@ export default function ViewArticle({ article, relatedArticles }: Props) {
                             <CardHeader>
                                 <CardTitle className="text-lg">Need More Help?</CardTitle>
                             </CardHeader>
-                            <CardContent className="space-y-3">
+                            <CardContent className="flex flex-col gap-2">
                                 <Link href={route('customer.support.create')}>
                                     <Button className="w-full justify-start">
                                         <Book className="h-4 w-4 mr-2" />

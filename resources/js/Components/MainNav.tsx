@@ -172,7 +172,7 @@ export default function MainNav({ settings }: MainNavProps) {
                 Access help articles and submit tickets
               </ListItem>
               <ListItem href="/guest/support" title="Support Chat">
-               Chat With Supporting Agents & submit tickets
+                Chat With Supporting Agents & submit tickets
               </ListItem>
             </ul>
           </NavigationMenuContent>
@@ -192,7 +192,7 @@ export default function MainNav({ settings }: MainNavProps) {
           </NavigationMenuLink>
         </NavigationMenuItem> */}
 
-         <NavigationMenuItem>
+        <NavigationMenuItem>
           <NavigationMenuLink asChild>
             <Link
               href={route('contact')}

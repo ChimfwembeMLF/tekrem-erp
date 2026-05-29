@@ -75,6 +75,20 @@
 - [ ] Ticket management
 - [ ] Knowledge base
 - [ ] FAQ system
+- [ ] Guest chatbot UX polish
+  - [x] Enforce sequential conversation flow (no layout-style information dumps)
+  - [x] Improve sender differentiation for user, AI, and agent/system messages
+  - [x] Keep dual input model: free text + quick-reply actions
+  - [x] Add quick-reply shortcuts above input (Track order, Return policy, Talk to human)
+  - [x] Ensure Enter sends and Shift+Enter inserts newline
+  - [x] Strengthen typing indicator behavior during AI response generation
+  - [x] Add named processing states (Searching, Running checks, etc.) instead of generic loading
+  - [x] Ensure every message shows timestamp consistently
+  - [x] Add conversational error states with clear recovery path (retry, rephrase, escalate)
+  - [x] Add always-visible human escalation action for fallback scenarios
+  - [x] Add message-level feedback controls (thumbs up/down)
+  - [x] Support interrupted response handling (incomplete marker + retry)
+  - [x] Align chatbot colors with system theme tokens for light/dark/chat modes
 
 ### Analytics Module
 - [ ] KPI dashboards

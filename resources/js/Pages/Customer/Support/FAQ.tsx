@@ -20,6 +20,12 @@ import {
 import useRoute from '@/Hooks/useRoute';
 import useTranslate from '@/Hooks/useTranslate';
 
+interface FAQFeedbackState {
+    helpful_count: number;
+    not_helpful_count: number;
+    voted: 'helpful' | 'not-helpful' | null;
+}
+
 interface FAQ {
     id: number;
     question: string;
@@ -55,6 +61,8 @@ export default function FAQ({ faqs, categories }: Props) {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [expandedFAQs, setExpandedFAQs] = useState<Set<number>>(new Set());
+    const [feedbackState, setFeedbackState] = useState<Record<number, FAQFeedbackState>>({});
+    const [submittingFaqId, setSubmittingFaqId] = useState<number | null>(null);
 
     const filteredFAQs = faqs.filter(faq => {
         const matchesSearch = faq.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -76,6 +84,55 @@ export default function FAQ({ faqs, categories }: Props) {
 
     const featuredFAQs = filteredFAQs.filter(faq => faq.is_featured);
     const regularFAQs = filteredFAQs.filter(faq => !faq.is_featured);
+
+    const getFeedbackState = (faq: FAQ): FAQFeedbackState => {
+        return feedbackState[faq.id] ?? {
+            helpful_count: faq.helpful_count,
+            not_helpful_count: faq.not_helpful_count,
+            voted: null,
+        };
+    };
+
+    const handleFAQFeedback = async (faqId: number, type: 'helpful' | 'not-helpful') => {
+        if (submittingFaqId !== null) {
+            return;
+        }
+
+        setSubmittingFaqId(faqId);
+
+        try {
+            const endpoint = type === 'helpful'
+                ? route('customer.support.faq.helpful', faqId)
+                : route('customer.support.faq.not-helpful', faqId);
+
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to submit FAQ feedback');
+            }
+
+            const data = await response.json();
+
+            setFeedbackState((current) => ({
+                ...current,
+                [faqId]: {
+                    helpful_count: data.helpful_count,
+                    not_helpful_count: data.not_helpful_count,
+                    voted: type,
+                },
+            }));
+        } catch (error) {
+            console.error('Failed to submit FAQ feedback', error);
+        } finally {
+            setSubmittingFaqId(null);
+        }
+    };
 
     return (
         <CustomerLayout>
@@ -138,7 +195,7 @@ export default function FAQ({ faqs, categories }: Props) {
                 {/* Results Summary */}
                 <div className="flex items-center justify-between">
                     <p className="text-sm text-muted-foreground">
-                        {t('support.showing_faqs', 'Showing {{count}} FAQ(s)', { count: filteredFAQs.length })}
+                        {t('support.showing_faqs', `Showing {{count}} FAQ(s)`, { count: filteredFAQs.length })}
                     </p>
                 </div>
 
@@ -151,7 +208,7 @@ export default function FAQ({ faqs, categories }: Props) {
                         </h2>
                         <div className="space-y-3">
                             {featuredFAQs.map((faq) => (
-                                <Card key={faq.id} className="border-l-4 border-l-primary">
+                                <Card key={faq.id}>
                                     <CardContent className="pt-4">
                                         <button
                                             onClick={() => toggleFAQ(faq.id)}

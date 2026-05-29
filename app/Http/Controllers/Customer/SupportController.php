@@ -8,6 +8,7 @@ use App\Models\Support\TicketCategory;
 use App\Models\Support\KnowledgeBaseArticle;
 use App\Models\Support\FAQ;
 use App\Services\Support\EmailNotificationService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -381,6 +382,36 @@ class SupportController extends Controller
     {
         $article->markAsNotHelpful();
         return redirect()->back()->with('success', 'Thank you for your feedback!');
+    }
+
+    /**
+     * Mark FAQ as helpful.
+     */
+    public function markFAQHelpful(FAQ $faq): JsonResponse
+    {
+        $faq->markAsHelpful();
+
+        return response()->json([
+            'success' => true,
+            'helpful_count' => $faq->fresh()->helpful_count,
+            'not_helpful_count' => $faq->fresh()->not_helpful_count,
+            'helpfulness_ratio' => $faq->fresh()->helpfulness_ratio,
+        ]);
+    }
+
+    /**
+     * Mark FAQ as not helpful.
+     */
+    public function markFAQNotHelpful(FAQ $faq): JsonResponse
+    {
+        $faq->markAsNotHelpful();
+
+        return response()->json([
+            'success' => true,
+            'helpful_count' => $faq->fresh()->helpful_count,
+            'not_helpful_count' => $faq->fresh()->not_helpful_count,
+            'helpfulness_ratio' => $faq->fresh()->helpfulness_ratio,
+        ]);
     }
 
     /**

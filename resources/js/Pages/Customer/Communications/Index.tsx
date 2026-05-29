@@ -174,12 +174,6 @@ export default function Index({ communications, stats, filters }: Props) {
                         </p>
                     </div>
                     <div className="flex space-x-2">
-                        <Link href={route('customer.communications.chats')}>
-                            <Button variant="outline">
-                                <MessageSquare className="mr-2 h-4 w-4" />
-                                Chat Conversations
-                            </Button>
-                        </Link>
                         <Link href={route('customer.communications.create')}>
                             <Button>
                                 <Plus className="mr-2 h-4 w-4" />

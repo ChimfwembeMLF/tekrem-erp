@@ -55,7 +55,7 @@ export default function GuestLayout({
               : 'bg-transparent  text-gray-200'
               }`}
           >
-            <div className="transition-colors duration-300">
+            {/* <div className="transition-colors duration-300">
               <div className="container mx-auto px-4">
                 <div className="flex justify-between items-center py-2 text-md">
                   <div className="flex items-center gap-4 font-medium">
@@ -85,9 +85,9 @@ export default function GuestLayout({
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
 
-            <div className="container mx-auto px-4">
+            <div className="container mx-auto px-4 py-4">
               <div className="flex h-16 items-center justify-between">
                 <div className="flex items-center gap-4">
                   <MobileNav settings={settings} />
@@ -214,9 +214,24 @@ export default function GuestLayout({
                   &copy; {new Date().getFullYear()} {settings.company_name || 'Technology Remedies Innovations'}. All rights reserved.
                 </p>
                 <div className="flex gap-6 text-sm">
-                  <a href="#" className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors duration-200">Privacy Policy</a>
-                  <a href="#" className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors duration-200">Terms of Service</a>
-                  <a href="#" className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors duration-200">Cookie Policy</a>
+                  <Link
+                    href={route('privacy-policy.show')}
+                    className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors duration-200"
+                  >
+                    Privacy Policy
+                  </Link>
+                  <Link
+                    href={route('terms.show')}
+                    className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors duration-200"
+                  >
+                    Terms of Service
+                  </Link>
+                  <Link
+                    href={route('refund-policy.show')}
+                    className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors duration-200"
+                  >
+                    Refund Policy
+                  </Link>
                 </div>
               </div>
 

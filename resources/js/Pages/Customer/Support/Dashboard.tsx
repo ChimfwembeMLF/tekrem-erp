@@ -114,13 +114,7 @@ export default function Dashboard({ tickets, popularArticles, featuredFAQs, tick
             <p className="text-muted-foreground">
               {t('support.portal_description', 'Get help, track your tickets, and find answers')}
             </p>
-          </div>
-          <Button asChild>
-            {/* <Link href={route('customer.support.create')}>
-              <Plus className="h-4 w-4 mr-2" />
-              {t('support.create_ticket', 'Create Ticket')}
-            </Link> */}
-          </Button>
+          </div>                 
         </div>
 
         {/* Quick Stats */}
@@ -251,24 +245,24 @@ export default function Dashboard({ tickets, popularArticles, featuredFAQs, tick
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button className="w-full" asChild>
-                  {/* <Link href={route('customer.support.create')}>
+                  <Link href={route('customer.support.create')}>
                     <Plus className="h-4 w-4 mr-2" />
                     {t('support.create_ticket', 'Create New Ticket')}
-                  </Link> */}
+                  </Link>
                 </Button>
                 
                 <Button variant="outline" className="w-full" asChild>
-                  {/* <Link href={route('customer.support.knowledge-base.index')}>
+                  <Link href={route('customer.support.knowledge-base.index')}>
                     <Search className="h-4 w-4 mr-2" />
                     {t('support.search_help', 'Search Help Articles')}
-                  </Link> */}
+                  </Link>
                 </Button>
                 
                 <Button variant="outline" className="w-full" asChild>
-                  {/* <Link href={route('customer.support.faq')}>
+                  <Link href={route('customer.support.faq')}>
                     <HelpCircle className="h-4 w-4 mr-2" />
                     {t('support.view_faq', 'View FAQ')}
-                  </Link> */}
+                  </Link>
                 </Button>
               </CardContent>
             </Card>

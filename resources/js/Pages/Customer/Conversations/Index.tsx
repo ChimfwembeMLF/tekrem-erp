@@ -6,6 +6,17 @@ import useRoute from '@/Hooks/useRoute';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
+import { Label } from '@/Components/ui/label';
+import {
+    Sheet,
+    SheetClose,
+    SheetContent,
+    SheetDescription,
+    SheetFooter,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from '@/Components/ui/sheet';
 import {
     ArrowLeft,
     Clock,
@@ -171,15 +182,34 @@ export default function CustomerConversationsIndex({ conversations, selectedConv
     const [creatingConversation, setCreatingConversation] = useState(false);
     const [selectedAttachments, setSelectedAttachments] = useState<File[]>([]);
     const [mediaSheetOpen, setMediaSheetOpen] = useState(false);
+    const [conversationMediaSheetOpen, setConversationMediaSheetOpen] = useState(false);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const attachmentInputRef = useRef<HTMLInputElement>(null);
 
+    useEffect(() => {
+        if (!newConversationOpen) {
+            setNewConversationTitle('');
+        }
+    }, [newConversationOpen]);
+
     const filteredConversations = useMemo(
         () => conversations.data.filter((conversation) => (conversation.title ?? '').toLowerCase().includes(searchQuery.toLowerCase())),
         [conversations.data, searchQuery]
     );
+
+    const conversationAttachments = useMemo(() => {
+        return activeMessages.flatMap((message) =>
+            (message.attachments ?? []).map((attachment, index) => ({
+                messageId: message.id,
+                messageAuthor: message.user?.name ?? 'Support',
+                messageCreatedAt: message.created_at,
+                attachment,
+                index,
+            }))
+        );
+    }, [activeMessages]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -365,33 +395,48 @@ export default function CustomerConversationsIndex({ conversations, selectedConv
                         <p className="text-muted-foreground">Support chat with the TekRem team</p>
                     </div>
 
-                    <Button onClick={() => setNewConversationOpen((previous) => !previous)} className="rounded-full px-5">
-                        <Plus className="mr-2 h-4 w-4" />
-                        New conversation
-                    </Button>
-                </div>
+                    <Sheet open={newConversationOpen} onOpenChange={setNewConversationOpen}>
+                        <SheetTrigger asChild>
+                            <Button className="rounded-full px-5">
+                                <Plus className="mr-2 h-4 w-4" />
+                                New conversation
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent className="sm:max-w-lg">
+                            <SheetHeader>
+                                <SheetTitle>Create a conversation</SheetTitle>
+                                <SheetDescription>
+                                    Start a new support thread and jump straight into the chat.
+                                </SheetDescription>
+                            </SheetHeader>
 
-                {newConversationOpen && (
-                    <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-                        <form onSubmit={handleCreateConversation} className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                            <Input
-                                value={newConversationTitle}
-                                onChange={(event) => setNewConversationTitle(event.target.value)}
-                                placeholder="Conversation title"
-                                disabled={creatingConversation}
-                                className="sm:max-w-md"
-                            />
-                            <div className="flex gap-2">
-                                <Button type="button" variant="outline" onClick={() => setNewConversationOpen(false)}>
-                                    Cancel
-                                </Button>
-                                <Button type="submit" disabled={!newConversationTitle.trim() || creatingConversation}>
-                                    {creatingConversation ? 'Creating...' : 'Create'}
-                                </Button>
-                            </div>
-                        </form>
-                    </div>
-                )}
+                            <form onSubmit={handleCreateConversation} className="mt-6 space-y-5">
+                                <div className="space-y-2">
+                                    <Label htmlFor="conversation-title">Conversation title</Label>
+                                    <Input
+                                        id="conversation-title"
+                                        value={newConversationTitle}
+                                        onChange={(event) => setNewConversationTitle(event.target.value)}
+                                        placeholder="e.g. Billing question"
+                                        disabled={creatingConversation}
+                                        autoFocus
+                                    />
+                                </div>
+
+                                <SheetFooter>
+                                    <SheetClose asChild>
+                                        <Button type="button" variant="outline">
+                                            Cancel
+                                        </Button>
+                                    </SheetClose>
+                                    <Button type="submit" disabled={!newConversationTitle.trim() || creatingConversation}>
+                                        {creatingConversation ? 'Creating...' : 'Create conversation'}
+                                    </Button>
+                                </SheetFooter>
+                            </form>
+                        </SheetContent>
+                    </Sheet>
+                </div>
 
                 <div className="h-[calc(100vh-11rem)] overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-50 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
                     <div className="flex h-full flex-col lg:flex-row">
@@ -494,17 +539,16 @@ export default function CustomerConversationsIndex({ conversations, selectedConv
                                         </div>
 
                                         <div className="flex items-center gap-2">
-                                            <Badge variant="outline" className="hidden sm:inline-flex">
-                                                <Sparkles className="mr-1 h-3 w-3" />
-                                                Customer chat
-                                            </Badge>
-                                            <Button variant="outline" size="sm" asChild>
-                                                <Link href={route('customer.conversations.index')}>
-                                                    <ArrowLeft className="mr-2 h-4 w-4" />
-                                                    Back
-                                                </Link>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setConversationMediaSheetOpen(true)}
+                                                disabled={conversationAttachments.length === 0}
+                                            >
+                                                All media
                                             </Button>
-                                            <Button variant="outline" size="sm">
+                                            <Button variant="ghost" size="sm">
                                                 <MoreVertical className="h-4 w-4" />
                                             </Button>
                                         </div>
@@ -674,6 +718,71 @@ export default function CustomerConversationsIndex({ conversations, selectedConv
                     </div>
                 </div>
             </div>
+
+            <Sheet open={conversationMediaSheetOpen} onOpenChange={setConversationMediaSheetOpen}>
+                <SheetContent className="sm:max-w-lg overflow-hidden">
+                    <SheetHeader>
+                        <SheetTitle>All media</SheetTitle>
+                        <SheetDescription>
+                            Browse every attachment shared in this conversation.
+                        </SheetDescription>
+                    </SheetHeader>
+
+                    <div className="mt-6 flex-1 overflow-y-auto pr-1">
+                        {conversationAttachments.length === 0 ? (
+                            <div className="flex min-h-[240px] items-center justify-center">
+                                <EmptyState label="No media yet" sublabel="Attachments shared here will appear here." />
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-2 gap-3 pb-2">
+                                {conversationAttachments.map(({ attachment, index, messageAuthor, messageCreatedAt }) => {
+                                    const attachmentUrl = buildAttachmentUrl(attachment);
+                                    const attachmentName = getAttachmentName(attachment, index);
+                                    const attachmentType = getAttachmentType(attachment);
+                                    const attachmentSize = attachment.file_size ?? attachment.size;
+                                    const attachmentTitle = `${attachmentName}${attachmentType ? ` (${attachmentType})` : ''}${attachmentSize ? ` - ${getFileSizeLabel(attachmentSize)}` : ''}`;
+
+                                    return (
+                                        <div
+                                            key={`${attachment.file_name ?? attachment.name ?? 'media'}-${messageAuthor}-${messageCreatedAt}-${index}`}
+                                            className="overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900"
+                                        >
+                                            <div className="aspect-square bg-zinc-100 dark:bg-zinc-800">
+                                                {isImageAttachment(attachment) && attachmentUrl ? (
+                                                    <a href={attachmentUrl} target="_blank" rel="noreferrer" className="block h-full w-full">
+                                                        <img src={attachmentUrl} alt={attachmentName} className="h-full w-full object-cover" />
+                                                    </a>
+                                                ) : (
+                                                    <a
+                                                        href={attachmentUrl ?? '#'}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="flex h-full items-center justify-center text-zinc-500 dark:text-zinc-300"
+                                                    >
+                                                        <FileText className="h-10 w-10" />
+                                                    </a>
+                                                )}
+                                            </div>
+                                            <div className="space-y-2 p-3">
+                                                <div>
+                                                    <p className="truncate text-sm font-medium">{attachmentName}</p>
+                                                    <p className="text-xs text-zinc-400">{messageAuthor}</p>
+                                                    <p className="text-[11px] text-zinc-400">{formatFull(messageCreatedAt)}</p>
+                                                </div>
+                                                <Button asChild type="button" variant="outline" size="sm" className="w-full">
+                                                    <a href={attachmentUrl ?? '#'} target="_blank" rel="noreferrer">
+                                                        Open
+                                                    </a>
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                </SheetContent>
+            </Sheet>
 
             {mediaSheetOpen && (
                 <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm">
