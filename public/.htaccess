@@ -17,6 +17,10 @@
 
     RewriteEngine On
 
+    # Block direct access to sensitive artifacts if the web root is misconfigured.
+    RewriteRule ^\.env - [F,L]
+    RewriteRule ^(composer\.(json|lock)|package(-lock)?\.json|yarn\.lock)$ - [F,L]
+
     # Serve static asset directories directly (never route through Laravel).
     RewriteRule ^(build|storage)/ - [L]
 

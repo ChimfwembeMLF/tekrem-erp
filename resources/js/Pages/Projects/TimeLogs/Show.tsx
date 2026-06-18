@@ -51,31 +51,27 @@ export default function Show({ project, timeLog }: Props) {
     <>
       <Head title={`Time Log Details - ${project.name}`} />
       <ProjectShowSheet backUrl={route('projects.time-logs.index', project.id)} size="lg">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold leading-tight text-foreground">View Time Log</h2>
             <p className="mt-1 text-sm text-muted-foreground">Log time spent on {project.name}</p>
           </div>
+
+          <div className="flex gap-2">
+            <Link href={route('projects.time-logs.edit', [project.id, timeLog.id])}>
+              <Button variant="outline" size="sm">
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </Button>
+            </Link>
+            <Button variant="destructive" size="sm" onClick={handleDelete}>
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </Button>
+          </div>
         </div>
 
-        <div className="mb-6 flex items-center justify-end">
-            
-
-            <div className="flex gap-2">
-              <Link href={route('projects.time-logs.edit', [project.id, timeLog.id])}>
-                <Button variant="outline" size="sm">
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit
-                </Button>
-              </Link>
-              <Button variant="destructive" size="sm" onClick={handleDelete}>
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </Button>
-            </div>
-          </div>
-
-          <Card>
+        <Card>
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div>
@@ -258,7 +254,7 @@ export default function Show({ project, timeLog }: Props) {
                 </div>
               </div>
             </CardContent>
-          </Card>
+        </Card>
       </ProjectShowSheet>
     </>
   );
