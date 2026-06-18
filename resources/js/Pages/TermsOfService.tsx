@@ -1,31 +1,21 @@
 import React from 'react';
-import AuthenticationCardLogo from '@/Components/AuthenticationCardLogo';
-import { Head } from '@inertiajs/react';
-import GuestLayout from '@/Layouts/GuestLayout';
+import LegalPageShell from '@/Components/Website/LegalPageShell';
 
 interface Props {
   terms: string;
+  lastUpdated?: string;
 }
 
-export default function TermsOfService({ terms }: Props) {
+export default function TermsOfService({ terms, lastUpdated }: Props) {
   return (
-    <GuestLayout title="Terms of Service">
-      <div className="font-sans text-gray-900 antialiased">
-        <Head title="Terms of Service" />
-
-        <div className="pt-4 bg-gray-100">
-          <div className="min-h-screen flex flex-col items-center pt-6 sm:pt-0">
-            <div>
-              <AuthenticationCardLogo />
-            </div>
-
-            <div
-              className="w-full mt-6 p-6 bg-white shadow-md overflow-hidden sm:rounded-lg prose"
-              dangerouslySetInnerHTML={{ __html: terms }}
-            />
-          </div>
-        </div>
-      </div>
-    </GuestLayout>
+    <LegalPageShell
+      pageKey="terms"
+      title="Terms of Service"
+      description="The rules and guidelines for using our website, products, and services."
+      badge="Legal"
+      badgeIcon="📄"
+      content={terms}
+      lastUpdated={lastUpdated}
+    />
   );
 }

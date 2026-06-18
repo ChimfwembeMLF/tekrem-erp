@@ -23,6 +23,12 @@ class ChartOfAccountsSeeder extends Seeder
             return;
         }
 
+        if (Account::exists()) {
+            $this->command->info('Chart of accounts already exists. Skipping.');
+
+            return;
+        }
+
         $this->command->info('Seeding Chart of Accounts...');
 
         // Define the standard Chart of Accounts structure

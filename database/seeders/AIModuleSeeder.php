@@ -15,6 +15,12 @@ class AIModuleSeeder extends Seeder
      */
     public function run(): void
     {
+        if (Service::query()->exists()) {
+            $this->command->info('AI services already exist. Skipping AIModuleSeeder.');
+
+            return;
+        }
+
         // Create AI Services
         $mistralService = Service::create([
             'name' => 'Mistral AI',

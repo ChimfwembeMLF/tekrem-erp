@@ -340,7 +340,6 @@ export default function TemplateShow({ auth, template }: TemplateShowProps) {
                 </Card>
               </TabsContent>
             </Tabs>
-          </div>
         </div>
       </ProjectShowSheet>
     </>

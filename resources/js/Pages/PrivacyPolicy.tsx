@@ -1,32 +1,21 @@
 import React from 'react';
-import AuthenticationCardLogo from '@/Components/AuthenticationCardLogo';
-import { Head } from '@inertiajs/react';
-import GuestLayout from '@/Layouts/GuestLayout';
+import LegalPageShell from '@/Components/Website/LegalPageShell';
 
 interface Props {
   policy: string;
+  lastUpdated?: string;
 }
 
-export default function PrivacyPolicy({ policy }: Props) {
+export default function PrivacyPolicy({ policy, lastUpdated }: Props) {
   return (
-    <GuestLayout title="Privacy Policy" >
-      <div>
-
-        <div className="font-sans text-gray-900 antialiased">
-          <div className="pt-4 bg-gray-100">
-            <div className="min-h-screen flex flex-col items-center pt-6 sm:pt-0">
-              <div>
-                <AuthenticationCardLogo />
-              </div>
-
-              <div
-                className="w-full sm:max-w-2xl mt-6 p-6 bg-white shadow-md overflow-hidden sm:rounded-lg prose"
-                dangerouslySetInnerHTML={{ __html: policy }}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </GuestLayout>
+    <LegalPageShell
+      pageKey="privacy"
+      title="Privacy Policy"
+      description="How we collect, use, and protect your personal information when you use our services."
+      badge="Legal"
+      badgeIcon="🛡️"
+      content={policy}
+      lastUpdated={lastUpdated}
+    />
   );
 }

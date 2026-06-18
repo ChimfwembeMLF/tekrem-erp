@@ -259,7 +259,6 @@ export default function Show({ project, timeLog }: Props) {
               </div>
             </CardContent>
           </Card>
-        </div>
       </ProjectShowSheet>
     </>
   );

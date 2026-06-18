@@ -113,7 +113,13 @@ class FinanceCategoriesSeeder extends Seeder
         ];
 
         foreach ($categories as $category) {
-            Category::create($category);
+            Category::updateOrCreate(
+                [
+                    'name' => $category['name'],
+                    'type' => $category['type'],
+                ],
+                $category
+            );
         }
     }
 }

@@ -8,32 +8,29 @@ use Inertia\Inertia;
 
 // Legal pages
 Route::get('/terms-of-service', function () {
+    $path = resource_path('markdown/terms.md');
+
     return Inertia::render('TermsOfService', [
-        'terms' => Str::markdown(
-            file_get_contents(
-                resource_path('markdown/terms.md')
-            )
-        ),
+        'terms' => Str::markdown(file_get_contents($path)),
+        'lastUpdated' => date('F j, Y', filemtime($path)),
     ]);
 })->name('terms.show');
 
 Route::get('/privacy-policy', function () {
+    $path = resource_path('markdown/policy.md');
+
     return Inertia::render('PrivacyPolicy', [
-        'policy' => Str::markdown(
-            file_get_contents(
-                resource_path('markdown/policy.md')
-            )
-        ),
+        'policy' => Str::markdown(file_get_contents($path)),
+        'lastUpdated' => date('F j, Y', filemtime($path)),
     ]);
 })->name('privacy-policy.show');
 
 Route::get('/refund-policy', function () {
+    $path = resource_path('markdown/refund-policy.md');
+
     return Inertia::render('RefundPolicy', [
-        'refund' => Str::markdown(
-            file_get_contents(
-                resource_path('markdown/refund-policy.md')
-            )
-        ),
+        'refund' => Str::markdown(file_get_contents($path)),
+        'lastUpdated' => date('F j, Y', filemtime($path)),
     ]);
 })->name('refund-policy.show');
 
