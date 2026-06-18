@@ -106,6 +106,7 @@ interface Invoice {
   notes: string;
   terms: string;
   is_zra_locked: boolean;
+  is_editable: boolean;
   zra_status: string;
   zra_qr_code?: string;
   billable: {
@@ -323,7 +324,7 @@ export default function Show({ invoice }: Props) {
                 {t('finance.print_view', 'Print View')}
               </Link>
             </Button>
-            {!invoice.is_zra_locked && (
+            {invoice.is_editable && (
               <Button variant="outline" asChild>
                 <Link href={route('finance.invoices.edit', invoice.id)}>
                   <Edit className="h-4 w-4 mr-2" />

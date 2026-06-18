@@ -223,7 +223,23 @@ class Invoice extends Model
      */
     public function canEdit(): bool
     {
-        return !$this->is_zra_locked;
+        return $this->is_editable;
+    }
+
+    /**
+     * Whether the invoice can be opened in the edit form.
+     */
+    public function getIsEditableAttribute(): bool
+    {
+        if ($this->is_zra_locked) {
+            return false;
+        }
+
+        if (! in_array($this->status, ['draft', 'sent'], true)) {
+            return false;
+        }
+
+        return (float) ($this->paid_amount ?? 0) <= 0;
     }
 
     /**

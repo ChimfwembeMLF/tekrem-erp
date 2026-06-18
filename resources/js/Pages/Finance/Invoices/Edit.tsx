@@ -135,17 +135,9 @@ export default function Edit({ invoice, clients, leads, currencies, statuses }: 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Update items in form data
-    const formData = {
-      ...data,
-      items: items,
-      subtotal: calculateSubtotal(),
-      tax_amount: calculateTaxAmount(),
-      total_amount: calculateTotal(),
-    };
+    setData('items', items);
 
     put(route('finance.invoices.update', invoice.id), {
-      data: formData,
       onSuccess: () => {
         toast.success(t('finance.invoice_updated', 'Invoice updated successfully'));
       },

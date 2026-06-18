@@ -56,6 +56,7 @@ interface Invoice {
   paid_amount: number;
   currency: string;
   is_zra_locked: boolean;
+  is_editable: boolean;
   zra_status: string;
   zra_qr_code?: string;
   billable: {
@@ -404,7 +405,7 @@ export default function Index({ invoices, filters, statuses, billables }: Props)
                                   {t('common.view', 'View')}
                                 </Link>
                               </DropdownMenuItem>
-                              {!invoice.is_zra_locked && (
+                              {invoice.is_editable && (
                                 <DropdownMenuItem asChild>
                                   <Link href={route('finance.invoices.edit', invoice.id)}>
                                     <Edit className="mr-2 h-4 w-4" />

@@ -228,21 +228,19 @@ class InvoiceController extends Controller
             abort(403);
         }
 
-        // Only allow editing of draft invoices
-        if ($invoice->status !== 'draft') {
-            return back()->with('error', 'Only draft invoices can be edited.');
+        if (! $invoice->is_editable) {
+            return redirect()
+                ->route('finance.invoices.show', $invoice)
+                ->with('error', 'This invoice cannot be edited.');
         }
 
         $invoice->load(['billable', 'items']);
 
-        // Get clients and leads for billable selection
-        $clients = Client::where('user_id', auth()->id())
-            ->where('status', 'active')
+        $clients = Client::where('status', 'active')
             ->orderBy('name')
             ->get(['id', 'name', 'email']);
 
-        $leads = Lead::where('user_id', auth()->id())
-            ->where('status', 'qualified')
+        $leads = Lead::where('status', 'qualified')
             ->orderBy('name')
             ->get(['id', 'name', 'email']);
 
@@ -261,7 +259,7 @@ class InvoiceController extends Controller
         ];
 
         return Inertia::render('Finance/Invoices/Edit', [
-            'invoice' => $invoice,
+            'invoice' => $this->formatInvoiceForForm($invoice),
             'clients' => $clients,
             'leads' => $leads,
             'currencies' => $currencies,
@@ -279,9 +277,10 @@ class InvoiceController extends Controller
             abort(403);
         }
 
-        // Only allow editing of draft invoices
-        if ($invoice->status !== 'draft') {
-            return back()->with('error', 'Only draft invoices can be edited.');
+        if (! $invoice->is_editable) {
+            return redirect()
+                ->route('finance.invoices.show', $invoice)
+                ->with('error', 'This invoice cannot be edited.');
         }
 
         $validator = Validator::make($request->all(), [
@@ -308,7 +307,6 @@ class InvoiceController extends Controller
         // Verify billable entity ownership
         $billableClass = $request->billable_type === 'client' ? Client::class : Lead::class;
         $billable = $billableClass::where('id', $request->billable_id)
-            ->where('user_id', auth()->id())
             ->first();
 
         if (!$billable) {
@@ -433,6 +431,39 @@ class InvoiceController extends Controller
         return Inertia::render('Finance/Invoices/Print', [
             'invoice' => $this->buildInvoicePrintPayload($invoice),
         ]);
+    }
+
+    private function formatInvoiceForForm(Invoice $invoice): array
+    {
+        $billableType = match ($invoice->billable_type) {
+            Client::class => 'client',
+            Lead::class => 'lead',
+            default => str_contains((string) $invoice->billable_type, 'Client') ? 'client' : 'lead',
+        };
+
+        return [
+            'id' => $invoice->id,
+            'invoice_number' => $invoice->invoice_number,
+            'status' => $invoice->status,
+            'issue_date' => $invoice->issue_date?->format('Y-m-d'),
+            'due_date' => $invoice->due_date?->format('Y-m-d'),
+            'subtotal' => (float) $invoice->subtotal,
+            'tax_amount' => (float) $invoice->tax_amount,
+            'discount_amount' => (float) $invoice->discount_amount,
+            'total_amount' => (float) $invoice->total_amount,
+            'currency' => $invoice->currency,
+            'notes' => $invoice->notes,
+            'terms' => $invoice->terms,
+            'billable_type' => $billableType,
+            'billable_id' => $invoice->billable_id,
+            'items' => $invoice->items->map(fn ($item) => [
+                'id' => $item->id,
+                'description' => $item->description,
+                'quantity' => (float) $item->quantity,
+                'unit_price' => (float) $item->unit_price,
+                'total_price' => (float) $item->total_price,
+            ])->values()->all(),
+        ];
     }
 
     private function buildInvoicePrintPayload(Invoice $invoice): array
