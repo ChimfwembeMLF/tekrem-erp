@@ -5,7 +5,7 @@ import useTypedPage from '@/Hooks/useTypedPage';
 import { Link } from '@inertiajs/react';
 import useRoute from '@/Hooks/useRoute';
 import aboutUsIllustration from '../../../../public/assets/illustrations/about-us.png';
-import TeamCarousel from '@/Components/TeamCarousel';
+import WebsiteHero from '@/Components/Website/WebsiteHero';
 export default function About() {
   const page = useTypedPage();
   const route = useRoute();
@@ -111,178 +111,17 @@ export default function About() {
     <GuestLayout title="About Us">
       <Head title="About Us" />
 
-      {/* Modern Hero Section with Gradient Background */}
-      <div className="relative overflow-hidden py-20 bg-white dark:bg-gray-900">
-        {/* Animated background elements */}
-        {/* <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-32 w-96 h-96 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-32 left-10 w-96 h-96 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        </div> */}
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
-          <div className="lg:grid lg:grid-cols-12 lg:gap-8 lg:items-center">
-            <div className="lg:col-span-6">
-              {/* Badge */}
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-blue-100 to-purple-100 dark:from-gray-800 dark:to-gray-700 text-sm font-medium text-blue-800 dark:text-blue-300 mb-8">
-                <span className="mr-2">🏢</span>
-                Leading Technology Solutions Provider
-              </div>
-
-              {/* Main heading */}
-              <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl">
-                <span className="block">About</span>
-                <span className="block bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  {settings.company_name || 'Technology Remedies Innovations'}
-                </span>
-              </h1>
-
-              {/* Description */}
-              <p className="mt-6 text-lg text-gray-600 dark:text-gray-300 max-w-2xl">
-                Founded in 2020, we've quickly established ourselves as a leading technology solutions provider in Zambia, specializing in innovative digital transformation.
-              </p>
-
-              {/* Feature highlights */}
-              <div className="mt-8 grid grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-400">
-                <div className="flex items-center">
-                  <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                  100+ Projects Delivered
-                </div>
-                <div className="flex items-center">
-                  <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                  98% Client Satisfaction
-                </div>
-                <div className="flex items-center">
-                  <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                  Expert Team
-                </div>
-                <div className="flex items-center">
-                  <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                  Innovation Focused
-                </div>
-              </div>
-
-              {/* CTA Buttons */}
-              <div className="mt-10 flex flex-col sm:flex-row gap-4">
-                <Link
-                  href={route('services')}
-                  className="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-secondary to-primary hover:from-primary hover:to-secondary text-white font-semibold rounded-xl transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
-                >
-                  Our Services
-                  <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </Link>
-                <Link
-                  href={route('contact')}
-                  className="inline-flex items-center justify-center px-8 py-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 shadow-lg hover:shadow-xl"
-                >
-                  <svg className="mr-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                  Get In Touch
-                </Link>
-              </div>
-            </div>
-
-            {/* Hero Image */}
-            <div className="lg:col-span-6 mt-12 lg:mt-0">
-              <div className="relative">
-                {/* Decorative elements */}
-                <div className="absolute -top-4 -left-4 w-24 h-24 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full opacity-20 animate-pulse blur-3xl"></div>
-                <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full opacity-20 animate-pulse delay-500 blur-3xl"></div>
-                
-                <div className="relative">
-                  <div className="text-center">
-                    <div className="w-full h-96 flex items-center justify-center mx-auto mb-6">
-                      {/* <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg> */}
-                      <img src={aboutUsIllustration} alt="About us illustration" />
-                    </div>
-                    <blockquote className="text-xl font-medium text-gray-900 dark:text-white mb-4 mt-20">
-                      "Our mission is to empower businesses with innovative technology solutions that drive growth and success."
-                    </blockquote>
-                    <cite className="text-blue-600 font-semibold">
-                      Leadership Team, {settings.company_name || 'TekRem'}
-                    </cite>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Statistics Section */}
-      {/* <div className="relative bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 py-20 overflow-hidden">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="absolute inset-0 opacity-40">
-          <div className="absolute inset-0 bg-gray-800/20 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[length:20px_20px]"></div>
-        </div>
-        
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-base text-blue-300 font-semibold tracking-wide uppercase mb-4">Our Journey</h2>
-            <p className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Delivering Excellence Since 2020
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-            <div className="text-center group">
-              <div className="relative">
-                <div className="text-5xl md:text-6xl font-bold text-transparent bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text mb-2">
-                  5+
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 blur-xl group-hover:blur-2xl transition-all duration-300"></div>
-              </div>
-              <div className="text-lg font-semibold text-white mb-2">Years of Excellence</div>
-              <div className="text-sm text-gray-300">Continuous innovation</div>
-            </div>
-            
-            <div className="text-center group">
-              <div className="relative">
-                <div className="text-5xl md:text-6xl font-bold text-transparent bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text mb-2">
-                  100+
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 to-blue-400/20 blur-xl group-hover:blur-2xl transition-all duration-300"></div>
-              </div>
-              <div className="text-lg font-semibold text-white mb-2">Projects Delivered</div>
-              <div className="text-sm text-gray-300">Successful implementations</div>
-            </div>
-            
-            <div className="text-center group">
-              <div className="relative">
-                <div className="text-5xl md:text-6xl font-bold text-transparent bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text mb-2">
-                  7
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20 blur-xl group-hover:blur-2xl transition-all duration-300"></div>
-              </div>
-              <div className="text-lg font-semibold text-white mb-2">Team Members</div>
-              <div className="text-sm text-gray-300">Expert professionals</div>
-            </div>
-            
-            <div className="text-center group">
-              <div className="relative">
-                <div className="text-5xl md:text-6xl font-bold text-transparent bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text mb-2">
-                  98%
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 to-orange-400/20 blur-xl group-hover:blur-2xl transition-all duration-300"></div>
-              </div>
-              <div className="text-lg font-semibold text-white mb-2">Client Satisfaction</div>
-              <div className="text-sm text-gray-300">Proven track record</div>
-            </div>
-          </div>
-        </div>
-      </div> */}
+      <WebsiteHero
+        badge="About TekRem"
+        badgeIcon="🏢"
+        title="About"
+        highlight={settings.company_name || 'Technology Remedies Innovations'}
+        description="Founded in 2020, we've established ourselves as a leading technology partner in Zambia — web, mobile, AI, cloud, and ERP for businesses across Africa."
+        image={aboutUsIllustration}
+        imageAlt="About TekRem"
+        primaryCta={{ label: 'Our Services', href: route('services') }}
+        secondaryCta={{ label: 'View Pricing', href: route('pricing') }}
+      />
 
       {/* Mission, Vision, Values Section */}
       <div className="py-20 bg-white dark:bg-gray-900">

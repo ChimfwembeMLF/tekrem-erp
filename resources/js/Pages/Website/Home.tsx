@@ -4,12 +4,6 @@ import GuestLayout from '@/Layouts/GuestLayout';
 import { Link } from '@inertiajs/react';
 import useRoute from '@/Hooks/useRoute';
 import useTypedPage from '@/Hooks/useTypedPage';
-import OrgChart from '@/Components/OrgChart';
-import PartnerSection from '@/Components/PartnerSection';
-import HeroImage from '../../../../public/hero-illustration.png'
-import TechnologiesSection from '@/Components/TechnologiesSection';
-import TeamCarousel from '@/Components/TeamCarousel';
-import TechnologyStack from '@/Components/TechnologyStack';
 import FAQ from '@/Components/FAQ';
 import { Check } from 'lucide-react';
 

@@ -47,7 +47,13 @@ return [
     'openai' => [
         'api_key' => env('OPENAI_API_KEY'),
         'api_url' => env('OPENAI_API_URL', 'https://api.openai.com/v1/chat/completions'),
-        'model' => env('OPENAI_MODEL', 'gpt-3.5-turbo'),
+        'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
+    ],
+
+    'anthropic' => [
+        'api_key' => env('ANTHROPIC_API_KEY'),
+        'api_url' => env('ANTHROPIC_API_URL', 'https://api.anthropic.com/v1/messages'),
+        'model' => env('ANTHROPIC_MODEL', 'claude-3-5-sonnet-20241022'),
     ],
 
     'mistral' => [
@@ -57,11 +63,16 @@ return [
     ],
 
     'pawapay' => [
-        'base_url' => env('PAWAPAY_BASE_URL', 'https://api.sandbox.pawapay.io'),
-        'api_key' => env('PAWAPAY_API_KEY'),
+        // Runtime config is loaded from the `settings` table via PawaPayService.
+        // These env values are only used until credentials are saved in Finance Settings.
+        'env' => env('PAWAPAY_ENV', 'sandbox'),
+        'api_token' => env('PAWAPAY_API_TOKEN', env('PAWAPAY_API_KEY')),
+        'base_url' => env('PAWAPAY_ENV', 'sandbox') === 'production'
+            ? env('PAWAPAY_BASE_URL_PROD', 'https://api.pawapay.io/v2')
+            : env('PAWAPAY_BASE_URL_SANDBOX', env('PAWAPAY_BASE_URL', 'https://api.sandbox.pawapay.io/v2')),
+        'private_key' => env('PAWAPAY_PRIVATE_KEY'),
+        'public_key_id' => env('PAWAPAY_PUBLIC_KEY_ID'),
         'callback_url' => env('PAWAPAY_CALLBACK_URL', env('APP_URL')),
-        'deposit_url' => env('PAWAPAY_DEPOSIT_URL', '/deposits'),
-        'payout_url' => env('PAWAPAY_PAYOUT_URL', '/payouts'),
         'timeout' => (int) env('PAWAPAY_TIMEOUT', 30),
         'enable_logging' => env('PAWAPAY_ENABLE_LOGGING', true),
     ],

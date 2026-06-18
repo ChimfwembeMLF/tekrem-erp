@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
@@ -17,36 +17,36 @@ import { Alert, AlertDescription } from '@/Components/ui/alert';
 import {
   ArrowLeft,
   Smartphone,
-  DollarSign,
   User,
   FileText,
-  AlertCircle,
-  CheckCircle,
   CreditCard,
-  Send
+  Send,
+  RotateCcw,
 } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
 import useRoute from '@/Hooks/useRoute';
 import { toast } from 'sonner';
 
-interface MomoProvider {
+interface Network {
+  code: string;
+  label: string;
+}
+
+interface RefundableDeposit {
   id: number;
-  display_name: string;
-  provider_code: string;
-  is_active: boolean;
-  supported_currencies: string[];
-  fee_structure: {
-    fixed_fee?: number;
-    percentage_fee?: number;
-    minimum_fee?: number;
-    maximum_fee?: number;
-  };
+  transaction_number: string;
+  provider_transaction_id: string;
+  amount: number;
+  currency: string;
+  customer_phone?: string;
+  created_at: string;
 }
 
 interface Invoice {
   id: number;
   invoice_number: string;
   total_amount: number;
+  balance_due?: number;
   currency: string;
   billable: {
     name: string;
@@ -55,71 +55,43 @@ interface Invoice {
 }
 
 interface Props {
-  providers: MomoProvider[];
+  networks: Network[];
+  pawapay: {
+    configured: boolean;
+    env: string;
+  };
+  refundableDeposits: RefundableDeposit[];
   invoice?: Invoice;
 }
 
-export default function Create({ providers, invoice }: Props) {
+export default function Create({ networks, pawapay, refundableDeposits, invoice }: Props) {
   const { t } = useTranslate();
   const route = useRoute();
-  const [selectedProvider, setSelectedProvider] = useState<MomoProvider | null>(null);
-  const [estimatedFee, setEstimatedFee] = useState<number>(0);
 
   const { data, setData, post, processing, errors } = useForm({
-    provider_id: '',
     type: 'payment',
+    correspondent: '',
     phone_number: '',
-    amount: invoice?.total_amount?.toString() || '',
+    amount: invoice?.balance_due?.toString() || invoice?.total_amount?.toString() || '',
     currency: invoice?.currency || 'ZMW',
     description: invoice ? `Payment for Invoice ${invoice.invoice_number}` : '',
     invoice_id: invoice?.id?.toString() || '',
     customer_name: invoice?.billable?.name || '',
     customer_email: invoice?.billable?.email || '',
-    callback_url: '',
-    metadata: {},
+    customer_message: '',
+    deposit_id: '',
   });
 
-  useEffect(() => {
-    if (data.provider_id) {
-      const provider = providers.find(p => p.id.toString() === data.provider_id);
-      setSelectedProvider(provider || null);
-    }
-  }, [data.provider_id, providers]);
+  const isRefund = data.type === 'refund';
+  const needsPhone = !isRefund;
 
   useEffect(() => {
-    if (selectedProvider && data.amount) {
-      calculateEstimatedFee();
+    const params = new URLSearchParams(window.location.search);
+    const type = params.get('type');
+    if (type && ['payment', 'payout', 'refund'].includes(type)) {
+      setData('type', type);
     }
-  }, [selectedProvider, data.amount]);
-
-  const calculateEstimatedFee = () => {
-    if (!selectedProvider || !data.amount) {
-      setEstimatedFee(0);
-      return;
-    }
-
-    const amount = parseFloat(data.amount);
-    const feeStructure = selectedProvider.fee_structure;
-    let fee = 0;
-
-    if (feeStructure.fixed_fee) {
-      fee += feeStructure.fixed_fee;
-    }
-
-    if (feeStructure.percentage_fee) {
-      fee += (amount * feeStructure.percentage_fee) / 100;
-    }
-
-    if (feeStructure.minimum_fee && fee < feeStructure.minimum_fee) {
-      fee = feeStructure.minimum_fee;
-    }
-
-    if (feeStructure.maximum_fee && fee > feeStructure.maximum_fee) {
-      fee = feeStructure.maximum_fee;
-    }
-
-    setEstimatedFee(fee);
-  };
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,36 +109,21 @@ export default function Create({ providers, invoice }: Props) {
   const formatCurrency = (amount: number, currency: string = 'ZMW') => {
     return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
-      currency: currency,
+      currency,
     }).format(amount);
   };
 
-  const formatPhoneNumber = (phone: string) => {
-    // Format Zambian phone numbers
-    const cleaned = phone.replace(/\D/g, '');
-    if (cleaned.startsWith('260')) {
-      return `+${cleaned}`;
-    } else if (cleaned.startsWith('0')) {
-      return `+260${cleaned.substring(1)}`;
-    } else if (cleaned.length === 9) {
-      return `+260${cleaned}`;
-    }
-    return phone;
-  };
-
-  const handlePhoneChange = (value: string) => {
-    const formatted = formatPhoneNumber(value);
-    setData('phone_number', formatted);
-  };
+  const typeLabel = {
+    payment: t('finance.momo.type.deposit', 'Deposit (collect)'),
+    payout: t('finance.momo.type.payout', 'Payout'),
+    refund: t('finance.momo.type.refund', 'Refund'),
+  }[data.type] ?? data.type;
 
   return (
-    <AppLayout
-      title={t('finance.momo.new_transaction', 'New Mobile Money Transaction')}
-      >
-      <Head title={t('finance.momo.new_transaction', 'New Mobile Money Transaction')} />
+    <AppLayout title={t('finance.momo.new_transaction', 'New PawaPay Transaction')}>
+      <Head title={t('finance.momo.new_transaction', 'New PawaPay Transaction')} />
 
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center gap-4">
           <Button variant="outline" size="icon" asChild>
             <Link href={route('finance.momo.index')}>
@@ -175,65 +132,49 @@ export default function Create({ providers, invoice }: Props) {
           </Button>
           <div>
             <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-              {t('finance.momo.new_transaction', 'New Mobile Money Transaction')}
+              {t('finance.momo.new_transaction', 'New PawaPay Transaction')}
             </h1>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              {t('finance.momo.create_description', 'Initiate a mobile money payment or payout')}
+              Deposits, payouts, and refunds via PawaPay ({pawapay.env})
             </p>
           </div>
         </div>
 
-        {/* Invoice Info */}
+        {!pawapay.configured && (
+          <Alert variant="destructive">
+            <AlertDescription>
+              PawaPay is not configured. Save your API token in{' '}
+              <Link href={route('settings.finance.payments.pawapay')} className="underline">
+                Finance Settings
+              </Link>
+              .
+            </AlertDescription>
+          </Alert>
+        )}
+
         {invoice && (
           <Alert>
             <FileText className="h-4 w-4" />
             <AlertDescription>
-              {t('finance.momo.invoice_payment', 'Processing payment for Invoice')} <strong>{invoice.invoice_number}</strong> - {formatCurrency(invoice.total_amount, invoice.currency)}
+              {t('finance.momo.invoice_payment', 'Processing payment for Invoice')}{' '}
+              <strong>{invoice.invoice_number}</strong> - {formatCurrency(invoice.total_amount, invoice.currency)}
             </AlertDescription>
           </Alert>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid gap-6 lg:grid-cols-2">
-            {/* Transaction Details */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Smartphone className="h-4 w-4" />
                   {t('finance.momo.transaction_details', 'Transaction Details')}
                 </CardTitle>
+                <CardDescription>{typeLabel}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="provider_id">
-                    {t('finance.momo.provider', 'Provider')} *
-                  </Label>
-                  <Select value={data.provider_id} onValueChange={(value) => setData('provider_id', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('finance.momo.select_provider', 'Select provider')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {providers.map((provider) => (
-                        <SelectItem key={provider.id} value={provider.id.toString()}>
-                          <div className="flex items-center gap-2">
-                            <div className="h-6 w-6 rounded bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs font-medium">
-                              {provider.provider_code}
-                            </div>
-                            {provider.display_name}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.provider_id && (
-                    <p className="text-sm text-red-600">{errors.provider_id}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="type">
-                    {t('finance.momo.transaction_type', 'Transaction Type')} *
-                  </Label>
+                  <Label>{t('finance.momo.transaction_type', 'Operation')} *</Label>
                   <Select value={data.type} onValueChange={(value) => setData('type', value)}>
                     <SelectTrigger>
                       <SelectValue />
@@ -242,7 +183,7 @@ export default function Create({ providers, invoice }: Props) {
                       <SelectItem value="payment">
                         <div className="flex items-center gap-2">
                           <CreditCard className="h-4 w-4" />
-                          {t('finance.momo.type.payment', 'Payment')}
+                          {t('finance.momo.type.deposit', 'Deposit')}
                         </div>
                       </SelectItem>
                       <SelectItem value="payout">
@@ -251,183 +192,165 @@ export default function Create({ providers, invoice }: Props) {
                           {t('finance.momo.type.payout', 'Payout')}
                         </div>
                       </SelectItem>
+                      <SelectItem value="refund">
+                        <div className="flex items-center gap-2">
+                          <RotateCcw className="h-4 w-4" />
+                          {t('finance.momo.type.refund', 'Refund')}
+                        </div>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
-                  {errors.type && (
-                    <p className="text-sm text-red-600">{errors.type}</p>
-                  )}
+                  {errors.type && <p className="text-sm text-red-600">{errors.type}</p>}
                 </div>
+
+                {isRefund ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="deposit_id">{t('finance.momo.original_deposit', 'Original deposit')} *</Label>
+                    {refundableDeposits.length > 0 ? (
+                      <Select value={data.deposit_id} onValueChange={(value) => setData('deposit_id', value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a completed deposit" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {refundableDeposits.map((deposit) => (
+                            <SelectItem key={deposit.id} value={deposit.provider_transaction_id}>
+                              {deposit.transaction_number} · {formatCurrency(deposit.amount, deposit.currency)}
+                              {deposit.customer_phone ? ` · ${deposit.customer_phone}` : ''}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input
+                        id="deposit_id"
+                        value={data.deposit_id}
+                        onChange={(e) => setData('deposit_id', e.target.value)}
+                        placeholder="PawaPay deposit UUID"
+                      />
+                    )}
+                    {errors.deposit_id && <p className="text-sm text-red-600">{errors.deposit_id}</p>}
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <Label>{t('finance.momo.network', 'Network')}</Label>
+                      <Select value={data.correspondent} onValueChange={(value) => setData('correspondent', value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Auto-detect from phone number" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {networks.map((network) => (
+                            <SelectItem key={network.code} value={network.code}>
+                              {network.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {errors.correspondent && <p className="text-sm text-red-600">{errors.correspondent}</p>}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="phone_number">{t('finance.momo.phone_number', 'Phone Number')} *</Label>
+                      <Input
+                        id="phone_number"
+                        type="tel"
+                        placeholder="076274499, 077274499, or 26076274499"
+                        value={data.phone_number}
+                        onChange={(e) => setData('phone_number', e.target.value)}
+                      />
+                      {errors.phone_number && <p className="text-sm text-red-600">{errors.phone_number}</p>}
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="amount">{t('finance.momo.amount', 'Amount')} *</Label>
+                        <Input
+                          id="amount"
+                          type="number"
+                          step="0.01"
+                          min="1"
+                          value={data.amount}
+                          onChange={(e) => setData('amount', e.target.value)}
+                        />
+                        {errors.amount && <p className="text-sm text-red-600">{errors.amount}</p>}
+                      </div>
+                      <div className="space-y-2">
+                        <Label>{t('finance.momo.currency', 'Currency')}</Label>
+                        <Select value={data.currency} onValueChange={(value) => setData('currency', value)}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="ZMW">ZMW</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="customer_message">{t('finance.momo.customer_message', 'Customer message')}</Label>
+                      <Input
+                        id="customer_message"
+                        maxLength={22}
+                        value={data.customer_message}
+                        onChange={(e) => setData('customer_message', e.target.value)}
+                        placeholder="4-22 chars shown on SMS"
+                      />
+                    </div>
+                  </>
+                )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone_number">
-                    {t('finance.momo.phone_number', 'Phone Number')} *
-                  </Label>
-                  <Input
-                    id="phone_number"
-                    type="tel"
-                    placeholder="+260 97 123 4567"
-                    value={data.phone_number}
-                    onChange={(e) => handlePhoneChange(e.target.value)}
-                    className={errors.phone_number ? 'border-red-500' : ''}
-                  />
-                  {errors.phone_number && (
-                    <p className="text-sm text-red-600">{errors.phone_number}</p>
-                  )}
-                  <p className="text-xs text-gray-500">
-                    {t('finance.momo.phone_format', 'Format: +260XXXXXXXXX')}
-                  </p>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="amount">
-                      {t('finance.momo.amount', 'Amount')} *
-                    </Label>
-                    <Input
-                      id="amount"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      placeholder="0.00"
-                      value={data.amount}
-                      onChange={(e) => setData('amount', e.target.value)}
-                      className={errors.amount ? 'border-red-500' : ''}
-                    />
-                    {errors.amount && (
-                      <p className="text-sm text-red-600">{errors.amount}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="currency">
-                      {t('finance.momo.currency', 'Currency')} *
-                    </Label>
-                    <Select value={data.currency} onValueChange={(value) => setData('currency', value)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {selectedProvider?.supported_currencies?.map((currency) => (
-                          <SelectItem key={currency} value={currency}>
-                            {currency}
-                          </SelectItem>
-                        )) || (
-                          <SelectItem value="ZMW">ZMW</SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                    {errors.currency && (
-                      <p className="text-sm text-red-600">{errors.currency}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description">
-                    {t('finance.momo.description', 'Description')}
-                  </Label>
+                  <Label htmlFor="description">{t('finance.momo.description', 'Description')}</Label>
                   <Textarea
                     id="description"
-                    placeholder={t('finance.momo.description_placeholder', 'Transaction description...')}
                     value={data.description}
                     onChange={(e) => setData('description', e.target.value)}
                     rows={3}
                   />
-                  {errors.description && (
-                    <p className="text-sm text-red-600">{errors.description}</p>
-                  )}
                 </div>
+
+                {errors.error && <p className="text-sm text-red-600">{errors.error}</p>}
               </CardContent>
             </Card>
 
-            {/* Customer Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  {t('finance.momo.customer_details', 'Customer Details')}
-                </CardTitle>
-                <CardDescription>
-                  {t('finance.momo.customer_description', 'Optional customer information for record keeping')}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="customer_name">
-                    {t('finance.momo.customer_name', 'Customer Name')}
-                  </Label>
-                  <Input
-                    id="customer_name"
-                    placeholder={t('finance.momo.customer_name_placeholder', 'Customer name')}
-                    value={data.customer_name}
-                    onChange={(e) => setData('customer_name', e.target.value)}
-                  />
-                  {errors.customer_name && (
-                    <p className="text-sm text-red-600">{errors.customer_name}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="customer_email">
-                    {t('finance.momo.customer_email', 'Customer Email')}
-                  </Label>
-                  <Input
-                    id="customer_email"
-                    type="email"
-                    placeholder={t('finance.momo.customer_email_placeholder', 'customer@example.com')}
-                    value={data.customer_email}
-                    onChange={(e) => setData('customer_email', e.target.value)}
-                  />
-                  {errors.customer_email && (
-                    <p className="text-sm text-red-600">{errors.customer_email}</p>
-                  )}
-                </div>
-
-                {/* Fee Estimation */}
-                {selectedProvider && data.amount && (
-                  <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                    <h4 className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-2">
-                      {t('finance.momo.fee_estimation', 'Fee Estimation')}
-                    </h4>
-                    <div className="space-y-1 text-sm">
-                      <div className="flex justify-between">
-                        <span>{t('finance.momo.transaction_amount', 'Transaction Amount')}:</span>
-                        <span className="font-medium">{formatCurrency(parseFloat(data.amount || '0'), data.currency)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>{t('finance.momo.estimated_fee', 'Estimated Fee')}:</span>
-                        <span className="font-medium">{formatCurrency(estimatedFee, data.currency)}</span>
-                      </div>
-                      <div className="flex justify-between border-t pt-1 font-medium">
-                        <span>{t('finance.momo.total_amount', 'Total Amount')}:</span>
-                        <span>{formatCurrency(parseFloat(data.amount || '0') + estimatedFee, data.currency)}</span>
-                      </div>
-                    </div>
+            {needsPhone && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    {t('finance.momo.customer_details', 'Customer Details')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="customer_name">{t('finance.momo.customer_name', 'Customer Name')}</Label>
+                    <Input
+                      id="customer_name"
+                      value={data.customer_name}
+                      onChange={(e) => setData('customer_name', e.target.value)}
+                    />
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                  <div className="space-y-2">
+                    <Label htmlFor="customer_email">{t('finance.momo.customer_email', 'Customer Email')}</Label>
+                    <Input
+                      id="customer_email"
+                      type="email"
+                      value={data.customer_email}
+                      onChange={(e) => setData('customer_email', e.target.value)}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
-          {/* Submit Button */}
           <div className="flex justify-end gap-4">
             <Button variant="outline" asChild>
-              <Link href={route('finance.momo.index')}>
-                {t('common.cancel', 'Cancel')}
-              </Link>
+              <Link href={route('finance.momo.index')}>{t('common.cancel', 'Cancel')}</Link>
             </Button>
-            <Button type="submit" disabled={processing}>
-              {processing ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  {t('finance.momo.processing', 'Processing...')}
-                </>
-              ) : (
-                <>
-                  <Send className="h-4 w-4" />
-                  {t('finance.momo.initiate_transaction', 'Initiate Transaction')}
-                </>
-              )}
+            <Button type="submit" disabled={processing || !pawapay.configured}>
+              {processing ? t('finance.momo.processing', 'Processing...') : typeLabel}
             </Button>
           </div>
         </form>

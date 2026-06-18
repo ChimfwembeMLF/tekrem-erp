@@ -118,6 +118,20 @@ export default function ChartOfAccounts({ reportData }: Props) {
     return groups;
   }, {} as Record<string, Account[]>);
 
+  const exportUrl = (format: 'pdf' | 'excel' | 'csv') => {
+    const params = new URLSearchParams({
+      format,
+      as_of_date: reportData.as_of_date,
+      include_inactive: reportData.parameters?.include_inactive ? '1' : '0',
+    });
+
+    if (reportData.parameters?.category) {
+      params.set('category', reportData.parameters.category);
+    }
+
+    return `${route('finance.reports.chart-of-accounts')}?${params.toString()}`;
+  };
+
   return (
     <AppLayout title={reportData.title} >
 
@@ -139,13 +153,17 @@ export default function ChartOfAccounts({ reportData }: Props) {
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              {t('Export PDF')}
+            <Button variant="outline" asChild>
+              <a href={exportUrl('pdf')}>
+                <Download className="h-4 w-4 mr-2" />
+                {t('Export PDF')}
+              </a>
             </Button>
-            <Button variant="outline">
-              <FileText className="h-4 w-4 mr-2" />
-              {t('Export Excel')}
+            <Button variant="outline" asChild>
+              <a href={exportUrl('excel')}>
+                <FileText className="h-4 w-4 mr-2" />
+                {t('Export Excel')}
+              </a>
             </Button>
           </div>
         </div>

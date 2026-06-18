@@ -156,8 +156,8 @@ class MomoCheckStatusCommand extends Command
             $query->where('created_at', '>=', Carbon::now()->subHours($hours));
         }
 
-        // Filter by provider
-        $providerCode = $this->option('provider');
+        // Filter by provider (PawaPay gateway)
+        $providerCode = $this->option('provider') ?: 'pawapay';
         if ($providerCode) {
             $query->whereHas('provider', function ($q) use ($providerCode) {
                 $q->where('code', $providerCode);

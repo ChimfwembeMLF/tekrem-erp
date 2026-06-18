@@ -25,6 +25,7 @@ import {
   Zap
 } from 'lucide-react';
 import useRoute from '@/Hooks/useRoute';
+import ProjectAgileTabs from '@/Components/Projects/ProjectAgileTabs';
 import { 
   Select,
   SelectContent,
@@ -84,6 +85,7 @@ interface BacklogProps {
     name: string;
     methodology: 'waterfall' | 'agile' | 'hybrid';
   };
+  board?: { id: number; name: string };
   productBacklog: BacklogItem[];
   sprintBacklogs: BacklogItem[];
   sprints: Sprint[];
@@ -93,7 +95,8 @@ interface BacklogProps {
 
 export default function Backlog({ 
   auth, 
-  project, 
+  project,
+  board,
   productBacklog = [], 
   sprintBacklogs  = [],
   sprints = [],
@@ -211,6 +214,7 @@ export default function Backlog({
       )}
     >
       <Head title={`Backlog - ${project.name}`} />
+      <ProjectAgileTabs projectId={project.id} boardId={board?.id} active="backlog" />
 
       <div className="space-y-6 p-6">
         {/* Filters */}

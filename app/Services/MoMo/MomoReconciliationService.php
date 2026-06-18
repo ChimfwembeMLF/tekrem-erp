@@ -6,6 +6,7 @@ use App\Models\Finance\MomoTransaction;
 use App\Models\Finance\MomoProvider;
 use App\Models\Finance\BankReconciliation;
 use App\Models\Finance\BankReconciliationItem;
+use App\Services\MoMo\MomoTransactionService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -99,6 +100,34 @@ class MomoReconciliationService
      */
     protected function getProviderTransactionHistory(MomoProvider $provider, Carbon $startDate, Carbon $endDate): array
     {
+        if ($provider->code === 'pawapay') {
+            $pending = MomoTransaction::where('momo_provider_id', $provider->id)
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->whereIn('status', ['pending', 'processing'])
+                ->get();
+
+            $statusService = app(MomoTransactionService::class);
+
+            foreach ($pending as $transaction) {
+                $statusService->checkTransactionStatus($transaction);
+            }
+
+            return MomoTransaction::where('momo_provider_id', $provider->id)
+                ->whereBetween('completed_at', [$startDate, $endDate])
+                ->where('status', 'completed')
+                ->get()
+                ->map(fn (MomoTransaction $transaction) => [
+                    'id' => $transaction->provider_transaction_id,
+                    'transaction_id' => $transaction->provider_transaction_id,
+                    'reference' => $transaction->provider_transaction_id,
+                    'amount' => (float) $transaction->amount,
+                    'phone_number' => $transaction->customer_phone,
+                    'status' => 'completed',
+                    'date' => $transaction->completed_at?->toDateString(),
+                ])
+                ->all();
+        }
+
         try {
             $service = MomoServiceFactory::createFromProvider($provider);
             
@@ -140,7 +169,7 @@ class MomoReconciliationService
      */
     protected function getLocalTransactions(MomoProvider $provider, Carbon $startDate, Carbon $endDate)
     {
-        return MomoTransaction::where('provider_id', $provider->id)
+        return MomoTransaction::where('momo_provider_id', $provider->id)
             ->where('status', 'completed')
             ->whereBetween('completed_at', [$startDate, $endDate])
             ->orderBy('completed_at')

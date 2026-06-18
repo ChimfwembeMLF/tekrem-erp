@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Paperclip, ImageIcon, SmilePlus, SendHorizonal, X, FileText } from 'lucide-react';
+import { Paperclip, ImageIcon, SmilePlus, SendHorizonal, X, FileText, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface AttachmentPreview {
   url: string;
@@ -14,6 +15,7 @@ interface ChatInputProps {
   onSend: (e?: React.FormEvent) => void;
   isLoading?: boolean;
   onKeyDown?: (e: React.KeyboardEvent) => void;
+  onBlur?: () => void;
   onEmojiClick?: () => void;
   showEmojiPicker?: boolean;
   onFileUpload: (files: FileList) => void;
@@ -31,6 +33,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   onSend,
   isLoading,
   onKeyDown,
+  onBlur,
   onEmojiClick,
   showEmojiPicker,
   onFileUpload,
@@ -46,7 +49,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const canSend = (value.trim().length > 0 || attachmentPreviews.length > 0) && !isLoading && !disabled;
   const slotsLeft = MAX_ATTACHMENTS - attachmentPreviews.length;
 
-  // Auto-grow textarea
   useEffect(() => {
     const ta = textareaRef.current;
     if (!ta) return;
@@ -65,22 +67,34 @@ const ChatInput: React.FC<ChatInputProps> = ({
     e.target.value = '';
   };
 
+  const handleBlur = () => {
+    setIsFocused(false);
+    onBlur?.();
+  };
+
   return (
-    <div className="chat-input-root">
-      {/* Attachment strip */}
+    <div className="flex flex-col gap-1.5">
       {attachmentPreviews.length > 0 && (
-        <div className="attach-strip">
+        <div className="flex flex-wrap gap-1.5 px-0.5">
           {attachmentPreviews.map((att, idx) => (
-            <div key={idx} className="attach-chip" title={att.name}>
+            <div
+              key={idx}
+              className="flex max-w-[130px] items-center gap-1 rounded-lg border border-primary/20 bg-primary/5 px-1.5 py-1 text-[11px] text-primary"
+              title={att.name}
+            >
               {att.type.startsWith('image/') ? (
-                <img src={att.url} alt={att.name} className="attach-thumb" />
+                <img src={att.url} alt={att.name} className="h-[22px] w-[22px] shrink-0 rounded object-cover" />
               ) : (
-                <div className="attach-file-icon">
+                <div className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded bg-primary/10 text-primary">
                   <FileText size={14} />
                 </div>
               )}
-              <span className="attach-name">{att.name}</span>
-              <button className="attach-remove" onClick={att.onRemove} type="button">
+              <span className="flex-1 truncate">{att.name}</span>
+              <button
+                type="button"
+                className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors hover:bg-primary/20"
+                onClick={att.onRemove}
+              >
                 <X size={10} />
               </button>
             </div>
@@ -88,16 +102,18 @@ const ChatInput: React.FC<ChatInputProps> = ({
         </div>
       )}
 
-      {/* Main input row */}
       <form
         onSubmit={(e) => { e.preventDefault(); onSend(e); }}
-        className={`input-pill ${isFocused ? 'focused' : ''} ${disabled ? 'pill-disabled' : ''}`}
+        className={cn(
+          'flex items-end gap-0.5 rounded-3xl border border-border bg-background px-2 py-1.5 transition-all',
+          isFocused ? 'border-primary shadow-[0_0_0_3px_hsl(var(--primary)/0.15)]' : '',
+          disabled && 'pointer-events-none opacity-60',
+        )}
       >
-        {/* Left actions */}
-        <div className="pill-actions-left">
+        <div className="flex shrink-0 items-center">
           <button
             type="button"
-            className="action-btn"
+            className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-primary disabled:opacity-40"
             onClick={() => imageInputRef.current?.click()}
             title="Attach image"
             disabled={slotsLeft <= 0 || disabled}
@@ -106,7 +122,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           </button>
           <button
             type="button"
-            className="action-btn"
+            className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-primary disabled:opacity-40"
             onClick={() => fileInputRef.current?.click()}
             title="Attach file"
             disabled={slotsLeft <= 0 || disabled}
@@ -115,29 +131,29 @@ const ChatInput: React.FC<ChatInputProps> = ({
           </button>
         </div>
 
-        {/* Hidden file inputs */}
         <input ref={imageInputRef} type="file" className="hidden" accept="image/*" multiple onChange={e => handleFileChange(e, 'image')} />
         <input ref={fileInputRef} type="file" className="hidden" accept="application/pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip" multiple onChange={e => handleFileChange(e, 'file')} />
 
-        {/* Text area */}
         <textarea
           ref={textareaRef}
           value={value}
           onChange={e => onChange(e.target.value)}
+          onBlur={handleBlur}
           placeholder={placeholder}
-          className="pill-textarea"
+          className="max-h-[120px] min-h-[28px] flex-1 resize-none border-0 bg-transparent px-1 py-1 text-[13.5px] leading-6 text-foreground outline-none placeholder:text-muted-foreground [scrollbar-width:thin]"
           rows={1}
           onKeyDown={onKeyDown}
           onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
           disabled={disabled || isLoading}
         />
 
-        {/* Right actions */}
-        <div className="pill-actions-right">
+        <div className="flex shrink-0 items-center">
           <button
             type="button"
-            className={`action-btn ${showEmojiPicker ? 'action-btn-active' : ''}`}
+            className={cn(
+              'flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-primary',
+              showEmojiPicker && 'bg-primary/10 text-primary',
+            )}
             onClick={onEmojiClick}
             title="Emoji"
           >
@@ -145,121 +161,19 @@ const ChatInput: React.FC<ChatInputProps> = ({
           </button>
           <button
             type="submit"
-            className={`send-btn ${canSend ? 'send-btn-active' : ''}`}
+            className={cn(
+              'ml-0.5 flex h-8 w-8 items-center justify-center rounded-full transition-all',
+              canSend
+                ? 'bg-gradient-to-br from-primary to-secondary text-primary-foreground hover:scale-105'
+                : 'bg-muted text-muted-foreground',
+            )}
             disabled={!canSend}
             title="Send"
           >
-            {isLoading
-              ? <span className="send-spinner" />
-              : <SendHorizonal size={14} />
-            }
+            {isLoading ? <Loader2 size={14} className="animate-spin" /> : <SendHorizonal size={14} />}
           </button>
         </div>
       </form>
-
-      <style>{`
-        .chat-input-root { display: flex; flex-direction: column; gap: 6px; }
-
-        .attach-strip {
-          display: flex; flex-wrap: wrap; gap: 6px;
-          padding: 0 2px;
-        }
-        .attach-chip {
-          display: flex; align-items: center; gap: 4px;
-          background: hsl(var(--primary) / 0.08);
-          border: 1px solid hsl(var(--primary) / 0.2);
-          border-radius: 8px;
-          padding: 3px 6px 3px 4px;
-          max-width: 130px;
-          font-size: 11px;
-          color: hsl(var(--primary));
-        }
-        .attach-thumb {
-          width: 22px; height: 22px;
-          object-fit: cover; border-radius: 4px; flex-shrink: 0;
-        }
-        .attach-file-icon {
-          width: 22px; height: 22px;
-          background: hsl(var(--primary) / 0.14);
-          border-radius: 4px; display: flex;
-          align-items: center; justify-content: center; flex-shrink: 0;
-          color: hsl(var(--primary));
-        }
-        .attach-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .attach-remove {
-          width: 16px; height: 16px; border-radius: 50%;
-          background: hsl(var(--primary) / 0.14);
-          border: none; cursor: pointer; display: flex;
-          align-items: center; justify-content: center;
-          color: hsl(var(--primary)); flex-shrink: 0;
-          transition: background 0.15s;
-        }
-        .attach-remove:hover { background: hsl(var(--primary) / 0.28); }
-
-        .input-pill {
-          display: flex; align-items: flex-end; gap: 2px;
-          background: hsl(var(--card));
-          border: 1.5px solid hsl(var(--border));
-          border-radius: 24px;
-          padding: 6px 6px 6px 8px;
-          transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .input-pill.focused {
-          border-color: hsl(var(--primary));
-          box-shadow: 0 0 0 3px hsl(var(--primary) / 0.18);
-        }
-        .input-pill.pill-disabled { opacity: 0.6; pointer-events: none; }
-
-        .pill-actions-left, .pill-actions-right {
-          display: flex; align-items: center; gap: 1px; flex-shrink: 0;
-        }
-
-        .action-btn {
-          width: 28px; height: 28px; border-radius: 50%;
-          display: flex; align-items: center; justify-content: center;
-          border: none; cursor: pointer;
-          background: transparent; color: hsl(var(--muted-foreground));
-          transition: color 0.15s, background 0.15s;
-        }
-        .action-btn:hover:not(:disabled) { color: hsl(var(--primary)); background: hsl(var(--primary) / 0.08); }
-        .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        .action-btn-active { color: hsl(var(--primary)) !important; background: hsl(var(--primary) / 0.12) !important; }
-
-        .pill-textarea {
-          flex: 1; background: transparent; border: none; outline: none;
-          resize: none; font-size: 13.5px; line-height: 1.5;
-          color: hsl(var(--foreground)); min-height: 28px; max-height: 120px;
-          padding: 4px 4px; overflow-y: auto;
-          font-family: inherit;
-        }
-        .pill-textarea::placeholder { color: hsl(var(--muted-foreground)); }
-        .pill-textarea::-webkit-scrollbar { width: 3px; }
-        .pill-textarea::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 10px; }
-
-        .send-btn {
-          width: 32px; height: 32px; border-radius: 50%;
-          display: flex; align-items: center; justify-content: center;
-          border: none; cursor: pointer;
-          background: hsl(var(--muted)); color: hsl(var(--muted-foreground));
-          transition: background 0.2s, color 0.2s, transform 0.15s;
-          flex-shrink: 0;
-        }
-        .send-btn.send-btn-active {
-          background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
-          color: hsl(var(--primary-foreground));
-        }
-        .send-btn.send-btn-active:hover { transform: scale(1.08); }
-        .send-btn:disabled { cursor: not-allowed; }
-
-        .send-spinner {
-          width: 14px; height: 14px; border-radius: 50%;
-          border: 2px solid rgba(255,255,255,0.4);
-          border-top-color: #fff;
-          animation: spin 0.7s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .hidden { display: none; }
-      `}</style>
     </div>
   );
 };

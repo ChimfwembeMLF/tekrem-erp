@@ -1,6 +1,6 @@
 import React from 'react';
 import { Head, Link } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import { ProjectShowSheet } from '@/Components/Projects/ProjectShowSheet';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
@@ -56,26 +56,17 @@ export default function TagShow({ auth, tag }: TagShowProps) {
   };
 
   return (
-    <AppLayout
-      title={tag.name}
-      renderHeader={() => (
-        <div className="flex justify-between items-center">
+    <>
+      <Head title={tag.name} />
+      <ProjectShowSheet backUrl={route('projects.tags.index')} size="lg">
+        <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href={route('projects.tags.index')}>
-              <Button variant="outline" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Tags
-              </Button>
-            </Link>
             <div>
-              <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight flex items-center gap-2">
-                <div 
-                  className="w-4 h-4 rounded-full" 
-                  style={{ backgroundColor: tag.color }}
-                />
+              <h2 className="flex items-center gap-2 text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                <div className="h-4 w-4 rounded-full" style={{ backgroundColor: tag.color }} />
                 {tag.name}
               </h2>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="mt-1 text-sm text-gray-600">
                 Tag • {tag.type} • {tag.usage_count} usage{tag.usage_count !== 1 ? 's' : ''}
               </p>
             </div>
@@ -84,16 +75,13 @@ export default function TagShow({ auth, tag }: TagShowProps) {
             {hasPermission('projects.update') && (
               <Link href={route('projects.tags.edit', tag.id)}>
                 <Button variant="outline">
-                  <Edit className="h-4 w-4 mr-2" />
+                  <Edit className="mr-2 h-4 w-4" />
                   Edit Tag
                 </Button>
               </Link>
             )}
           </div>
         </div>
-      )}
-    >
-      <Head title={tag.name} />
 
       <div className="space-y-6">
         {/* Tag Details */}
@@ -267,6 +255,7 @@ export default function TagShow({ auth, tag }: TagShowProps) {
           </TabsContent>
         </Tabs>
       </div>
-    </AppLayout>
+      </ProjectShowSheet>
+    </>
   );
 }

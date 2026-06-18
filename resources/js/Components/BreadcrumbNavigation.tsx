@@ -9,6 +9,7 @@ import {
   BreadcrumbSeparator,
 } from "@/Components/ui/breadcrumb";
 import useBreadcrumbs from "@/Hooks/useBreadcrumbs";
+import useRoute from "@/Hooks/useRoute";
 import { Home, ChevronRight } from "lucide-react";
 
 interface Crumb {
@@ -19,14 +20,22 @@ interface Crumb {
 }
 
 export default function BreadcrumbNavigation({ className }: { className?: string }) {
+  const route = useRoute();
   const dynamicCrumbs = useBreadcrumbs() as Crumb[];
+
+  if (dynamicCrumbs.length === 0) {
+    return null;
+  }
+
+  const currentRoute = route().current() ?? '';
+  const homeHref = currentRoute.startsWith('shop.') ? route('home') : route('dashboard');
 
   const breadcrumbs: Crumb[] = [
     {
       label: "",
-      href: "/dashboard",
+      href: homeHref,
       icon: Home,
-      isActive: dynamicCrumbs.length === 0,
+      isActive: false,
     },
     ...dynamicCrumbs,
   ];
@@ -47,7 +56,7 @@ export default function BreadcrumbNavigation({ className }: { className?: string
                   </BreadcrumbPage>
                 ) : (
                   <BreadcrumbLink asChild>
-                    <Link href={breadcrumb.href!} className="flex items-center gap-1">
+                    <Link href={breadcrumb.href ?? '#'} className="flex items-center gap-1">
                       {Icon && <Icon className="w-4 h-4" />}
                       {breadcrumb.label && <span>{breadcrumb.label}</span>}
                     </Link>

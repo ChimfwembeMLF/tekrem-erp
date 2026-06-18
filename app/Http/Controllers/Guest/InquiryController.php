@@ -178,24 +178,15 @@ class InquiryController extends Controller
     private function notifyStaff(GuestInquiry $inquiry): void
     {
         try {
-            $notificationService = app(NotificationService::class);
-            
-            // Get users who should be notified based on inquiry type
             $users = $this->getUsersToNotify($inquiry->type);
-            
-            foreach ($users as $user) {
-                $notificationService->send(
-                    $user,
-                    'New Guest Inquiry',
-                    "New {$inquiry->type} inquiry from {$inquiry->name} - {$inquiry->subject}",
-                    [
-                        'type' => 'guest_inquiry',
-                        'inquiry_id' => $inquiry->id,
-                        'reference_number' => $inquiry->reference_number,
-                        'urgency' => $inquiry->urgency
-                    ]
-                );
-            }
+
+            NotificationService::notifyUsers(
+                $users,
+                'guest_inquiry',
+                "New {$inquiry->type} inquiry from {$inquiry->name} - {$inquiry->subject}",
+                null,
+                $inquiry
+            );
         } catch (\Exception $e) {
             // Log error but don't fail the inquiry submission
             \Log::error('Failed to send inquiry notification: ' . $e->getMessage());

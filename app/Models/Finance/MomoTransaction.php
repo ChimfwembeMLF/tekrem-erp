@@ -88,12 +88,59 @@ class MomoTransaction extends Model
         'retry_count' => 'integer',
     ];
 
+    protected $appends = [
+        'correspondent_label',
+    ];
+
+    public function getCorrespondentAttribute(): ?string
+    {
+        return $this->metadata['correspondent'] ?? null;
+    }
+
+    public function getCorrespondentLabelAttribute(): ?string
+    {
+        $code = $this->correspondent;
+
+        if (!$code) {
+            return null;
+        }
+
+        $networks = [
+            'MTN_MOMO_ZMB' => 'MTN Mobile Money',
+            'AIRTEL_OAPI_ZMB' => 'Airtel Money',
+            'ZAMTEL_ZMB' => 'Zamtel Kwacha',
+        ];
+
+        return $networks[$code] ?? $code;
+    }
+
     /**
      * Get the MoMo provider for this transaction.
      */
     public function momoProvider(): BelongsTo
     {
         return $this->belongsTo(MomoProvider::class);
+    }
+
+    /**
+     * Alias used across finance MoMo pages.
+     */
+    public function provider(): BelongsTo
+    {
+        return $this->momoProvider();
+    }
+
+    /**
+     * Alias used across finance MoMo pages.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->initiatedBy();
+    }
+
+    public function getPhoneNumberAttribute(): ?string
+    {
+        return $this->customer_phone;
     }
 
     /**
@@ -219,8 +266,11 @@ class MomoTransaction extends Model
     /**
      * Generate a unique transaction number.
      */
-    public static function generateTransactionNumber(): string
+    public static function generateTransactionNumber(?string $prefix = null): string
     {
+        $prefix = strtoupper(trim((string) ($prefix ?? 'MOMO')));
+        $prefix = preg_replace('/[^A-Z0-9_-]/', '', $prefix) ?: 'MOMO';
+
         $year = date('Y');
         $month = date('m');
         $lastTransaction = static::whereYear('created_at', $year)
@@ -230,7 +280,7 @@ class MomoTransaction extends Model
 
         $sequence = $lastTransaction ? (int) substr($lastTransaction->transaction_number, -6) + 1 : 1;
 
-        return 'MOMO-' . $year . $month . '-' . str_pad($sequence, 6, '0', STR_PAD_LEFT);
+        return $prefix . '-' . $year . $month . '-' . str_pad((string) $sequence, 6, '0', STR_PAD_LEFT);
     }
 
     /**

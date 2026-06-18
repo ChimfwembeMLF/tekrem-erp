@@ -1,19 +1,19 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/Components/ui/sheet';
-import { Menu, X } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import useRoute from '@/Hooks/useRoute';
 import useActiveRoute from '@/Hooks/useActiveRoute';
-import { ThemeSelect, ThemeToggle } from '@/Components/ThemeProvider';
+import { ThemeToggle } from '@/Components/ThemeProvider';
 import useTypedPage from '@/Hooks/useTypedPage';
 import ApplicationMark from '@/Components/ApplicationMark';
 
 interface MobileNavProps {
-  settings: Record<string, any>;
+  settings: Record<string, unknown>;
 }
 
-export default function MobileNav({ settings }: MobileNavProps) {
+export default function MobileNav({ settings: _settings }: MobileNavProps) {
   const route = useRoute();
   const { isActive } = useActiveRoute();
   const page = useTypedPage();
@@ -22,25 +22,11 @@ export default function MobileNav({ settings }: MobileNavProps) {
     { href: route('home'), label: 'Home' },
     { href: route('about'), label: 'About' },
     { href: route('services'), label: 'Services' },
-    // {
-    //   href: '/guest/portfolio',
-    //   label: 'Portfolio',
-    //   submenu: [
-    //     { href: '/guest/portfolio', label: 'View Projects' },
-    //     { href: '/guest/testimonials', label: 'Testimonials' },
-    //     { href: '/guest/portfolio/services', label: 'Service Examples' },
-    //   ]
-    // },
-    {
-      href: '/guest/inquiry',
-      label: 'Get Started',
-      submenu: [
-        { href: '/guest/inquiry', label: 'General Inquiry' },
-        { href: '/guest/quote', label: 'Request Quote' },
-        { href: '/guest/project', label: 'Project Consultation' },
-        { href: '/guest/support', label: 'Support Center' },
-      ]
-    },
+    { href: route('pricing'), label: 'Pricing' },
+    { href: route('faq'), label: 'FAQ' },
+    { href: route('guest.inquiry.create'), label: 'Inquiry' },
+    { href: route('guest.quote.create'), label: 'Get a Quote' },
+    { href: route('guest.support.index'), label: 'Support' },
     { href: route('contact'), label: 'Contact' },
   ];
 
@@ -52,11 +38,10 @@ export default function MobileNav({ settings }: MobileNavProps) {
           <span className="sr-only">Toggle menu</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="top" className="dark:bg-primary h-100 w-full rounded-b-xl">
+      <SheetContent side="top" className="h-auto w-full rounded-b-xl">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <ApplicationMark />
-            {/* <span>{settings.site_name || 'TekRem ERP'}</span> */}
           </SheetTitle>
         </SheetHeader>
 
@@ -66,10 +51,10 @@ export default function MobileNav({ settings }: MobileNavProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center px-4 py-2 text-base font-medium rounded-md transition-colors ${
+                className={`flex items-center rounded-md px-4 py-2 text-base font-medium transition-colors ${
                   isActive(item.href)
-                    ? 'bg-primary/10 text-primary font-semibold'
-                    : 'text-foreground/70 hover:text-foreground hover:bg-accent'
+                    ? 'bg-primary/10 font-semibold text-primary'
+                    : 'text-foreground/70 hover:bg-accent hover:text-foreground'
                 }`}
               >
                 {item.label}
@@ -77,25 +62,19 @@ export default function MobileNav({ settings }: MobileNavProps) {
             ))}
           </nav>
 
-          <div className="border-t border-border border-gray-300 dark:border-gray-500 pt-4 mt-2">
-            <div className="px-4 py-2">
-              {/* <h3 className="text-sm font-medium mb-2">Theme</h3> */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Toggle theme:</span>
-                <ThemeToggle />
-              </div>
-              {/* <div className="mt-4">
-                <ThemeSelect />
-              </div> */}
+          <div className="border-t border-border pt-4">
+            <div className="flex items-center justify-between px-4 py-2">
+              <span className="text-sm">Theme</span>
+              <ThemeToggle />
             </div>
           </div>
 
-          <div className="border-t border-border border-gray-300 dark:border-gray-500 pt-4 mt-2">
+          <div className="border-t border-border pt-4">
             <div className="px-4 py-2">
               {page.props.auth.user ? (
                 <Link
                   href={route('dashboard')}
-                  className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-primary hover:bg-primary/90"
+                  className="flex w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-white shadow-sm hover:bg-primary/90"
                 >
                   Dashboard
                 </Link>
@@ -103,13 +82,13 @@ export default function MobileNav({ settings }: MobileNavProps) {
                 <div className="flex flex-col gap-2">
                   <Link
                     href={route('login')}
-                    className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-primary dark:bg-secondary hover:bg-primary/90 hover:dark:bg-secondary/80"
+                    className="flex w-full items-center justify-center rounded-md border px-4 py-2 shadow-sm"
                   >
                     Login
                   </Link>
                   <Link
                     href={route('register')}
-                    className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-white  bg-primary dark:bg-secondary hover:bg-primary/90 hover:dark:bg-secondary/80"
+                    className="flex w-full items-center justify-center rounded-md bg-gradient-to-r from-secondary to-primary px-4 py-2 text-white shadow-sm"
                   >
                     Register
                   </Link>

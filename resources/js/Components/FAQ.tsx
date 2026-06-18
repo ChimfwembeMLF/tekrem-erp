@@ -30,7 +30,7 @@ const faqs: FAQItem[] = [
   {
     question: "What are your pricing models?",
     answer:
-      "We offer flexible pricing models including fixed-price projects, hourly rates, and retainer agreements. Pricing depends on project scope, complexity, and timeline requirements."
+      "We publish transparent ZMW packages on our pricing page — from K 75,000 for starter web projects to managed cloud from K 25,000/month. Custom quotes are provided after discovery.",
   },
   {
     question: "Do you work with international clients?",

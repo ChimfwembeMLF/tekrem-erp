@@ -15,7 +15,7 @@ class SetupController extends Controller
      */
     public function index(): Response
     {
-        $this->authorize('manage-hr-settings');
+        $this->authorize('edit settings');
 
         return Inertia::render('HR/Setup/Index', [
             'payrollSettings' => $this->getPayrollSettings(),
@@ -32,7 +32,7 @@ class SetupController extends Controller
      */
     public function updatePayroll(Request $request)
     {
-        $this->authorize('manage-hr-settings');
+        $this->authorize('edit settings');
 
         $validated = $request->validate([
             'payroll_frequency' => 'required|in:weekly,bi-weekly,monthly,quarterly',
@@ -68,7 +68,7 @@ class SetupController extends Controller
      */
     public function updateAttendance(Request $request)
     {
-        $this->authorize('manage-hr-settings');
+        $this->authorize('edit settings');
 
         $validated = $request->validate([
             'work_hours_per_day' => 'required|numeric|min:1|max:24',
@@ -103,7 +103,7 @@ class SetupController extends Controller
      */
     public function updateLeave(Request $request)
     {
-        $this->authorize('manage-hr-settings');
+        $this->authorize('edit settings');
 
         $validated = $request->validate([
             'annual_leave_days' => 'required|integer|min:0|max:365',
@@ -138,7 +138,7 @@ class SetupController extends Controller
      */
     public function updatePerformance(Request $request)
     {
-        $this->authorize('manage-hr-settings');
+        $this->authorize('edit settings');
 
         $validated = $request->validate([
             'review_frequency' => 'required|in:quarterly,semi-annually,annually',
@@ -170,7 +170,7 @@ class SetupController extends Controller
      */
     public function updateTraining(Request $request)
     {
-        $this->authorize('manage-hr-settings');
+        $this->authorize('edit settings');
 
         $validated = $request->validate([
             'enable_mandatory_training' => 'boolean',
@@ -202,14 +202,13 @@ class SetupController extends Controller
      */
     public function updateGeneral(Request $request)
     {
-        $this->authorize('manage-hr-settings');
+        $this->authorize('edit settings');
 
         $validated = $request->validate([
             'employee_id_format' => 'required|string|max:50',
             'employee_id_prefix' => 'nullable|string|max:10',
             'probation_period_months' => 'required|integer|min:1|max:24',
             'notice_period_days' => 'required|integer|min:1|max:365',
-            'enable_employee_portal' => 'boolean',
             'enable_document_management' => 'boolean',
             'enable_org_chart' => 'boolean',
             'enable_employee_directory' => 'boolean',
@@ -344,7 +343,6 @@ class SetupController extends Controller
             'employee_id_prefix' => Setting::get('hr.general.employee_id_prefix', 'EMP'),
             'probation_period_months' => Setting::get('hr.general.probation_period_months', 3),
             'notice_period_days' => Setting::get('hr.general.notice_period_days', 30),
-            'enable_employee_portal' => Setting::get('hr.general.enable_employee_portal', true),
             'enable_document_management' => Setting::get('hr.general.enable_document_management', true),
             'enable_org_chart' => Setting::get('hr.general.enable_org_chart', true),
             'enable_employee_directory' => Setting::get('hr.general.enable_employee_directory', true),

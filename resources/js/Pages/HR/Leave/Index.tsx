@@ -148,9 +148,20 @@ export default function Index({ leaves, leaveTypes, employees, filters }: LeaveI
     <AppLayout
       title={t('hr.leave_management', 'Leave Management')}
       renderHeader={() => (
-        <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-          {t('hr.leave_management', 'Leave Management')}
-        </h2>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="font-semibold text-xl text-foreground">Leave</h2>
+            <p className="text-sm text-muted-foreground">Review requests, approve time off, manage balances</p>
+          </div>
+          <div className="flex gap-2">
+            <Link href={route('hr.leave-types.index')}>
+              <Button variant="outline" size="sm">Leave policies</Button>
+            </Link>
+            <Link href={route('hr.leave.create')}>
+              <Button size="sm"><Plus className="h-4 w-4 mr-1" />New request</Button>
+            </Link>
+          </div>
+        </div>
       )}
     >
       <Head title={t('hr.leave_management', 'Leave Management')} />

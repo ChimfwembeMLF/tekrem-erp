@@ -9,7 +9,6 @@ import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import useRoute from '@/Hooks/useRoute';
-import MediaPicker from '@/Components/CMS/MediaPicker';
 
 // Dummy data for components (replace with actual props or API call)
 const payrollComponents = [
@@ -48,7 +47,6 @@ export default function EditPayroll({ payroll, employees = [] }: EditPayrollProp
       ? payroll.components
       : [{ payroll_component_id: '', amount: '' }]
   );
-  const [showMediaPicker, setShowMediaPicker] = useState(false);
   const { data, setData, put, processing, errors } = useForm({
     employee_id: payroll.employee_id || '',
     period: payroll.period || '',
@@ -147,22 +145,10 @@ export default function EditPayroll({ payroll, employees = [] }: EditPayrollProp
                     type="text"
                     value={data.payslip_file_path}
                     onChange={e => setData('payslip_file_path', e.target.value)}
-                    placeholder="Select or paste file path"
+                    placeholder="Payslip file path or URL"
                     className="flex-1"
                   />
-                  <Button type="button" variant="outline" onClick={() => setShowMediaPicker(true)}>
-                    Pick File
-                  </Button>
                 </div>
-                <MediaPicker
-                  isOpen={showMediaPicker}
-                  onSelect={media => {
-                    setData('payslip_file_path', media.url);
-                    setShowMediaPicker(false);
-                  }}
-                  onClose={() => setShowMediaPicker(false)}
-                  type="document"
-                />
               </div>
               <div>
                 <Label>Payroll Components</Label>

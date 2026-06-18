@@ -3,34 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Services\SocialMedia\FacebookService;
-use App\Services\SocialMedia\InstagramService;
-use App\Services\SocialMedia\LinkedInService;
-use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Http;
 
 class IntegrationVerificationController extends Controller
 {
-    protected FacebookService $facebookService;
-    protected InstagramService $instagramService;
-    protected LinkedInService $linkedInService;
-
-    public function __construct(
-        FacebookService $facebookService,
-        InstagramService $instagramService,
-        LinkedInService $linkedInService
-    ) {
-        $this->facebookService = $facebookService;
-        $this->instagramService = $instagramService;
-        $this->linkedInService = $linkedInService;
-    }
-
     /**
      * Display integration verification dashboard
      */
@@ -54,13 +35,6 @@ class IntegrationVerificationController extends Controller
     {
         try {
             $results = [];
-
-            // Test Social Media Integrations
-            $results['social_media'] = [
-                'facebook' => $this->testFacebookIntegration(),
-                'instagram' => $this->testInstagramIntegration(),
-                'linkedin' => $this->testLinkedInIntegration(),
-            ];
 
             // Test Database Connections
             $results['database'] = $this->testDatabaseConnections();
@@ -111,14 +85,11 @@ class IntegrationVerificationController extends Controller
     public function testIntegration(Request $request): JsonResponse
     {
         $request->validate([
-            'integration' => 'required|string|in:facebook,instagram,linkedin,database,email,storage,queue,cache'
+            'integration' => 'required|string|in:database,email,storage,queue,cache'
         ]);
 
         try {
             $result = match($request->integration) {
-                'facebook' => $this->testFacebookIntegration(),
-                'instagram' => $this->testInstagramIntegration(),
-                'linkedin' => $this->testLinkedInIntegration(),
                 'database' => $this->testDatabaseConnections(),
                 'email' => $this->testEmailConfiguration(),
                 'storage' => $this->testFileStorage(),
@@ -147,9 +118,6 @@ class IntegrationVerificationController extends Controller
     {
         try {
             $configurations = [
-                'facebook' => $this->getFacebookConfigStatus(),
-                'instagram' => $this->getInstagramConfigStatus(),
-                'linkedin' => $this->getLinkedInConfigStatus(),
                 'email' => $this->getEmailConfigStatus(),
                 'storage' => $this->getStorageConfigStatus(),
                 'queue' => $this->getQueueConfigStatus(),
@@ -165,78 +133,6 @@ class IntegrationVerificationController extends Controller
                 'success' => false,
                 'message' => 'Failed to get configuration status: ' . $e->getMessage()
             ], 500);
-        }
-    }
-
-    /**
-     * Test Facebook integration
-     */
-    private function testFacebookIntegration(): array
-    {
-        try {
-            $result = $this->facebookService->testConnection();
-            
-            return [
-                'status' => $result['status'] === 'success' ? 'healthy' : 'error',
-                'message' => $result['message'],
-                'details' => $result['data'] ?? null,
-                'response_time' => $this->measureResponseTime(fn() => $this->facebookService->testConnection()),
-            ];
-        } catch (\Exception $e) {
-            return [
-                'status' => 'error',
-                'message' => 'Facebook integration test failed: ' . $e->getMessage(),
-                'details' => null,
-                'response_time' => null,
-            ];
-        }
-    }
-
-    /**
-     * Test Instagram integration
-     */
-    private function testInstagramIntegration(): array
-    {
-        try {
-            $result = $this->instagramService->testConnection();
-            
-            return [
-                'status' => $result['status'] === 'success' ? 'healthy' : 'error',
-                'message' => $result['message'],
-                'details' => $result['data'] ?? null,
-                'response_time' => $this->measureResponseTime(fn() => $this->instagramService->testConnection()),
-            ];
-        } catch (\Exception $e) {
-            return [
-                'status' => 'error',
-                'message' => 'Instagram integration test failed: ' . $e->getMessage(),
-                'details' => null,
-                'response_time' => null,
-            ];
-        }
-    }
-
-    /**
-     * Test LinkedIn integration
-     */
-    private function testLinkedInIntegration(): array
-    {
-        try {
-            $result = $this->linkedInService->testConnection();
-            
-            return [
-                'status' => $result['status'] === 'success' ? 'healthy' : 'error',
-                'message' => $result['message'],
-                'details' => $result['data'] ?? null,
-                'response_time' => $this->measureResponseTime(fn() => $this->linkedInService->testConnection()),
-            ];
-        } catch (\Exception $e) {
-            return [
-                'status' => 'error',
-                'message' => 'LinkedIn integration test failed: ' . $e->getMessage(),
-                'details' => null,
-                'response_time' => null,
-            ];
         }
     }
 
@@ -429,11 +325,6 @@ class IntegrationVerificationController extends Controller
     private function getAllIntegrations(): array
     {
         return [
-            'social_media' => [
-                'facebook' => $this->getFacebookConfigStatus(),
-                'instagram' => $this->getInstagramConfigStatus(),
-                'linkedin' => $this->getLinkedInConfigStatus(),
-            ],
             'system' => [
                 'database' => ['configured' => true, 'status' => 'unknown'],
                 'email' => ['configured' => true, 'status' => 'unknown'],
@@ -485,60 +376,6 @@ class IntegrationVerificationController extends Controller
         }
 
         return $totalTests > 0 ? round(($passedTests / $totalTests) * 100) : 0;
-    }
-
-    /**
-     * Measure response time for a function
-     */
-    private function measureResponseTime(callable $function): float
-    {
-        $startTime = microtime(true);
-        $function();
-        return round((microtime(true) - $startTime) * 1000, 2);
-    }
-
-    /**
-     * Get Facebook configuration status
-     */
-    private function getFacebookConfigStatus(): array
-    {
-        $appId = Setting::get('integration.facebook.app_id');
-        $appSecret = Setting::get('integration.facebook.app_secret');
-        $accessToken = Setting::get('integration.facebook.access_token');
-
-        return [
-            'configured' => !empty($appId) && !empty($appSecret) && !empty($accessToken),
-            'status' => 'unknown',
-            'last_test' => null,
-        ];
-    }
-
-    /**
-     * Get Instagram configuration status
-     */
-    private function getInstagramConfigStatus(): array
-    {
-        $accessToken = Setting::get('integration.instagram.access_token');
-
-        return [
-            'configured' => !empty($accessToken),
-            'status' => 'unknown',
-            'last_test' => null,
-        ];
-    }
-
-    /**
-     * Get LinkedIn configuration status
-     */
-    private function getLinkedInConfigStatus(): array
-    {
-        $accessToken = Setting::get('integration.linkedin.access_token');
-
-        return [
-            'configured' => !empty($accessToken),
-            'status' => 'unknown',
-            'last_test' => null,
-        ];
     }
 
     /**

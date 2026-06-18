@@ -8,6 +8,7 @@ import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import { Plus, Trash2 } from 'lucide-react';
 import useRoute from '@/Hooks/useRoute';
+import ProjectAgileTabs from '@/Components/Projects/ProjectAgileTabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 
 interface Epic {
@@ -82,6 +83,11 @@ export default function EpicIndex({ auth, project, epics, boards = [] }: EpicInd
       )}
     >
       <Head title="Epics" />
+      <ProjectAgileTabs
+        projectId={project.id}
+        boardId={boards?.[0]?.id}
+        active="epics"
+      />
 
       <div className="py-12">
         <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">

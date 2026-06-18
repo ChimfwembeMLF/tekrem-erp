@@ -55,6 +55,8 @@ interface MomoTransaction {
     display_name: string;
     provider_code: string;
   };
+  correspondent?: string;
+  correspondent_label?: string;
   type: string;
   status: string;
   amount: number;
@@ -69,11 +71,9 @@ interface MomoTransaction {
   };
 }
 
-interface MomoProvider {
-  id: number;
-  display_name: string;
-  provider_code: string;
-  is_active: boolean;
+interface Network {
+  code: string;
+  label: string;
 }
 
 interface Props {
@@ -86,9 +86,9 @@ interface Props {
     to: number;
     total: number;
   };
-  providers: MomoProvider[];
+  networks: Network[];
   filters: {
-    provider_id?: string;
+    correspondent?: string;
     status?: string;
     type?: string;
     date_from?: string;
@@ -97,7 +97,7 @@ interface Props {
   };
 }
 
-export default function Index({ transactions, providers, filters }: Props) {
+export default function Index({ transactions, networks, filters }: Props) {
   const { t } = useTranslate();
   const route = useRoute();
   const [searchTerm, setSearchTerm] = useState(filters.search || '');
@@ -200,9 +200,9 @@ export default function Index({ transactions, providers, filters }: Props) {
           </div>
           <div className="flex gap-2">
             <Button variant="outline" asChild>
-              <Link href={route('finance.momo.providers')}>
+              <Link href={route('settings.finance.payments.pawapay')}>
                 <Settings className="h-4 w-4" />
-                {t('finance.momo.providers', 'Providers')}
+                {t('finance.momo.pawapay_settings', 'PawaPay Settings')}
               </Link>
             </Button>
             <Button asChild>
@@ -238,15 +238,15 @@ export default function Index({ transactions, providers, filters }: Props) {
                 </div>
               </form>
 
-              <Select value={filters.provider_id || 'all'} onValueChange={(value) => handleFilter('provider_id', value)}>
+              <Select value={filters.correspondent || 'all'} onValueChange={(value) => handleFilter('correspondent', value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder={t('finance.momo.all_providers', 'All Providers')} />
+                  <SelectValue placeholder={t('finance.momo.all_networks', 'All Networks')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{t('finance.momo.all_providers', 'All Providers')}</SelectItem>
-                  {providers.map((provider) => (
-                    <SelectItem key={provider.id} value={provider.id.toString()}>
-                      {provider.display_name}
+                  <SelectItem value="all">{t('finance.momo.all_networks', 'All Networks')}</SelectItem>
+                  {networks.map((network) => (
+                    <SelectItem key={network.code} value={network.code}>
+                      {network.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -307,7 +307,7 @@ export default function Index({ transactions, providers, filters }: Props) {
                 <TableHeader>
                   <TableRow>
                     <TableHead>{t('finance.momo.transaction_number', 'Transaction #')}</TableHead>
-                    <TableHead>{t('finance.momo.provider', 'Provider')}</TableHead>
+                    <TableHead>{t('finance.momo.network', 'Network')}</TableHead>
                     <TableHead>{t('finance.momo.type', 'Type')}</TableHead>
                     <TableHead>{t('finance.momo.phone_number', 'Phone')}</TableHead>
                     <TableHead>{t('finance.momo.amount', 'Amount')}</TableHead>
@@ -332,9 +332,9 @@ export default function Index({ transactions, providers, filters }: Props) {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <div className="h-6 w-6 rounded bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs font-medium">
-                            {transaction.provider.provider_code}
+                            {(transaction.correspondent ?? 'PP').slice(0, 3)}
                           </div>
-                          {transaction.provider.display_name}
+                          {transaction.correspondent_label ?? transaction.provider.display_name}
                         </div>
                       </TableCell>
                       <TableCell>{getTypeBadge(transaction.type)}</TableCell>
@@ -360,7 +360,7 @@ export default function Index({ transactions, providers, filters }: Props) {
                                 {t('common.view', 'View')}
                               </Link>
                             </DropdownMenuItem>
-                            {transaction.status === 'pending' && (
+                            {(transaction.status === 'pending' || transaction.status === 'processing') && (
                               <DropdownMenuItem onClick={() => handleCheckStatus(transaction.id)}>
                                 <RefreshCw className="h-4 w-4" />
                                 {t('finance.momo.check_status', 'Check Status')}

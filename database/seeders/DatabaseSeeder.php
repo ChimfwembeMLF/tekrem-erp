@@ -92,9 +92,8 @@ class DatabaseSeeder extends Seeder
         $this->command->info('🤖 Seeding AI system prompts...');
         $this->call(AISystemPromptSeeder::class);
 
-        // 12. CMS (needs admin user, should be last as it's content-focused)
-        $this->command->info('📝 Seeding CMS data...');
-        $this->call(CMSSeeder::class);
+        $this->command->info('🛒 Seeding commerce module...');
+        $this->call(CommerceSeeder::class);
 
         $this->command->info('✅ TekRem ERP Database Seeding Completed Successfully!');
         $this->command->info('');

@@ -57,6 +57,9 @@ class MomoProvider extends Model
         'is_active' => 'boolean',
         'is_sandbox' => 'boolean',
         'provider_settings' => 'array',
+        'supported_currencies' => 'array',
+        'fee_structure' => 'array',
+        'last_health_check' => 'datetime',
         'min_transaction_amount' => 'decimal:2',
         'max_transaction_amount' => 'decimal:2',
         'daily_transaction_limit' => 'decimal:2',
@@ -75,6 +78,11 @@ class MomoProvider extends Model
         'merchant_id',
         'webhook_secret',
     ];
+
+    public function getProviderCodeAttribute(): string
+    {
+        return $this->code;
+    }
 
     /**
      * Get the cash account for this provider.

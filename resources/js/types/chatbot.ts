@@ -1,3 +1,12 @@
+export interface ChatAttachment {
+  id: string
+  name: string
+  type: string
+  size: number
+  url: string
+  uploaded_at?: string
+}
+
 export interface Message {
   id: string
   role: "user" | "assistant"
@@ -15,6 +24,7 @@ export interface Message {
   requiresHuman?: boolean
   rating?: "helpful" | "not_helpful"
   feedback?: string
+  attachments?: ChatAttachment[]
 }
 
 export interface Suggestion {
@@ -36,4 +46,5 @@ export interface ChatResponse {
   }>
   confidence: number
   requires_human: boolean
+  suggested_ticket_title?: string | null
 }

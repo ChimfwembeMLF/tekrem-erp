@@ -28,7 +28,7 @@ export default function PermissionCreate() {
   };
 
   const modules = [
-    'crm', 'finance', 'projects', 'support', 'cms', 'hr', 'ai', 'admin', 'settings'
+    'crm', 'finance', 'projects', 'support', 'hr', 'ai', 'admin', 'settings'
   ];
 
   const actions = [

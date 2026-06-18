@@ -7,6 +7,7 @@ import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Checkbox } from '@/Components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { ArrowLeft, Save, GraduationCap, Plus, X } from 'lucide-react';
 import { useTranslate } from '@/Hooks/useTranslate';
 import useRoute from '@/Hooks/useRoute';

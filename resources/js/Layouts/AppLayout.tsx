@@ -4,9 +4,11 @@ import useTypedPage from '@/Hooks/useTypedPage';
 import Banner from '@/Components/Banner';
 import Sidebar from '@/Components/Sidebar';
 import TopNav from '@/Components/TopNav';
-// import BreadcrumbNavigation from '@/Components/BreadcrumbNavigation';
+import BreadcrumbNavigation from '@/Components/BreadcrumbNavigation';
 import AppProvider from '@/Providers/AppProvider';
 import { Toaster } from '@/Components/ui/sonner';
+import SupportChatWidget from '@/Components/Support/SupportChatWidget';
+import SupportStaffAlertsListener from '@/Components/Support/SupportStaffAlertsListener';
 
 interface Props {
   title: string;
@@ -42,21 +44,22 @@ export default function AppLayout({
             <header className="bg-card shadow">
               <div className=" mx-auto py-6 px-4 sm:px-6 lg:px-8">
                 {renderHeader()}
-                {/* Breadcrumb Navigation */}
-              {/* <BreadcrumbNavigation className="mb-6" /> */}
               </div>
             </header>
           )}
 
           {/* Page Content */}
           <main className="flex-1 p-4 md:p-6">
-            <div className="">              
+            <BreadcrumbNavigation className="mb-4" />
+            <div className="">
               {children}
             </div>
           </main>
         </div>
       </div>
       <Toaster />
+      {page.props.auth?.user && <SupportStaffAlertsListener />}
+      {page.props.auth?.user && <SupportChatWidget />}
     </AppProvider>
   );
 }

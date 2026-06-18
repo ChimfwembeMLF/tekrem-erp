@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
-use App\Models\Finance\MomoProvider;
 use App\Models\Finance\ZraConfiguration;
 use App\Models\Finance\MomoTransaction;
 use App\Models\Finance\ZraSmartInvoice;
 use App\Models\Finance\BankReconciliation;
 use App\Models\Setting;
-use App\Services\MoMo\MomoApiService;
+use App\Services\Payments\PawaPayService;
 use App\Services\ZRA\ZraApiService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -22,12 +21,12 @@ use Inertia\Response;
 
 class FinanceSettingsController extends Controller
 {
-    protected MomoApiService $momoApiService;
+    protected PawaPayService $pawaPayService;
     protected ZraApiService $zraApiService;
 
-    public function __construct(MomoApiService $momoApiService, ZraApiService $zraApiService)
+    public function __construct(PawaPayService $pawaPayService, ZraApiService $zraApiService)
     {
-        $this->momoApiService = $momoApiService;
+        $this->pawaPayService = $pawaPayService;
         $this->zraApiService = $zraApiService;
     }
 
@@ -38,11 +37,6 @@ class FinanceSettingsController extends Controller
     {
         //$this->authorize('manage-finance-settings');
 
-        $momoProviders = MomoProvider::select([
-            'id', 'display_name', 'code', 'is_active', 
-            'health_status', 'last_health_check', 'supported_currencies', 'fee_structure'
-        ])->get();
-
         $zraConfiguration = ZraConfiguration::active()->select([
             'id', 'environment', 'taxpayer_tpin', 'taxpayer_name', 
             'is_active', 'health_status', 'last_health_check', 'last_token_refresh'
@@ -51,81 +45,51 @@ class FinanceSettingsController extends Controller
         $systemStats = [
             'total_momo_transactions' => MomoTransaction::count(),
             'total_zra_submissions' => ZraSmartInvoice::count(),
-            'active_providers' => MomoProvider::where('is_active', true)->count(),
+            'payments_configured' => $this->pawaPayService->isConfigured(),
             'pending_reconciliations' => BankReconciliation::where('status', 'pending')->count(),
         ];
 
         return Inertia::render('Settings/Finance/Index', [
-            'momoProviders' => $momoProviders,
+            'pawapay' => $this->pawaPayService->getPublicConfiguration(),
             'zraConfiguration' => $zraConfiguration,
             'systemStats' => $systemStats,
         ]);
     }
 
     /**
-     * Display MoMo API configuration page.
+     * Display PawaPay configuration page.
      */
-    public function momoApiConfiguration(): Response
+    public function pawaPayConfiguration(): Response
     {
-        //$this->authorize('manage-finance-settings');
-
-        $configuration = [
-            'global_timeout' => Setting::get('momo.api.global_timeout', 30),
-            'max_retry_attempts' => Setting::get('momo.api.max_retry_attempts', 3),
-            'retry_delay_seconds' => Setting::get('momo.api.retry_delay_seconds', 5),
-            'enable_request_logging' => Setting::get('momo.api.enable_request_logging', true),
-            'enable_response_logging' => Setting::get('momo.api.enable_response_logging', true),
-            'log_sensitive_data' => Setting::get('momo.api.log_sensitive_data', false),
-            'rate_limit_enabled' => Setting::get('momo.api.rate_limit_enabled', true),
-            'rate_limit_requests_per_minute' => Setting::get('momo.api.rate_limit_requests_per_minute', 60),
-            'health_check_interval_minutes' => Setting::get('momo.api.health_check_interval_minutes', 15),
-            'auto_disable_unhealthy_providers' => Setting::get('momo.api.auto_disable_unhealthy_providers', true),
-            'webhook_timeout_seconds' => Setting::get('momo.api.webhook_timeout_seconds', 30),
-            'webhook_retry_attempts' => Setting::get('momo.api.webhook_retry_attempts', 3),
-            'enable_sandbox_mode' => Setting::get('momo.api.enable_sandbox_mode', false),
-            'sandbox_api_base_url' => Setting::get('momo.api.sandbox_api_base_url', ''),
-            'production_api_base_url' => Setting::get('momo.api.production_api_base_url', ''),
-            'default_currency' => Setting::get('momo.api.default_currency', 'ZMW'),
-            'enable_transaction_encryption' => Setting::get('momo.api.enable_transaction_encryption', true),
-            'encryption_algorithm' => Setting::get('momo.api.encryption_algorithm', 'AES-256-GCM'),
-            'api_version' => Setting::get('momo.api.api_version', 'v1'),
-        ];
-
-        return Inertia::render('Settings/Finance/MoMo/ApiConfiguration', [
-            'configuration' => $configuration,
-            'supportedCurrencies' => ['ZMW', 'USD', 'EUR', 'GBP'],
-            'encryptionAlgorithms' => ['AES-256-GCM', 'AES-256-CBC', 'ChaCha20-Poly1305'],
+        return Inertia::render('Settings/Finance/Payments/PawaPay', [
+            'configuration' => $this->pawaPayService->getPublicConfiguration(),
         ]);
     }
 
     /**
-     * Update MoMo API configuration.
+     * Update PawaPay configuration.
      */
-    public function updateMomoApiConfiguration(Request $request): RedirectResponse
+    public function updatePawaPayConfiguration(Request $request): RedirectResponse
     {
-        //$this->authorize('manage-finance-settings');
-
         $validator = Validator::make($request->all(), [
-            'global_timeout' => 'required|integer|min:5|max:300',
-            'max_retry_attempts' => 'required|integer|min:0|max:10',
-            'retry_delay_seconds' => 'required|integer|min:1|max:60',
-            'enable_request_logging' => 'boolean',
-            'enable_response_logging' => 'boolean',
-            'log_sensitive_data' => 'boolean',
-            'rate_limit_enabled' => 'boolean',
-            'rate_limit_requests_per_minute' => 'required|integer|min:1|max:1000',
-            'health_check_interval_minutes' => 'required|integer|min:5|max:1440',
-            'auto_disable_unhealthy_providers' => 'boolean',
-            'webhook_timeout_seconds' => 'required|integer|min:5|max:300',
-            'webhook_retry_attempts' => 'required|integer|min:0|max:10',
-            'enable_sandbox_mode' => 'boolean',
-            'sandbox_api_base_url' => 'nullable|url',
-            'production_api_base_url' => 'nullable|url',
-            'default_currency' => 'required|string|size:3',
-            'enable_transaction_encryption' => 'boolean',
-            'encryption_algorithm' => 'required|string',
-            'api_version' => 'required|string',
+            'env' => 'required|string|in:sandbox,production',
+            'api_token' => 'nullable|string|max:500',
+            'base_url_sandbox' => 'required|url|max:255',
+            'base_url_prod' => 'required|url|max:255',
+            'callback_url' => 'nullable|url|max:255',
+            'timeout' => 'required|integer|min:5|max:120',
+            'enable_logging' => 'boolean',
+            'private_key' => 'nullable|string|max:10000',
+            'public_key' => 'nullable|string|max:10000',
+            'public_key_id' => 'nullable|string|max:255',
+            'transaction_id_prefix' => 'nullable|string|max:20|regex:/^[A-Za-z0-9_-]*$/',
         ]);
+
+        if (!$this->pawaPayService->isConfigured() && !$request->filled('api_token')) {
+            $validator->after(function ($validator) {
+                $validator->errors()->add('api_token', 'API token is required for the initial setup.');
+            });
+        }
 
         if ($validator->fails()) {
             return redirect()->back()
@@ -133,64 +97,41 @@ class FinanceSettingsController extends Controller
                 ->withInput();
         }
 
-        $validated = $validator->validated();
+        $this->pawaPayService->saveConfiguration($validator->validated());
 
-        // Save all settings with momo.api prefix
-        foreach ($validated as $key => $value) {
-            Setting::set("momo.api.{$key}", $value);
-        }
-
-        // Clear relevant caches
-        // Cache::tags(['momo', 'api-config']);
-
-        return redirect()->back()->with('success', 'MoMo API configuration updated successfully');
+        return redirect()->back()->with('success', 'PawaPay configuration saved to the database');
     }
 
     /**
-     * Test MoMo API connection.
+     * Test PawaPay API connection.
      */
-    public function testMomoApiConnection(Request $request): JsonResponse
+    public function testPawaPayConnection(Request $request): JsonResponse
     {
-        //$this->authorize('manage-finance-settings');
+        $overrides = [];
 
-        try {
-            // Test connection with active providers
-            $activeProviders = MomoProvider::where('is_active', true)->get();
-            
-            if ($activeProviders->isEmpty()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No active MoMo providers configured'
-                ]);
-            }
-
-            $results = [];
-            foreach ($activeProviders as $provider) {
-                $healthCheck = $this->momoApiService->testProviderConnection($provider);
-                $results[] = [
-                    'provider' => $provider->display_name,
-                    'success' => $healthCheck['success'],
-                    'message' => $healthCheck['message'] ?? null,
-                    'response_time' => $healthCheck['response_time'] ?? null,
-                ];
-            }
-
-            $allSuccessful = collect($results)->every('success');
-
-            return response()->json([
-                'success' => $allSuccessful,
-                'message' => $allSuccessful 
-                    ? 'All provider connections successful' 
-                    : 'Some provider connections failed',
-                'results' => $results,
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Connection test failed: ' . $e->getMessage()
-            ]);
+        if ($request->filled('api_token')) {
+            $overrides['api_token'] = $request->input('api_token');
         }
+
+        if ($request->filled('env')) {
+            $overrides['env'] = $request->input('env');
+        }
+
+        if ($request->filled('base_url_sandbox')) {
+            $overrides['base_url_sandbox'] = $request->input('base_url_sandbox');
+        }
+
+        if ($request->filled('base_url_prod')) {
+            $overrides['base_url_prod'] = $request->input('base_url_prod');
+        }
+
+        if ($request->filled('timeout')) {
+            $overrides['timeout'] = (int) $request->input('timeout');
+        }
+
+        $result = $this->pawaPayService->testConnection($overrides);
+
+        return response()->json($result);
     }
 
     /**

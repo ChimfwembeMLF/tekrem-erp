@@ -47,18 +47,23 @@
     <div class="watermark">Tekrem ERP</div>
     <div class="header">
         @if($logoBase64)
-           <img src="{{ $logoBase64 }}" style="width: 180px; height: auto; display: block; margin: 0 auto;" alt="Logo">
+           <img src="{{ $logoBase64 }}" style="width: 180px; height: auto; display: block; margin: 0 auto 10px;" alt="{{ $company['name'] ?? 'Company Logo' }}">
         @endif
         <div class="report-title">{{ $report->name }}</div>
         <div class="company-info">
-            Tekrem ERP &mdash; {{ config('app.url') }}<br>
-            {{ config('app.name') }} | {{ config('app.env') }}
+            <strong>{{ $company['name'] ?? config('app.name') }}</strong><br>
+            @if(!empty($company['tagline']))<em>{{ $company['tagline'] }}</em><br>@endif
+            {{ $company['address'] ?? '' }}@if(!empty($company['city'])), {{ $company['city'] }}@endif @if(!empty($company['country'])){{ $company['country'] }}@endif<br>
+            @if(!empty($company['phone']))Tel: {{ $company['phone'] }}<br>@endif
+            @if(!empty($company['email']))Email: {{ $company['email'] }}<br>@endif
+            @if(!empty($company['website']))Web: {{ $company['website'] }}<br>@endif
+            @if(!empty($company['tax_number']))TPIN: {{ $company['tax_number'] }}<br>@endif
         </div>
         <div class="meta">
             Generated: {{ now()->format('Y-m-d H:i:s') }}<br>
             Created by: {{ $report->createdBy?->name ?? 'System' }}<br>
             Type: {{ $report->getTypeLabel() }}<br>
-            Report ID: {{ $report->id }}
+            @if($report->id)Report ID: {{ $report->id }}<br>@endif
         </div>
     </div>
 
@@ -353,7 +358,10 @@
     @endif
 
     <div class="footer">
-        Tekrem ERP &copy; {{ date('Y') }} &mdash; Page <span class="pageNumber"></span>
+        @foreach($footerLines ?? [] as $line)
+            {{ $line }}@if(!$loop->last) &mdash; @endif
+        @endforeach
+        <br>{{ $company['name'] ?? 'TekRem' }} &copy; {{ date('Y') }}
     </div>
 
     <script type="text/php">

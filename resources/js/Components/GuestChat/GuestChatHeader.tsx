@@ -1,6 +1,7 @@
 import React from 'react';
-import { X, ChevronDown, ChevronUp, Settings2, WifiOff, Loader2 } from 'lucide-react';
-import Logo from '../../../../public/favicon.svg';
+import { X, ChevronDown, ChevronUp, Settings2, WifiOff, Loader2, Bot } from 'lucide-react';
+import { Button } from '@/Components/ui/button';
+import { Badge } from '@/Components/ui/badge';
 
 interface GuestSession {
   id: number;
@@ -31,17 +32,10 @@ interface GuestChatHeaderProps {
   onShowGuestForm: () => void;
 }
 
-const INQUIRY_LABELS: Record<string, { label: string; colorVar: string }> = {
-  support: { label: 'Support', colorVar: '--chart-1' },
-  sales: { label: 'Sales', colorVar: '--chart-2' },
-  general: { label: 'General', colorVar: '--primary' },
-};
-
-const STATUS_COLOR_VARS: Record<string, string> = {
-  active: '--chart-2',
-  closed: '--destructive',
-  archived: '--muted-foreground',
-  open: '--primary',
+const INQUIRY_LABELS: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
+  support: { label: 'Support', variant: 'outline' },
+  sales: { label: 'Sales', variant: 'secondary' },
+  general: { label: 'General', variant: 'default' },
 };
 
 export default function GuestChatHeader({
@@ -54,114 +48,86 @@ export default function GuestChatHeader({
   onShowGuestForm,
 }: GuestChatHeaderProps) {
   const inquiry = guestSession ? (INQUIRY_LABELS[guestSession.inquiry_type] ?? INQUIRY_LABELS.general) : null;
-  const statusColorVar = conversation?.status
-    ? (STATUS_COLOR_VARS[conversation.status] ?? STATUS_COLOR_VARS.open)
-    : STATUS_COLOR_VARS.open;
-
   const agentName = conversation?.assignee?.name;
+  const isOnline = connectionStatus === 'connected';
 
   return (
-    <header className="relative flex-shrink-0 overflow-hidden border-b border-border bg-white dark:bg-gray-900 select-none">
-
-      {/* Animated top bar */}
-      {/* <div className="h-[2px] bg-[hsl(var(--primary))]" /> */}
+    <header className="relative shrink-0 border-b border-border bg-card select-none">
+      <div className="h-0.5 w-full bg-gradient-to-r from-primary via-secondary to-primary" />
 
       <div className="flex items-center justify-between gap-2 px-4 py-3">
-
-        {/* Left */}
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-
-          <div className="relative flex items-center justify-center w-9 h-9 rounded-full border border-border bg-[hsl(var(--card))]">
-            <img src={Logo} alt="TekRem" className="w-5 h-5 object-contain" />
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-primary shadow-sm">
+            <Bot className="h-5 w-5" />
             <span
-              className="absolute bottom-[1px] right-[1px] w-2 h-2 rounded-full border border-[hsl(var(--card))]"
-              style={{ background: `hsl(var(${statusColorVar}))` }}
+              className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-card ${
+                isOnline ? 'bg-chart-2' : connectionStatus === 'connecting' ? 'bg-chart-1' : 'bg-destructive'
+              }`}
             />
           </div>
 
-          <div className="flex-1 min-w-0">
-
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold tracking-tight text-foreground truncate">
+              <span className="truncate text-sm font-semibold tracking-tight text-foreground">
                 Remy
               </span>
-
               {inquiry && !isMinimized && (
-                <span
-                  className="text-[10px] font-semibold uppercase tracking-wider px-2 py-[1px] rounded-full border"
-                  style={{
-                    color: `hsl(var(${inquiry.colorVar}))`,
-                    borderColor: `hsl(var(${inquiry.colorVar}) / 0.25)`,
-                    background: `hsl(var(${inquiry.colorVar}) / 0.1)`,
-                  }}
-                >
+                <Badge variant={inquiry.variant} className="h-5 px-2 text-[10px] uppercase tracking-wide">
                   {inquiry.label}
-                </span>
+                </Badge>
               )}
             </div>
 
             {!isMinimized && (
-              <div className="mt-0.5 text-[11px] flex items-center gap-1">
-
+              <div className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground">
                 {connectionStatus === 'connecting' && (
-                  <span className="flex items-center gap-1 text-[hsl(var(--chart-1))]">
+                  <span className="inline-flex items-center gap-1 text-chart-1">
                     <Loader2 size={10} className="animate-spin" />
                     Connecting...
                   </span>
                 )}
-
                 {connectionStatus === 'connected' && agentName && (
-                  <span className="flex items-center gap-1 text-[hsl(var(--chart-2))]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--chart-2))]" />
+                  <span className="inline-flex items-center gap-1 text-chart-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-chart-2" />
                     Chatting with {agentName}
                   </span>
                 )}
-
                 {connectionStatus === 'connected' && !agentName && (
-                  <span className="text-primary dark:text-white flex items-center gap-1">
+                  <span className="inline-flex items-center gap-1 text-primary">
                     AI assistant ready
                   </span>
                 )}
-
                 {connectionStatus === 'disconnected' && (
-                  <span className="flex items-center gap-1 text-destructive">
+                  <span className="inline-flex items-center gap-1 text-destructive">
                     <WifiOff size={10} />
                     Reconnecting...
                   </span>
                 )}
-
               </div>
             )}
-
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-1 flex-shrink-0">
-
+        <div className="flex shrink-0 items-center gap-0.5">
           {!isMinimized && guestSession && (
-            <button
-              onClick={onShowGuestForm}
-              className="w-7 h-7 rounded-md flex items-center justify-center text-[hsl(var(--foreground)/0.65)] hover:text-foreground hover:bg-[hsl(var(--accent))] transition"
-            >
-              <Settings2 size={14} />
-            </button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onShowGuestForm}>
+              <Settings2 className="h-4 w-4" />
+              <span className="sr-only">Chat settings</span>
+            </Button>
           )}
-
-          <button
-            onClick={onToggleMinimize}
-            className="w-7 h-7 rounded-md flex items-center justify-center text-[hsl(var(--foreground)/0.65)] hover:text-foreground hover:bg-[hsl(var(--accent))] transition"
-          >
-            {isMinimized ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          </button>
-
-          <button
+          <Button variant="ghost" size="icon" className="h-8 w-8 hidden sm:inline-flex" onClick={onToggleMinimize}>
+            {isMinimized ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            <span className="sr-only">{isMinimized ? 'Expand' : 'Minimize'}</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-destructive"
             onClick={onClose}
-            className="w-7 h-7 rounded-md flex items-center justify-center text-[hsl(var(--foreground)/0.65)] hover:text-destructive hover:bg-[hsl(var(--destructive)/0.15)] transition"
           >
-            <X size={14} />
-          </button>
-
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close chat</span>
+          </Button>
         </div>
       </div>
     </header>

@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use App\Policies\DepartmentAccessPolicy;
@@ -282,6 +283,44 @@ class EmployeeController extends Controller
         $employee->update(['employment_status' => 'inactive']);
 
         return back()->with('success', 'Employee deactivated successfully.');
+    }
+
+    /**
+     * Display employee documents.
+     */
+    public function documents(Employee $employee): Response
+    {
+        $employee->load('user');
+
+        return Inertia::render('HR/Employees/Documents', [
+            'employee' => $employee,
+            'documents' => $employee->documents ?? [],
+        ]);
+    }
+
+    /**
+     * Upload an employee document.
+     */
+    public function uploadDocument(Request $request, Employee $employee): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'file' => 'required|file|max:10240',
+        ]);
+
+        $path = $request->file('file')->store('employee-documents', 'public');
+
+        $documents = $employee->documents ?? [];
+        $documents[] = [
+            'title' => $validated['title'],
+            'file_path' => $path,
+            'uploaded_at' => now()->toIso8601String(),
+            'uploaded_by' => auth()->id(),
+        ];
+
+        $employee->update(['documents' => $documents]);
+
+        return back()->with('success', 'Document uploaded successfully.');
     }
 
     /**

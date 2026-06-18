@@ -50,6 +50,8 @@ interface MomoTransaction {
     display_name: string;
     provider_code: string;
   };
+  correspondent?: string;
+  correspondent_label?: string;
   type: string;
   status: string;
   amount: number;
@@ -218,15 +220,24 @@ export default function Show({ transaction }: Props) {
 
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {t('finance.momo.provider', 'Provider')}
+                  {t('finance.momo.gateway', 'Gateway')}
                 </span>
-                <div className="flex items-center gap-2">
-                  <div className="h-6 w-6 rounded bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs font-medium">
-                    {transaction.provider.provider_code}
-                  </div>
-                  <span className="font-medium">{transaction.provider.display_name}</span>
-                </div>
+                <span className="font-medium">{transaction.provider.display_name}</span>
               </div>
+
+              {transaction.correspondent_label && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {t('finance.momo.network', 'Network')}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <div className="h-6 w-6 rounded bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs font-medium">
+                      {(transaction.correspondent ?? 'PP').slice(0, 3)}
+                    </div>
+                    <span className="font-medium">{transaction.correspondent_label}</span>
+                  </div>
+                </div>
+              )}
 
               <Separator />
 

@@ -23,6 +23,7 @@ interface Report {
   name: string;
   description?: string;
   type: string;
+  format?: string;
   status: string;
   parameters?: any;
   generated_at?: string;
@@ -129,13 +130,24 @@ export default function Show({ report }: Props) {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {report.file_path && report.status === 'available' && (
-                      <Link href={route('finance.reports.download', report.id)}>
-                        <Button variant="outline" size="sm">
-                          <Download className="h-4 w-4 mr-2" />
-                          {t('finance.download', 'Download')}
-                        </Button>
-                      </Link>
+                    {report.status === 'available' && (
+                      <>
+                        <a href={route('finance.reports.download', report.id)}>
+                          <Button variant="outline" size="sm">
+                            <Download className="h-4 w-4 mr-2" />
+                            {t('finance.download', 'Download')}
+                          </Button>
+                        </a>
+                        <a href={route('finance.reports.export', { report: report.id, format: 'pdf' })}>
+                          <Button variant="outline" size="sm">PDF</Button>
+                        </a>
+                        <a href={route('finance.reports.export', { report: report.id, format: 'excel' })}>
+                          <Button variant="outline" size="sm">Excel</Button>
+                        </a>
+                        <a href={route('finance.reports.export', { report: report.id, format: 'csv' })}>
+                          <Button variant="outline" size="sm">CSV</Button>
+                        </a>
+                      </>
                     )}
                     <Link href={route('finance.reports.edit', report.id)}>
                       <Button variant="outline" size="sm">

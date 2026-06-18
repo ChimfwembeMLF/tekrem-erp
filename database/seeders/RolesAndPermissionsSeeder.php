@@ -30,9 +30,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'view projects',
             'view hr',
             'view support',
-            'view cms',
             'view ai',
-            'view social_media',
+            'view inventory',
+            'view procurement',
+            'view sales orders',
+            'access pos',
+            'view ecommerce',
 
             // ========== SYSTEM ADMINISTRATION ==========
             // User Management
@@ -360,41 +363,44 @@ class RolesAndPermissionsSeeder extends Seeder
             'delete automation',
             'manage automation rules',
 
-            // ========== CMS MODULE ==========
-            // Pages
-            'view cms pages',
-            'create cms pages',
-            'edit cms pages',
-            'delete cms pages',
-            'publish cms pages',
-            'manage cms pages',
+            // ========== INVENTORY MODULE ==========
+            'view products',
+            'create products',
+            'edit products',
+            'delete products',
+            'manage warehouses',
+            'adjust stock',
+            'view stock movements',
 
-            // Media
-            'view cms media',
-            'upload cms media',
-            'edit cms media',
-            'delete cms media',
-            'manage cms media',
+            // ========== PROCUREMENT MODULE ==========
+            'view suppliers',
+            'create suppliers',
+            'edit suppliers',
+            'delete suppliers',
+            'view purchase orders',
+            'create purchase orders',
+            'edit purchase orders',
+            'approve purchase orders',
+            'receive purchase orders',
 
-            // Templates
-            'view cms templates',
-            'create cms templates',
-            'edit cms templates',
-            'delete cms templates',
-            'manage cms templates',
+            // ========== SALES ORDERS MODULE ==========
+            'create sales orders',
+            'edit sales orders',
+            'delete sales orders',
+            'confirm sales orders',
+            'fulfill sales orders',
+            'cancel sales orders',
 
-            // Menus
-            'view cms menus',
-            'create cms menus',
-            'edit cms menus',
-            'delete cms menus',
-            'manage cms menus',
+            // ========== POS MODULE ==========
+            'open pos session',
+            'close pos session',
+            'process pos sales',
+            'void pos sales',
+            'manage pos registers',
 
-            // Redirects
-            'view cms redirects',
-            'create cms redirects',
-            'edit cms redirects',
-            'delete cms redirects',
+            // ========== ECOMMERCE MODULE ==========
+            'manage ecommerce catalog',
+            'manage ecommerce orders',
 
             // ========== AI MODULE ==========
             // AI Services
@@ -507,9 +513,13 @@ class RolesAndPermissionsSeeder extends Seeder
             'view projects',
             'view hr',
             'view support',
-            'view cms',
             'view ai',
-            'view social_media',
+            'view inventory',
+            'view procurement',
+            'view sales orders',
+            'access pos',
+            'manage pos registers',
+            'view ecommerce',
 
             // User Management (limited)
             'view users',
@@ -760,9 +770,13 @@ class RolesAndPermissionsSeeder extends Seeder
             'view projects',
             'view hr',
             'view support',
-            'view cms',
             'view ai',
-            'view social_media',
+            'view inventory',
+            'view procurement',
+            'view sales orders',
+            'access pos',
+            'manage pos registers',
+            'view ecommerce',
 
             // User Management (view only)
             'view users',
@@ -825,51 +839,51 @@ class RolesAndPermissionsSeeder extends Seeder
             'view training',
             'enroll training',
 
-            // Projects Module (good access) – all permissions now follow the same pattern
+            // Projects Module (good access)
             'view projects',
             'create projects',
             'edit projects',
-            'update projects',               // was projects.update
-            'delete projects',              // you may want to include this if staff can delete
+            'projects.update',
             'view project analytics',
 
-            // Milestones (formerly dot‑notation)
-            'view project milestones',      // was view milestones (but kept project prefix for clarity)
-            'create project milestones',    // was projects.milestones.create
-            'edit project milestones',      // was projects.milestones.edit
-            'update project milestones',    // was projects.milestones.update
+            // Milestones
+            'view milestones',
+            'create milestones',
+            'edit milestones',
+            'projects.milestones.create',
+            'projects.milestones.edit',
+            'projects.milestones.update',
 
             // Tasks
-            'view project tasks',           // was view tasks
-            'create project tasks',         // was projects.tasks.create
-            'edit project tasks',           // was projects.tasks.edit
-            'assign project tasks',         // was assign tasks (makes the resource explicit)
+            'view tasks',
+            'create tasks',
+            'edit tasks',
+            'assign tasks',
+            'projects.tasks.create',
+            'projects.tasks.edit',
 
             // Project Files
             'view project files',
             'upload project files',
             'edit project files',
             'download project files',
-            'delete project files',         // you may want to add if staff can delete
 
             // Time Logs
-            'view project time logs',       // was view time logs
-            'create project time logs',     // was projects.time-logs.create
-            'edit project time logs',       // was projects.time-logs.edit
-            'delete project time logs',     // optional, include if needed
+            'view time logs',
+            'create time logs',
+            'edit time logs',
+            'projects.time-logs.create',
+            'projects.time-logs.edit',
 
             // Project Templates
             'view project templates',
             'use project templates',
-            'create project templates',     // was projects.templates.create
-            'edit project templates',       // was projects.templates.edit
-            'delete project templates',     // optional
+            'create project templates',
+            'edit project templates',
 
             // Project Tags
-            'view project tags',            // was missing, but good to have
-            'create project tags',          // was projects.tags.create
-            'edit project tags',            // was projects.tags.edit
-            'delete project tags',          // optional
+            'projects.tags.create',
+            'projects.tags.edit',
 
             // Support Module (good access)
             'view tickets',

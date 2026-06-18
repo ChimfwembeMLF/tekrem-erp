@@ -100,7 +100,6 @@ class SendNotificationJob implements ShouldQueue
             'App\Notifications\NewChatMessage' => 'new_chat_message',
             'App\Notifications\UserRegistered' => 'security',
             'App\Notifications\NewUserRegisteredAdmin' => 'security',
-            'App\Notifications\SocialMediaNotification' => 'marketing',
             default => 'system',
         };
     }

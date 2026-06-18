@@ -63,14 +63,14 @@ export default function FAQ() {
     {
       id: 4,
       question: "How much does a typical web development project cost?",
-      answer: "Project costs vary based on complexity, features, and timeline. Basic websites start from $5,000, while complex web applications can range from $15,000 to $50,000+. We provide detailed quotes after understanding your specific requirements.",
+      answer: "Starter web projects from K 75,000; mobile apps from K 225,000; AI from K 325,000; managed cloud from K 25,000/month. See our pricing page for full packages — custom quotes follow discovery.",
       category: "pricing",
       popular: true
     },
     {
       id: 5,
       question: "Do you offer payment plans or financing options?",
-      answer: "Yes, we offer flexible payment plans for projects over $10,000. Typically, we structure payments in milestones: 30% upfront, 40% at midpoint, and 30% upon completion. Custom payment arrangements can be discussed for larger projects.",
+      answer: "Yes — for projects over K 250,000 we typically structure payments in milestones (e.g. 30% upfront, 40% at midpoint, 30% on completion). Custom arrangements are available for larger engagements.",
       category: "pricing",
       popular: false
     },
@@ -93,7 +93,7 @@ export default function FAQ() {
     {
       id: 8,
       question: "Do you provide ongoing maintenance and support?",
-      answer: "Yes, we offer comprehensive maintenance packages including security updates, bug fixes, performance optimization, and feature enhancements. Our support plans start from $500/month depending on the complexity of your application.",
+      answer: "Yes — maintenance from K 5,000/month depending on scope, including security updates, fixes, and performance monitoring.",
       category: "technical",
       popular: true
     },
@@ -315,7 +315,7 @@ export default function FAQ() {
               </Link>
             </Button>
             <Button variant="outline" asChild>
-              <Link href={route('help')}>
+              <Link href={route('contact')}>
                 <HelpCircle className="mr-2 h-4 w-4" />
                 Visit Help Center
               </Link>

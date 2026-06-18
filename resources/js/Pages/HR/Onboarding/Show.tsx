@@ -1,49 +1,64 @@
 import React from 'react';
-import { Head, Link } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
-import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/card';
+import HrPageShell from '@/Components/HR/HrPageShell';
+import HrLifecycleChecklist, { ChecklistItem } from '@/Components/HR/HrLifecycleChecklist';
+import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
+import { Badge } from '@/Components/ui/badge';
+import { Link } from '@inertiajs/react';
 import { Button } from '@/Components/ui/button';
-import { Edit } from 'lucide-react';
 import useRoute from '@/Hooks/useRoute';
 
-interface Onboarding {
-  id: number;
-  title: string;
-  status: string;
-  employee_name: string;
+interface Props {
+  onboarding: {
+    id: number;
+    title?: string;
+    status: string;
+    start_date: string;
+    checklist: ChecklistItem[];
+    employee: {
+      id: number;
+      full_name?: string;
+      job_title?: string;
+      department?: { name: string };
+      user?: { name: string; email: string };
+    };
+  };
 }
 
-interface ShowOnboardingProps {
-  onboarding: Onboarding;
-}
-
-export default function ShowOnboarding({ onboarding }: ShowOnboardingProps) {
+export default function OnboardingShow({ onboarding }: Props) {
   const route = useRoute();
+  const name = onboarding.employee?.user?.name ?? onboarding.employee?.full_name ?? 'Employee';
+
   return (
-    <AppLayout title="Onboarding Details">
-      <Head title="Onboarding Details" />
-      <div className="max-w-xl mx-auto py-8">
+    <HrPageShell
+      title={onboarding.title ?? `Onboarding — ${name}`}
+      description={`Start date: ${onboarding.start_date}`}
+      actions={
+        <Link href={route('hr.employees.show', onboarding.employee.id)}>
+          <Button variant="outline">View employee profile</Button>
+        </Link>
+      }
+    >
+      <div className="grid gap-6 lg:grid-cols-2">
+        <HrLifecycleChecklist
+          items={onboarding.checklist ?? []}
+          updateUrl={route('hr.onboarding.checklist', onboarding.id)}
+        />
+
         <Card>
           <CardHeader>
-            <CardTitle>Onboarding Details</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">New hire</CardTitle>
+              <Badge>{onboarding.status}</Badge>
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="mb-4">
-              <div className="font-medium">Title:</div>
-              <div>{onboarding.title}</div>
-            </div>
-            <div className="mb-4">
-              <div className="font-medium">Status:</div>
-              <div>{onboarding.status}</div>
-            </div>
-            <div className="mb-4">
-              <div className="font-medium">Employee:</div>
-              <div>{onboarding.employee_name}</div>
-            </div>
-            <Link href={route('hr.onboarding.edit', onboarding.id)}><Button variant="outline"><Edit className="h-4 w-4 mr-2" />Edit</Button></Link>
+          <CardContent className="space-y-2 text-sm">
+            <p><span className="text-muted-foreground">Name:</span> {name}</p>
+            <p><span className="text-muted-foreground">Role:</span> {onboarding.employee?.job_title}</p>
+            <p><span className="text-muted-foreground">Department:</span> {onboarding.employee?.department?.name}</p>
+            <p><span className="text-muted-foreground">Email:</span> {onboarding.employee?.user?.email}</p>
           </CardContent>
         </Card>
       </div>
-    </AppLayout>
+    </HrPageShell>
   );
 }

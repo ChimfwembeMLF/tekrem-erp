@@ -9,6 +9,7 @@ import { Button } from '@/Components/ui/button.jsx';
 import MobileNav from '@/Components/MobileNav';
 import MainNav from '@/Components/MainNav';
 import GuestChatWidget from '@/Components/GuestChat/GuestChatWidget';
+import BreadcrumbNavigation from '@/Components/BreadcrumbNavigation';
 import { Contact, Facebook, Instagram, Linkedin, MailIcon, Settings2Icon, Twitter, X } from 'lucide-react';
 
 interface Props {
@@ -32,6 +33,8 @@ export default function GuestLayout({
   const [scrolled, setScrolled] = useState(false);
   // Get settings from Inertia shared props
   const settings: any = page.props.settings || {};
+  const currentRoute = route().current() ?? '';
+  const showBreadcrumbs = currentRoute.startsWith('shop.');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -129,6 +132,11 @@ export default function GuestLayout({
 
         {/* Main Content */}
         <main className='-mt-28'>
+          {showBreadcrumbs && (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32">
+              <BreadcrumbNavigation className="mb-4" />
+            </div>
+          )}
           {children}
         </main>
 
@@ -168,42 +176,23 @@ export default function GuestLayout({
               <div>
                 <h3 className="text-gray-900 dark:text-white font-semibold text-lg mb-6">Solutions</h3>
                 <ul className="space-y-4">
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors duration-200">Network Security</a></li>
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors duration-200">Cloud Infrastructure</a></li>
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors duration-200">Web Development</a></li>
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors duration-200">Mobile Applications</a></li>
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors duration-200">AI & Analytics</a></li>
+                  <li><Link href={route('services.web-development')} className="text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">Web Development</Link></li>
+                  <li><Link href={route('services.mobile-apps')} className="text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">Mobile Applications</Link></li>
+                  <li><Link href={route('services.ai-solutions')} className="text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">AI Solutions</Link></li>
+                  <li><Link href={route('services.cloud-services')} className="text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">Cloud Services</Link></li>
+                  <li><Link href={route('pricing')} className="text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">Pricing</Link></li>
                 </ul>
               </div>
 
-              {/* Resources */}
               <div>
                 <h3 className="text-gray-900 dark:text-white font-semibold text-lg mb-6">Resources</h3>
                 <ul className="space-y-4">
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors duration-200">Documentation</a></li>
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors duration-200">Case Studies</a></li>
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors duration-200">Security Center</a></li>
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors duration-200">Support Portal</a></li>
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors duration-200">Blog</a></li>
+                  <li><Link href={route('faq')} className="text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">FAQ</Link></li>
+                  <li><Link href={route('guest.support.index')} className="text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">Support Center</Link></li>
+                  <li><Link href={route('guest.quote.create')} className="text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">Request a Quote</Link></li>
+                  <li><Link href={route('careers.index')} className="text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">Careers</Link></li>
+                  <li><Link href={route('shop.index')} className="text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">Shop</Link></li>
                 </ul>
-              </div>
-            </div>
-
-            {/* Newsletter Signup */}
-            <div className="border-t border-gray-200 dark:border-gray-800 pt-12 mb-12">
-              <div className="max-w-md">
-                <h3 className="text-gray-900 dark:text-white font-semibold text-lg mb-4">Stay Updated</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">Get the latest news and insights delivered to your inbox.</p>
-                <div className="flex gap-3">
-                  <input
-                    type="email"
-                    placeholder="Enter your email"
-                    className="flex-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                  />
-                  <button className="px-6 py-3 bg-gradient-to-r from-secondary to-primary hover:from-primary hover:to-secondary text-white font-medium rounded-lg transition-all duration-300">
-                    Subscribe
-                  </button>
-                </div>
               </div>
             </div>
 

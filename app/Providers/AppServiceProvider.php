@@ -5,7 +5,10 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use App\Models\Permission;
 use App\Models\User;
+use App\Models\HR\JobApplication;
+use App\Models\HR\JobPosting;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Route;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,6 +25,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Route::bind('recruitment', fn (string $value) => JobPosting::findOrFail($value));
+        Route::bind('application', fn (string $value) => JobApplication::findOrFail($value));
+
         // Register gates for all permissions
         try {
             Permission::all()->each(function ($permission) {

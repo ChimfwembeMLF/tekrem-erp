@@ -17,8 +17,66 @@ export default function useBreadcrumbs(): BreadcrumbItem[] {
     const currentRoute = route().current();
     const breadcrumbs: BreadcrumbItem[] = [];
 
-    // Always start with Dashboard for authenticated routes
-    if (currentRoute && !currentRoute.startsWith('website.') && currentRoute !== 'dashboard') {
+    const isPublicRoute = (name: string) =>
+      name === 'home' ||
+      name.startsWith('shop.') ||
+      name.startsWith('guest.') ||
+      name.startsWith('guest-chat.') ||
+      name === 'about' ||
+      name === 'services' ||
+      name.startsWith('services.') ||
+      name === 'portfolio' ||
+      name === 'contact' ||
+      name === 'careers.index' ||
+      name.startsWith('careers.') ||
+      name === 'help' ||
+      name === 'faq' ||
+      name.startsWith('terms.') ||
+      name.startsWith('privacy-policy.') ||
+      name.startsWith('refund-policy.') ||
+      (name.startsWith('support.') && !name.startsWith('support.chatbot.') && name !== 'support.dashboard');
+
+    const pushCrud = (prefix: string) => {
+      if (currentRoute === `${prefix}.create`) {
+        breadcrumbs.push({ label: t('common.create', 'Create'), isActive: true });
+      } else if (currentRoute === `${prefix}.edit`) {
+        breadcrumbs.push({ label: t('common.edit', 'Edit'), isActive: true });
+      } else if (currentRoute === `${prefix}.show`) {
+        breadcrumbs.push({ label: t('common.details', 'Details'), isActive: true });
+      } else if (currentRoute === `${prefix}.index`) {
+        breadcrumbs[breadcrumbs.length - 1].isActive = true;
+      }
+    };
+
+    if (!currentRoute) {
+      return breadcrumbs;
+    }
+
+    // Public shop
+    if (currentRoute.startsWith('shop.')) {
+      breadcrumbs.push({
+        label: t('shop.title', 'Shop'),
+        href: route('shop.index'),
+        isActive: currentRoute === 'shop.index',
+      });
+      if (currentRoute === 'shop.show') {
+        breadcrumbs.push({ label: t('common.details', 'Product'), isActive: true });
+      } else if (currentRoute === 'shop.cart') {
+        breadcrumbs.push({ label: t('shop.cart', 'Cart'), isActive: true });
+      } else if (currentRoute === 'shop.checkout') {
+        breadcrumbs.push({ label: t('shop.checkout', 'Checkout'), isActive: true });
+      } else if (currentRoute === 'shop.order.confirmation') {
+        breadcrumbs.push({ label: t('shop.confirmation', 'Order Confirmed'), isActive: true });
+      }
+      return breadcrumbs;
+    }
+
+    if (isPublicRoute(currentRoute)) {
+      return breadcrumbs;
+    }
+
+    // App routes: prepend dashboard link (except on dashboard itself)
+    if (currentRoute !== 'dashboard') {
       breadcrumbs.push({
         label: t('navigation.dashboard', 'Dashboard'),
         href: route('dashboard'),
@@ -110,14 +168,8 @@ export default function useBreadcrumbs(): BreadcrumbItem[] {
           breadcrumbs.push({
             label: t('crm.chat', 'LiveChat'),
             href: route('crm.livechat.index'),
+            isActive: true,
           });
-
-          if (currentRoute === 'crm.livechat.show') {
-            breadcrumbs.push({
-              label: t('crm.conversation', 'Conversation'),
-              isActive: true,
-            });
-          }
         }
 
         if (currentRoute.startsWith('crm.analytics.')) {
@@ -458,11 +510,162 @@ export default function useBreadcrumbs(): BreadcrumbItem[] {
           href: route('support.dashboard'),
         });
 
-        if (currentRoute === 'support.dashboard') {
+        if (currentRoute.startsWith('support.tickets.')) {
+          breadcrumbs.push({
+            label: t('support.tickets', 'Tickets'),
+            href: route('support.tickets.index'),
+          });
+          pushCrud('support.tickets');
+        } else if (currentRoute.startsWith('support.knowledge-base.')) {
+          breadcrumbs.push({
+            label: t('support.knowledge_base', 'Knowledge Base'),
+            href: route('support.knowledge-base.index'),
+            isActive: currentRoute === 'support.knowledge-base.index',
+          });
+          pushCrud('support.knowledge-base');
+        } else if (currentRoute === 'support.dashboard') {
           breadcrumbs.push({
             label: t('navigation.dashboard', 'Dashboard'),
             isActive: true,
           });
+        } else if (currentRoute.startsWith('support.chatbot.')) {
+          breadcrumbs.push({
+            label: t('support.chatbot', 'Chatbot'),
+            isActive: true,
+          });
+        }
+      }
+
+      // Inventory Module
+      if (currentRoute.startsWith('inventory.')) {
+        breadcrumbs.push({
+          label: t('inventory.title', 'Inventory'),
+          href: route('inventory.dashboard'),
+        });
+
+        if (currentRoute.startsWith('inventory.products.')) {
+          breadcrumbs.push({
+            label: t('inventory.products', 'Products'),
+            href: route('inventory.products.index'),
+          });
+          pushCrud('inventory.products');
+        } else if (currentRoute.startsWith('inventory.warehouses.')) {
+          breadcrumbs.push({
+            label: t('inventory.warehouses', 'Warehouses'),
+            href: route('inventory.warehouses.index'),
+            isActive: currentRoute === 'inventory.warehouses.index',
+          });
+          if (currentRoute === 'inventory.warehouses.stock') {
+            breadcrumbs.push({ label: t('inventory.stock', 'Stock'), isActive: true });
+          }
+        } else if (currentRoute === 'inventory.dashboard') {
+          breadcrumbs.push({ label: t('navigation.dashboard', 'Dashboard'), isActive: true });
+        }
+      }
+
+      // Procurement Module
+      if (currentRoute.startsWith('procurement.')) {
+        breadcrumbs.push({
+          label: t('procurement.title', 'Procurement'),
+          href: route('procurement.dashboard'),
+        });
+
+        if (currentRoute.startsWith('procurement.suppliers.')) {
+          breadcrumbs.push({
+            label: t('procurement.suppliers', 'Suppliers'),
+            href: route('procurement.suppliers.index'),
+            isActive: currentRoute === 'procurement.suppliers.index',
+          });
+        } else if (currentRoute.startsWith('procurement.purchase-orders.')) {
+          breadcrumbs.push({
+            label: t('procurement.purchase_orders', 'Purchase Orders'),
+            href: route('procurement.purchase-orders.index'),
+          });
+          pushCrud('procurement.purchase-orders');
+        } else if (currentRoute === 'procurement.dashboard') {
+          breadcrumbs.push({ label: t('navigation.dashboard', 'Dashboard'), isActive: true });
+        }
+      }
+
+      // Sales Module
+      if (currentRoute.startsWith('sales.')) {
+        breadcrumbs.push({
+          label: t('sales.title', 'Sales'),
+          href: route('sales.dashboard'),
+        });
+
+        if (currentRoute.startsWith('sales.orders.')) {
+          breadcrumbs.push({
+            label: t('sales.orders', 'Orders'),
+            href: route('sales.orders.index'),
+          });
+          pushCrud('sales.orders');
+        } else if (currentRoute === 'sales.dashboard') {
+          breadcrumbs.push({ label: t('navigation.dashboard', 'Dashboard'), isActive: true });
+        }
+      }
+
+      // POS Module
+      if (currentRoute.startsWith('pos.')) {
+        breadcrumbs.push({
+          label: t('pos.title', 'POS'),
+          href: route('pos.index'),
+          isActive: currentRoute === 'pos.index',
+        });
+        if (currentRoute === 'pos.terminal') {
+          breadcrumbs.push({ label: t('pos.terminal', 'Terminal'), isActive: true });
+        }
+      }
+
+      // Ecommerce Admin
+      if (currentRoute.startsWith('ecommerce.')) {
+        breadcrumbs.push({
+          label: t('ecommerce.title', 'Ecommerce'),
+          href: route('ecommerce.dashboard'),
+          isActive: currentRoute === 'ecommerce.dashboard',
+        });
+      }
+
+      // AI Module
+      if (currentRoute.startsWith('ai.')) {
+        breadcrumbs.push({
+          label: t('ai.title', 'AI'),
+          href: route('ai.dashboard'),
+        });
+
+        if (currentRoute.startsWith('ai.services.')) {
+          breadcrumbs.push({ label: t('ai.services', 'Services'), href: route('ai.services.index') });
+          pushCrud('ai.services');
+        } else if (currentRoute.startsWith('ai.models.')) {
+          breadcrumbs.push({ label: t('ai.models', 'Models'), href: route('ai.models.index') });
+          pushCrud('ai.models');
+        } else if (currentRoute.startsWith('ai.prompt-templates.')) {
+          breadcrumbs.push({ label: t('ai.prompts', 'Prompts'), href: route('ai.prompt-templates.index') });
+          pushCrud('ai.prompt-templates');
+        } else if (currentRoute === 'ai.dashboard') {
+          breadcrumbs.push({ label: t('navigation.dashboard', 'Dashboard'), isActive: true });
+        }
+      }
+
+      // Admin Module
+      if (currentRoute.startsWith('admin.')) {
+        breadcrumbs.push({
+          label: t('admin.title', 'Admin'),
+          href: route('admin.users.index'),
+        });
+
+        if (currentRoute.startsWith('admin.users.')) {
+          breadcrumbs.push({ label: t('admin.users', 'Users'), href: route('admin.users.index') });
+          pushCrud('admin.users');
+        } else if (currentRoute.startsWith('admin.roles.')) {
+          breadcrumbs.push({ label: t('admin.roles', 'Roles'), href: route('admin.roles.index') });
+          pushCrud('admin.roles');
+        } else if (currentRoute.startsWith('admin.permissions.')) {
+          breadcrumbs.push({ label: t('admin.permissions', 'Permissions'), href: route('admin.permissions.index') });
+          pushCrud('admin.permissions');
+        } else if (currentRoute.startsWith('admin.modules.')) {
+          breadcrumbs.push({ label: t('admin.modules', 'Modules'), href: route('admin.modules.index') });
+          pushCrud('admin.modules');
         }
       }
 

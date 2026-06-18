@@ -1,6 +1,6 @@
 import React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import { ProjectShowSheet } from '@/Components/Projects/ProjectShowSheet';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
@@ -61,13 +61,13 @@ export default function SprintShow({ auth, sprint, project, stats }: SprintShowP
   };
 
   return (
-    <AppLayout
-      title={sprint.name}
-      renderHeader={() => (
-        <div className="flex justify-between items-center">
+    <>
+      <Head title={sprint.name} />
+      <ProjectShowSheet backUrl={route('agile.sprints.index', project.id)} size="xl">
+        <div className="mb-6 flex items-center justify-between">
           <div>
-            <h2 className="font-semibold text-xl text-gray-800 leading-tight">{sprint.name}</h2>
-            <p className="text-sm text-gray-600 mt-1">
+            <h2 className="text-xl font-semibold leading-tight text-gray-800">{sprint.name}</h2>
+            <p className="mt-1 text-sm text-gray-600">
               <Link href={route('projects.show', project.id)} className="hover:underline">
                 {project.name}
               </Link>
@@ -76,28 +76,24 @@ export default function SprintShow({ auth, sprint, project, stats }: SprintShowP
           <div className="flex gap-2">
             {sprint.status === 'planned' && (
               <Button onClick={handleStart}>
-                <Play className="h-4 w-4 mr-2" />
+                <Play className="mr-2 h-4 w-4" />
                 Start Sprint
               </Button>
             )}
             {sprint.status === 'active' && (
               <Button onClick={handleComplete}>
-                <CheckCircle className="h-4 w-4 mr-2" />
+                <CheckCircle className="mr-2 h-4 w-4" />
                 Complete Sprint
               </Button>
             )}
             <Button variant="destructive" onClick={handleDelete}>
-              <Trash2 className="h-4 w-4 mr-2" />
+              <Trash2 className="mr-2 h-4 w-4" />
               Delete
             </Button>
           </div>
         </div>
-      )}
-    >
-      <Head title={sprint.name} />
 
-      <div className="py-12">
-        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+        <div className="space-y-6">
           <div className="grid grid-cols-3 gap-6">
             <Card>
               <CardHeader>
@@ -244,7 +240,7 @@ export default function SprintShow({ auth, sprint, project, stats }: SprintShowP
             </Card>
           )}
         </div>
-      </div>
-    </AppLayout>
+      </ProjectShowSheet>
+    </>
   );
 }

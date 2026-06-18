@@ -3,8 +3,10 @@ import ReactMarkdown from 'react-markdown';
 import { Bot, User, Sparkles, CheckCheck, Check, FileText, ZoomIn, X, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
+import { Button } from '@/Components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import ChatInput from './ChatInput';
+import { fetchWithSession } from '@/lib/http';
 
 const quickEmojis = ['👍', '❤️', '😂', '😮', '😢', '😡', '👏', '🎉', '🙏', '🔥', '✅', '💯'];
 const quickReplies = ['Track my order', 'Return policy', 'Talk to a human'];
@@ -53,8 +55,10 @@ interface GuestChatInterfaceProps {
   onUpdateGuestInfo: () => void;
   onCloseGuestForm: () => void;
   onKeyPress: (e: React.KeyboardEvent) => void;
+  onInputBlur?: () => void;
   messagesEndRef: React.RefObject<HTMLDivElement>;
   isTyping?: boolean;
+  typingUsers?: string[];
   connectionStatus?: 'connecting' | 'connected' | 'disconnected';
 }
 
@@ -85,7 +89,7 @@ function Lightbox({ url, name, onClose }: { url: string; name: string; onClose: 
       aria-modal="true"
     >
       <div
-        className="relative w-full max-w-[min(90vw,600px)] rounded-lg bg-white dark:bg-gray-900 p-3 shadow-[0_24px_64px_rgba(0,0,0,0.4)] animate-scale-in"
+        className="relative w-full max-w-[min(90vw,600px)] rounded-lg border border-border bg-card p-3 shadow-2xl animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -121,10 +125,10 @@ function MessageBubble({ msg, guestSession }: { msg: Message; guestSession: Gues
 
   const bubbleBase = 'relative rounded-2xl px-3.5 py-2.5 text-[13px] leading-6 break-words';
   const bubbleCls = own
-    ? `${bubbleBase} `
+    ? `${bubbleBase} rounded-tr-sm bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-sm`
     : ai
-      ? `${bubbleBase} text-foreground bg-[hsl(var(--muted)/0.55)] border border-border rounded-tl-[2px]`
-      : `${bubbleBase} text-foreground bg-card border border-border rounded-tl-[2px] shadow-[0_1px_3px_rgba(0,0,0,0.06)]`;
+      ? `${bubbleBase} rounded-tl-sm border border-border bg-muted/60 text-foreground`
+      : `${bubbleBase} rounded-tl-sm border border-border bg-card text-foreground shadow-sm`;
 
   return (
     <div className={rowCls}>
@@ -300,20 +304,12 @@ function GuestForm({
       </div>
 
       <div className="mt-5 flex flex-col gap-2">
-        <button
-          className="h-[42px] w-full rounded-xl bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-sm font-semibold text-[hsl(var(--primary-foreground))] shadow-[0_4px_12px_rgba(139,92,246,0.35)] transition-all duration-150 hover:-translate-y-[1px] hover:shadow-[0_6px_18px_rgba(139,92,246,0.45)]"
-          onClick={onSubmit}
-          type="button"
-        >
+        <Button onClick={onSubmit} className="h-11 w-full rounded-xl" type="button">
           Start Chat →
-        </button>
-        <button
-          className="h-9 w-full rounded-xl text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-          onClick={onSkip}
-          type="button"
-        >
+        </Button>
+        <Button variant="ghost" onClick={onSkip} className="h-9 w-full rounded-xl text-muted-foreground" type="button">
           Skip for now
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -321,13 +317,7 @@ function GuestForm({
 
 function WelcomeScreen() {
   return (
-    <div className="relative flex flex-col items-center px-6 py-10 text-center">
-      <div className="pointer-events-none absolute left-1/2 top-0 h-[180px] w-[180px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,hsl(var(--primary)/0.14)_0%,transparent_70%)]" />
-
-      <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-[18px] bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-[hsl(var(--primary-foreground))] shadow-[0_8px_24px_rgba(139,92,246,0.3)] animate-float">
-        <Sparkles size={26} />
-      </div>
-
+    <div className="flex flex-col items-center px-6 py-8 text-center">
       <h3 className="mb-2 text-lg font-bold text-foreground">Hi there! 👋</h3>
       <p className="mb-5 max-w-[260px] text-[13px] leading-6 text-muted-foreground">
         We're here to help with web development, mobile apps, and AI solutions. Ask us anything!
@@ -337,7 +327,7 @@ function WelcomeScreen() {
         {['Web Development', 'Mobile Apps', 'AI Solutions', 'Technical Support'].map((t) => (
           <span
             key={t}
-            className="rounded-full border border-[hsl(var(--primary)/0.25)] bg-[hsl(var(--primary)/0.12)] px-2.5 py-1 text-[11px] font-medium text-primary"
+            className="rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary"
           >
             {t}
           </span>
@@ -370,7 +360,7 @@ function DateDivider({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-2 py-1">
       <span className="h-px flex-1 bg-border" />
-      <span className="whitespace-nowrap bg-white dark:bg-gray-900 px-1 text-[10.5px] text-muted-foreground">{label}</span>
+      <span className="whitespace-nowrap bg-background px-1 text-[10.5px] text-muted-foreground">{label}</span>
       <span className="h-px flex-1 bg-border" />
     </div>
   );
@@ -400,7 +390,7 @@ function SystemNoticeBubble({
     if (variant === 'destructive') {
       return 'border-[hsl(var(--destructive)/0.32)] bg-[hsl(var(--destructive)/0.08)] text-destructive hover:bg-[hsl(var(--destructive)/0.14)]';
     }
-    return 'border-border bg-white dark:bg-gray-900 text-foreground hover:bg-[hsl(var(--muted)/0.55)]';
+    return 'border-border bg-muted/50 text-foreground hover:bg-muted';
   };
 
   return (
@@ -453,8 +443,10 @@ export default function GuestChatInterface({
   onUpdateGuestInfo,
   onCloseGuestForm,
   onKeyPress,
+  onInputBlur,
   messagesEndRef,
   isTyping = false,
+  typingUsers = [],
   connectionStatus = 'connected',
 }: GuestChatInterfaceProps) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -471,9 +463,8 @@ export default function GuestChatInterface({
     if (!conversation || transcriptSent) return;
     setTranscriptLoading(true);
     try {
-      await fetch('/guest-chat/transcript', {
+      await fetchWithSession('/guest-chat/transcript', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ conversation_id: conversation.id }),
       });
       setTranscriptSent(true);
@@ -494,9 +485,8 @@ export default function GuestChatInterface({
   const submitRating = async (value: number) => {
     setRating(value);
     try {
-      await fetch('/guest-chat/rate', {
+      await fetchWithSession('/guest-chat/rate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ conversation_id: conversation?.id, rating: value }),
       });
       setRatingSubmitted(true);
@@ -604,7 +594,7 @@ export default function GuestChatInterface({
       className={`flex h-full flex-col overflow-hidden transition-all duration-300 ${visible ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'
         }`}
     >
-      <div className="flex flex-1 flex-col gap-1 overflow-y-auto bg-[hsl(var(--muted)/0.3)] px-3.5 py-4 [scrollbar-width:thin]">
+      <div className="flex flex-1 flex-col gap-1 overflow-y-auto bg-muted/30 px-3.5 py-4 [scrollbar-width:thin]">
         {messages.length === 0 && <WelcomeScreen />}
 
         {grouped.map((group) => (
@@ -671,12 +661,15 @@ export default function GuestChatInterface({
         )}
 
         {isTyping && <TypingIndicator name="Remy" />}
+        {typingUsers.map(name => (
+          <TypingIndicator key={name} name={name} />
+        ))}
         <div ref={messagesEndRef} />
       </div>
 
       {/* CSAT Rating UI & Transcript */}
       {showRating && (
-        <div className="absolute left-0 right-0 bottom-20 bg-white dark:bg-gray-900 border-t border-border shadow-[0_-2px_16px_rgba(0,0,0,0.06)] py-4 text-center z-50">
+        <div className="absolute left-0 right-0 bottom-20 z-50 border-t border-border bg-card py-4 text-center shadow-[0_-2px_16px_rgba(0,0,0,0.06)]">
           <div className="mb-2 text-base font-semibold text-foreground">How was your chat experience?</div>
           <div className="flex justify-center gap-2 mb-1">
             {[1, 2, 3, 4, 5].map(val => (
@@ -706,7 +699,7 @@ export default function GuestChatInterface({
         </div>
       )}
 
-      <div className="relative shrink-0 border-t border-border bg-white dark:bg-gray-900 px-3 py-2">
+      <div className="relative shrink-0 border-t border-border bg-card px-3 py-2">
         <div className="mb-2 flex flex-wrap gap-1.5">
           {quickReplies.map((reply) => (
             <button
@@ -723,6 +716,7 @@ export default function GuestChatInterface({
         <ChatInput
           value={newMessage}
           onChange={setNewMessage}
+          onBlur={onInputBlur}
           onSend={handleSendMessage}
           isLoading={isLoading}
           onKeyDown={handleInputKeyDown}
@@ -734,7 +728,7 @@ export default function GuestChatInterface({
         />
 
         {showEmojiPicker && (
-          <div className="absolute bottom-[calc(100%+6px)] left-3 z-50 min-w-[300px] rounded-lg border border-border bg-white dark:bg-gray-900 p-2.5 shadow-[0_8px_32px_rgba(0,0,0,0.12)] animate-popup">
+          <div className="absolute bottom-[calc(100%+6px)] left-3 z-50 min-w-[300px] animate-popup rounded-lg border border-border bg-popover p-2.5 shadow-lg">
             <div className="mb-2 flex items-center justify-between text-[11px] font-semibold text-muted-foreground">
               <span>Quick Reactions</span>
               <button

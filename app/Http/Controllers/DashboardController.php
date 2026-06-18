@@ -20,10 +20,17 @@ use App\Models\Finance\Transaction;
 use App\Models\Project;
 use App\Models\HR\Employee;
 use App\Models\Support\Ticket;
-use App\Models\CMS\Page;
-use App\Models\CMS\Post;
 use App\Models\AI\Service as AIService;
 use App\Models\AI\Conversation;
+use App\Models\Inventory\Product;
+use App\Models\Inventory\StockLevel;
+use App\Models\Inventory\Warehouse;
+use App\Models\Procurement\PurchaseOrder;
+use App\Models\Procurement\Supplier;
+use App\Models\Sales\SalesOrder;
+use App\Models\POS\PosSession;
+use App\Models\Finance\MomoTransaction;
+use App\Services\DashboardRedirectService;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -34,13 +41,12 @@ class DashboardController extends Controller
     public function index(): Response|RedirectResponse
     {
         $user = Auth::user();
+        $home = app(DashboardRedirectService::class)->resolve($user);
 
-        // Redirect customers to their dedicated dashboard
-        if ($user->hasRole('customer')) {
-            return redirect()->route('customer.dashboard');
+        if ($home !== route('dashboard')) {
+            return redirect($home);
         }
 
-        // For admin, manager, and staff users, show the main dashboard with comprehensive data
         $dashboardData = $this->getAdminDashboardData();
 
         return Inertia::render('Dashboard', $dashboardData);
@@ -59,11 +65,12 @@ class DashboardController extends Controller
                 'stats' => $this->getOverviewStats(),
                 'systemHealth' => $this->getSystemHealth(),
                 'recentActivity' => $this->getRecentActivity(),
-                'moduleUsage' => $this->getModuleUsage(),
+                'moduleCards' => $this->getModuleCards(),
                 'userManagement' => $this->getUserManagementSummary(),
-                'quickActions' => $this->getQuickActions(),
+                'quickActions' => $this->getQuickActions($user),
                 'analytics' => $this->getAnalyticsData(),
                 'notifications' => $this->getSystemNotifications(),
+                'isAdmin' => $user->hasAnyRole(['admin', 'super_user']),
             ];
         });
     }
@@ -206,142 +213,193 @@ class DashboardController extends Controller
         $activities = [];
 
         // Recent user registrations
-        $recentUsers = User::latest()->take(5)->get(['id', 'name', 'email', 'created_at']);
+        $recentUsers = User::latest()->take(10)->get(['id', 'name', 'email', 'created_at']);
         foreach ($recentUsers as $user) {
             $activities[] = [
+                'id' => 'user-' . $user->id,
                 'type' => 'user_registered',
                 'title' => 'New User Registration',
                 'description' => "{$user->name} registered",
-                'timestamp' => $user->created_at,
+                'timestamp' => $user->created_at?->toISOString(),
                 'icon' => 'user-plus',
                 'color' => 'green',
             ];
         }
 
         // Recent communications
-        $recentComms = Communication::with('user')->latest()->take(5)->get();
+        $recentComms = Communication::with('user')->latest()->take(10)->get();
         foreach ($recentComms as $comm) {
             $activities[] = [
+                'id' => 'comm-' . $comm->id,
                 'type' => 'communication',
                 'title' => 'New Communication',
-                'description' => "Communication by {$comm->user->name}",
-                'timestamp' => $comm->created_at,
+                'description' => 'Communication by ' . ($comm->user?->name ?? 'Unknown'),
+                'timestamp' => $comm->created_at?->toISOString(),
                 'icon' => 'message-square',
                 'color' => 'blue',
             ];
         }
 
         // Recent tickets
-        $recentTickets = Ticket::with('createdBy')->latest()->take(5)->get();
+        $recentTickets = Ticket::with('createdBy')->latest()->take(10)->get();
         foreach ($recentTickets as $ticket) {
             $activities[] = [
+                'id' => 'ticket-' . $ticket->id,
                 'type' => 'ticket',
                 'title' => 'New Support Ticket',
                 'description' => "Ticket #{$ticket->id} created",
-                'timestamp' => $ticket->created_at,
+                'timestamp' => $ticket->created_at?->toISOString(),
                 'icon' => 'ticket',
                 'color' => 'orange',
             ];
         }
 
-        // Sort by timestamp and return latest 10
+        // Sort by timestamp and return latest 30
         usort($activities, function ($a, $b) {
-            return $b['timestamp'] <=> $a['timestamp'];
+            return strcmp($b['timestamp'] ?? '', $a['timestamp'] ?? '');
         });
 
-        return array_slice($activities, 0, 10);
+        return array_slice($activities, 0, 30);
     }
 
     /**
-     * Get module usage analytics.
+     * Module cards for the admin dashboard grid.
      */
-    private function getModuleUsage(): array
+    private function getModuleCards(): array
     {
+        $lowStock = StockLevel::whereColumn('quantity', '<=', 'reorder_level')->count();
+        $pendingPos = PurchaseOrder::where('status', 'draft')->count();
+        $pendingSales = SalesOrder::whereIn('status', ['draft', 'confirmed'])->count();
+        $openPosSessions = PosSession::where('status', 'open')->count();
+        $pendingMomo = MomoTransaction::whereIn('status', ['pending', 'processing'])->count();
+
         return [
-            'crm' => [
-                'clients' => Client::count(),
-                'leads' => Lead::count(),
-                'communications' => Communication::count(),
-                'growth' => $this->getModuleGrowth('clients'),
+            [
+                'key' => 'crm',
+                'name' => 'CRM',
+                'description' => 'Clients, leads, and communications',
+                'route' => 'crm.dashboard',
+                'metrics' => [
+                    ['label' => 'Clients', 'value' => Client::count()],
+                    ['label' => 'Leads', 'value' => Lead::count()],
+                ],
             ],
-            'finance' => [
-                'invoices' => Invoice::count(),
-                'transactions' => Transaction::count(),
-                'revenue' => Invoice::where('status', 'paid')->sum('total_amount'),
-                'growth' => $this->getModuleGrowth('invoices'),
+            [
+                'key' => 'finance',
+                'name' => 'Finance',
+                'description' => 'Invoices, payments, and reporting',
+                'route' => 'finance.dashboard',
+                'metrics' => [
+                    ['label' => 'Invoices', 'value' => Invoice::count()],
+                    ['label' => 'Revenue', 'value' => $this->formatZmw(Invoice::where('status', 'paid')->sum('total_amount'))],
+                ],
             ],
-            'projects' => [
-                'total' => Project::count(),
-                'active' => Project::where('status', 'active')->count(),
-                'completed' => Project::where('status', 'completed')->count(),
-                'growth' => $this->getModuleGrowth('projects'),
+            [
+                'key' => 'projects',
+                'name' => 'Projects',
+                'description' => 'Delivery, boards, and milestones',
+                'route' => 'projects.dashboard',
+                'metrics' => [
+                    ['label' => 'Active', 'value' => Project::where('status', 'active')->count()],
+                    ['label' => 'Total', 'value' => Project::count()],
+                ],
             ],
-            'hr' => [
-                'employees' => Employee::count(),
-                //'active' => Employee::where('status', 'active')->count(),
-                'active' => Employee::count(),
-                'departments' => Employee::distinct('department_id')->count(),
-                'growth' => $this->getModuleGrowth('employees'),
+            [
+                'key' => 'hr',
+                'name' => 'HR',
+                'description' => 'People operations and payroll',
+                'route' => 'hr.dashboard',
+                'metrics' => [
+                    ['label' => 'Employees', 'value' => Employee::count()],
+                    ['label' => 'Departments', 'value' => Employee::distinct('department_id')->count('department_id')],
+                ],
             ],
-            'support' => [
-                'tickets' => Ticket::count(),
-                'open' => Ticket::where('status', 'open')->count(),
-                'resolved' => Ticket::where('status', 'resolved')->count(),
-                'growth' => $this->getModuleGrowth('tickets'),
+            [
+                'key' => 'support',
+                'name' => 'Support',
+                'description' => 'Tickets and knowledge base',
+                'route' => 'support.dashboard',
+                'metrics' => [
+                    ['label' => 'Open', 'value' => Ticket::where('status', 'open')->count()],
+                    ['label' => 'Total', 'value' => Ticket::count()],
+                ],
             ],
-            'cms' => [
-                'pages' => Page::count(),
-                'posts' => [],
-                'published' => [],
-                'growth' => [],
+            [
+                'key' => 'inventory',
+                'name' => 'Inventory',
+                'description' => 'Products, stock, and warehouses',
+                'route' => 'inventory.dashboard',
+                'metrics' => [
+                    ['label' => 'Products', 'value' => Product::where('is_active', true)->count()],
+                    ['label' => 'Low stock', 'value' => $lowStock],
+                ],
             ],
-            'ai' => [
-                'services' => AIService::count(),
-                'conversations' => Conversation::count(),
-                'active_services' => AIService::where('is_enabled', true)->count(),
-                'growth' => $this->getModuleGrowth('ai_conversations'),
+            [
+                'key' => 'procurement',
+                'name' => 'Procurement',
+                'description' => 'Suppliers and purchase orders',
+                'route' => 'procurement.dashboard',
+                'metrics' => [
+                    ['label' => 'Suppliers', 'value' => Supplier::where('is_active', true)->count()],
+                    ['label' => 'Pending POs', 'value' => $pendingPos],
+                ],
+            ],
+            [
+                'key' => 'sales',
+                'name' => 'Sales',
+                'description' => 'Orders and fulfillment',
+                'route' => 'sales.dashboard',
+                'metrics' => [
+                    ['label' => 'Pending', 'value' => $pendingSales],
+                    ['label' => 'Total', 'value' => SalesOrder::count()],
+                ],
+            ],
+            [
+                'key' => 'pos',
+                'name' => 'POS',
+                'description' => 'Registers and live sessions',
+                'route' => 'pos.index',
+                'metrics' => [
+                    ['label' => 'Open sessions', 'value' => $openPosSessions],
+                    ['label' => 'Warehouses', 'value' => Warehouse::where('is_active', true)->count()],
+                ],
+            ],
+            [
+                'key' => 'ecommerce',
+                'name' => 'Ecommerce',
+                'description' => 'Online store and web orders',
+                'route' => 'ecommerce.dashboard',
+                'metrics' => [
+                    ['label' => 'Published', 'value' => Product::where('is_published', true)->count()],
+                    ['label' => 'Web orders', 'value' => SalesOrder::where('source', 'ecommerce')->count()],
+                ],
+            ],
+            [
+                'key' => 'momo',
+                'name' => 'Mobile Money',
+                'description' => 'PawaPay collections and payouts',
+                'route' => 'finance.momo.dashboard',
+                'metrics' => [
+                    ['label' => 'Pending', 'value' => $pendingMomo],
+                    ['label' => 'This month', 'value' => MomoTransaction::where('created_at', '>=', Carbon::now()->startOfMonth())->count()],
+                ],
+            ],
+            [
+                'key' => 'ai',
+                'name' => 'AI',
+                'description' => 'Services and conversations',
+                'route' => 'ai.dashboard',
+                'metrics' => [
+                    ['label' => 'Services', 'value' => AIService::where('is_enabled', true)->count()],
+                    ['label' => 'Chats', 'value' => Conversation::count()],
+                ],
             ],
         ];
     }
 
-    /**
-     * Get module growth data.
-     */
-    private function getModuleGrowth(string $table): array
+    private function formatZmw(float $amount): string
     {
-        $currentMonth = Carbon::now()->startOfMonth();
-        $lastMonth = Carbon::now()->subMonth()->startOfMonth();
-
-        // Map table names to actual table names
-        $tableMap = [
-            'clients' => 'clients',
-            'invoices' => 'invoices',
-            'projects' => 'projects',
-            'employees' => 'hr_employees',
-            'tickets' => 'tickets',
-            //'posts' => 'posts',
-            'ai_conversations' => 'conversations',
-        ];
-
-        $actualTable = $tableMap[$table] ?? $table;
-
-        $currentCount = DB::table($actualTable)
-            ->where('created_at', '>=', $currentMonth)
-            ->count();
-
-        $lastCount = DB::table($actualTable)
-            ->where('created_at', '>=', $lastMonth)
-            ->where('created_at', '<', $currentMonth)
-            ->count();
-
-        $percentage = $lastCount > 0 ? round((($currentCount - $lastCount) / $lastCount) * 100, 1) : 0;
-
-        return [
-            'current' => $currentCount,
-            'previous' => $lastCount,
-            'percentage' => $percentage,
-            'trend' => $percentage > 0 ? 'up' : ($percentage < 0 ? 'down' : 'stable'),
-        ];
+        return 'ZMW ' . number_format($amount, 2);
     }
 
     /**
@@ -366,52 +424,68 @@ class DashboardController extends Controller
     /**
      * Get quick actions for admin.
      */
-    private function getQuickActions(): array
+    private function getQuickActions(?User $user = null): array
     {
-        return [
+        $user = $user ?? Auth::user();
+
+        $actions = [
             [
                 'title' => 'Create User',
                 'description' => 'Add a new user to the system',
                 'route' => 'admin.users.create',
                 'icon' => 'user-plus',
-                'color' => 'blue',
+                'permission' => null,
+                'roles' => ['admin', 'super_user'],
             ],
             [
-                'title' => 'Manage Roles',
-                'description' => 'Configure user roles and permissions',
-                'route' => 'admin.roles.index',
-                'icon' => 'shield',
-                'color' => 'green',
+                'title' => 'New Invoice',
+                'description' => 'Create a client invoice',
+                'route' => 'finance.invoices.create',
+                'icon' => 'bar-chart',
+                'permission' => 'view finance',
+            ],
+            [
+                'title' => 'Open Tickets',
+                'description' => 'Review support queue',
+                'route' => 'support.tickets.index',
+                'icon' => 'grid',
+                'permission' => 'view support',
+            ],
+            [
+                'title' => 'Low Stock',
+                'description' => 'Review inventory alerts',
+                'route' => 'inventory.dashboard',
+                'icon' => 'download',
+                'permission' => 'view inventory',
+            ],
+            [
+                'title' => 'New Sales Order',
+                'description' => 'Create a sales order',
+                'route' => 'sales.orders.create',
+                'icon' => 'plus',
+                'permission' => 'view sales orders',
             ],
             [
                 'title' => 'System Settings',
                 'description' => 'Configure system-wide settings',
                 'route' => 'settings.index',
                 'icon' => 'settings',
-                'color' => 'gray',
-            ],
-            [
-                'title' => 'View Reports',
-                'description' => 'Access system reports and analytics',
-                'route' => 'finance.reports.index',
-                'icon' => 'bar-chart',
-                'color' => 'purple',
-            ],
-            [
-                'title' => 'Backup System',
-                'description' => 'Create system backup',
-                'route' => 'settings.maintenance.backup',
-                'icon' => 'download',
-                'color' => 'orange',
-            ],
-            [
-                'title' => 'Module Settings',
-                'description' => 'Configure module activation',
-                'route' => 'admin.modules.index',
-                'icon' => 'grid',
-                'color' => 'indigo',
+                'permission' => null,
+                'roles' => ['admin', 'super_user', 'manager'],
             ],
         ];
+
+        return array_values(array_filter($actions, function (array $action) use ($user) {
+            if (!empty($action['roles']) && !$user->hasAnyRole($action['roles'])) {
+                return false;
+            }
+
+            if (!empty($action['permission']) && !$user->can($action['permission'])) {
+                return false;
+            }
+
+            return true;
+        }));
     }
 
     /**
@@ -423,7 +497,6 @@ class DashboardController extends Controller
             'userGrowth' => $this->getUserGrowthData(),
             'revenueGrowth' => $this->getRevenueGrowthData(),
             'moduleActivity' => $this->getModuleActivityData(),
-            'systemPerformance' => $this->getSystemPerformanceData(),
         ];
     }
 
@@ -482,45 +555,18 @@ class DashboardController extends Controller
     private function getModuleActivityData(): array
     {
         return [
-            'labels' => ['CRM', 'Finance', 'Projects', 'HR', 'Support', 'CMS', 'AI'],
+            'labels' => ['CRM', 'Finance', 'Projects', 'HR', 'Support', 'Inventory', 'Sales', 'POS', 'AI'],
             'data' => [
                 Client::count() + Lead::count(),
                 Invoice::count() + Transaction::count(),
                 Project::count(),
                 Employee::count(),
                 Ticket::count(),
-                Page::count(),
+                Product::count(),
+                SalesOrder::count(),
+                PosSession::count(),
                 Conversation::count(),
             ],
-        ];
-    }
-
-    /**
-     * Get system performance data.
-     */
-    private function getSystemPerformanceData(): array
-    {
-        // Simulate performance metrics (in a real app, you'd collect these from monitoring tools)
-        $days = [];
-        $cpuData = [];
-        $memoryData = [];
-        $responseTimeData = [];
-
-        for ($i = 6; $i >= 0; $i--) {
-            $date = Carbon::now()->subDays($i);
-            $days[] = $date->format('M j');
-
-            // Simulate metrics
-            $cpuData[] = rand(20, 80);
-            $memoryData[] = rand(30, 90);
-            $responseTimeData[] = rand(100, 500);
-        }
-
-        return [
-            'labels' => $days,
-            'cpu' => $cpuData,
-            'memory' => $memoryData,
-            'responseTime' => $responseTimeData,
         ];
     }
 

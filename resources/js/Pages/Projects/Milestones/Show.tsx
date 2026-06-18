@@ -1,6 +1,6 @@
 import React from 'react';
 import { Head, Link } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import { ProjectShowSheet } from '@/Components/Projects/ProjectShowSheet';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
@@ -74,41 +74,34 @@ export default function MilestoneShow({ auth, project, milestone }: MilestoneSho
   const totalHours = milestone.time_logs?.reduce((sum, log) => sum + log.hours, 0) || 0;
 
   return (
-    <AppLayout
-      title={`${milestone.name} - ${project.name}`}
-      renderHeader={() => (
-        <div className="flex justify-between items-center">
+    <>
+      <Head title={`${milestone.name} - ${project.name}`} />
+      <ProjectShowSheet backUrl={route('projects.milestones.index', project.id)} size="full">
+        <div className="mb-6 flex items-center justify-between">
           <div>
-            <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+            <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
               {milestone.name}
             </h2>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="mt-1 text-sm text-gray-600">
               {project.name} • Milestone
             </p>
           </div>
           <div className="flex gap-2">
             <Link href={route('projects.milestones.index', project.id)}>
-              <Button variant="outline">
-                Back to Milestones
-              </Button>
+              <Button variant="outline">Back to Milestones</Button>
             </Link>
             {hasPermission('projects.milestones.edit') && (
               <Link href={route('projects.milestones.edit', [project.id, milestone.id])}>
                 <Button>
-                  <Edit className="h-4 w-4 mr-2" />
+                  <Edit className="mr-2 h-4 w-4" />
                   Edit Milestone
                 </Button>
               </Link>
             )}
           </div>
         </div>
-      )}
-    >
-      <Head title={`${milestone.name} - ${project.name}`} />
 
-      <div className="py-12">
-        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-          <div className="space-y-6">
+        <div className="space-y-6">
             {/* Overview */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
@@ -356,8 +349,7 @@ export default function MilestoneShow({ auth, project, milestone }: MilestoneSho
               </TabsContent>
             </Tabs>
           </div>
-        </div>
-      </div>
-    </AppLayout>
+      </ProjectShowSheet>
+    </>
   );
 }

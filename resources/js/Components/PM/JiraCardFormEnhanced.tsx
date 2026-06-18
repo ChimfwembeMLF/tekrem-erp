@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader } from '@/Components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader } from '@/Components/ui/sheet';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
@@ -129,9 +129,9 @@ export function JiraCardForm({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[95vh] sm:h-[90vh] overflow-hidden flex flex-col bg-card m-2 sm:m-0 w-[calc(100vw-1rem)] sm:w-auto">
-        <DialogHeader className="flex-none border-b border-border p-3 sm:p-6">
+    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent side="right" className="flex w-full max-w-4xl flex-col gap-0 overflow-hidden bg-card p-0 sm:max-w-4xl">
+        <SheetHeader className="flex-none border-b border-border p-3 text-left sm:p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg sm:text-xl font-semibold text-foreground">
               {mode === 'create' ? 'Create Issue' : 'Edit Issue'}
@@ -147,7 +147,7 @@ export function JiraCardForm({
               </Button>
             </div>
           </div>
-        </DialogHeader>
+        </SheetHeader>
 
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
           {/* Main Content */}
@@ -412,7 +412,7 @@ export function JiraCardForm({
             </div>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }

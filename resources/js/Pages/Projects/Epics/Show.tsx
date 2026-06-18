@@ -1,6 +1,6 @@
 import React from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import { ProjectShowSheet } from '@/Components/Projects/ProjectShowSheet';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
@@ -59,57 +59,45 @@ export default function EpicShow({ auth, project, epic, progress }: EpicShowProp
   const completionPercentage = progress?.percent_complete ?? 0;
 
   return (
-    <AppLayout
-      title={epic.name}
-      renderHeader={() => (
-        <div className="flex justify-between items-center">
+    <>
+      <Head title={epic.name} />
+      <ProjectShowSheet backUrl={route('agile.epics.index', project.id)} size="xl">
+        <div className="mb-6 flex items-center justify-between">
           <div>
             <div className="flex items-center gap-3">
               {epic.color && (
-                <div
-                  className="w-4 h-4 rounded"
-                  style={{ backgroundColor: epic.color }}
-                />
+                <div className="h-4 w-4 rounded" style={{ backgroundColor: epic.color }} />
               )}
-              <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                {epic.name}
-              </h2>
+              <h2 className="text-xl font-semibold leading-tight text-gray-800">{epic.name}</h2>
             </div>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="mt-1 text-sm text-gray-600">
               <Link href={route('projects.show', project.id)} className="hover:underline">
                 {project.name}
               </Link>
             </p>
           </div>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setIsEditing(!isEditing)}
-            >
+            <Button variant="outline" onClick={() => setIsEditing(!isEditing)}>
               {isEditing ? (
                 <>
-                  <X className="h-4 w-4 mr-2" />
+                  <X className="mr-2 h-4 w-4" />
                   Cancel
                 </>
               ) : (
                 <>
-                  <Edit className="h-4 w-4 mr-2" />
+                  <Edit className="mr-2 h-4 w-4" />
                   Edit
                 </>
               )}
             </Button>
             <Button variant="destructive" onClick={handleDelete}>
-              <Trash2 className="h-4 w-4 mr-2" />
+              <Trash2 className="mr-2 h-4 w-4" />
               Delete
             </Button>
           </div>
         </div>
-      )}
-    >
-      <Head title={epic.name} />
 
-      <div className="py-12">
-        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+        <div className="space-y-6">
           {isEditing ? (
             <Card>
               <CardHeader>
@@ -296,7 +284,7 @@ export default function EpicShow({ auth, project, epic, progress }: EpicShowProp
             </Card>
           )}
         </div>
-      </div>
-    </AppLayout>
+      </ProjectShowSheet>
+    </>
   );
 }

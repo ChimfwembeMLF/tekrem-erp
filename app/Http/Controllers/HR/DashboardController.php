@@ -9,6 +9,11 @@ use App\Models\HR\Leave;
 use App\Models\HR\Performance;
 use App\Models\HR\Attendance;
 use App\Models\HR\Training;
+use App\Models\HR\Onboarding;
+use App\Models\HR\Offboarding;
+use App\Models\HR\JobPosting;
+use App\Models\HR\JobApplication;
+use App\Models\HR\Payroll;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -139,6 +144,35 @@ class DashboardController extends Controller
         $attendanceChart = $this->getAttendanceChartData();
         $leaveTypesChart = $this->getLeaveTypesChartData();
 
+        $pipeline = [
+            'recruitment' => [
+                'open_jobs' => JobPosting::where('status', 'published')->count(),
+                'new_applications' => JobApplication::where('applied_at', '>=', now()->subDays(7))->count(),
+                'interviews' => JobApplication::where('status', 'interview')->count(),
+            ],
+            'onboarding' => [
+                'in_progress' => Onboarding::where('status', 'in_progress')->count(),
+                'completed_month' => Onboarding::where('status', 'completed')
+                    ->whereMonth('completed_at', now()->month)->count(),
+            ],
+            'offboarding' => [
+                'in_progress' => Offboarding::where('status', 'in_progress')->count(),
+                'pending_interviews' => Offboarding::where('status', 'in_progress')->whereNull('exit_interview_date')->count(),
+            ],
+            'payroll' => [
+                'pending' => Payroll::where('status', 'pending')->count(),
+                'approved_month' => Payroll::where('status', 'approved')
+                    ->whereMonth('updated_at', now()->month)->count(),
+            ],
+        ];
+
+        $action_queue = [
+            'pending_leaves' => $pendingLeaves,
+            'overdue_reviews' => $overdueReviews,
+            'pending_payroll' => Payroll::where('status', 'pending')->count(),
+            'onboarding_due' => Onboarding::where('status', 'in_progress')->count(),
+        ];
+
         return Inertia::render('HR/Dashboard', [
             'stats' => [
                 'employees' => [
@@ -164,6 +198,8 @@ class DashboardController extends Controller
                 'attendance' => $attendanceChart,
                 'leave_types' => $leaveTypesChart,
             ],
+            'pipeline' => $pipeline,
+            'action_queue' => $action_queue,
         ]);
     }
 

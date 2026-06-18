@@ -7,6 +7,7 @@ import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Plus, Trash2, GripVertical } from 'lucide-react';
 import useRoute from '@/Hooks/useRoute';
+import ProjectAgileTabs from '@/Components/Projects/ProjectAgileTabs';
 
 interface BoardColumn {
   id: number;
@@ -73,6 +74,7 @@ export default function BoardSettings({ auth, board, project }: BoardSettingsPro
       )}
     >
       <Head title={`Board Settings - ${board.name}`} />
+      <ProjectAgileTabs projectId={project.id} boardId={board.id} active="settings" />
 
       <div className="py-12">
         <div className="max-w-6xl mx-auto sm:px-6 lg:px-8 space-y-6">

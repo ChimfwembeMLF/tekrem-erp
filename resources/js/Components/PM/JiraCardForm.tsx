@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader } from '@/Components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader } from '@/Components/ui/sheet';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { 
@@ -118,12 +118,12 @@ export function JiraCardForm({
   const selectedStatus = statusOptions.find(s => s.value === status);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto p-0">
-        <div className="flex">
+    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent side="right" className="flex w-full max-w-6xl flex-col gap-0 overflow-hidden p-0 sm:max-w-6xl">
+        <div className="flex flex-1 overflow-y-auto">
           {/* Main Content */}
           <div className="flex-1 p-6">
-            <DialogHeader className="mb-6">
+            <SheetHeader className="mb-6 text-left">
               <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
                 <span>CBS-175</span>
                 <ChevronDown className="w-4 h-4" />
@@ -141,7 +141,7 @@ export function JiraCardForm({
                   </Button>
                 </div>
               </div>
-            </DialogHeader>
+            </SheetHeader>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Title */}
@@ -490,7 +490,7 @@ export function JiraCardForm({
             </div>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }

@@ -219,8 +219,6 @@ export default function PermissionsIndex({ permissions, roles, modules, filters 
         return <Briefcase className="h-5 w-5" />;
       case 'support':
         return <MessageSquare className="h-5 w-5" />;
-      case 'cms':
-        return <FileText className="h-5 w-5" />;
       case 'hr':
         return <UserCheck className="h-5 w-5" />;
       case 'ai':
@@ -239,7 +237,6 @@ export default function PermissionsIndex({ permissions, roles, modules, filters 
       finance: 'bg-green-100 text-green-800 border-green-200',
       projects: 'bg-purple-100 text-purple-800 border-purple-200',
       support: 'bg-orange-100 text-orange-800 border-orange-200',
-      cms: 'bg-indigo-100 text-indigo-800 border-indigo-200',
       hr: 'bg-pink-100 text-pink-800 border-pink-200',
       ai: 'bg-cyan-100 text-cyan-800 border-cyan-200',
       settings: 'bg-gray-100 text-gray-800 border-gray-200',

@@ -21,6 +21,7 @@ import {
   Tag
 } from 'lucide-react';
 import useRoute from '@/Hooks/useRoute';
+import ProjectAgileTabs from '@/Components/Projects/ProjectAgileTabs';
 
 interface Release {
   id: number;
@@ -61,6 +62,7 @@ interface ReleasesProps {
     id: number;
     name: string;
   };
+  board?: { id: number; name: string };
   releases: Release[];
   upcomingReleases: Release[];
   releasedVersions: Release[];
@@ -68,7 +70,8 @@ interface ReleasesProps {
 
 export default function Releases({ 
   auth, 
-  project, 
+  project,
+  board,
   releases = [],
   upcomingReleases = [],
   releasedVersions = []
@@ -161,6 +164,7 @@ export default function Releases({
       )}
     >
       <Head title={`Releases - ${project.name}`} />
+      <ProjectAgileTabs projectId={project.id} boardId={board?.id} active="releases" />
 
       <div className="space-y-6 p-6">
         <Tabs defaultValue="upcoming" className="w-full">

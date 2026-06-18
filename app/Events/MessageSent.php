@@ -13,27 +13,42 @@ class MessageSent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $message;
+    public array $message;
 
     public function __construct(Chat $message)
     {
-        // Only load user name/id, not full relationships
-        $this->message = [
+        $message->loadMissing('user');
+        $this->message = self::formatMessage($message);
+    }
+
+    public static function formatMessage(Chat $message): array
+    {
+        return [
             'id' => $message->id,
             'conversation_id' => $message->conversation_id,
             'user_id' => $message->user_id,
-            'user_name' => $message->user?->name,
+            'user_name' => $message->user?->name ?? ($message->metadata['guest_name'] ?? null),
+            'user' => $message->user ? [
+                'id' => $message->user->id,
+                'name' => $message->user->name,
+            ] : null,
             'message' => $message->message,
+            'message_type' => $message->message_type,
+            'attachments' => $message->attachments,
+            'status' => $message->status,
+            'metadata' => $message->metadata,
             'created_at' => $message->created_at,
         ];
     }
 
-    public function broadcastOn()
+    public function broadcastOn(): array
     {
-        return new PrivateChannel('conversation.' . $this->message['conversation_id']);
+        return [
+            new PrivateChannel('conversation.' . $this->message['conversation_id']),
+        ];
     }
 
-    public function broadcastAs()
+    public function broadcastAs(): string
     {
         return 'MessageSent';
     }

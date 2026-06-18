@@ -1,12 +1,17 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { requestNotificationPermission, getFcmToken, listenForForegroundMessages } from '../../firebase-messaging';
-import { Card, CardContent } from '@/Components/ui/card';
+import { MessageCircle, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import GuestChatHeader from './GuestChatHeader';
 import GuestChatInterface from './GuestChatInterface';
-import Logo from '../../../../public/favicon.svg';
+import { useConversationChannel } from '@/Hooks/useConversationChannel';
+import { getBroadcastHeaders } from '@/echo';
+import { fetchWithSession } from '@/lib/http';
+import { Button } from '@/Components/ui/button';
+import { Badge } from '@/Components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
+import { cn } from '@/lib/utils';
 
-/* ─── types ─────────────────────────────────────────────────── */
 interface Message {
   id: number;
   message: string;
@@ -37,10 +42,56 @@ interface GuestSession {
 
 type ConnectionStatus = 'connecting' | 'connected' | 'disconnected';
 
-const CSRF = () =>
-  document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
 
-/* ─── component ─────────────────────────────────────────────── */
+const appendUniqueMessage = (prev: Message[], incoming: Message) => {
+  if (prev.some(m => m.id === incoming.id)) {
+    return prev;
+  }
+  return [...prev, incoming];
+};
+
+function ChatLauncher({
+  unreadCount,
+  onOpen,
+}: {
+  unreadCount: number;
+  onOpen: () => void;
+}) {
+  return (
+    <div className="group fixed bottom-5 right-5 z-[999] sm:bottom-6 sm:right-6">
+      <button
+        type="button"
+        onClick={onOpen}
+        aria-label="Open chat"
+        className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-lg shadow-primary/25 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-primary/30 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      >
+        <span
+          aria-hidden
+          className="absolute inset-0 rounded-full bg-primary/40 animate-launcher-pulse"
+        />
+        <span
+          aria-hidden
+          className="absolute -inset-1 rounded-full border border-primary/25"
+        />
+        <span className="relative z-10 flex animate-launcher-bob items-center justify-center">
+          <MessageCircle className="h-6 w-6" strokeWidth={2.25} />
+        </span>
+        {unreadCount > 0 && (
+          <Badge
+            variant="destructive"
+            className="absolute -right-1 -top-1 z-20 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold animate-scale-in border-2 border-background"
+          >
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </Badge>
+        )}
+      </button>
+      <span className="pointer-events-none absolute -top-9 right-0 hidden whitespace-nowrap rounded-md bg-foreground px-2.5 py-1 text-xs font-medium text-background opacity-0 shadow-md transition-opacity group-hover:opacity-100 sm:block">
+        Chat with us
+      </span>
+    </div>
+  );
+}
+
 export default function GuestChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -57,24 +108,51 @@ export default function GuestChatWidget() {
   });
   const [initError, setInitError] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [isTyping, setIsTyping] = useState(false);
+  const [isAiTyping, setIsAiTyping] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('connecting');
   const [animateOpen, setAnimateOpen] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  /* ── init ─────────────────────────────────────────── */
+  const { typingUsers, notifyTyping } = useConversationChannel({
+    conversationId: conversation?.id ?? null,
+    currentUserId: guestSession ? `guest_${guestSession.id}` : null,
+    typingUrl: '/guest-chat/typing',
+    enabled: initialized && !!conversation?.id,
+    onMessage: (incoming) => {
+      const next = incoming as unknown as Message;
+      setMessages(prev => {
+        const updated = appendUniqueMessage(prev, next);
+        if (!isOpen && updated.length > prev.length) {
+          setUnreadCount(c => c + (updated.length - prev.length));
+        }
+        return updated;
+      });
+      if (next.metadata?.is_ai_response) {
+        setIsAiTyping(false);
+      }
+    },
+  });
+
+  useEffect(() => {
+    if (isOpen && !isMinimized) {
+      const original = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = original;
+      };
+    }
+  }, [isOpen, isMinimized]);
+
   const initializeSession = useCallback(async () => {
     try {
       setIsLoading(true);
       setInitError(null);
       setConnectionStatus('connecting');
-      // Try to resume session from localStorage
       const storedSessionId = localStorage.getItem('guest_chat_session_id');
-      const res = await fetch('/guest-chat/initialize', {
+      const res = await fetchWithSession('/guest-chat/initialize', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF() },
+        headers: { 'Content-Type': 'application/json' },
         body: storedSessionId ? JSON.stringify({ session_id: storedSessionId }) : undefined,
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -97,22 +175,18 @@ export default function GuestChatWidget() {
     }
   }, []);
 
-  // FCM push notification registration
   useEffect(() => {
     async function setupPush() {
       if ('Notification' in window && window.navigator.serviceWorker) {
         await requestNotificationPermission();
         const token = await getFcmToken();
         if (token && guestSession) {
-          // Send token to backend to associate with session
-          fetch('/guest-chat/push-token', {
+          fetchWithSession('/guest-chat/push-token', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF() },
             body: JSON.stringify({ session_id: guestSession.session_id, token }),
-          });
+          }).catch(() => {});
         }
         listenForForegroundMessages((payload: any) => {
-          // Optionally show toast or notification in-app
           toast('New chat message', { description: payload?.notification?.body });
         });
       }
@@ -124,46 +198,20 @@ export default function GuestChatWidget() {
     if (isOpen && !initialized) initializeSession();
   }, [isOpen, initialized, initializeSession]);
 
-  /* ── polling ──────────────────────────────────────── */
-  const fetchMessages = useCallback(async () => {
-    if (!initialized) return;
-    try {
-      const res = await fetch('/guest-chat/messages', {
-        headers: { 'X-CSRF-TOKEN': CSRF() },
-      });
-      if (!res.ok) return;
-      const data = await res.json();
-      const next: Message[] = data.messages ?? [];
-      setMessages(prev => {
-        if (next.length > prev.length && !isOpen)
-          setUnreadCount(c => c + (next.length - prev.length));
-        return next;
-      });
-      if (data.conversation) setConversation(data.conversation);
-      if (connectionStatus === 'disconnected') setConnectionStatus('connected');
-    } catch {
-      setConnectionStatus('disconnected');
+  useEffect(() => {
+    if (window.Echo && initialized) {
+      setConnectionStatus('connected');
     }
-  }, [initialized, isOpen, connectionStatus]);
+  }, [initialized, conversation?.id]);
 
-  // Mark messages as read when widget is open and messages change
   useEffect(() => {
     if (!isOpen || !initialized || messages.length === 0) return;
-    fetch('/guest-chat/read', {
+    fetchWithSession('/guest-chat/read', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF() },
       body: JSON.stringify({ message_ids: messages.filter(m => m.status !== 'read').map(m => m.id) }),
-    });
+    }).catch(() => {});
   }, [isOpen, initialized, messages]);
 
-  useEffect(() => {
-    if (isOpen && initialized) {
-      pollRef.current = setInterval(fetchMessages, 5000);
-      return () => { if (pollRef.current) clearInterval(pollRef.current); };
-    }
-  }, [isOpen, initialized, fetchMessages]);
-
-  /* ── send ─────────────────────────────────────────── */
   const sendMessage = async () => {
     if ((!newMessage.trim() && attachments.length === 0) || isLoading) return;
     try {
@@ -172,31 +220,26 @@ export default function GuestChatWidget() {
       fd.append('message', newMessage);
       fd.append('message_type', 'text');
       attachments.forEach(f => fd.append('attachments[]', f));
-      const res = await fetch('/guest-chat/send', {
+      const res = await fetchWithSession('/guest-chat/send', {
         method: 'POST',
-        headers: { 'X-CSRF-TOKEN': CSRF() },
+        headers: getBroadcastHeaders(null),
         body: fd,
       });
       const data = await res.json();
       if (!res.ok) {
-        // File size error handling
         if (data.errors && data.errors['attachments.0']) {
-          const maxMb = 10;
-          toast.error(`File too large. Max size is ${maxMb}MB.`);
+          toast.error('File too large. Max size is 10MB.');
         } else {
           toast.error('Failed to send message. Please try again.');
         }
         return;
       }
-      setMessages(prev => [...prev, data.message]);
+      setMessages(prev => appendUniqueMessage(prev, data.message));
       setNewMessage('');
       setAttachments([]);
+      notifyTyping(false);
       if (data.ai_response) {
-        setIsTyping(true);
-        setTimeout(() => {
-          setIsTyping(false);
-          setMessages(prev => [...prev, data.ai_response]);
-        }, 1200);
+        setIsAiTyping(true);
       }
     } catch {
       toast.error('Failed to send message. Please try again.');
@@ -207,9 +250,8 @@ export default function GuestChatWidget() {
 
   const updateGuestInfo = async () => {
     try {
-      const res = await fetch('/guest-chat/update-info', {
+      const res = await fetchWithSession('/guest-chat/update-info', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF() },
         body: JSON.stringify(guestInfo),
       });
       if (!res.ok) throw new Error();
@@ -226,7 +268,11 @@ export default function GuestChatWidget() {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   };
 
-  /* ── open/close animation ─────────────────────────── */
+  const handleMessageChange = (value: string) => {
+    setNewMessage(value);
+    notifyTyping(value.trim().length > 0);
+  };
+
   const openWidget = () => {
     setIsOpen(true);
     setUnreadCount(0);
@@ -238,200 +284,102 @@ export default function GuestChatWidget() {
     setTimeout(() => setIsOpen(false), 280);
   };
 
-  /* ── launcher button ──────────────────────────────── */
   if (!isOpen) {
-    return (
-      <div className="widget-launcher">
-        <button className="launcher-btn" onClick={openWidget} title="Open chat">
-          <img src={Logo} alt="Chat" className="" />
-          {unreadCount > 0 && (
-            <span className="unread-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
-          )}
-          <span className="launcher-ripple" />
-        </button>
-        <style>{`
-          .widget-launcher {
-            position: fixed; bottom: 24px; right: 24px; z-index: 999;
-          }
-          .launcher-btn {
-            width: 56px; height: 56px; border-radius: 50%;
-            background: linear-gradient(135deg, #8b5cf6, #6366f1);
-            border: none; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 8px 24px rgba(99,102,241,0.45);
-            position: relative; overflow: hidden;
-            transition: transform 0.2s, box-shadow 0.2s;
-          }
-          .launcher-btn:hover {
-            transform: scale(1.08);
-            box-shadow: 0 12px 32px rgba(99,102,241,0.55);
-          }
-          .launcher-btn:active { transform: scale(0.95); }
-          .launcher-logo { width: 28px; height: 28px; object-fit: contain; position: relative; z-index: 1; }
-          .unread-badge {
-            position: absolute; top: -3px; right: -3px;
-            min-width: 20px; height: 20px; border-radius: 10px;
-            background: #ef4444; color: #fff;
-            font-size: 10px; font-weight: 700;
-            display: flex; align-items: center; justify-content: center;
-            padding: 0 4px; z-index: 2;
-            border: 2px solid #fff;
-            animation: badgePop 0.3s ease-out;
-          }
-          @keyframes badgePop { 0% { transform: scale(0); } 80% { transform: scale(1.15); } 100% { transform: scale(1); } }
-          .launcher-ripple {
-            position: absolute; inset: 0; border-radius: 50%;
-            background: rgba(255,255,255,0.2);
-            animation: ripplePulse 2.5s ease-in-out infinite;
-          }
-          @keyframes ripplePulse {
-            0%,100% { transform: scale(1); opacity: 0.4; }
-            50%      { transform: scale(1.35); opacity: 0; }
-          }
-        `}</style>
-      </div>
-    );
+    return <ChatLauncher unreadCount={unreadCount} onOpen={openWidget} />;
   }
 
-  /* ── error state ──────────────────────────────────── */
   if (initError) {
     return (
-      <div className="widget-error-wrap">
-        <div className="widget-error-card bg-white dark:bg-gray-900 border border-red-100 dark:border-red-900/40">
-          <div className="error-icon">⚠️</div>
-          <h3 className="text-gray-900 dark:text-gray-100">Connection Error</h3>
-          <p className="text-gray-500 dark:text-gray-300">{initError}</p>
-          <button className="error-retry" onClick={initializeSession}>
-            {isLoading ? 'Retrying…' : 'Try Again'}
-          </button>
-          <button className="error-close" onClick={closeWidget}>Close</button>
-        </div>
-        <style>{`
-          .widget-error-wrap {
-            position: fixed; bottom: 24px; right: 24px; z-index: 1000;
-          }
-          .widget-error-card {
-            width: 320px; background: transparent; border-radius: 16px;
-            padding: 28px 24px; text-align: center;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-            border: none;
-          }
-          .error-icon { font-size: 32px; margin-bottom: 10px; }
-          .widget-error-card h3 { font-size: 15px; font-weight: 700; margin: 0 0 6px; }
-          .widget-error-card p { font-size: 13px; margin: 0 0 20px; line-height: 1.5; }
-          .error-retry {
-            width: 100%; height: 40px; border-radius: 10px;
-            background: linear-gradient(135deg, #8b5cf6, #6366f1);
-            color: #fff; font-size: 13px; font-weight: 600;
-            border: none; cursor: pointer; margin-bottom: 8px;
-          }
-          .error-close {
-            width: 100%; height: 36px; background: none;
-            border: none; color: #9ca3af; cursor: pointer; font-size: 13px;
-          }
-        `}</style>
+      <div className="fixed inset-0 z-[1000] flex items-end justify-center p-4 sm:inset-auto sm:bottom-6 sm:right-6 sm:left-auto sm:top-auto sm:items-end sm:justify-end sm:p-0">
+        <Card className="w-full max-w-sm border-border bg-card shadow-2xl animate-chat-panel-in sm:w-[360px]">
+          <CardHeader className="items-center text-center pb-2">
+            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+              <AlertTriangle className="h-6 w-6" />
+            </div>
+            <CardTitle className="text-base">Connection Error</CardTitle>
+            <CardDescription>{initError}</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            <Button onClick={initializeSession} disabled={isLoading} className="w-full">
+              {isLoading ? 'Retrying…' : 'Try Again'}
+            </Button>
+            <Button variant="ghost" onClick={closeWidget} className="w-full">
+              Close
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  /* ── chat panel ───────────────────────────────────── */
   return (
-    <div className={`widget-wrap ${animateOpen ? 'widget-open' : ''}`}>
-      <div className={`widget-panel bg-white dark:bg-gray-900 ${isMinimized ? 'panel-minimized' : ''}`}>
-        <GuestChatHeader
-          guestSession={guestSession}
-          conversation={conversation}
-          isMinimized={isMinimized}
-          connectionStatus={connectionStatus}
-          onToggleMinimize={() => setIsMinimized(v => !v)}
-          onClose={closeWidget}
-          onShowGuestForm={() => setShowGuestForm(true)}
-        />
-
-        {!isMinimized && (
-          <div className="panel-body">
-            <GuestChatInterface
-              messages={messages}
-              conversation={conversation}
-              guestSession={guestSession}
-              newMessage={newMessage}
-              setNewMessage={setNewMessage}
-              attachments={attachments}
-              setAttachments={setAttachments as any}
-              isLoading={isLoading}
-              showGuestForm={showGuestForm}
-              guestInfo={guestInfo}
-              setGuestInfo={setGuestInfo}
-              onSendMessage={sendMessage}
-              onUpdateGuestInfo={updateGuestInfo}
-              onCloseGuestForm={() => setShowGuestForm(false)}
-              onKeyPress={handleKeyPress}
-              messagesEndRef={messagesEndRef}
-              isTyping={isTyping}
-              connectionStatus={connectionStatus}
-            />
-          </div>
+    <>
+      <button
+        type="button"
+        aria-label="Close chat"
+        className={cn(
+          'fixed inset-0 z-[999] bg-background/80 backdrop-blur-sm transition-opacity duration-300 sm:hidden',
+          animateOpen ? 'opacity-100' : 'opacity-0 pointer-events-none',
         )}
+        onClick={closeWidget}
+      />
+
+      <div
+        className={cn(
+          'fixed z-[1000] flex flex-col pointer-events-none',
+          'inset-0 sm:inset-auto sm:bottom-6 sm:right-6',
+          'sm:h-[min(680px,calc(100dvh-48px))] sm:w-[400px]',
+        )}
+      >
+        <div
+          className={cn(
+            'pointer-events-auto flex h-full w-full flex-col overflow-hidden border-border bg-background shadow-2xl',
+            'sm:rounded-2xl sm:border',
+            'transition-all duration-300 ease-out',
+            animateOpen
+              ? 'animate-chat-panel-in opacity-100'
+              : 'opacity-0 translate-y-4 sm:translate-y-6 sm:scale-[0.98]',
+            isMinimized && 'sm:!h-auto',
+          )}
+        >
+          <GuestChatHeader
+            guestSession={guestSession}
+            conversation={conversation}
+            isMinimized={isMinimized}
+            connectionStatus={connectionStatus}
+            onToggleMinimize={() => setIsMinimized(v => !v)}
+            onClose={closeWidget}
+            onShowGuestForm={() => setShowGuestForm(true)}
+          />
+
+          {!isMinimized && (
+            <div className="flex min-h-0 flex-1 flex-col bg-background">
+              <GuestChatInterface
+                messages={messages}
+                conversation={conversation}
+                guestSession={guestSession}
+                newMessage={newMessage}
+                setNewMessage={handleMessageChange}
+                attachments={attachments}
+                setAttachments={setAttachments as any}
+                isLoading={isLoading}
+                showGuestForm={showGuestForm}
+                guestInfo={guestInfo}
+                setGuestInfo={setGuestInfo}
+                onSendMessage={sendMessage}
+                onUpdateGuestInfo={updateGuestInfo}
+                onCloseGuestForm={() => setShowGuestForm(false)}
+                onKeyPress={handleKeyPress}
+                onInputBlur={() => notifyTyping(false)}
+                messagesEndRef={messagesEndRef}
+                isTyping={isAiTyping}
+                typingUsers={typingUsers}
+                connectionStatus={connectionStatus}
+              />
+            </div>
+          )}
+        </div>
       </div>
-
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap');
-
-        .widget-wrap {
-          position: fixed; z-index: 1000;
-          /* Mobile: full screen */
-          inset: 0;
-          display: flex; align-items: flex-end; justify-content: center;
-          padding: 0;
-          pointer-events: none;
-        }
-        @media (min-width: 640px) {
-          .widget-wrap {
-            inset: auto;
-            bottom: 24px; right: 24px;
-            align-items: flex-end; justify-content: flex-end;
-          }
-        }
-
-        .widget-panel {
-          width: 100%;
-          height: 100dvh;
-          max-width: 100%;
-          background: transparent;
-          border-radius: 0;
-          display: flex; flex-direction: column;
-          overflow: hidden;
-          box-shadow: 0 24px 64px rgba(0,0,0,0.18);
-          pointer-events: auto;
-          opacity: 0; transform: translateY(20px) scale(0.97);
-          transition: opacity 0.28s cubic-bezier(0.34,1.56,0.64,1),
-                      transform 0.28s cubic-bezier(0.34,1.56,0.64,1);
-        }
-        @media (min-width: 640px) {
-          .widget-panel {
-            width: 380px;
-            height: min(680px, calc(100dvh - 48px));
-            border-radius: 20px;
-            transform-origin: bottom right;
-          }
-        }
-
-        .widget-open .widget-panel {
-          opacity: 1; transform: none;
-        }
-
-        .panel-minimized {
-          height: auto !important;
-        }
-
-        .panel-body {
-          flex: 1; overflow: hidden;
-          display: flex; flex-direction: column;
-        }
-
-        * { box-sizing: border-box; }
-        body { font-family: 'Sora', system-ui, sans-serif; }
-      `}</style>
-    </div>
+    </>
   );
 }

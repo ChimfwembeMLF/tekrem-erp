@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Head, Link, useForm, router, usePage } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import AISuggestions from '@/Components/Support/AISuggestions';
@@ -9,7 +9,6 @@ import { Textarea } from '@/Components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { Separator } from '@/Components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/Components/ui/avatar';
-import MediaPicker from '@/Components/CMS/MediaPicker';
 import MarkdownEditor from '@/Components/PM/MarkdownEditor';
 import {
   ArrowLeft,
@@ -129,7 +128,7 @@ export default function Show({ ticket, users, comments }: Props) {
   const { t } = useTranslate();
   const route = useRoute();
   const { auth } = usePage<any>().props;
-  const [showMediaPicker, setShowMediaPicker] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [showAISuggestions, setShowAISuggestions] = useState(false);
   const [mediaAttachments, setMediaAttachments] = useState<any[]>([]);
   const [editorKey, setEditorKey] = useState(0);
@@ -277,34 +276,37 @@ export default function Show({ ticket, users, comments }: Props) {
     setMediaAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
+  const addFiles = (files: File[]) => {
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setMediaAttachments(prev => [
+          ...prev,
+          {
+            id: Math.random().toString(36).substr(2, 9),
+            name: file.name,
+            url: ev.target?.result,
+            mime_type: file.type,
+            file_size: file.size,
+            file,
+          }
+        ]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleAddComment = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Separate new uploads (with .file) and CMS/media files (without .file)
     const newFiles = mediaAttachments.filter(m => m.file);
-    const cmsFiles = mediaAttachments.filter(m => !m.file);
 
-    // Map CMS/media files to metadata
-    const mappedCMS = cmsFiles.map(m => ({
-      name: m.name || m.original_name,
-      path: m.file_path || m.path || m.url || '',
-      size: m.file_size || m.size || 0,
-      type: m.mime_type || m.type || '',
-    }));
-
-    // Build FormData
     const formData = new FormData();
     formData.append('content', data.content);
     formData.append('is_internal', data.is_internal ? '1' : '0');
     formData.append('is_solution', data.is_solution ? '1' : '0');
     if (data.time_spent_minutes) formData.append('time_spent_minutes', data.time_spent_minutes);
-    mappedCMS.forEach((att, idx) => {
-      formData.append(`existing_attachments[${idx}][name]`, att.name);
-      formData.append(`existing_attachments[${idx}][path]`, att.path);
-      formData.append(`existing_attachments[${idx}][size]`, att.size.toString());
-      formData.append(`existing_attachments[${idx}][type]`, att.type);
-    });
-    newFiles.forEach((m, idx) => {
+    newFiles.forEach((m) => {
       formData.append('attachments[]', m.file, m.name);
     });
 
@@ -617,45 +619,26 @@ export default function Show({ ticket, users, comments }: Props) {
                         onDrop={e => {
                           e.preventDefault();
                           e.stopPropagation();
-                          const files = Array.from(e.dataTransfer.files);
-                          files.forEach(file => {
-                            const reader = new FileReader();
-                            reader.onload = (ev) => {
-                              setMediaAttachments(prev => [
-                                ...prev,
-                                {
-                                  id: Math.random().toString(36).substr(2, 9),
-                                  name: file.name,
-                                  url: ev.target?.result,
-                                  mime_type: file.type,
-                                  file_size: file.size,
-                                  file,
-                                }
-                              ]);
-                            };
-                            reader.readAsDataURL(file);
-                          });
+                          addFiles(Array.from(e.dataTransfer.files));
                         }}
-                        onClick={() => setShowMediaPicker(true)}
+                        onClick={() => fileInputRef.current?.click()}
                       >
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          multiple
+                          className="hidden"
+                          onChange={e => {
+                            if (e.target.files) {
+                              addFiles(Array.from(e.target.files));
+                              e.target.value = '';
+                            }
+                          }}
+                        />
                         <Upload className="h-8 w-8 mb-2 text-primary" />
                         <span className="font-medium text-sm mb-1">{t('support.drag_drop_files', 'Drag & drop files here or click to select')}</span>
-                        <span className="text-xs text-muted-foreground">{t('support.file_types_media', 'Select files via the CMS Media Library to attach them to this comment.')}</span>
+                        <span className="text-xs text-muted-foreground">{t('support.file_types', 'Images, PDFs, and documents up to 10MB')}</span>
                       </div>
-                      <MediaPicker
-                        isOpen={showMediaPicker}
-                        onSelect={(media) => {
-                          setMediaAttachments(prev => {
-                            if (!prev.find(m => m.id === media.id)) {
-                              return [...prev, media];
-                            }
-                            return prev;
-                          });
-                        }}
-                        onClose={() => setShowMediaPicker(false)}
-                        multiple={true}
-                        type="all"
-                      />
                     </div>
 
                     {mediaAttachments.length > 0 && (

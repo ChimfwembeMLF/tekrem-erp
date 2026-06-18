@@ -20,6 +20,7 @@ class Report extends Model
         'name',
         'description',
         'type',
+        'format',
         'status',
         'parameters',
         'generated_at',

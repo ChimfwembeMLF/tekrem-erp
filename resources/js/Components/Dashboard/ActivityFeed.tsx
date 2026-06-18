@@ -1,17 +1,21 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
+import { Button } from '@/Components/ui/button';
 import {
   UserPlus,
   FileText,
   Ticket,
   MessageSquare,
   Activity,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import useTranslate from '@/Hooks/useTranslate';
 
 interface ActivityItem {
+  id?: string | number;
   type: string;
   title: string;
   description: string;
@@ -27,6 +31,26 @@ interface ActivityFeedProps {
 
 export default function ActivityFeed({ activities, maxItems = 8 }: ActivityFeedProps) {
   const { t } = useTranslate();
+  const [page, setPage] = useState(1);
+
+  const totalPages = Math.max(1, Math.ceil(activities.length / maxItems));
+
+  const paginatedActivities = useMemo(() => {
+    const start = (page - 1) * maxItems;
+    return activities.slice(start, start + maxItems);
+  }, [activities, maxItems, page]);
+
+  const rangeStart = activities.length === 0 ? 0 : (page - 1) * maxItems + 1;
+  const rangeEnd = Math.min(page * maxItems, activities.length);
+
+  const goToPage = (nextPage: number) => {
+    setPage(Math.min(Math.max(1, nextPage), totalPages));
+  };
+
+  // Reset to page 1 when the activity list changes (e.g. dashboard refresh)
+  React.useEffect(() => {
+    setPage(1);
+  }, [activities.length]);
 
   const getActivityIcon = (iconName: string) => {
     switch (iconName) {
@@ -98,9 +122,9 @@ export default function ActivityFeed({ activities, maxItems = 8 }: ActivityFeedP
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {activities.slice(0, maxItems).map((activity, index) => (
+          {paginatedActivities.map((activity, index) => (
             <div
-              key={index}
+              key={activity.id ?? `${activity.type}-${activity.timestamp}-${index}`}
               className="flex items-start gap-3 p-2 rounded-lg hover:bg-accent transition-colors"
             >
               <div className={cn("p-2 rounded-full", getActivityColor(activity.color))}>
@@ -139,13 +163,37 @@ export default function ActivityFeed({ activities, maxItems = 8 }: ActivityFeedP
           )}
           
           {activities.length > maxItems && (
-            <div className="text-center pt-2 border-t">
+            <div className="flex items-center justify-between gap-2 border-t pt-3">
               <p className="text-xs text-muted-foreground">
-                {t('dashboard.showing_activities', 'Showing {count} of {total} activities', {
-                  count: maxItems,
-                  total: activities.length,
-                })}
+                Showing {rangeStart}–{rangeEnd} of {activities.length}
               </p>
+              <div className="flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  disabled={page <= 1}
+                  onClick={() => goToPage(page - 1)}
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="min-w-[4.5rem] text-center text-xs text-muted-foreground">
+                  {page} / {totalPages}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  disabled={page >= totalPages}
+                  onClick={() => goToPage(page + 1)}
+                  aria-label="Next page"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           )}
         </div>

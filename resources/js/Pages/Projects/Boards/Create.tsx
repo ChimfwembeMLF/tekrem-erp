@@ -1,6 +1,6 @@
 import React from 'react';
 import { Head, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import { ProjectShowSheet } from '@/Components/Projects/ProjectShowSheet';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -33,19 +33,16 @@ export default function BoardCreate({ auth, project }: BoardCreateProps) {
   };
 
   return (
-    <AppLayout
-      title="Create Board"
-      renderHeader={() => (
-        <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-          Create New Board - {project.name}
-        </h2>
-      )}
-    >
+    <>
       <Head title={`Create Board - ${project.name}`} />
+      <ProjectShowSheet backUrl={route('projects.show', project.id)} size="lg">
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
+            Create New Board — {project.name}
+          </h2>
+        </div>
 
-      <div className="py-12">
-        <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
-          <Card>
+        <Card>
             <CardHeader>
               <CardTitle>Board Details</CardTitle>
             </CardHeader>
@@ -117,8 +114,7 @@ export default function BoardCreate({ auth, project }: BoardCreateProps) {
               </form>
             </CardContent>
           </Card>
-        </div>
-      </div>
-    </AppLayout>
+      </ProjectShowSheet>
+    </>
   );
 }

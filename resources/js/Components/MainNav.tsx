@@ -12,30 +12,29 @@ import {
 import { cn } from '@/lib/utils';
 import useRoute from '@/Hooks/useRoute';
 import useActiveRoute from '@/Hooks/useActiveRoute';
-import { ThemeToggle } from '@/Components/ThemeProvider';
-import useTypedPage from '@/Hooks/useTypedPage';
 
 interface MainNavProps {
-  settings: Record<string, any>;
+  settings: Record<string, unknown>;
 }
 
-export default function MainNav({ settings }: MainNavProps) {
+export default function MainNav({ settings: _settings }: MainNavProps) {
   const route = useRoute();
   const { isActive } = useActiveRoute();
-  const page = useTypedPage();
+
+  const linkClass = (active: boolean) =>
+    cn(
+      navigationMenuTriggerStyle(),
+      active
+        ? 'bg-primary font-medium text-primary-foreground hover:bg-primary'
+        : 'bg-transparent hover:bg-primary/10 hover:text-primary'
+    );
 
   return (
     <NavigationMenu className="hidden md:flex">
       <NavigationMenuList>
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
-            <Link
-              href={route('home')}
-              className={cn(
-                navigationMenuTriggerStyle(),
-                isActive(route('home'), true) ? 'bg-primary hover:bg-primary font-medium' : 'bg-transperent hover:bg-primary duration-300 ease-in transition-all hover:text-secondary'
-              )}
-            >
+            <Link href={route('home')} className={linkClass(isActive(route('home'), true))}>
               Home
             </Link>
           </NavigationMenuLink>
@@ -43,164 +42,92 @@ export default function MainNav({ settings }: MainNavProps) {
 
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
-            <Link
-              href={route('about')}
-              className={cn(
-                navigationMenuTriggerStyle(),
-                isActive(route('about')) ? 'bg-primary/60 hover:bg-primary font-medium' : 'bg-transperent hover:bg-primary duration-300 ease-in transition-all hover:text-secondary'
-              )}
-            >
+            <Link href={route('about')} className={linkClass(isActive(route('about')))}>
               About
             </Link>
           </NavigationMenuLink>
         </NavigationMenuItem>
 
         <NavigationMenuItem>
-          <NavigationMenuTrigger
-            className={cn(
-              isActive(route('services')) ? 'bg-primary/60 hover:bg-primary font-medium' : 'bg-transperent hover:bg-primary duration-300 ease-in transition-all hover:text-secondary'
-            )}
-          >
+          <NavigationMenuTrigger className={linkClass(isActive(route('services')))}>
             Services
           </NavigationMenuTrigger>
           <NavigationMenuContent>
             <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
               <li className="row-span-3">
                 <NavigationMenuLink asChild>
-                  <a
-                    className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-primary/50 to-primary p-6 no-underline outline-none focus:shadow-md"
+                  <Link
+                    className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-primary to-primary/80 p-6 no-underline outline-none"
                     href={route('services')}
                   >
-                    <div className="mt-4 mb-2 text-lg font-medium text-white">
-                      Our Services
-                    </div>
-                    <p className="text-sm leading-tight text-white/90">
-                      Comprehensive technology solutions for modern businesses
-                    </p>
-                  </a>
+                    <div className="mb-2 text-lg font-medium text-white">Our Services</div>
+                    <p className="text-sm text-white/90">Web, mobile, AI, and cloud for African businesses</p>
+                  </Link>
                 </NavigationMenuLink>
               </li>
               <ListItem href={route('services.web-development')} title="Web Development">
-                Custom websites and web applications
+                Websites and web applications
               </ListItem>
               <ListItem href={route('services.mobile-apps')} title="Mobile Apps">
-                Native and cross-platform mobile solutions
+                iOS and Android solutions
               </ListItem>
               <ListItem href={route('services.ai-solutions')} title="AI Solutions">
-                Intelligent automation and data analysis
+                Automation and intelligent tools
               </ListItem>
               <ListItem href={route('services.cloud-services')} title="Cloud Services">
-                Scalable and secure cloud infrastructure
+                Migration and managed cloud
               </ListItem>
             </ul>
           </NavigationMenuContent>
         </NavigationMenuItem>
 
-        {/* <NavigationMenuItem>
-          <NavigationMenuTrigger
-            className={cn(
-              isActive('/portfolio') ? 'bg-primary/60 hover:bg-primary font-medium' : 'bg-transperent hover:bg-primary duration-300 ease-in transition-all hover:text-secondary'
-            )}
-          >
-            Portfolio
-          </NavigationMenuTrigger>
-          <NavigationMenuContent>
-            <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-              <li className="row-span-3">
-                <NavigationMenuLink asChild>
-                  <a
-                    className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-purple-500/50 to-purple-600 p-6 no-underline outline-none focus:shadow-md"
-                    href="/portfolio"
-                  >
-                    <div className="mt-4 mb-2 text-lg font-medium text-white">
-                      Our Portfolio
-                    </div>
-                    <p className="text-sm leading-tight text-white/90">
-                      Explore our successful projects and case studies
-                    </p>
-                  </a>
-                </NavigationMenuLink>
-              </li>
-              <ListItem href="/guest/portfolio" title="View Projects">
-                Browse our completed projects and case studies
-              </ListItem>
-              <ListItem href="/guest/testimonials" title="Testimonials">
-                Read what our clients say about us
-              </ListItem>
-              <ListItem href="/guest/portfolio/services" title="Service Examples">
-                See examples of our different service offerings
-              </ListItem>
-            </ul>
-          </NavigationMenuContent>
-        </NavigationMenuItem> */}
+        <NavigationMenuItem>
+          <NavigationMenuLink asChild>
+            <Link href={route('pricing')} className={linkClass(isActive(route('pricing')))}>
+              Pricing
+            </Link>
+          </NavigationMenuLink>
+        </NavigationMenuItem>
 
         <NavigationMenuItem>
           <NavigationMenuTrigger
-            className={cn(
-              isActive('/guest/support') || isActive('/guest/inquiry') || isActive('/guest/quote') || isActive('/guest/project') ? 'bg-primary/60 hover:bg-primary font-medium' : 'bg-transperent hover:bg-primary duration-300 ease-in transition-all hover:text-secondary'
+            className={linkClass(
+              isActive(route('guest.inquiry.create')) ||
+                isActive(route('guest.quote.create')) ||
+                isActive(route('guest.support.index'))
             )}
           >
             Get Started
           </NavigationMenuTrigger>
           <NavigationMenuContent>
-            <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-              <li className="row-span-3">
-                <NavigationMenuLink asChild>
-                  <a
-                    className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-green-500/50 to-green-600 p-6 no-underline outline-none focus:shadow-md"
-                    href="/guest/inquiry"
-                  >
-                    <div className="mt-4 mb-2 text-lg font-medium text-white">
-                      Get Started
-                    </div>
-                    <p className="text-sm leading-tight text-white/90">
-                      Contact us for inquiries, quotes, and support
-                    </p>
-                  </a>
-                </NavigationMenuLink>
-              </li>
-              <ListItem href="/guest/inquiry" title="General Inquiry">
-                Ask questions or get more information
+            <ul className="grid w-[400px] gap-3 p-4 md:w-[420px]">
+              <ListItem href={route('guest.inquiry.create')} title="General Inquiry">
+                Ask a question or get more information
               </ListItem>
-              <ListItem href="/guest/quote" title="Request Quote">
-                Get a detailed quote for your project
+              <ListItem href={route('guest.quote.create')} title="Request Quote">
+                Get a tailored ZMW quote
               </ListItem>
-              <ListItem href="/guest/project" title="Project Consultation">
+              <ListItem href={route('guest.project.create')} title="Project Consultation">
                 Discuss your project requirements
               </ListItem>
-              <ListItem href="/guest/support" title="Support Center">
-                Access help articles and submit tickets
-              </ListItem>
-              <ListItem href="/guest/support" title="Support Chat">
-                Chat With Supporting Agents & submit tickets
+              <ListItem href={route('guest.support.index')} title="Support Center">
+                Help articles and tickets
               </ListItem>
             </ul>
           </NavigationMenuContent>
         </NavigationMenuItem>
 
-        {/* <NavigationMenuItem>
+        <NavigationMenuItem>
           <NavigationMenuLink asChild>
-            <Link
-              href={route('portfolio')}
-              className={cn(
-                navigationMenuTriggerStyle(),
-                isActive(route('contact')) ? 'bg-accent text-accent-foreground font-medium' : 'bg-transperent hover:bg-primary duration-300 ease-in transition-all hover:text-secondary'
-              )}
-            >
-              Portifolio
+            <Link href={route('faq')} className={linkClass(isActive(route('faq')))}>
+              FAQ
             </Link>
           </NavigationMenuLink>
-        </NavigationMenuItem> */}
+        </NavigationMenuItem>
 
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
-            <Link
-              href={route('contact')}
-              className={cn(
-                navigationMenuTriggerStyle(),
-                isActive(route('contact')) ? 'bg-accent text-accent-foreground font-medium' : 'bg-transperent hover:bg-primary duration-300 ease-in transition-all hover:text-secondary'
-              )}
-            >
+            <Link href={route('contact')} className={linkClass(isActive(route('contact')))}>
               Contact
             </Link>
           </NavigationMenuLink>
@@ -210,27 +137,22 @@ export default function MainNav({ settings }: MainNavProps) {
   );
 }
 
-const ListItem = React.forwardRef<
-  React.ElementRef<"a">,
-  React.ComponentPropsWithoutRef<"a">
->(({ className, title, children, ...props }, ref) => {
-  return (
+const ListItem = React.forwardRef<React.ElementRef<'a'>, React.ComponentPropsWithoutRef<'a'>>(
+  ({ className, title, children, ...props }, ref) => (
     <li>
       <NavigationMenuLink asChild>
         <a
           ref={ref}
           className={cn(
-            "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+            'block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground',
             className
           )}
           {...props}
         >
           <div className="text-sm font-medium leading-none">{title}</div>
-          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-            {children}
-          </p>
+          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">{children}</p>
         </a>
       </NavigationMenuLink>
     </li>
-  );
-});
+  )
+);

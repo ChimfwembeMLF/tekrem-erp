@@ -1,6 +1,6 @@
 import React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import { ProjectShowSheet } from '@/Components/Projects/ProjectShowSheet';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
@@ -91,11 +91,10 @@ export default function Show({ project, file }: Props) {
   const isPDF = file.mime_type === 'application/pdf';
 
   return (
-    <AppLayout title={`${file.name} - ${project.name}`} >
-
-      <div className="">
-        <div className="mx-auto max-w-full sm:px-6">
-          <div className="flex items-center justify-between">
+    <>
+      <Head title={`${file.name} - ${project.name}`} />
+      <ProjectShowSheet backUrl={route('projects.files.index', project.id)} size="xl">
+          <div className="mb-4 flex items-center justify-between">
             <Link href={route('projects.files.index', project.id)}>
               <Button variant="ghost" size="sm">
                 <ArrowLeft className="mr-2 h-4 w-4" />
@@ -378,8 +377,7 @@ export default function Show({ project, file }: Props) {
               </Card>
             </div>
           </div>
-        </div>
-      </div>
-    </AppLayout>
+      </ProjectShowSheet>
+    </>
   );
 }

@@ -1,13 +1,15 @@
 import React from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { Button } from "@/Components/ui/button"
 import { Badge } from "@/Components/ui/badge"
 import { Card, CardContent } from "@/Components/ui/card"
-import { Bot, User, ThumbsUp, ThumbsDown, ExternalLink, Ticket, AlertTriangle } from "lucide-react"
+import { Bot, User, ThumbsUp, ThumbsDown, ExternalLink, Ticket, AlertTriangle, FileText } from "lucide-react"
 import type { Message } from "@/types/chatbot"
 
 interface ChatMessageProps {
   message: Message
-  onRate: () => void
+  onRate: (messageId: string, rating?: 'helpful' | 'not_helpful') => void
   onCreateTicket: () => void
   onEscalate: () => void
 }
@@ -30,7 +32,48 @@ export function ChatMessage({ message, onRate, onCreateTicket, onEscalate }: Cha
       <div className={`flex-1 max-w-[80%] ${isUser ? "text-right" : "text-left"}`}>
         <Card className={`${isUser ? "bg-blue-600 text-white" : "bg-white text-gray-800"}`}>
           <CardContent className="p-3">
-            <p className="text-sm whitespace-pre-wrap">{message.message}</p>
+            {isUser ? (
+              <p className="text-sm whitespace-pre-wrap">{message.message}</p>
+            ) : (
+              <div className="prose prose-sm max-w-none text-sm text-gray-800 prose-p:my-0 prose-p:leading-relaxed prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0 prose-headings:my-1 prose-headings:text-sm prose-headings:font-semibold prose-strong:text-gray-900 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-code:rounded prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:text-xs prose-pre:my-2 prose-pre:text-xs">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.message}</ReactMarkdown>
+              </div>
+            )}
+
+            {message.attachments && message.attachments.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {message.attachments.map((att) =>
+                  att.url && att.type?.startsWith('image/') ? (
+                    <a
+                      key={att.id}
+                      href={att.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block overflow-hidden rounded-lg"
+                    >
+                      <img
+                        src={att.url}
+                        alt={att.name}
+                        className="h-[75px] w-[100px] rounded-lg object-cover"
+                      />
+                    </a>
+                  ) : att.url ? (
+                    <a
+                      key={att.id}
+                      href={att.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] ${
+                        isUser ? 'bg-white/15 hover:bg-white/25' : 'bg-muted hover:bg-muted/80'
+                      }`}
+                    >
+                      <FileText className="h-3.5 w-3.5" />
+                      <span>{att.name}</span>
+                    </a>
+                  ) : null,
+                )}
+              </div>
+            )}
 
             {/* Intent Badge */}
             {message.intent && !isUser && (
@@ -100,13 +143,12 @@ export function ChatMessage({ message, onRate, onCreateTicket, onEscalate }: Cha
           </CardContent>
         </Card>
 
-        {/* Rating Buttons for Assistant Messages */}
-        {!isUser && (
+        {!isUser && !message.rating && message.intent !== 'greeting' && (
           <div className="flex gap-1 mt-2 justify-start">
-            <Button variant="ghost" size="sm" onClick={onRate} className="h-6 w-6 p-0 hover:bg-green-100">
+            <Button variant="ghost" size="sm" onClick={() => onRate(message.id, 'helpful')} className="h-6 w-6 p-0 hover:bg-green-100">
               <ThumbsUp className="w-3 h-3" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={onRate} className="h-6 w-6 p-0 hover:bg-red-100">
+            <Button variant="ghost" size="sm" onClick={() => onRate(message.id, 'not_helpful')} className="h-6 w-6 p-0 hover:bg-red-100">
               <ThumbsDown className="w-3 h-3" />
             </Button>
           </div>

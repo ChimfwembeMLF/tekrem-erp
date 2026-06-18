@@ -69,6 +69,16 @@ export default function TrialBalance({ reportData }: Props) {
     return new Date(dateString).toLocaleDateString();
   };
 
+  const exportUrl = (format: 'pdf' | 'excel' | 'csv') => {
+    const params = new URLSearchParams({
+      format,
+      as_of_date: reportData.as_of_date,
+      include_zero_balances: reportData.parameters?.include_zero_balances ? '1' : '0',
+    });
+
+    return `${route('finance.reports.trial-balance')}?${params.toString()}`;
+  };
+
   return (
     <AppLayout title={reportData.title} >
 
@@ -90,13 +100,17 @@ export default function TrialBalance({ reportData }: Props) {
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              {t('Export PDF')}
+            <Button variant="outline" asChild>
+              <a href={exportUrl('pdf')}>
+                <Download className="h-4 w-4 mr-2" />
+                {t('Export PDF')}
+              </a>
             </Button>
-            <Button variant="outline">
-              <FileText className="h-4 w-4 mr-2" />
-              {t('Export Excel')}
+            <Button variant="outline" asChild>
+              <a href={exportUrl('excel')}>
+                <FileText className="h-4 w-4 mr-2" />
+                {t('Export Excel')}
+              </a>
             </Button>
           </div>
         </div>

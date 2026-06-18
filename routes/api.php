@@ -15,6 +15,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/v1/tickets', [\App\Http\Controllers\Api\TicketController::class, 'store']);
 });
 
+Route::prefix('pawapay')->name('api.pawapay.')->group(function () {
+    Route::post('callback', [\App\Http\Controllers\Api\PawaPayWebhookController::class, 'handle'])->name('callback');
+});
+
 // MoMo Webhook Routes (No authentication required for provider callbacks)
 Route::prefix('momo')->name('api.momo.')->group(function () {
     Route::post('webhook/{provider}', [MomoWebhookController::class, 'handle'])->name('webhook');

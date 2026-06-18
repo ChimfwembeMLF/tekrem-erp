@@ -6,15 +6,78 @@ use App\Models\Support\Ticket;
 use App\Models\Support\KnowledgeBaseArticle;
 use App\Models\Support\FAQ;
 use App\Models\Support\TicketCategory;
+use App\Models\Setting;
 use App\Services\AIService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class SupportAIService
 {
     public function __construct(
-        private AIService $aiService
+        private AIService $aiService,
+        private GroundedBotService $groundedBot,
     ) {}
+
+    /**
+     * Generate a chatbot reply grounded in the knowledge base (Mistral only).
+     */
+    public function generateChatResponse(string $prompt, array $conversation = [], string $latestMessage = ''): string
+    {
+        $message = $latestMessage !== '' ? $latestMessage : $this->extractLatestUserMessage($conversation);
+        $history = $this->normalizeConversationHistory($conversation);
+
+        $result = $this->groundedBot->respond(
+            $message,
+            $history,
+            Setting::get('support.bot.support_name', 'Support Assistant'),
+        );
+
+        if ($result && !empty($result['message'])) {
+            return $result['message'];
+        }
+
+        return "I don't have that in our knowledge base yet. I can connect you with our team or help you create a support ticket.";
+    }
+
+    private function extractLatestUserMessage(array $conversation): string
+    {
+        $lastUser = collect($conversation)->where('role', 'user')->last();
+
+        return is_array($lastUser) ? (string) ($lastUser['message'] ?? '') : '';
+    }
+
+    private function normalizeConversationHistory(array $conversation): array
+    {
+        return collect($conversation)
+            ->map(fn (array $msg) => [
+                'role' => $msg['role'] ?? 'user',
+                'message' => $msg['message'] ?? '',
+            ])
+            ->all();
+    }
+
+    /**
+     * Suggest a concise ticket title from conversation context.
+     */
+    public function suggestTicketTitle(array $conversation, string $latestMessage): string
+    {
+        $context = '';
+        foreach (array_slice($conversation, -6) as $msg) {
+            $role = $msg['role'] === 'user' ? 'User' : 'Assistant';
+            $context .= "{$role}: {$msg['message']}\n";
+        }
+
+        $prompt = "Based on this support chat, suggest ONE short ticket title (max 80 chars). Reply with only the title, no quotes.\n\n{$context}\nLatest: {$latestMessage}";
+
+        $title = trim($this->aiService->generateResponse($prompt) ?? '');
+
+        if ($title === '' || strlen($title) > 255) {
+            return Str::limit($latestMessage, 80) ?: 'Support request from chat';
+        }
+
+        return $title;
+    }
 
     /**
      * Generate ticket resolution suggestions based on ticket content.

@@ -1,9 +1,24 @@
+# Allow search engines and other bots to fetch publicly served static files.
+<IfModule mod_headers.c>
+    <FilesMatch "\.(?i:css|js|jpg|jpeg|png|gif|webp|svg|ico|woff2?|ttf|eot|pdf|txt|xml|json|html|map)$">
+        Header set X-Robots-Tag "all"
+    </FilesMatch>
+
+    <Files "robots.txt">
+        Header set X-Robots-Tag "all"
+        Header set Content-Type "text/plain; charset=UTF-8"
+    </Files>
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
     </IfModule>
 
     RewriteEngine On
+
+    # Serve static asset directories directly (never route through Laravel).
+    RewriteRule ^(build|storage)/ - [L]
 
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .

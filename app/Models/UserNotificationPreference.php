@@ -120,6 +120,7 @@ class UserNotificationPreference extends Model
         $typeMap = [
             'chat' => 'chat_notifications',
             'new_chat_message' => 'chat_notifications',
+            'support_chat' => 'chat_notifications',
             'lead' => 'lead_notifications',
             'client' => 'client_notifications',
             'communication' => 'communication_notifications',

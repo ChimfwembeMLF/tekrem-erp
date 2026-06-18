@@ -20,6 +20,7 @@ export default function Create({ types }: Props) {
     name: '',
     description: '',
     type: '',
+    format: 'pdf',
     date_from: '',
     date_to: '',
   });
@@ -96,6 +97,25 @@ export default function Create({ types }: Props) {
                     </select>
                     {errors.type && (
                       <p className="text-sm text-red-600">{errors.type}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="format" className="block text-sm font-medium text-gray-700">
+                      {t('finance.export_format', 'Export Format')} *
+                    </label>
+                    <select
+                      id="format"
+                      value={data.format}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setData('format', e.target.value)}
+                      className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.format ? 'border-red-500' : ''}`}
+                    >
+                      <option value="pdf">PDF</option>
+                      <option value="excel">Excel (.xlsx)</option>
+                      <option value="csv">CSV</option>
+                    </select>
+                    {errors.format && (
+                      <p className="text-sm text-red-600">{errors.format}</p>
                     )}
                   </div>
                 </div>

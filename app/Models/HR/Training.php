@@ -78,6 +78,18 @@ class Training extends Model
     }
 
     /**
+     * Open trainings available for enrollment.
+     */
+    public function scopeActive($query)
+    {
+        return $query->whereIn('status', ['scheduled', 'ongoing'])
+            ->where(function ($q) {
+                $q->whereNull('end_date')
+                    ->orWhere('end_date', '>=', now()->toDateString());
+            });
+    }
+
+    /**
      * Scope to get ongoing trainings.
      */
     public function scopeOngoing($query)

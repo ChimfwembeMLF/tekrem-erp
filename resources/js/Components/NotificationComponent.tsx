@@ -82,6 +82,7 @@ export default function NotificationComponent({ className = '' }: NotificationCo
     switch (type) {
       case 'chat':
       case 'new_chat_message':
+      case 'support_chat':
         return '💬';
       case 'lead':
         return '🎯';
@@ -115,6 +116,7 @@ export default function NotificationComponent({ className = '' }: NotificationCo
     switch (type) {
       case 'chat':
       case 'new_chat_message':
+      case 'support_chat':
         return 'bg-blue-500';
       case 'lead':
         return 'bg-green-500';
@@ -148,6 +150,7 @@ export default function NotificationComponent({ className = '' }: NotificationCo
     switch (type) {
       case 'chat':
       case 'new_chat_message':
+      case 'support_chat':
         return '#3b82f6'; // blue-500
       case 'lead':
         return '#22c55e'; // green-500
@@ -181,6 +184,7 @@ export default function NotificationComponent({ className = '' }: NotificationCo
     switch (type) {
       case 'chat':
       case 'new_chat_message':
+      case 'support_chat':
         return 'high';
       case 'lead':
       case 'client':

@@ -19,11 +19,14 @@ class ReleaseController extends Controller
             ->orderBy('planned_date', 'desc')
             ->get();
 
+        $board = $project->boards()->first();
+
         $upcomingReleases = $releases->whereIn('status', ['planned', 'in_progress']);
         $releasedVersions = $releases->where('status', 'released');
 
-        return Inertia::render('Agile/Releases', [
+        return Inertia::render('Projects/Releases', [
             'project' => $project,
+            'board' => $board,
             'releases' => $releases,
             'upcomingReleases' => $upcomingReleases,
             'releasedVersions' => $releasedVersions,
@@ -40,7 +43,7 @@ class ReleaseController extends Controller
             'project'
         ]);
 
-        return Inertia::render('Agile/Releases/Show', [
+        return Inertia::render('Projects/Releases/Show', [
             'release' => $release,
             'project' => $release->project,
             'progress' => [
@@ -59,7 +62,7 @@ class ReleaseController extends Controller
         $sprints = $project->sprints()->get();
         $epics = $project->epics()->get();
 
-        return Inertia::render('Agile/Releases/Create', [
+        return Inertia::render('Projects/Releases/Create', [
             'project' => $project,
             'sprints' => $sprints,
             'epics' => $epics,
@@ -112,7 +115,7 @@ class ReleaseController extends Controller
         $sprints = $release->project->sprints()->get();
         $epics = $release->project->epics()->get();
 
-        return Inertia::render('Agile/Releases/Edit', [
+        return Inertia::render('Projects/Releases/Edit', [
             'release' => $release,
             'project' => $release->project,
             'sprints' => $sprints,

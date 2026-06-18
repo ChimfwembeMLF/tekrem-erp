@@ -3,4 +3,6 @@ import _ from 'lodash';
 window._ = _;
 window.axios = axios;
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
-// Echo is now initialized in echo.ts only. No duplicate setup here.
+window.axios.defaults.withCredentials = true;
+window.axios.defaults.xsrfCookieName = 'XSRF-TOKEN';
+window.axios.defaults.xsrfHeaderName = 'X-XSRF-TOKEN';

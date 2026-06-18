@@ -22,6 +22,7 @@ import {
   Square
 } from 'lucide-react';
 import useRoute from '@/Hooks/useRoute';
+import ProjectAgileTabs from '@/Components/Projects/ProjectAgileTabs';
 
 interface Sprint {
   id: number;
@@ -163,6 +164,11 @@ export default function Sprints({
       )}
     >
       <Head title={`Sprints - ${project.name}`} />
+      <ProjectAgileTabs
+        projectId={project.id}
+        boardId={board?.id}
+        active="sprints"
+      />
 
       <div className="space-y-6 p-6">
         <Tabs defaultValue="active" className="w-full">

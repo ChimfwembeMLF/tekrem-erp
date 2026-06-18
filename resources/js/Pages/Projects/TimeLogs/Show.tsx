@@ -1,6 +1,6 @@
 import React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import { ProjectShowSheet } from '@/Components/Projects/ProjectShowSheet';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
@@ -48,31 +48,17 @@ export default function Show({ project, timeLog }: Props) {
     : 0;
 
   return (
-    <AppLayout
-      title={`Time Log Details - ${project.name}`}
-      renderHeader={() => (
-        <div className="flex items-center justify-between">
+    <>
+      <Head title={`Time Log Details - ${project.name}`} />
+      <ProjectShowSheet backUrl={route('projects.time-logs.index', project.id)} size="lg">
+        <div className="mb-6 flex items-center justify-between">
           <div>
-            <h2 className="font-semibold text-xl text-foreground leading-tight">
-              View Time Log
-            </h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Log time spent on {project.name}
-            </p>
+            <h2 className="text-xl font-semibold leading-tight text-foreground">View Time Log</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Log time spent on {project.name}</p>
           </div>
-          <Link href={route('projects.time-logs.index', project.id)}>
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Time Logs
-              </Button>
-            </Link>
         </div>
-      )}
-    >
 
-      <div className="py-12">
-        <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
-          <div className="mb-6 flex items-center justify-end">
+        <div className="mb-6 flex items-center justify-end">
             
 
             <div className="flex gap-2">
@@ -274,7 +260,7 @@ export default function Show({ project, timeLog }: Props) {
             </CardContent>
           </Card>
         </div>
-      </div>
-    </AppLayout>
+      </ProjectShowSheet>
+    </>
   );
 }

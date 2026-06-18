@@ -25,9 +25,9 @@ class WebsiteController extends Controller
         return inertia('Website/Services');
     }
 
-    public function portfolio()
+    public function pricing()
     {
-        return inertia('Website/Portfolio');
+        return inertia('Website/Pricing');
     }
 
     public function contact()
@@ -37,31 +37,31 @@ class WebsiteController extends Controller
 
     public function webDevelopment()
     {
-        return inertia('Website/Services/WebDevelopment');
+        return $this->serviceShow('web-development');
     }
 
     public function mobileApps()
     {
-        return inertia('Website/Services/MobileApps');
+        return $this->serviceShow('mobile-apps');
     }
 
     public function aiSolutions()
     {
-        return inertia('Website/Services/AISolutions');
+        return $this->serviceShow('ai-solutions');
     }
 
     public function cloudServices()
     {
-        return inertia('Website/Services/CloudServices');
-    }
-
-    public function help()
-    {
-        return inertia('Website/Help');
+        return $this->serviceShow('cloud-services');
     }
 
     public function faq()
     {
         return inertia('Website/FAQ');
+    }
+
+    protected function serviceShow(string $slug)
+    {
+        return inertia('Website/Services/Show', ['slug' => $slug]);
     }
 }

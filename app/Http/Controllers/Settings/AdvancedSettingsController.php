@@ -178,43 +178,6 @@ class AdvancedSettingsController extends Controller
     }
 
     /**
-     * Update social platform integration settings.
-     */
-    public function updateSocialPlatforms(Request $request): RedirectResponse
-    {
-        $validator = Validator::make($request->all(), [
-            'platform' => 'required|string|in:facebook,twitter,instagram,linkedin,whatsapp',
-            'enabled' => 'boolean',
-            'settings' => 'required|array',
-        ]);
-
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-
-        $platform = $request->input('platform');
-        $enabled = $request->input('enabled', false);
-        $settings = $request->input('settings', []);
-
-        // Save the enabled status
-        Setting::set("integration.{$platform}.enabled", $enabled);
-
-        // Save platform-specific settings
-        foreach ($settings as $key => $value) {
-            Setting::set("integration.{$platform}.{$key}", $value);
-        }
-
-        session()->flash('flash', [
-            'bannerStyle' => 'success',
-            'banner' => ucfirst($platform) . ' integration settings updated successfully!'
-        ]);
-
-        return redirect()->back();
-    }
-
-    /**
      * Update AI service integration settings.
      */
     public function updateAIServices(Request $request): RedirectResponse
@@ -243,6 +206,8 @@ class AdvancedSettingsController extends Controller
             Setting::set("integration.{$service}.{$key}", $value);
         }
 
+        app(\App\Services\AIService::class)->syncServiceRecord($service, $enabled, $settings);
+
         session()->flash('flash', [
             'bannerStyle' => 'success',
             'banner' => ucfirst($service) . ' AI service settings updated successfully!'
@@ -257,7 +222,7 @@ class AdvancedSettingsController extends Controller
     public function testConnection(Request $request): \Illuminate\Http\JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'type' => 'required|string|in:social,ai',
+            'type' => 'required|string|in:ai',
             'service' => 'required|string',
             'settings' => 'required|array',
         ]);
@@ -266,73 +231,24 @@ class AdvancedSettingsController extends Controller
             return response()->json(['error' => 'Invalid request'], 422);
         }
 
-        $type = $request->input('type');
         $service = $request->input('service');
-        $settings = $request->input('settings');
+        $settings = $request->input('settings', []);
 
         try {
-            if ($type === 'ai') {
-                // Use the actual AI service for testing
-                $aiService = new \App\Services\AIService();
-                $result = $aiService->testConnection($service);
+            $aiService = app(\App\Services\AIService::class);
+            $result = $aiService->testConnection($service, $settings);
 
-                return response()->json([
-                    'status' => $result['status'] === 'success' ? 'connected' : 'error',
-                    'message' => $result['message'],
-                ]);
-            } else {
-                // For social platforms, use the existing logic
-                $status = $this->performConnectionTest($type, $service, $settings);
-
-                return response()->json([
-                    'status' => $status,
-                    'message' => $status === 'connected' ? 'Connection successful!' : 'Connection failed. Please check your credentials.',
-                ]);
-            }
+            return response()->json([
+                'status' => $result['status'] === 'success' ? 'connected' : 'error',
+                'message' => $result['message'],
+                'response' => $result['response'] ?? null,
+            ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Connection test failed: ' . $e->getMessage(),
             ], 500);
         }
-    }
-
-    /**
-     * Perform actual connection test (placeholder implementation).
-     */
-    private function performConnectionTest(string $type, string $service, array $settings): string
-    {
-        // This is a placeholder implementation
-        // In a real application, you would make actual API calls to test the connection
-
-        if ($type === 'ai') {
-            // Test AI service connection
-            if (empty($settings['api_key'])) {
-                return 'disconnected';
-            }
-            // Simulate API key validation
-            return strlen($settings['api_key']) > 10 ? 'connected' : 'disconnected';
-        }
-
-        if ($type === 'social') {
-            // Test social platform connection
-            switch ($service) {
-                case 'facebook':
-                    return !empty($settings['app_id']) && !empty($settings['app_secret']) ? 'connected' : 'disconnected';
-                case 'twitter':
-                    return !empty($settings['api_key']) && !empty($settings['api_secret']) ? 'connected' : 'disconnected';
-                case 'instagram':
-                    return !empty($settings['access_token']) ? 'connected' : 'disconnected';
-                case 'linkedin':
-                    return !empty($settings['client_id']) && !empty($settings['client_secret']) ? 'connected' : 'disconnected';
-                case 'whatsapp':
-                    return !empty($settings['phone_number_id']) && !empty($settings['access_token']) ? 'connected' : 'disconnected';
-                default:
-                    return 'disconnected';
-            }
-        }
-
-        return 'disconnected';
     }
 
     /**
@@ -360,19 +276,19 @@ class AdvancedSettingsController extends Controller
     private function getSecuritySettings(): array
     {
         return [
-            'force_https' => config('app.force_https', false),
-            'csrf_protection' => true,
-            'rate_limiting_enabled' => true,
-            'rate_limit_requests' => 60,
-            'rate_limit_window' => 1, // minutes
-            'ip_whitelist_enabled' => false,
-            'ip_whitelist' => '',
-            'failed_login_lockout' => true,
-            'lockout_duration' => 15, // minutes
-            'password_expiry_days' => null,
-            'two_factor_required' => false,
-            'api_rate_limiting' => true,
-            'api_rate_limit' => 1000, // requests per hour
+            'force_https' => (bool) Setting::get('advanced.security.force_https', config('app.force_https', false)),
+            'csrf_protection' => (bool) Setting::get('advanced.security.csrf_protection', true),
+            'rate_limiting_enabled' => (bool) Setting::get('advanced.security.rate_limiting_enabled', true),
+            'rate_limit_requests' => (int) Setting::get('advanced.security.rate_limit_requests', 60),
+            'rate_limit_window' => (int) Setting::get('advanced.security.rate_limit_window', 1),
+            'ip_whitelist_enabled' => (bool) Setting::get('advanced.security.ip_whitelist_enabled', false),
+            'ip_whitelist' => (string) Setting::get('advanced.security.ip_whitelist', ''),
+            'failed_login_lockout' => (bool) Setting::get('advanced.security.failed_login_lockout', true),
+            'lockout_duration' => (int) Setting::get('advanced.security.lockout_duration', 15),
+            'password_expiry_days' => Setting::get('advanced.security.password_expiry_days'),
+            'two_factor_required' => (bool) Setting::get('advanced.security.two_factor_required', false),
+            'api_rate_limiting' => (bool) Setting::get('advanced.security.api_rate_limiting', true),
+            'api_rate_limit' => (int) Setting::get('advanced.security.api_rate_limit', 1000),
         ];
     }
 
@@ -382,17 +298,17 @@ class AdvancedSettingsController extends Controller
     private function getPerformanceSettings(): array
     {
         return [
-            'cache_enabled' => true,
-            'cache_driver' => config('cache.default', 'file'),
-            'cache_ttl' => 3600, // seconds
-            'session_driver' => config('session.driver', 'file'),
-            'queue_driver' => config('queue.default', 'sync'),
-            'database_query_logging' => config('logging.channels.database', false),
-            'slow_query_threshold' => 1000, // milliseconds
-            'compression_enabled' => true,
-            'minify_assets' => true,
-            'cdn_enabled' => false,
-            'cdn_url' => '',
+            'cache_enabled' => (bool) Setting::get('advanced.performance.cache_enabled', true),
+            'cache_driver' => (string) Setting::get('advanced.performance.cache_driver', config('cache.default', 'file')),
+            'cache_ttl' => (int) Setting::get('advanced.performance.cache_ttl', 3600),
+            'session_driver' => (string) Setting::get('advanced.performance.session_driver', config('session.driver', 'file')),
+            'queue_driver' => (string) Setting::get('advanced.performance.queue_driver', config('queue.default', 'sync')),
+            'database_query_logging' => (bool) Setting::get('advanced.performance.database_query_logging', false),
+            'slow_query_threshold' => (int) Setting::get('advanced.performance.slow_query_threshold', 1000),
+            'compression_enabled' => (bool) Setting::get('advanced.performance.compression_enabled', true),
+            'minify_assets' => (bool) Setting::get('advanced.performance.minify_assets', true),
+            'cdn_enabled' => (bool) Setting::get('advanced.performance.cdn_enabled', false),
+            'cdn_url' => (string) Setting::get('advanced.performance.cdn_url', ''),
         ];
     }
 
@@ -418,75 +334,43 @@ class AdvancedSettingsController extends Controller
             'analytics_provider' => null,
             'analytics_tracking_id' => '',
 
-            // Social Platform Integrations
-            'social_platforms' => [
-                'facebook' => [
-                    'enabled' => Setting::get('integration.facebook.enabled', false),
-                    'app_id' => Setting::get('integration.facebook.app_id', ''),
-                    'app_secret' => Setting::get('integration.facebook.app_secret', ''),
-                    'page_access_token' => Setting::get('integration.facebook.page_access_token', ''),
-                    'webhook_verify_token' => Setting::get('integration.facebook.webhook_verify_token', ''),
-                    'status' => 'disconnected', // Will be determined by API validation
-                ],
-                'twitter' => [
-                    'enabled' => Setting::get('integration.twitter.enabled', false),
-                    'api_key' => Setting::get('integration.twitter.api_key', ''),
-                    'api_secret' => Setting::get('integration.twitter.api_secret', ''),
-                    'access_token' => Setting::get('integration.twitter.access_token', ''),
-                    'access_token_secret' => Setting::get('integration.twitter.access_token_secret', ''),
-                    'status' => 'disconnected',
-                ],
-                'instagram' => [
-                    'enabled' => Setting::get('integration.instagram.enabled', false),
-                    'access_token' => Setting::get('integration.instagram.access_token', ''),
-                    'business_account_id' => Setting::get('integration.instagram.business_account_id', ''),
-                    'status' => 'disconnected',
-                ],
-                'linkedin' => [
-                    'enabled' => Setting::get('integration.linkedin.enabled', false),
-                    'client_id' => Setting::get('integration.linkedin.client_id', ''),
-                    'client_secret' => Setting::get('integration.linkedin.client_secret', ''),
-                    'access_token' => Setting::get('integration.linkedin.access_token', ''),
-                    'status' => 'disconnected',
-                ],
-                'whatsapp' => [
-                    'enabled' => Setting::get('integration.whatsapp.enabled', false),
-                    'phone_number_id' => Setting::get('integration.whatsapp.phone_number_id', ''),
-                    'access_token' => Setting::get('integration.whatsapp.access_token', ''),
-                    'webhook_verify_token' => Setting::get('integration.whatsapp.webhook_verify_token', ''),
-                    'status' => 'disconnected',
-                ],
-            ],
-
             // AI Service Integrations
             'ai_services' => [
-                'mistral' => [
-                    'enabled' => Setting::get('integration.mistral.enabled', true), // Default provider
-                    'api_key' => Setting::get('integration.mistral.api_key', ''),
-                    'model' => Setting::get('integration.mistral.model', 'mistral-large-latest'),
-                    'max_tokens' => Setting::get('integration.mistral.max_tokens', 4096),
-                    'temperature' => Setting::get('integration.mistral.temperature', 0.7),
-                    'status' => 'disconnected',
-                ],
-                'openai' => [
-                    'enabled' => Setting::get('integration.openai.enabled', false),
-                    'api_key' => Setting::get('integration.openai.api_key', ''),
-                    'model' => Setting::get('integration.openai.model', 'gpt-4'),
-                    'max_tokens' => Setting::get('integration.openai.max_tokens', 4096),
-                    'temperature' => Setting::get('integration.openai.temperature', 0.7),
-                    'organization' => Setting::get('integration.openai.organization', ''),
-                    'status' => 'disconnected',
-                ],
-                'anthropic' => [
-                    'enabled' => Setting::get('integration.anthropic.enabled', false),
-                    'api_key' => Setting::get('integration.anthropic.api_key', ''),
-                    'model' => Setting::get('integration.anthropic.model', 'claude-3-sonnet-20240229'),
-                    'max_tokens' => Setting::get('integration.anthropic.max_tokens', 4096),
-                    'temperature' => Setting::get('integration.anthropic.temperature', 0.7),
-                    'status' => 'disconnected',
-                ],
+                'mistral' => $this->buildAiServiceSettings('mistral', true),
+                'openai' => $this->buildAiServiceSettings('openai', false),
+                'anthropic' => $this->buildAiServiceSettings('anthropic', false),
             ],
         ];
+    }
+
+    private function buildAiServiceSettings(string $service, bool $defaultEnabled, array $extra = []): array
+    {
+        $aiService = app(\App\Services\AIService::class);
+        $config = $aiService->getServiceConfig($service);
+
+        $settings = array_merge([
+            'enabled' => $config['enabled'] ?? $defaultEnabled,
+            'api_key' => $config['api_key'] ?? '',
+            'model' => $config['model'] ?? '',
+            'max_tokens' => $config['max_tokens'] ?? 4096,
+            'temperature' => $config['temperature'] ?? 0.7,
+            'status' => $this->resolveAiServiceStatus($config),
+        ], $extra);
+
+        if ($service === 'openai') {
+            $settings['organization'] = $config['organization'] ?? '';
+        }
+
+        return $settings;
+    }
+
+    private function resolveAiServiceStatus(array $config): string
+    {
+        if (empty($config['enabled']) || empty($config['api_key'])) {
+            return 'disconnected';
+        }
+
+        return 'configured';
     }
 
     /**
@@ -584,11 +468,11 @@ class AdvancedSettingsController extends Controller
      */
     private function updateConfigSettings(string $category, array $settings): void
     {
-        // In a real application, you would save these to a database
-        // or configuration file. For now, we'll just log them.
-        Log::info("Updated {$category} settings", $settings);
+        foreach ($settings as $key => $value) {
+            Setting::set("advanced.{$category}.{$key}", $value);
+        }
 
-        // You could also cache the settings for quick access
         Cache::put("advanced_settings_{$category}", $settings, 3600);
+        Log::info("Updated {$category} settings", $settings);
     }
 }

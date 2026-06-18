@@ -10,37 +10,22 @@ import {
   Settings,
   Smartphone,
   Shield,
-  CreditCard,
-  Building,
   AlertTriangle,
   CheckCircle,
   XCircle,
   Activity,
   DollarSign,
   Key,
-  Server,
-  Database,
-  Webhook,
   FileText,
   Eye,
-  EyeOff
 } from 'lucide-react';
-import useTranslate from '@/Hooks/useTranslate';
 import useRoute from '@/Hooks/useRoute';
-import { toast } from 'sonner';
 
-interface MomoProvider {
-  id: number;
-  display_name: string;
-  provider_code: string;
-  is_active: boolean;
-  health_status?: 'healthy' | 'degraded' | 'down';
-  last_health_check?: string;
-  supported_currencies: string[];
-  fee_structure: {
-    fixed_fee?: number;
-    percentage_fee?: number;
-  };
+interface PawaPayStatus {
+  env: string;
+  configured: boolean;
+  provider_label: string;
+  base_url: string;
 }
 
 interface ZraConfiguration {
@@ -55,18 +40,17 @@ interface ZraConfiguration {
 }
 
 interface Props {
-  momoProviders: MomoProvider[];
+  pawapay: PawaPayStatus;
   zraConfiguration?: ZraConfiguration;
   systemStats: {
     total_momo_transactions: number;
     total_zra_submissions: number;
-    active_providers: number;
+    payments_configured: boolean;
     pending_reconciliations: number;
   };
 }
 
-export default function FinanceSettings({ momoProviders, zraConfiguration, systemStats }: Props) {
-  const { t } = useTranslate();
+export default function FinanceSettings({ pawapay, zraConfiguration, systemStats }: Props) {
   const route = useRoute();
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -117,12 +101,10 @@ export default function FinanceSettings({ momoProviders, zraConfiguration, syste
               </h2>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-orange-600 border-orange-600">
-              <AlertTriangle className="h-3 w-3 mr-1" />
-              Admin Only
-            </Badge>
-          </div>
+          <Badge variant="outline" className="text-orange-600 border-orange-600">
+            <AlertTriangle className="h-3 w-3 mr-1" />
+            Admin Only
+          </Badge>
         </div>
       )}
     >
@@ -136,13 +118,9 @@ export default function FinanceSettings({ momoProviders, zraConfiguration, syste
                 <Activity className="h-4 w-4 mr-2" />
                 Overview
               </TabsTrigger>
-              <TabsTrigger value="momo">
+              <TabsTrigger value="payments">
                 <Smartphone className="h-4 w-4 mr-2" />
-                Mobile Money
-              </TabsTrigger>
-              <TabsTrigger value="momo-providers">
-                <Building className="h-4 w-4 mr-2" />
-                Mobile Money Providers
+                Payments
               </TabsTrigger>
               <TabsTrigger value="zra">
                 <Shield className="h-4 w-4 mr-2" />
@@ -154,7 +132,6 @@ export default function FinanceSettings({ momoProviders, zraConfiguration, syste
               </TabsTrigger>
             </TabsList>
 
-            {/* Overview Tab */}
             <TabsContent value="overview">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <Card>
@@ -181,12 +158,16 @@ export default function FinanceSettings({ momoProviders, zraConfiguration, syste
 
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Active Providers</CardTitle>
-                    <Building className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium">Payments</CardTitle>
+                    <Smartphone className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{systemStats.active_providers}</div>
-                    <p className="text-xs text-muted-foreground">MoMo providers</p>
+                    <div className="text-2xl font-bold">
+                      {systemStats.payments_configured ? 'PawaPay' : '—'}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {systemStats.payments_configured ? 'Ready for collections' : 'Not configured'}
+                    </p>
                   </CardContent>
                 </Card>
 
@@ -202,55 +183,37 @@ export default function FinanceSettings({ momoProviders, zraConfiguration, syste
                 </Card>
               </div>
 
-              {/* System Status Overview */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
+                <Card className={pawapay.configured ? 'border-green-500/30' : 'border-amber-500/30'}>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Smartphone className="h-5 w-5" />
-                      Mobile Money Status
+                      {pawapay.provider_label}
                     </CardTitle>
                     <CardDescription>
-                      Current status of MoMo providers and integrations
+                      Mobile money collections and payouts via PawaPay (MTN, Airtel, Zamtel)
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      {momoProviders.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
-                          <Smartphone className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                          <p>No MoMo providers configured</p>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="mt-2"
-                            onClick={() => router.visit(route('finance.momo.providers'))}
-                          >
-                            Configure Providers
-                          </Button>
-                        </div>
-                      ) : (
-                        momoProviders.map((provider) => (
-                          <div key={provider.id} className="flex items-center justify-between p-3 border rounded-lg">
-                            <div className="flex items-center gap-3">
-                              {getStatusIcon(provider.health_status)}
-                              <div>
-                                <p className="font-medium">{provider.display_name}</p>
-                                <p className="text-sm text-gray-500">{provider.provider_code}</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {getStatusBadge(provider.health_status)}
-                              {provider.is_active ? (
-                                <Badge variant="outline" className="text-green-600 border-green-600">Active</Badge>
-                              ) : (
-                                <Badge variant="outline" className="text-gray-600 border-gray-600">Inactive</Badge>
-                              )}
-                            </div>
-                          </div>
-                        ))
-                      )}
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium capitalize">{pawapay.env}</p>
+                        <p className="text-sm text-gray-500 font-mono text-xs">{pawapay.base_url}</p>
+                      </div>
+                      <Badge variant="outline" className={pawapay.configured ? 'text-green-600 border-green-600' : 'text-amber-600 border-amber-600'}>
+                        {pawapay.configured ? 'Configured' : 'Not configured'}
+                      </Badge>
                     </div>
+                    {!pawapay.configured && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-4"
+                        onClick={() => router.visit(route('settings.finance.payments.pawapay'))}
+                      >
+                        Configure PawaPay
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -291,15 +254,15 @@ export default function FinanceSettings({ momoProviders, zraConfiguration, syste
                           <div className="flex items-center gap-2">
                             {getStatusBadge(zraConfiguration.health_status)}
                             <Badge variant="outline" className={
-                              zraConfiguration.environment === 'production' 
-                                ? 'text-green-600 border-green-600' 
+                              zraConfiguration.environment === 'production'
+                                ? 'text-green-600 border-green-600'
                                 : 'text-yellow-600 border-yellow-600'
                             }>
                               {zraConfiguration.environment}
                             </Badge>
                           </div>
                         </div>
-                        
+
                         {zraConfiguration.last_health_check && (
                           <p className="text-sm text-gray-500">
                             Last health check: {new Date(zraConfiguration.last_health_check).toLocaleString()}
@@ -312,16 +275,15 @@ export default function FinanceSettings({ momoProviders, zraConfiguration, syste
               </div>
             </TabsContent>
 
-            {/* Mobile Money Tab */}
-            <TabsContent value="momo">
+            <TabsContent value="payments">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Smartphone className="h-5 w-5" />
-                    Mobile Money Configuration
+                    Payments (PawaPay)
                   </CardTitle>
                   <CardDescription>
-                    Manage MoMo providers, API settings, and transaction processing
+                    Configure PawaPay and manage mobile money transactions
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -329,48 +291,39 @@ export default function FinanceSettings({ momoProviders, zraConfiguration, syste
                     <Button
                       variant="outline"
                       className="h-24 flex flex-col items-center justify-center gap-2"
-                      onClick={() => router.visit(route('finance.momo.providers'))}
+                      onClick={() => router.visit(route('settings.finance.payments.pawapay'))}
                     >
-                      <Building className="h-6 w-6" />
-                      <span>Provider Management</span>
+                      <Settings className="h-6 w-6" />
+                      <span>PawaPay Configuration</span>
                     </Button>
-                    
+
                     <Button
                       variant="outline"
                       className="h-24 flex flex-col items-center justify-center gap-2"
-                      onClick={() => router.visit(route('settings.finance.momo.api'))}
+                      onClick={() => router.visit(route('finance.momo.dashboard'))}
                     >
-                      <Server className="h-6 w-6" />
-                      <span>API Configuration</span>
+                      <Activity className="h-6 w-6" />
+                      <span>Payments Dashboard</span>
                     </Button>
-                    
+
                     <Button
                       variant="outline"
                       className="h-24 flex flex-col items-center justify-center gap-2"
-                      onClick={() => router.visit(route('settings.finance.momo.webhooks'))}
+                      onClick={() => router.visit(route('finance.momo.index'))}
                     >
-                      <Webhook className="h-6 w-6" />
-                      <span>Webhook Settings</span>
+                      <Eye className="h-6 w-6" />
+                      <span>Transactions</span>
                     </Button>
-                    
+
                     <Button
                       variant="outline"
                       className="h-24 flex flex-col items-center justify-center gap-2"
-                      onClick={() => router.visit(route('settings.finance.momo.reconciliation'))}
+                      onClick={() => router.visit(route('finance.momo.reconciliation'))}
                     >
                       <FileText className="h-6 w-6" />
                       <span>Reconciliation</span>
                     </Button>
-                    
-                    <Button
-                      variant="outline"
-                      className="h-24 flex flex-col items-center justify-center gap-2"
-                      onClick={() => router.visit(route('settings.finance.momo.accounts'))}
-                    >
-                      <Database className="h-6 w-6" />
-                      <span>Account Mapping</span>
-                    </Button>
-                    
+
                     <Button
                       variant="outline"
                       className="h-24 flex flex-col items-center justify-center gap-2"
@@ -384,166 +337,6 @@ export default function FinanceSettings({ momoProviders, zraConfiguration, syste
               </Card>
             </TabsContent>
 
-            {/* Mobile Money Providers Tab */}
-            <TabsContent value="momo-providers">
-              <div className="space-y-6">
-                {/* Provider Management Card */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Building className="h-5 w-5" />
-                        Mobile Money Providers
-                      </div>
-                      <Button
-                        size="sm"
-                        onClick={() => router.visit(route('finance.momo.providers'))}
-                      >
-                        Manage Providers
-                      </Button>
-                    </CardTitle>
-                    <CardDescription>
-                      Configure and manage mobile money service providers
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {momoProviders.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
-                          <Building className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                          <p className="text-lg font-medium mb-2">No providers configured</p>
-                          <p className="text-sm mb-4">Add your first mobile money provider to start processing payments</p>
-                          <Button
-                            onClick={() => router.visit(route('finance.momo.providers'))}
-                          >
-                            <Building className="h-4 w-4 mr-2" />
-                            Add Provider
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {momoProviders.map((provider) => (
-                            <Card key={provider.id} className="relative">
-                              <CardHeader className="pb-3">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-3">
-                                    <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
-                                      <Smartphone className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                                    </div>
-                                    <div>
-                                      <CardTitle className="text-base">{provider.display_name}</CardTitle>
-                                      <p className="text-sm text-muted-foreground">{provider.provider_code}</p>
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    {getStatusIcon(provider.health_status)}
-                                    {provider.is_active ? (
-                                      <Badge variant="outline" className="text-green-600 border-green-600">
-                                        Active
-                                      </Badge>
-                                    ) : (
-                                      <Badge variant="outline" className="text-gray-600 border-gray-600">
-                                        Inactive
-                                      </Badge>
-                                    )}
-                                  </div>
-                                </div>
-                              </CardHeader>
-                              <CardContent>
-                                <div className="space-y-3">
-                                  <div>
-                                    <p className="text-sm font-medium text-muted-foreground">Supported Currencies</p>
-                                    <div className="flex gap-1 mt-1">
-                                      {provider.supported_currencies.map((currency) => (
-                                        <Badge key={currency} variant="secondary" className="text-xs">
-                                          {currency}
-                                        </Badge>
-                                      ))}
-                                    </div>
-                                  </div>
-                                  
-                                  <div>
-                                    <p className="text-sm font-medium text-muted-foreground">Fee Structure</p>
-                                    <div className="text-sm mt-1">
-                                      {provider.fee_structure.percentage_fee && (
-                                        <span>{provider.fee_structure.percentage_fee}% + </span>
-                                      )}
-                                      {provider.fee_structure.fixed_fee && (
-                                        <span>{provider.fee_structure.fixed_fee} fixed</span>
-                                      )}
-                                    </div>
-                                  </div>
-                                  
-                                  {provider.last_health_check && (
-                                    <div>
-                                      <p className="text-sm font-medium text-muted-foreground">Last Health Check</p>
-                                      <p className="text-xs text-muted-foreground mt-1">
-                                        {new Date(provider.last_health_check).toLocaleString()}
-                                      </p>
-                                    </div>
-                                  )}
-                                </div>
-                              </CardContent>
-                            </Card>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Quick Actions */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Button
-                    variant="outline"
-                    className="h-20 flex flex-col items-center justify-center gap-2"
-                    onClick={() => router.visit(route('finance.momo.providers'))}
-                  >
-                    <Building className="h-6 w-6" />
-                    <span className="text-sm">Add New Provider</span>
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    className="h-20 flex flex-col items-center justify-center gap-2"
-                    onClick={() => router.visit(route('settings.finance.momo.api'))}
-                  >
-                    <Server className="h-6 w-6" />
-                    <span className="text-sm">API Settings</span>
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    className="h-20 flex flex-col items-center justify-center gap-2"
-                    onClick={() => router.visit(route('finance.momo.index'))}
-                  >
-                    <Activity className="h-6 w-6" />
-                    <span className="text-sm">View Transactions</span>
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    className="h-20 flex flex-col items-center justify-center gap-2"
-                    onClick={() => {
-                      // Test all provider connections
-                      toast.promise(
-                        fetch('/api/finance/momo/test-all-connections', { method: 'POST' }),
-                        {
-                          loading: 'Testing provider connections...',
-                          success: 'All provider connections tested successfully',
-                          error: 'Failed to test provider connections'
-                        }
-                      );
-                    }}
-                  >
-                    <CheckCircle className="h-6 w-6" />
-                    <span className="text-sm">Test All Providers</span>
-                  </Button>
-                </div>
-              </div>
-            </TabsContent>
-
-            {/* ZRA Tab */}
             <TabsContent value="zra">
               <Card>
                 <CardHeader>
@@ -565,43 +358,16 @@ export default function FinanceSettings({ momoProviders, zraConfiguration, syste
                       <Settings className="h-6 w-6" />
                       <span>Basic Configuration</span>
                     </Button>
-                    
+
                     <Button
                       variant="outline"
                       className="h-24 flex flex-col items-center justify-center gap-2"
                       onClick={() => router.visit(route('settings.finance.zra.taxpayer'))}
                     >
-                      <Building className="h-6 w-6" />
+                      <Shield className="h-6 w-6" />
                       <span>Taxpayer Information</span>
                     </Button>
-                    
-                    <Button
-                      variant="outline"
-                      className="h-24 flex flex-col items-center justify-center gap-2"
-                      onClick={() => router.visit(route('settings.finance.zra.api'))}
-                    >
-                      <Server className="h-6 w-6" />
-                      <span>API Settings</span>
-                    </Button>
-                    
-                    <Button
-                      variant="outline"
-                      className="h-24 flex flex-col items-center justify-center gap-2"
-                      onClick={() => router.visit(route('settings.finance.zra.tax-rates'))}
-                    >
-                      <DollarSign className="h-6 w-6" />
-                      <span>Tax Rates</span>
-                    </Button>
-                    
-                    <Button
-                      variant="outline"
-                      className="h-24 flex flex-col items-center justify-center gap-2"
-                      onClick={() => router.visit(route('settings.finance.zra.automation'))}
-                    >
-                      <Activity className="h-6 w-6" />
-                      <span>Automation Rules</span>
-                    </Button>
-                    
+
                     <Button
                       variant="outline"
                       className="h-24 flex flex-col items-center justify-center gap-2"
@@ -615,7 +381,6 @@ export default function FinanceSettings({ momoProviders, zraConfiguration, syste
               </Card>
             </TabsContent>
 
-            {/* Security & API Tab */}
             <TabsContent value="security">
               <Card>
                 <CardHeader>
@@ -636,51 +401,6 @@ export default function FinanceSettings({ momoProviders, zraConfiguration, syste
                     >
                       <Key className="h-6 w-6" />
                       <span>API Management</span>
-                    </Button>
-                    
-                    <Button
-                      variant="outline"
-                      className="h-24 flex flex-col items-center justify-center gap-2"
-                      onClick={() => router.visit(route('settings.finance.security.encryption'))}
-                    >
-                      <Shield className="h-6 w-6" />
-                      <span>Encryption Settings</span>
-                    </Button>
-                    
-                    <Button
-                      variant="outline"
-                      className="h-24 flex flex-col items-center justify-center gap-2"
-                      onClick={() => router.visit(route('settings.finance.security.access'))}
-                    >
-                      <Eye className="h-6 w-6" />
-                      <span>Access Control</span>
-                    </Button>
-                    
-                    <Button
-                      variant="outline"
-                      className="h-24 flex flex-col items-center justify-center gap-2"
-                      onClick={() => router.visit(route('settings.finance.security.audit'))}
-                    >
-                      <Activity className="h-6 w-6" />
-                      <span>Security Audit</span>
-                    </Button>
-                    
-                    <Button
-                      variant="outline"
-                      className="h-24 flex flex-col items-center justify-center gap-2"
-                      onClick={() => router.visit(route('settings.finance.security.backup'))}
-                    >
-                      <Database className="h-6 w-6" />
-                      <span>Backup & Recovery</span>
-                    </Button>
-                    
-                    <Button
-                      variant="outline"
-                      className="h-24 flex flex-col items-center justify-center gap-2"
-                      onClick={() => router.visit(route('settings.finance.security.monitoring'))}
-                    >
-                      <Activity className="h-6 w-6" />
-                      <span>Security Monitoring</span>
                     </Button>
                   </div>
                 </CardContent>

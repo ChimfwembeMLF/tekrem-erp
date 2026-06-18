@@ -1,6 +1,6 @@
 import React from 'react';
 import { Head, router } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import { ProjectShowSheet } from '@/Components/Projects/ProjectShowSheet';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
@@ -111,11 +111,10 @@ export default function Show({ backlog, project, assignees = [] }: Props) {
     backlog.assigned_user?.name || backlog.assignedUser?.name || 'Unassigned';
 
   return (
-    <AppLayout title={`${backlog.title} - ${project?.name ?? 'Project'}`}>
+    <>
       <Head title={`${backlog.title} - ${project?.name ?? 'Project'}`} />
-
-      <div className="mx-auto max-w-full sm:px-6">
-        <div className="w-full flex justify-end">
+      <ProjectShowSheet backUrl={route('agile.backlog.index', project.id)} size="xl">
+      <div className="mb-4 flex w-full justify-end">
           <Button variant="destructive" onClick={handleDelete}>
             <Trash2 className="mr-2 h-4 w-4" />
             Delete Item
@@ -385,7 +384,7 @@ export default function Show({ backlog, project, assignees = [] }: Props) {
             </Card>
           </div>
         </div>
-      </div>
-    </AppLayout>
+      </ProjectShowSheet>
+    </>
   );
 }

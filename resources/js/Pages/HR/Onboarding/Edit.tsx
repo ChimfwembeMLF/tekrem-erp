@@ -25,9 +25,10 @@ interface EditOnboardingProps {
     start_date: string;
   };
   employees: Employee[];
+  workflowTitles: string[];
 }
 
-export default function EditOnboarding({ onboarding, employees = [] }: EditOnboardingProps) {
+export default function EditOnboarding({ onboarding, employees = [], workflowTitles = [] }: EditOnboardingProps) {
   const route = useRoute();
   const { data, setData, put, processing, errors } = useForm({
     title: onboarding.title || '',
@@ -41,6 +42,11 @@ export default function EditOnboarding({ onboarding, employees = [] }: EditOnboa
     put(route('hr.onboarding.update', onboarding.id));
   };
 
+  const titleOptions = [
+    ...workflowTitles,
+    ...(onboarding.title && !workflowTitles.includes(onboarding.title) ? [onboarding.title] : []),
+  ];
+
   return (
     <AppLayout title="Edit Onboarding Workflow">
       <Head title="Edit Onboarding Workflow" />
@@ -52,8 +58,19 @@ export default function EditOnboarding({ onboarding, employees = [] }: EditOnboa
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="title">Title</Label>
-                <Input id="title" type="text" value={data.title} onChange={e => setData('title', e.target.value)} />
+                <Label htmlFor="title">Workflow title</Label>
+                <Select value={data.title} onValueChange={(value) => setData('title', value)}>
+                  <SelectTrigger id="title">
+                    <SelectValue placeholder="Select workflow" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {titleOptions.map((title) => (
+                      <SelectItem key={title} value={title}>
+                        {title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 {errors.title && <div className="text-red-500 text-xs mt-1">{errors.title}</div>}
               </div>
               <div>

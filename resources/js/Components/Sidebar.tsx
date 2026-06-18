@@ -25,11 +25,7 @@ import {
   BookOpen,
   LifeBuoy,
   Ticket,
-  Globe,
-  FileEdit,
-  Image,
   Layout,
-  Navigation,
   Link2,
   Folder,
   Palette,
@@ -48,15 +44,16 @@ import {
   Key,
   UserCog,
   Plus,
-  Share2,
   Smartphone,
-  TreePine,
-  Facebook,
-  Instagram,
-  Linkedin,
-  Twitter,
-  MessageCircle,
   Package,
+  Truck,
+  ShoppingCart,
+  Store,
+  ScanLine,
+  Briefcase,
+  UserMinus,
+  ExternalLink,
+  MessageCircle,
 } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import useRoute from '@/Hooks/useRoute';
@@ -71,6 +68,17 @@ import { cn } from '@/lib/utils';
 interface SidebarProps {
   settings: Record<string, any>;
 }
+
+type NavSection = { type: 'section'; label: string };
+type NavLink = {
+  type: 'link';
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+  active: boolean;
+  requirePermission?: string;
+};
+type NavEntry = NavSection | NavLink;
 
 export default function Sidebar({ settings }: SidebarProps) {
   const route = useRoute();
@@ -100,17 +108,49 @@ export default function Sidebar({ settings }: SidebarProps) {
     return hasAnyPermission(['view support']);
   };
 
-  const hasCmsAccess = (): boolean => {
-    return hasAnyPermission(['view cms']);
-  };
-
   const hasAiAccess = (): boolean => {
     return hasAnyPermission(['view ai']);
   };
 
-  const hasSocialMediaAccess = (): boolean => {
-    return hasAnyPermission(['view social_media']);
-  };
+  const hasInventoryAccess = (): boolean => hasAnyPermission(['view inventory']);
+  const hasProcurementAccess = (): boolean => hasAnyPermission(['view procurement']);
+  const hasSalesAccess = (): boolean => hasAnyPermission(['view sales orders']);
+  const hasPosAccess = (): boolean => hasAnyPermission(['access pos']);
+  const hasEcommerceAccess = (): boolean => hasAnyPermission(['view ecommerce']);
+
+  const renderNavEntries = (entries: NavEntry[], keyPrefix: string) =>
+    entries.map((entry, idx) => {
+      if (entry.type === 'section') {
+        return (
+          <p
+            key={`${keyPrefix}-section-${idx}`}
+            className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground first:pt-1"
+          >
+            {entry.label}
+          </p>
+        );
+      }
+
+      if (entry.requirePermission && !hasAnyPermission([entry.requirePermission])) {
+        return null;
+      }
+
+      return (
+        <Link
+          key={entry.href}
+          href={entry.href}
+          className={cn(
+            'flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors',
+            entry.active
+              ? 'bg-primary/10 text-primary font-semibold'
+              : 'text-foreground/70 hover:text-foreground hover:bg-accent',
+          )}
+        >
+          {entry.icon}
+          {entry.label}
+        </Link>
+      );
+    });
 
   // Define navigation items
   const navItems = [
@@ -122,460 +162,592 @@ export default function Sidebar({ settings }: SidebarProps) {
     },
   ];
 
-  // CRM navigation items - only visible to admin and staff
-  const crmItems = hasCrmAccess() ? [
+  // CRM navigation — grouped by workflow
+  const crmNav: NavEntry[] = hasCrmAccess() ? [
+    { type: 'section', label: t('crm.overview', 'Overview') },
     {
+      type: 'link',
       href: route('crm.dashboard'),
       label: t('crm.dashboard', 'Dashboard'),
       icon: <LayoutDashboard className="h-5 w-5" />,
-      active: route().current('crm.dashboard')
+      active: route().current('crm.dashboard'),
     },
+    { type: 'section', label: t('crm.pipeline', 'Pipeline') },
     {
+      type: 'link',
       href: route('crm.clients.index'),
       label: t('crm.clients', 'Clients'),
       icon: <Users className="h-5 w-5" />,
-      active: route().current('crm.clients.*')
+      active: route().current('crm.clients.*'),
     },
     {
+      type: 'link',
       href: route('crm.leads.index'),
       label: t('crm.leads', 'Leads'),
       icon: <UserPlus className="h-5 w-5" />,
-      active: route().current('crm.leads.*')
+      active: route().current('crm.leads.*'),
     },
+    { type: 'section', label: t('crm.engagement', 'Engagement') },
     {
+      type: 'link',
       href: route('crm.communications.index'),
       label: t('crm.communications', 'Communications'),
       icon: <MessageSquare className="h-5 w-5" />,
-      active: route().current('crm.communications.*')
+      active: route().current('crm.communications.*'),
     },
     {
+      type: 'link',
       href: route('crm.livechat.index'),
       label: t('crm.chat', 'Chat'),
       icon: <MessageCircle className="h-5 w-5" />,
-      active: route().current('crm.livechat.*')
+      active: route().current('crm.livechat.*'),
     },
+    { type: 'section', label: t('crm.insights', 'Insights') },
     {
+      type: 'link',
       href: route('crm.analytics.dashboard'),
       label: t('crm.analytics', 'Analytics'),
       icon: <BarChart3 className="h-5 w-5" />,
-      active: route().current('crm.analytics.*')
+      active: route().current('crm.analytics.*'),
     },
   ] : [];
 
-  // Finance navigation items - only visible to users with finance permission
-  const financeItems = hasFinanceAccess() ? [
+  // Finance navigation — grouped by function
+  const financeNav: NavEntry[] = hasFinanceAccess() ? [
+    { type: 'section', label: t('finance.overview', 'Overview') },
     {
+      type: 'link',
       href: route('finance.dashboard'),
       label: t('finance.dashboard', 'Dashboard'),
       icon: <LayoutDashboard className="h-5 w-5" />,
-      active: route().current('finance.dashboard')
+      active: route().current('finance.dashboard'),
     },
+    { type: 'section', label: t('finance.core', 'Core') },
     {
+      type: 'link',
       href: route('finance.accounts.index'),
       label: t('finance.accounts', 'Accounts'),
       icon: <Wallet className="h-5 w-5" />,
-      active: route().current('finance.accounts.*')
+      active: route().current('finance.accounts.*'),
     },
-    // {
-    //   href: route('finance.chart-of-accounts.index'),
-    //   label: t('finance.chart_of_accounts', 'Chart of Accounts'),
-    //   icon: <TreePine className="h-5 w-5" />,
-    //   active: route().current('finance.chart-of-accounts.*')
-    // },
     {
+      type: 'link',
       href: route('finance.transactions.index'),
       label: t('finance.transactions', 'Transactions'),
       icon: <CreditCard className="h-5 w-5" />,
-      active: route().current('finance.transactions.*')
+      active: route().current('finance.transactions.*'),
     },
+    { type: 'section', label: t('finance.billing', 'Billing') },
     {
+      type: 'link',
       href: route('finance.invoices.index'),
       label: t('finance.invoices', 'Invoices'),
       icon: <Receipt className="h-5 w-5" />,
-      active: route().current('finance.invoices.*')
+      active: route().current('finance.invoices.*'),
     },
     {
+      type: 'link',
       href: route('finance.payments.index'),
       label: t('finance.payments', 'Payments'),
       icon: <DollarSign className="h-5 w-5" />,
-      active: route().current('finance.payments.*')
+      active: route().current('finance.payments.*'),
     },
     {
+      type: 'link',
       href: route('finance.quotations.index'),
       label: t('finance.quotations', 'Quotations'),
       icon: <FileText className="h-5 w-5" />,
-      active: route().current('finance.quotations.*')
+      active: route().current('finance.quotations.*'),
     },
+    { type: 'section', label: t('finance.planning', 'Planning') },
     {
+      type: 'link',
       href: route('finance.expenses.index'),
       label: t('finance.expenses', 'Expenses'),
       icon: <TrendingUp className="h-5 w-5" />,
-      active: route().current('finance.expenses.*')
+      active: route().current('finance.expenses.*'),
     },
     {
+      type: 'link',
       href: route('finance.budgets.index'),
       label: t('finance.budgets', 'Budgets'),
       icon: <PieChart className="h-5 w-5" />,
-      active: route().current('finance.budgets.*')
+      active: route().current('finance.budgets.*'),
     },
     {
+      type: 'link',
       href: route('finance.categories.index'),
       label: t('finance.categories', 'Categories'),
       icon: <Tag className="h-5 w-5" />,
-      active: route().current('finance.categories.*')
+      active: route().current('finance.categories.*'),
     },
+    { type: 'section', label: t('finance.compliance', 'Compliance & Banking') },
     {
-      href: route('finance.reports.index'),
-      label: t('finance.reports', 'Reports'),
-      icon: <BarChart3 className="h-5 w-5" />,
-      active: route().current('finance.reports.*')
-    },
-    {
+      type: 'link',
       href: route('finance.momo.dashboard'),
       label: t('finance.momo', 'Mobile Money'),
       icon: <Smartphone className="h-5 w-5" />,
-      active: route().current('finance.momo.*')
+      active: route().current('finance.momo.*'),
     },
     {
+      type: 'link',
       href: route('finance.zra.dashboard'),
       label: t('finance.zra', 'ZRA Smart Invoice'),
       icon: <Shield className="h-5 w-5" />,
-      active: route().current('finance.zra.*')
+      active: route().current('finance.zra.*'),
     },
     {
+      type: 'link',
       href: route('finance.reconciliation.index'),
       label: t('finance.reconciliation', 'Bank Reconciliation'),
       icon: <Building className="h-5 w-5" />,
-      active: route().current('finance.reconciliation.*')
+      active: route().current('finance.reconciliation.*'),
+    },
+    { type: 'section', label: t('finance.insights', 'Insights') },
+    {
+      type: 'link',
+      href: route('finance.reports.index'),
+      label: t('finance.reports', 'Reports'),
+      icon: <BarChart3 className="h-5 w-5" />,
+      active: route().current('finance.reports.*'),
     },
   ] : [];
 
-  // Support navigation items - only visible to users with support permission
-  const supportItems = hasSupportAccess() ? [
+  const inventoryNav: NavEntry[] = hasInventoryAccess() ? [
+    { type: 'section', label: t('inventory.overview', 'Overview') },
+    { type: 'link', href: route('inventory.dashboard'), label: t('inventory.dashboard', 'Dashboard'), icon: <LayoutDashboard className="h-5 w-5" />, active: route().current('inventory.dashboard') },
+    { type: 'section', label: t('inventory.catalog', 'Catalog') },
+    { type: 'link', href: route('inventory.products.index'), label: t('inventory.products', 'Products'), icon: <Package className="h-5 w-5" />, active: route().current('inventory.products.*') },
+    { type: 'link', href: route('inventory.warehouses.index'), label: t('inventory.warehouses', 'Warehouses'), icon: <Building className="h-5 w-5" />, active: route().current('inventory.warehouses.*') },
+  ] : [];
+
+  const procurementNav: NavEntry[] = hasProcurementAccess() ? [
+    { type: 'section', label: t('procurement.overview', 'Overview') },
+    { type: 'link', href: route('procurement.dashboard'), label: t('procurement.dashboard', 'Dashboard'), icon: <LayoutDashboard className="h-5 w-5" />, active: route().current('procurement.dashboard') },
+    { type: 'section', label: t('procurement.supply', 'Supply') },
+    { type: 'link', href: route('procurement.suppliers.index'), label: t('procurement.suppliers', 'Suppliers'), icon: <Truck className="h-5 w-5" />, active: route().current('procurement.suppliers.*') },
+    { type: 'link', href: route('procurement.purchase-orders.index'), label: t('procurement.purchase_orders', 'Purchase Orders'), icon: <FileText className="h-5 w-5" />, active: route().current('procurement.purchase-orders.*') },
+  ] : [];
+
+  const salesNav: NavEntry[] = hasSalesAccess() ? [
+    { type: 'section', label: t('sales.overview', 'Overview') },
+    { type: 'link', href: route('sales.dashboard'), label: t('sales.dashboard', 'Dashboard'), icon: <LayoutDashboard className="h-5 w-5" />, active: route().current('sales.dashboard') },
+    { type: 'section', label: t('sales.orders', 'Orders') },
+    { type: 'link', href: route('sales.orders.index'), label: t('sales.all_orders', 'All Orders'), icon: <ShoppingCart className="h-5 w-5" />, active: route().current('sales.orders.*') },
+  ] : [];
+
+  const posNav: NavEntry[] = hasPosAccess() ? [
+    { type: 'link', href: route('pos.index'), label: t('pos.dashboard', 'Registers'), icon: <ScanLine className="h-5 w-5" />, active: route().current('pos.index') || route().current('pos.terminal') },
+    ...(hasAnyPermission(['manage pos registers']) ? [{ type: 'link' as const, href: route('pos.registers.index'), label: t('pos.terminals', 'Terminals'), icon: <ScanLine className="h-5 w-5" />, active: route().current('pos.registers.*') }] : []),
+  ] : [];
+
+  const ecommerceNav: NavEntry[] = hasEcommerceAccess() ? [
+    { type: 'link', href: route('ecommerce.dashboard'), label: t('ecommerce.dashboard', 'Store Admin'), icon: <Store className="h-5 w-5" />, active: route().current('ecommerce.*') },
+    { type: 'link', href: route('shop.index'), label: t('ecommerce.storefront', 'View Storefront'), icon: <Link2 className="h-5 w-5" />, active: false },
+  ] : [];
+
+  // Support navigation — grouped by function
+  const supportNav: NavEntry[] = hasSupportAccess() ? [
+    { type: 'section', label: t('support.overview', 'Overview') },
     {
+      type: 'link',
       href: route('support.dashboard'),
       label: t('support.dashboard', 'Dashboard'),
       icon: <LayoutDashboard className="h-5 w-5" />,
-      active: route().current('support.dashboard')
+      active: route().current('support.dashboard'),
     },
+    { type: 'section', label: t('support.tickets_section', 'Tickets') },
     {
+      type: 'link',
       href: route('support.tickets.index'),
       label: t('support.tickets', 'Tickets'),
       icon: <Ticket className="h-5 w-5" />,
-      active: route().current('support.tickets.*')
+      active: route().current('support.tickets.*'),
     },
+    { type: 'section', label: t('support.knowledge', 'Knowledge') },
     {
+      type: 'link',
       href: route('support.knowledge-base.index'),
       label: t('support.knowledge_base', 'Knowledge Base'),
       icon: <BookOpen className="h-5 w-5" />,
-      active: route().current('support.knowledge-base.*')
+      active: route().current('support.knowledge-base.*'),
     },
     {
+      type: 'link',
       href: route('support.faq.index'),
       label: t('support.faq', 'FAQ'),
       icon: <HelpCircle className="h-5 w-5" />,
-      active: route().current('support.faq.*')
+      active: route().current('support.faq.*'),
     },
     {
+      type: 'link',
+      href: route('support.bot-knowledge.index'),
+      label: t('support.bot_knowledge', 'Bot Knowledge'),
+      icon: <Bot className="h-5 w-5" />,
+      active: route().current('support.bot-knowledge.*'),
+    },
+    { type: 'section', label: t('support.configuration', 'Configuration') },
+    {
+      type: 'link',
       href: route('support.categories.index'),
       label: t('support.categories', 'Categories'),
       icon: <Tag className="h-5 w-5" />,
-      active: route().current('support.categories.*')
+      active: route().current('support.categories.*'),
     },
     {
+      type: 'link',
       href: route('support.ticket-sources.index'),
       label: t('support.sources', 'External Sources'),
       icon: <Link2 className="h-5 w-5" />,
-      active: route().current('support.ticket-sources.*')
+      active: route().current('support.ticket-sources.*'),
     },
+    { type: 'section', label: t('support.insights', 'Insights') },
     {
+      type: 'link',
       href: route('support.analytics.dashboard'),
       label: t('support.analytics', 'Analytics'),
       icon: <BarChart3 className="h-5 w-5" />,
-      active: route().current('support.analytics.*')
+      active: route().current('support.analytics.*'),
     },
   ] : [];
 
-  // CMS navigation items - only visible to users with cms permission
-  const cmsItems = hasCmsAccess() ? [
+  // Projects navigation — grouped by work area
+  const projectsNav: NavEntry[] = hasProjectsAccess() ? [
+    { type: 'section', label: t('projects.overview', 'Overview') },
     {
-      href: route('cms.dashboard'),
-      label: t('cms.dashboard', 'Dashboard'),
-      icon: <LayoutDashboard className="h-5 w-5" />,
-      active: route().current('cms.dashboard')
-    },
-    {
-      href: route('cms.pages.index'),
-      label: t('cms.pages', 'Pages'),
-      icon: <FileEdit className="h-5 w-5" />,
-      active: route().current('cms.pages.*')
-    },
-    {
-      href: route('cms.media.index'),
-      label: t('cms.media', 'Media Library'),
-      icon: <Image className="h-5 w-5" />,
-      active: route().current('cms.media.*')
-    },
-    {
-      href: route('cms.templates.index'),
-      label: t('cms.templates', 'Templates'),
-      icon: <Layout className="h-5 w-5" />,
-      active: route().current('cms.templates.*')
-    },
-    {
-      href: route('cms.menus.index'),
-      label: t('cms.menus', 'Menus'),
-      icon: <Navigation className="h-5 w-5" />,
-      active: route().current('cms.menus.*')
-    },
-    {
-      href: route('cms.redirects.index'),
-      label: t('cms.redirects', 'Redirects'),
-      icon: <Link2 className="h-5 w-5" />,
-      active: route().current('cms.redirects.*')
-    },
-    {
-      href: route('cms.analytics'),
-      label: t('cms.analytics', 'Analytics'),
-      icon: <BarChart3 className="h-5 w-5" />,
-      active: route().current('cms.analytics.*')
-    },
-  ] : [];
-
-  // Projects navigation items - only visible to users with projects permission
-  const projectsItems = hasProjectsAccess() ? [
-    {
+      type: 'link',
       href: route('projects.dashboard'),
       label: t('projects.dashboard', 'Dashboard'),
       icon: <LayoutDashboard className="h-5 w-5" />,
-      active: route().current('projects.dashboard')
+      active: route().current('projects.dashboard'),
     },
+    { type: 'section', label: t('projects.work', 'Work') },
     {
+      type: 'link',
       href: route('projects.index'),
       label: t('projects.projects', 'All Projects'),
       icon: <FolderOpen className="h-5 w-5" />,
-      active: route().current('projects.index') || route().current('projects.show') || route().current('projects.edit') || route().current('projects.create')
+      active: route().current('projects.index') || route().current('projects.show') || route().current('projects.edit') || route().current('projects.create'),
     },
     {
+      type: 'link',
       href: route('projects.my-tasks'),
       label: t('projects.my_tasks', 'My Tasks'),
       icon: <CheckSquare className="h-5 w-5" />,
-      active: route().current('projects.my-tasks')
+      active: route().current('projects.my-tasks'),
     },
+    { type: 'section', label: t('projects.organization', 'Organization') },
     {
+      type: 'link',
       href: route('projects.tags.index'),
       label: t('projects.tags', 'Tags'),
       icon: <Tag className="h-5 w-5" />,
-      active: route().current('projects.tags.*')
+      active: route().current('projects.tags.*'),
     },
     {
+      type: 'link',
       href: route('projects.templates.index'),
       label: t('projects.templates', 'Templates'),
       icon: <Layout className="h-5 w-5" />,
-      active: route().current('projects.templates.*')
+      active: route().current('projects.templates.*'),
     },
+    { type: 'section', label: t('projects.insights', 'Insights') },
     {
+      type: 'link',
       href: route('projects.analytics'),
       label: t('projects.analytics', 'Analytics'),
       icon: <BarChart3 className="h-5 w-5" />,
-      active: route().current('projects.analytics.*')
+      active: route().current('projects.analytics.*'),
     },
+    { type: 'section', label: t('projects.settings_section', 'Settings') },
     {
+      type: 'link',
       href: route('projects.setup.index'),
       label: t('projects.settings', 'Settings'),
       icon: <Settings className="h-5 w-5" />,
       active: route().current('projects.setup.*'),
-      requirePermission: 'manage-project-settings'
+      requirePermission: 'manage-project-settings',
     },
   ] : [];
 
-  // HR navigation items - only visible to users with hr permission
-  const hrItems = hasHrAccess() ? [
+  // HR navigation — grouped by lifecycle
+  const hrNav: NavEntry[] = hasHrAccess() ? [
+    { type: 'section' as const, label: t('hr.overview', 'Overview') },
     {
+      type: 'link' as const,
       href: route('hr.dashboard'),
       label: t('hr.dashboard', 'Dashboard'),
       icon: <LayoutDashboard className="h-5 w-5" />,
-      active: route().current('hr.dashboard')
+      active: route().current('hr.dashboard'),
+    },
+    { type: 'section' as const, label: t('hr.talent', 'Talent') },
+    {
+      type: 'link' as const,
+      href: route('hr.recruitment.index'),
+      label: t('hr.recruitment', 'Recruitment'),
+      icon: <Briefcase className="h-5 w-5" />,
+      active: route().current('hr.recruitment.*'),
     },
     {
-      href: route('hr.employees.index'),
-      label: t('hr.employees', 'Employees'),
-      icon: <Users className="h-5 w-5" />,
-      active: route().current('hr.employees.*')
-    },
-    {
-      href: route('hr.departments.index'),
-      label: t('hr.departments', 'Departments'),
-      icon: <Building className="h-5 w-5" />,
-      active: route().current('hr.departments.*')
-    },
-    {
-      href: route('hr.teams.index'),
-      label: t('hr.teams', 'Teams'),
-      icon: <Users className="h-5 w-5" />,
-      active: route().current('hr.teams.*')
-    },
-    {
-      href: route('hr.leave.index'),
-      label: t('hr.leave', 'Leave Management'),
-      icon: <Calendar className="h-5 w-5" />,
-      active: route().current('hr.leave.*')
-    },
-    {
-      href: route('hr.performance.index'),
-      label: t('hr.performance', 'Performance'),
-      icon: <TrendingUp className="h-5 w-5" />,
-      active: route().current('hr.performance.*')
-    },
-    {
-      href: route('hr.skills.index'),
-      label: t('hr.skills', 'Skills'),
-      icon: <CheckSquare className="h-5 w-5" />,
-      active: route().current('hr.skills.*')
-    },
-    {
-      href: route('hr.documents.index'),
-      label: t('hr.documents', 'Documents'),
-      icon: <FileText className="h-5 w-5" />,
-      active: route().current('hr.documents.*')
-    },
-    {
-      href: route('hr.attendance.index'),
-      label: t('hr.attendance', 'Attendance'),
-      icon: <Clock className="h-5 w-5" />,
-      active: route().current('hr.attendance.*')
-    },
-    {
-      href: route('hr.training.index'),
-      label: t('hr.training', 'Training'),
-      icon: <GraduationCap className="h-5 w-5" />,
-      active: route().current('hr.training.*')
-    },
-    {
+      type: 'link' as const,
       href: route('hr.onboarding.index'),
       label: t('hr.onboarding', 'Onboarding'),
       icon: <UserPlus className="h-5 w-5" />,
-      active: route().current('hr.onboarding.*')
+      active: route().current('hr.onboarding.*'),
     },
     {
-      href: route('hr.orgchart.index'),
-      label: t('hr.orgchart', 'Org Chart'),
-      icon: <TreePine className="h-5 w-5" />,
-      active: route().current('hr.orgchart.*')
+      type: 'link' as const,
+      href: route('hr.offboarding.index'),
+      label: t('hr.offboarding', 'Offboarding'),
+      icon: <UserMinus className="h-5 w-5" />,
+      active: route().current('hr.offboarding.*'),
     },
     {
+      type: 'link' as const,
+      href: route('careers.index'),
+      label: t('hr.career_portal', 'Career portal'),
+      icon: <ExternalLink className="h-5 w-5" />,
+      active: false,
+    },
+    { type: 'section' as const, label: t('hr.people', 'People') },
+    {
+      type: 'link' as const,
+      href: route('hr.employees.index'),
+      label: t('hr.employees', 'Employees'),
+      icon: <Users className="h-5 w-5" />,
+      active: route().current('hr.employees.*'),
+    },
+    {
+      type: 'link' as const,
+      href: route('hr.departments.index'),
+      label: t('hr.departments', 'Departments'),
+      icon: <Building className="h-5 w-5" />,
+      active: route().current('hr.departments.*'),
+    },
+    {
+      type: 'link' as const,
+      href: route('hr.teams.index'),
+      label: t('hr.teams', 'Teams'),
+      icon: <Users className="h-5 w-5" />,
+      active: route().current('hr.teams.*'),
+    },
+    { type: 'section' as const, label: t('hr.time_pay', 'Time & Pay') },
+    {
+      type: 'link' as const,
+      href: route('hr.attendance.index'),
+      label: t('hr.attendance', 'Attendance'),
+      icon: <Clock className="h-5 w-5" />,
+      active: route().current('hr.attendance.*'),
+    },
+    {
+      type: 'link' as const,
+      href: route('hr.leave.index'),
+      label: t('hr.leave', 'Leave'),
+      icon: <Calendar className="h-5 w-5" />,
+      active: route().current('hr.leave.*'),
+    },
+    {
+      type: 'link' as const,
       href: route('hr.payroll.index'),
       label: t('hr.payroll', 'Payroll'),
       icon: <DollarSign className="h-5 w-5" />,
-      active: route().current('hr.payroll.*')
+      active: route().current('hr.payroll.*'),
+    },
+    { type: 'section' as const, label: t('hr.development', 'Development') },
+    {
+      type: 'link' as const,
+      href: route('hr.performance.index'),
+      label: t('hr.performance', 'Performance'),
+      icon: <TrendingUp className="h-5 w-5" />,
+      active: route().current('hr.performance.*'),
     },
     {
-      href: route('hr.analytics.dashboard'),
-      label: t('hr.analytics', 'Analytics'),
+      type: 'link' as const,
+      href: route('hr.training.index'),
+      label: t('hr.training', 'Training'),
+      icon: <GraduationCap className="h-5 w-5" />,
+      active: route().current('hr.training.*'),
+    },
+    { type: 'section' as const, label: t('hr.settings', 'Settings') },
+    {
+      type: 'link' as const,
+      href: route('hr.setup.index'),
+      label: t('hr.setup', 'HR Setup'),
+      icon: <Settings className="h-5 w-5" />,
+      active: route().current('hr.setup.*'),
+    },
+    {
+      type: 'link' as const,
+      href: route('hr.leave-types.index'),
+      label: t('hr.leave_types', 'Leave types'),
+      icon: <Calendar className="h-5 w-5" />,
+      active: route().current('hr.leave-types.*'),
+    },
+    {
+      type: 'link' as const,
+      href: route('hr.analytics.reports'),
+      label: t('hr.reports', 'Reports'),
       icon: <BarChart3 className="h-5 w-5" />,
-      active: route().current('hr.analytics.*')
+      active: route().current('hr.analytics.*'),
     },
   ] : [];
 
-  // AI navigation items - only visible to users with ai permission
-  const aiItems = hasAiAccess() ? [
+  // AI navigation — grouped by platform area
+  const aiNav: NavEntry[] = hasAiAccess() ? [
+    { type: 'section', label: t('ai.overview', 'Overview') },
     {
+      type: 'link',
       href: route('ai.dashboard'),
       label: t('ai.dashboard', 'Dashboard'),
       icon: <LayoutDashboard className="h-5 w-5" />,
-      active: route().current('ai.dashboard')
+      active: route().current('ai.dashboard'),
     },
+    { type: 'section', label: t('ai.platform', 'Platform') },
     {
+      type: 'link',
       href: route('ai.services.index'),
       label: t('ai.services', 'Services'),
       icon: <Settings className="h-5 w-5" />,
-      active: route().current('ai.services.*')
+      active: route().current('ai.services.*'),
     },
     {
+      type: 'link',
       href: route('ai.models.index'),
       label: t('ai.models', 'Models'),
       icon: <Brain className="h-5 w-5" />,
-      active: route().current('ai.models.*')
+      active: route().current('ai.models.*'),
     },
+    { type: 'section', label: t('ai.content', 'Content') },
     {
+      type: 'link',
       href: route('ai.conversations.index'),
       label: t('ai.conversations', 'Conversations'),
       icon: <MessageSquare className="h-5 w-5" />,
-      active: route().current('ai.conversations.*')
+      active: route().current('ai.conversations.*'),
     },
     {
+      type: 'link',
       href: route('ai.prompt-templates.index'),
       label: t('ai.prompt_templates', 'Templates'),
       icon: <FileText className="h-5 w-5" />,
-      active: route().current('ai.prompt-templates.*')
+      active: route().current('ai.prompt-templates.*'),
     },
+    { type: 'section', label: t('ai.insights', 'Insights') },
     {
+      type: 'link',
       href: route('ai.analytics.dashboard'),
       label: t('ai.analytics', 'Analytics'),
       icon: <BarChart3 className="h-5 w-5" />,
-      active: route().current('ai.analytics.*')
+      active: route().current('ai.analytics.*'),
     },
   ] : [];
 
-  // Admin navigation items - only visible to admin users
-  const adminItems = hasAnyRole(['admin', 'super_user']) ? [
+  // Admin navigation — grouped by access area
+  const adminNav: NavEntry[] = hasAnyRole(['admin', 'super_user']) ? [
+    { type: 'section', label: t('admin.access', 'Access Control') },
     {
+      type: 'link',
       href: route('admin.users.index'),
       label: t('admin.users', 'User Management'),
       icon: <UserCog className="h-5 w-5" />,
-      active: route().current('admin.users.*')
+      active: route().current('admin.users.*'),
     },
     {
+      type: 'link',
       href: route('admin.roles.index'),
       label: t('admin.roles', 'Role Management'),
       icon: <Shield className="h-5 w-5" />,
-      active: route().current('admin.roles.*')
+      active: route().current('admin.roles.*'),
     },
     {
+      type: 'link',
       href: route('admin.permissions.index'),
       label: t('admin.permissions', 'Permission Management'),
       icon: <Key className="h-5 w-5" />,
-      active: route().current('admin.permissions.*')
+      active: route().current('admin.permissions.*'),
     },
+    { type: 'section', label: t('admin.system', 'System') },
     {
+      type: 'link',
       href: route('admin.modules.index'),
       label: t('admin.modules', 'Module Management'),
       icon: <Package className="h-5 w-5" />,
-      active: route().current('admin.modules.*')
+      active: route().current('admin.modules.*'),
     },
   ] : [];
 
-  // Customer-only navigation
-  const customerItems = hasAnyRole(['customer']) ? [
+  // Customer navigation — grouped by portal area
+  const customerNav: NavEntry[] = hasAnyRole(['customer']) ? [
+    { type: 'section', label: t('customer.overview', 'Overview') },
     {
+      type: 'link',
       href: route('customer.dashboard'),
       label: t('customer.dashboard', 'My Dashboard'),
       icon: <LayoutDashboard className="h-5 w-5" />,
-      active: route().current('customer.dashboard')
+      active: route().current('customer.dashboard'),
     },
+    { type: 'section', label: t('customer.support_section', 'Support') },
     {
+      type: 'link',
       href: route('customer.support.index'),
       label: t('customer.support', 'My Tickets'),
       icon: <Ticket className="h-5 w-5" />,
-      active: route().current('customer.support.*')
+      active: route().current('customer.support.index') || route().current('customer.support.show'),
     },
     {
+      type: 'link',
       href: route('customer.support.create'),
       label: t('customer.support.create', 'Create Ticket'),
       icon: <Plus className="h-5 w-5" />,
-      active: route().current('customer.support.create')
+      active: route().current('customer.support.create'),
     },
     {
+      type: 'link',
       href: route('customer.support.knowledge-base.index'),
       label: t('customer.knowledge_base', 'Knowledge Base'),
       icon: <BookOpen className="h-5 w-5" />,
-      active: route().current('customer.support.knowledge-base.*')
+      active: route().current('customer.support.knowledge-base.*'),
     },
     {
+      type: 'link',
       href: route('customer.support.faq'),
       label: t('customer.faq', 'FAQ'),
       icon: <HelpCircle className="h-5 w-5" />,
-      active: route().current('customer.support.faq')
+      active: route().current('customer.support.faq'),
+    },
+  ] : [];
+
+  // Settings navigation — grouped by area
+  const settingsNav: NavEntry[] = hasAnyRole(['admin']) ? [
+    { type: 'section', label: t('settings.general_section', 'General') },
+    {
+      type: 'link',
+      href: route('settings.index'),
+      label: t('settings.general', 'General Settings'),
+      icon: <Cog className="h-5 w-5" />,
+      active: route().current('settings.index'),
+    },
+    {
+      type: 'link',
+      href: route('settings.finance.index'),
+      label: t('settings.finance', 'Finance Settings'),
+      icon: <DollarSign className="h-5 w-5" />,
+      active: route().current('settings.finance.*'),
+    },
+    { type: 'section', label: t('settings.system', 'System') },
+    {
+      type: 'link',
+      href: route('settings.notifications'),
+      label: t('settings.notifications', 'Notifications'),
+      icon: <MessageSquare className="h-5 w-5" />,
+      active: route().current('settings.notifications'),
+    },
+    {
+      type: 'link',
+      href: route('settings.advanced'),
+      label: t('settings.advanced', 'Advanced Settings'),
+      icon: <Shield className="h-5 w-5" />,
+      active: route().current('settings.advanced'),
     },
   ] : [];
 
@@ -622,21 +794,7 @@ export default function Sidebar({ settings }: SidebarProps) {
               <ChevronRight className="h-4 w-4 transition-transform data-[state=open]:rotate-90" />
             </CollapsibleTrigger>
             <CollapsibleContent className="pl-4 mt-1 space-y-1">
-              {crmItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                    item.active
-                      ? "bg-primary/10 text-primary font-semibold"
-                      : "text-foreground/70 hover:text-foreground hover:bg-accent"
-                  )}
-                >
-                  {item.icon}
-                  {item.label}
-                </Link>
-              ))}
+              {renderNavEntries(crmNav, 'crm')}
             </CollapsibleContent>
           </Collapsible>
         )}
@@ -657,22 +815,58 @@ export default function Sidebar({ settings }: SidebarProps) {
               <ChevronRight className="h-4 w-4 transition-transform data-[state=open]:rotate-90" />
             </CollapsibleTrigger>
             <CollapsibleContent className="pl-4 mt-1 space-y-1">
-              {financeItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                    item.active
-                      ? "bg-primary/10 text-primary font-semibold"
-                      : "text-foreground/70 hover:text-foreground hover:bg-accent"
-                  )}
-                >
-                  {item.icon}
-                  {item.label}
-                </Link>
-              ))}
+              {renderNavEntries(financeNav, 'finance')}
             </CollapsibleContent>
+          </Collapsible>
+        )}
+
+        {hasInventoryAccess() && (
+          <Collapsible className="mt-2">
+            <CollapsibleTrigger className={cn("w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors", route().current('inventory.*') ? "bg-primary/10 text-primary font-semibold" : "text-foreground/70 hover:text-foreground hover:bg-accent")}>
+              <div className="flex items-center gap-3"><Package className="h-5 w-5" /><span>{t('inventory.title', 'Inventory')}</span></div>
+              <ChevronRight className="h-4 w-4 transition-transform data-[state=open]:rotate-90" />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-4 mt-1 space-y-1">{renderNavEntries(inventoryNav, 'inventory')}</CollapsibleContent>
+          </Collapsible>
+        )}
+
+        {hasProcurementAccess() && (
+          <Collapsible className="mt-2">
+            <CollapsibleTrigger className={cn("w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors", route().current('procurement.*') ? "bg-primary/10 text-primary font-semibold" : "text-foreground/70 hover:text-foreground hover:bg-accent")}>
+              <div className="flex items-center gap-3"><Truck className="h-5 w-5" /><span>{t('procurement.title', 'Procurement')}</span></div>
+              <ChevronRight className="h-4 w-4 transition-transform data-[state=open]:rotate-90" />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-4 mt-1 space-y-1">{renderNavEntries(procurementNav, 'procurement')}</CollapsibleContent>
+          </Collapsible>
+        )}
+
+        {hasSalesAccess() && (
+          <Collapsible className="mt-2">
+            <CollapsibleTrigger className={cn("w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors", route().current('sales.*') ? "bg-primary/10 text-primary font-semibold" : "text-foreground/70 hover:text-foreground hover:bg-accent")}>
+              <div className="flex items-center gap-3"><ShoppingCart className="h-5 w-5" /><span>{t('sales.title', 'Sales')}</span></div>
+              <ChevronRight className="h-4 w-4 transition-transform data-[state=open]:rotate-90" />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-4 mt-1 space-y-1">{renderNavEntries(salesNav, 'sales')}</CollapsibleContent>
+          </Collapsible>
+        )}
+
+        {hasPosAccess() && (
+          <Collapsible className="mt-2">
+            <CollapsibleTrigger className={cn("w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors", route().current('pos.*') ? "bg-primary/10 text-primary font-semibold" : "text-foreground/70 hover:text-foreground hover:bg-accent")}>
+              <div className="flex items-center gap-3"><ScanLine className="h-5 w-5" /><span>{t('pos.title', 'POS')}</span></div>
+              <ChevronRight className="h-4 w-4 transition-transform data-[state=open]:rotate-90" />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-4 mt-1 space-y-1">{renderNavEntries(posNav, 'pos')}</CollapsibleContent>
+          </Collapsible>
+        )}
+
+        {hasEcommerceAccess() && (
+          <Collapsible className="mt-2">
+            <CollapsibleTrigger className={cn("w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors", route().current('ecommerce.*') ? "bg-primary/10 text-primary font-semibold" : "text-foreground/70 hover:text-foreground hover:bg-accent")}>
+              <div className="flex items-center gap-3"><Store className="h-5 w-5" /><span>{t('ecommerce.title', 'Ecommerce')}</span></div>
+              <ChevronRight className="h-4 w-4 transition-transform data-[state=open]:rotate-90" />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-4 mt-1 space-y-1">{renderNavEntries(ecommerceNav, 'ecommerce')}</CollapsibleContent>
           </Collapsible>
         )}
 
@@ -692,21 +886,7 @@ export default function Sidebar({ settings }: SidebarProps) {
               <ChevronRight className="h-4 w-4 transition-transform data-[state=open]:rotate-90" />
             </CollapsibleTrigger>
             <CollapsibleContent className="pl-4 mt-1 space-y-1">
-              {projectsItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                    item.active
-                      ? "bg-primary/10 text-primary font-semibold"
-                      : "text-foreground/70 hover:text-foreground hover:bg-accent"
-                  )}
-                >
-                  {item.icon}
-                  {item.label}
-                </Link>
-              ))}
+              {renderNavEntries(projectsNav, 'projects')}
             </CollapsibleContent>
           </Collapsible>
         )}
@@ -727,21 +907,7 @@ export default function Sidebar({ settings }: SidebarProps) {
               <ChevronRight className="h-4 w-4 transition-transform data-[state=open]:rotate-90" />
             </CollapsibleTrigger>
             <CollapsibleContent className="pl-4 mt-1 space-y-1">
-              {hrItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                    item.active
-                      ? "bg-primary/10 text-primary font-semibold"
-                      : "text-foreground/70 hover:text-foreground hover:bg-accent"
-                  )}
-                >
-                  {item.icon}
-                  {item.label}
-                </Link>
-              ))}
+              {renderNavEntries(hrNav, 'hr')}
             </CollapsibleContent>
           </Collapsible>
         )}
@@ -762,21 +928,7 @@ export default function Sidebar({ settings }: SidebarProps) {
               <ChevronRight className="h-4 w-4 transition-transform data-[state=open]:rotate-90" />
             </CollapsibleTrigger>
             <CollapsibleContent className="pl-4 mt-1 space-y-1">
-              {supportItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                    item.active
-                      ? "bg-primary/10 text-primary font-semibold"
-                      : "text-foreground/70 hover:text-foreground hover:bg-accent"
-                  )}
-                >
-                  {item.icon}
-                  {item.label}
-                </Link>
-              ))}
+              {renderNavEntries(supportNav, 'support')}
             </CollapsibleContent>
           </Collapsible>
         )}
@@ -797,56 +949,7 @@ export default function Sidebar({ settings }: SidebarProps) {
               <ChevronRight className="h-4 w-4 transition-transform data-[state=open]:rotate-90" />
             </CollapsibleTrigger>
             <CollapsibleContent className="pl-4 mt-1 space-y-1">
-              {aiItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                    item.active
-                      ? "bg-primary/10 text-primary font-semibold"
-                      : "text-foreground/70 hover:text-foreground hover:bg-accent"
-                  )}
-                >
-                  {item.icon}
-                  {item.label}
-                </Link>
-              ))}
-            </CollapsibleContent>
-          </Collapsible>
-        )}
-
-        {/* CMS Navigation - Only visible to users with cms permission */}
-        {hasCmsAccess() && (
-          <Collapsible className="mt-2">
-            <CollapsibleTrigger className={cn(
-              "w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors",
-              route().current('cms.*')
-                ? "bg-primary/10 text-primary font-semibold"
-                : "text-foreground/70 hover:text-foreground hover:bg-accent"
-            )}>
-              <div className="flex items-center gap-3">
-                <Globe className="h-5 w-5" />
-                <span>{t('cms.title', 'CMS')}</span>
-              </div>
-              <ChevronRight className="h-4 w-4 transition-transform data-[state=open]:rotate-90" />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pl-4 mt-1 space-y-1">
-              {cmsItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                    item.active
-                      ? "bg-primary/10 text-primary font-semibold"
-                      : "text-foreground/70 hover:text-foreground hover:bg-accent"
-                  )}
-                >
-                  {item.icon}
-                  {item.label}
-                </Link>
-              ))}
+              {renderNavEntries(aiNav, 'ai')}
             </CollapsibleContent>
           </Collapsible>
         )}
@@ -867,115 +970,7 @@ export default function Sidebar({ settings }: SidebarProps) {
               <ChevronRight className="h-4 w-4 transition-transform data-[state=open]:rotate-90" />
             </CollapsibleTrigger>
             <CollapsibleContent className="pl-4 mt-1 space-y-1">
-              {adminItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                    item.active
-                      ? "bg-primary/10 text-primary font-semibold"
-                      : "text-foreground/70 hover:text-foreground hover:bg-accent"
-                  )}
-                >
-                  {item.icon}
-                  {item.label}
-                </Link>
-              ))}
-            </CollapsibleContent>
-          </Collapsible>
-        )}
-
-        {/* Social Media Navigation - Only visible to users with social media permission */}
-        {hasSocialMediaAccess() && (
-          <Collapsible className="mt-2">
-            <CollapsibleTrigger className={cn(
-              "w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors",
-              route().current('social-media.*')
-                ? "bg-primary/10 text-primary font-semibold"
-                : "text-foreground/70 hover:text-foreground hover:bg-accent"
-            )}>
-              <div className="flex items-center gap-3">
-                <Share2 className="h-5 w-5" />
-                <span>{t('social_media.title', 'Social Media')}</span>
-              </div>
-              <ChevronRight className="h-4 w-4 transition-transform data-[state=open]:rotate-90" />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pl-4 mt-1 space-y-1">
-              <Link
-                href={route('social-media.dashboard')}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                  route().current('social-media.dashboard')
-                    ? "bg-primary/10 text-primary font-semibold"
-                    : "text-foreground/70 hover:text-foreground hover:bg-accent"
-                )}
-              >
-                <LayoutDashboard className="h-4 w-4" />
-                <span>{t('social_media.dashboard', 'Dashboard')}</span>
-              </Link>
-              <Link
-                href={route('social-media.facebook.index')}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                  route().current('social-media.facebook.*')
-                    ? "bg-primary/10 text-primary font-semibold"
-                    : "text-foreground/70 hover:text-foreground hover:bg-accent"
-                )}
-              >
-                <Facebook className="h-4 w-4" />
-                <span>{t('social_media.facebook', 'Facebook')}</span>
-              </Link>
-              <Link
-                href={route('social-media.instagram.index')}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                  route().current('social-media.instagram.*')
-                    ? "bg-primary/10 text-primary font-semibold"
-                    : "text-foreground/70 hover:text-foreground hover:bg-accent"
-                )}
-              >
-                <Instagram className="h-4 w-4" />
-                <span>{t('social_media.instagram', 'Instagram')}</span>
-              </Link>
-              <Link
-                href={route('social-media.linkedin.index')}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                  route().current('social-media.linkedin.*')
-                    ? "bg-primary/10 text-primary font-semibold"
-                    : "text-foreground/70 hover:text-foreground hover:bg-accent"
-                )}
-              >
-                <Linkedin className="h-4 w-4" />
-                <span>{t('social_media.linkedin', 'LinkedIn')}</span>
-              </Link>
-              <Link
-                href={route('social-media.twitter.index')}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                  route().current('social-media.twitter.*')
-                    ? "bg-primary/10 text-primary font-semibold"
-                    : "text-foreground/70 hover:text-foreground hover:bg-accent"
-                )}
-              >
-                <Twitter className="h-4 w-4" />
-                <span>{t('social_media.twitter', 'Twitter/X')}</span>
-              </Link>
-              <Link
-                href={route('social-media.whatsapp.index')}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                  route().current('social-media.whatsapp.*')
-                    ? "bg-primary/10 text-primary font-semibold"
-                    : "text-foreground/70 hover:text-foreground hover:bg-accent"
-                )}
-              >
-                <MessageCircle className="h-4 w-4 text-[#25D366]" />
-                <span>{t('social_media.whatsapp', 'WhatsApp')}</span>
-              </Link>
-              
-             
+              {renderNavEntries(adminNav, 'admin')}
             </CollapsibleContent>
           </Collapsible>
         )}
@@ -995,55 +990,8 @@ export default function Sidebar({ settings }: SidebarProps) {
               </div>
               <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-180" />
             </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-1 mt-1">
-              <Link
-                href={route('settings.index')}
-                className={cn(
-                  "flex items-center gap-3 px-6 py-2 text-sm rounded-md transition-colors",
-                  route().current('settings.index')
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-foreground/60 hover:text-foreground hover:bg-accent"
-                )}
-              >
-                <Cog className="h-4 w-4" />
-                <span>{t('settings.general', 'General Settings')}</span>
-              </Link>
-              <Link
-                href={route('settings.finance.index')}
-                className={cn(
-                  "flex items-center gap-3 px-6 py-2 text-sm rounded-md transition-colors",
-                  route().current('settings.finance.*')
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-foreground/60 hover:text-foreground hover:bg-accent"
-                )}
-              >
-                <DollarSign className="h-4 w-4" />
-                <span>{t('settings.finance', 'Finance Settings')}</span>
-              </Link>
-              <Link
-                href={route('settings.notifications')}
-                className={cn(
-                  "flex items-center gap-3 px-6 py-2 text-sm rounded-md transition-colors",
-                  route().current('settings.notifications')
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-foreground/60 hover:text-foreground hover:bg-accent"
-                )}
-              >
-                <MessageSquare className="h-4 w-4" />
-                <span>{t('settings.notifications', 'Notifications')}</span>
-              </Link>
-              <Link
-                href={route('settings.advanced')}
-                className={cn(
-                  "flex items-center gap-3 px-6 py-2 text-sm rounded-md transition-colors",
-                  route().current('settings.advanced')
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-foreground/60 hover:text-foreground hover:bg-accent"
-                )}
-              >
-                <Shield className="h-4 w-4" />
-                <span>{t('settings.advanced', 'Advanced Settings')}</span>
-              </Link>
+            <CollapsibleContent className="pl-4 mt-1 space-y-1">
+              {renderNavEntries(settingsNav, 'settings')}
             </CollapsibleContent>
           </Collapsible>
         )}
@@ -1064,21 +1012,7 @@ export default function Sidebar({ settings }: SidebarProps) {
               <ChevronRight className="h-4 w-4 transition-transform data-[state=open]:rotate-90" />
             </CollapsibleTrigger>
             <CollapsibleContent className="pl-4 mt-1 space-y-1">
-              {customerItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                    item.active
-                      ? "bg-primary/10 text-primary font-semibold"
-                      : "text-foreground/70 hover:text-foreground hover:bg-accent"
-                  )}
-                >
-                  {item.icon}
-                  {item.label}
-                </Link>
-              ))}
+              {renderNavEntries(customerNav, 'customer')}
             </CollapsibleContent>
           </Collapsible>
         )}

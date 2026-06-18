@@ -26,12 +26,28 @@ class ModuleSeeder extends Seeder
                 'description' => 'Human Resources',
             ],
             [
-                'name' => 'CMS',
-                'description' => 'Content Management System',
-            ],
-            [
                 'name' => 'Support',
                 'description' => 'Support and Ticketing',
+            ],
+            [
+                'name' => 'Inventory',
+                'description' => 'Inventory and Stock Management',
+            ],
+            [
+                'name' => 'Procurement',
+                'description' => 'Suppliers and Purchase Orders',
+            ],
+            [
+                'name' => 'Sales',
+                'description' => 'Sales Order Management',
+            ],
+            [
+                'name' => 'POS',
+                'description' => 'Point of Sale',
+            ],
+            [
+                'name' => 'Ecommerce',
+                'description' => 'Online Store',
             ],
             [
                 'name' => 'AI',

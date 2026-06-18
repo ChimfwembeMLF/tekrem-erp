@@ -95,7 +95,7 @@ class LeaveType extends Model
     /**
      * Validate leave request against this leave type rules.
      */
-    public function validateLeaveRequest(int $daysRequested, \DateTime $startDate): array
+    public function validateLeaveRequest(float $daysRequested, \DateTime $startDate): array
     {
         $errors = [];
 

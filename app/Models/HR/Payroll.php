@@ -15,6 +15,7 @@ class Payroll extends Model
         'period',
         'amount',
         'status',
+        'breakdown',
         'approved_by',
         'approved_at',
         'rejected_reason',
@@ -22,6 +23,11 @@ class Payroll extends Model
     ];
 
     protected $table = 'hr_payrolls';
+
+    protected $casts = [
+        'breakdown' => 'array',
+        'approved_at' => 'datetime',
+    ];
 
     protected $dates = [
         'approved_at',

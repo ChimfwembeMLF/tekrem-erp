@@ -1,2 +1,46 @@
+# Allow crawlers on public marketing pages and static assets.
 User-agent: *
-Disallow:
+Allow: /build/
+Allow: /storage/
+Allow: /favicon.svg
+Allow: /robots.txt
+Allow: /shop/
+Allow: /about
+Allow: /services
+Allow: /portfolio
+Allow: /contact
+Allow: /careers
+Allow: /help
+Allow: /faq
+Allow: /terms-of-service
+Allow: /privacy-policy
+Allow: /refund-policy
+
+# Block private ERP, admin, and authenticated app areas.
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /finance/
+Disallow: /crm/
+Disallow: /projects/
+Disallow: /agile/
+Disallow: /inventory/
+Disallow: /procurement/
+Disallow: /sales/
+Disallow: /pos/
+Disallow: /ecommerce/
+Disallow: /hr/
+Disallow: /support/
+Disallow: /ai/
+Disallow: /customer/
+Disallow: /api/
+Disallow: /guest-chat/
+Disallow: /guest/
+Disallow: /notifications/
+Disallow: /profile/
+Disallow: /settings/
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /verify-email
+Disallow: /two-factor-challenge

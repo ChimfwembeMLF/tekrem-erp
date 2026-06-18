@@ -300,29 +300,19 @@ class SupportController extends Controller
     private function notifySupport(GuestSupportTicket $ticket): void
     {
         try {
-            $notificationService = app(NotificationService::class);
-            
-            // Get support staff
-            $users = \App\Models\User::whereHas('roles', function($q) {
+            $users = \App\Models\User::whereHas('roles', function ($q) {
                 $q->whereIn('name', ['super_user', 'admin', 'staff']);
-            })->orWhereHas('permissions', function($q) {
-                $q->whereIn('name', ['manage support', 'view support tickets']);
+            })->orWhereHas('permissions', function ($q) {
+                $q->where('name', 'view support');
             })->get();
-            
-            foreach ($users as $user) {
-                $notificationService->send(
-                    $user,
-                    'New Support Ticket',
-                    "New {$ticket->category} ticket from {$ticket->name} - {$ticket->subject}",
-                    [
-                        'type' => 'guest_support_ticket',
-                        'ticket_id' => $ticket->id,
-                        'ticket_number' => $ticket->ticket_number,
-                        'priority' => $ticket->priority,
-                        'category' => $ticket->category
-                    ]
-                );
-            }
+
+            NotificationService::notifyUsers(
+                $users,
+                'guest_support_ticket',
+                "New {$ticket->category} ticket from {$ticket->name} - {$ticket->subject}",
+                null,
+                $ticket
+            );
         } catch (\Exception $e) {
             \Log::error('Failed to send support ticket notification: ' . $e->getMessage());
         }

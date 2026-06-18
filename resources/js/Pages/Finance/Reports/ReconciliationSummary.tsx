@@ -87,10 +87,6 @@ export default function ReconciliationSummary({ reportData }: Props) {
     }).format(amount);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
-  };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
@@ -120,6 +116,17 @@ export default function ReconciliationSummary({ reportData }: Props) {
     }
   };
 
+  const exportUrl = (format: 'pdf' | 'excel' | 'csv') => {
+    const params = new URLSearchParams({ format });
+
+    if (reportData.period.from) params.set('date_from', reportData.period.from);
+    if (reportData.period.to) params.set('date_to', reportData.period.to);
+    if (reportData.parameters?.account_id) params.set('account_id', String(reportData.parameters.account_id));
+    if (reportData.parameters?.status) params.set('status', reportData.parameters.status);
+
+    return `${route('finance.reports.reconciliation-summary')}?${params.toString()}`;
+  };
+
   return (
     <AppLayout title={reportData.title}>
 
@@ -141,13 +148,17 @@ export default function ReconciliationSummary({ reportData }: Props) {
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              {t('Export PDF')}
+            <Button variant="outline" asChild>
+              <a href={exportUrl('pdf')}>
+                <Download className="h-4 w-4 mr-2" />
+                {t('Export PDF')}
+              </a>
             </Button>
-            <Button variant="outline">
-              <FileText className="h-4 w-4 mr-2" />
-              {t('Export Excel')}
+            <Button variant="outline" asChild>
+              <a href={exportUrl('excel')}>
+                <FileText className="h-4 w-4 mr-2" />
+                {t('Export Excel')}
+              </a>
             </Button>
           </div>
         </div>

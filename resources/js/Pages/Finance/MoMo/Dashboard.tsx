@@ -25,7 +25,8 @@ import {
   Eye,
   BarChart3,
   Users,
-  Calendar
+  Calendar,
+  Send,
 } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
 import useRoute from '@/Hooks/useRoute';
@@ -83,13 +84,19 @@ interface Props {
   recentTransactions: MomoTransaction[];
   providerStats: ProviderStats;
   pendingTransactions: MomoTransaction[];
+  pawapay: {
+    env: string;
+    configured: boolean;
+    provider_label: string;
+  };
 }
 
 export default function Dashboard({
   stats,
   recentTransactions,
   providerStats,
-  pendingTransactions
+  pendingTransactions,
+  pawapay,
 }: Props) {
   const { t } = useTranslate();
   const route = useRoute();
@@ -149,12 +156,39 @@ export default function Dashboard({
 
       <div className="py-12">
         <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+          <Card className={pawapay.configured ? 'border-green-500/30 bg-green-500/5' : 'border-amber-500/30 bg-amber-500/5'}>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Smartphone className="h-4 w-4" />
+                {pawapay.provider_label} · {pawapay.env}
+              </CardTitle>
+              <CardDescription>
+                {pawapay.configured
+                  ? 'Collections and payouts route through PawaPay (MTN, Airtel, Zamtel).'
+                  : 'Configure PawaPay in Finance Settings to store credentials in the database.'}
+              </CardDescription>
+            </CardHeader>
+            {!pawapay.configured && (
+              <CardContent className="pt-0">
+                <Link href={route('settings.finance.payments.pawapay')}>
+                  <Button variant="outline" size="sm">Configure PawaPay</Button>
+                </Link>
+              </CardContent>
+            )}
+          </Card>
+
           {/* Quick Actions */}
           <div className="flex gap-4 mb-6">
-            <Link href={route('finance.momo.create')}>
+            <Link href={route('finance.momo.create', { type: 'payment' })}>
               <Button className="flex items-center gap-2">
                 <Plus className="h-4 w-4" />
-                {t('New Payment')}
+                {t('Deposit')}
+              </Button>
+            </Link>
+            <Link href={route('finance.momo.create', { type: 'payout' })}>
+              <Button variant="outline" className="flex items-center gap-2">
+                <Send className="h-4 w-4" />
+                {t('Payout')}
               </Button>
             </Link>
             <Link href={route('finance.momo.index')}>

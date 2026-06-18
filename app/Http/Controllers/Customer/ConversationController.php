@@ -263,6 +263,26 @@ class ConversationController extends Controller
         return redirect()->route('customer.conversations.show', $conversation);
     }
 
+    /**
+     * Broadcast typing indicator for customer conversations.
+     */
+    public function typing(Request $request, Conversation $conversation)
+    {
+        $user = Auth::user();
+
+        if (!$this->userCanAccessConversation($conversation, $user)) {
+            abort(403, 'Access denied.');
+        }
+
+        broadcast(new \App\Events\UserTyping($conversation->id, [
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'is_typing' => $request->boolean('is_typing', true),
+        ]))->toOthers();
+
+        return response()->json(['success' => true]);
+    }
+
     // ─── Private helpers ──────────────────────────────────────────────────────
 
     private function buildConversationList($user)

@@ -45,6 +45,8 @@ export default function QuickActions({ actions }: QuickActionsProps) {
         return <Download className="h-4 w-4" />;
       case 'grid':
         return <Grid className="h-4 w-4" />;
+      case 'plus':
+        return <Plus className="h-4 w-4" />;
       default:
         return <Plus className="h-4 w-4" />;
     }

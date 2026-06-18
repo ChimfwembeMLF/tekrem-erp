@@ -39,8 +39,11 @@ class BacklogController extends Controller
 
         $epics = $project->epics()->get();
 
+        $board = $project->boards()->first();
+
         return Inertia::render('Projects/Backlog', [
             'project' => $project,
+            'board' => $board,
             'productBacklog' => $productBacklog,
             'sprintBacklogs' => $sprintBacklogs,
             'sprints' => $sprints,

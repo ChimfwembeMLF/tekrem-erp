@@ -1,56 +1,101 @@
 import React from 'react';
+import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
-import { Head } from '@inertiajs/react';
-import EmployeeAttendance from './EmployeeAttendance';
+import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
+import { Button } from '@/Components/ui/button';
+import { Input } from '@/Components/ui/input';
+import { Label } from '@/Components/ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
+import useRoute from '@/Hooks/useRoute';
 
-interface AttendanceRecord {
-  date: string;
-  status: 'Present' | 'Absent' | 'Late' | 'On Leave';
-  checkIn?: string;
-  checkOut?: string;
+interface Summary {
+  total_records: number;
+  present_count: number;
+  absent_count: number;
+  late_count: number;
+  avg_hours_worked: number;
+  total_overtime: number;
 }
 
-interface Employee {
-  id: number;
-  name: string;
-  records: AttendanceRecord[];
+interface DepartmentStat {
+  department_name: string;
+  total_records: number;
+  present_count: number;
+  late_count: number;
 }
 
-// Example data for demonstration
-const employees: Employee[] = [
-  {
-    id: 1,
-    name: 'John Doe',
-    records: [
-      { date: '2025-09-01', status: 'Present', checkIn: '08:00', checkOut: '17:00' },
-      { date: '2025-09-02', status: 'Late', checkIn: '08:30', checkOut: '17:00' },
-      { date: '2025-09-03', status: 'Absent' },
-      { date: '2025-09-04', status: 'On Leave' },
-    ],
-  },
-  {
-    id: 2,
-    name: 'Jane Smith',
-    records: [
-      { date: '2025-09-01', status: 'Present', checkIn: '08:05', checkOut: '17:10' },
-      { date: '2025-09-02', status: 'Present', checkIn: '08:00', checkOut: '17:00' },
-      { date: '2025-09-03', status: 'Present', checkIn: '08:00', checkOut: '17:00' },
-      { date: '2025-09-04', status: 'Late', checkIn: '08:45', checkOut: '17:00' },
-    ],
-  },
-];
+interface Props {
+  summary: Summary;
+  departmentStats: DepartmentStat[];
+  filters: { start_date: string; end_date: string };
+}
 
-export default function AttendanceReport() {
+export default function AttendanceReport({ summary, departmentStats, filters }: Props) {
+  const route = useRoute();
+  const [startDate, setStartDate] = React.useState(filters.start_date);
+  const [endDate, setEndDate] = React.useState(filters.end_date);
+
+  const applyFilters = (e: React.FormEvent) => {
+    e.preventDefault();
+    router.get(route('hr.attendance.reports'), { start_date: startDate, end_date: endDate }, { preserveState: true });
+  };
+
   return (
     <AppLayout title="Attendance Report">
       <Head title="Attendance Report" />
-      <div className="max-w-4xl mx-auto py-8 space-y-8">
-        <h1 className="text-2xl font-bold mb-6">Employee Attendance Report</h1>
-        {employees.map(emp => (
-          <div key={emp.id} className="mb-8">
-            <EmployeeAttendance employeeName={emp.name} records={emp.records as any} />
-          </div>
-        ))}
+      <div className="max-w-5xl mx-auto py-8 space-y-6">
+        <h1 className="text-2xl font-bold">Attendance Report</h1>
+
+        <Card>
+          <CardContent className="pt-6">
+            <form onSubmit={applyFilters} className="flex flex-wrap gap-4 items-end">
+              <div className="space-y-2">
+                <Label>Start Date</Label>
+                <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>End Date</Label>
+                <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              </div>
+              <Button type="submit">Apply</Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+          <Card><CardContent className="pt-6"><div className="text-2xl font-bold">{summary?.total_records ?? 0}</div><p className="text-xs text-muted-foreground">Total records</p></CardContent></Card>
+          <Card><CardContent className="pt-6"><div className="text-2xl font-bold">{summary?.present_count ?? 0}</div><p className="text-xs text-muted-foreground">Present</p></CardContent></Card>
+          <Card><CardContent className="pt-6"><div className="text-2xl font-bold">{summary?.absent_count ?? 0}</div><p className="text-xs text-muted-foreground">Absent</p></CardContent></Card>
+          <Card><CardContent className="pt-6"><div className="text-2xl font-bold">{summary?.late_count ?? 0}</div><p className="text-xs text-muted-foreground">Late</p></CardContent></Card>
+          <Card><CardContent className="pt-6"><div className="text-2xl font-bold">{Number(summary?.avg_hours_worked ?? 0).toFixed(1)}</div><p className="text-xs text-muted-foreground">Avg hours</p></CardContent></Card>
+          <Card><CardContent className="pt-6"><div className="text-2xl font-bold">{Number(summary?.total_overtime ?? 0).toFixed(1)}</div><p className="text-xs text-muted-foreground">Overtime hrs</p></CardContent></Card>
+        </div>
+
+        <Card>
+          <CardHeader><CardTitle>By Department</CardTitle></CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Department</TableHead>
+                  <TableHead>Records</TableHead>
+                  <TableHead>Present</TableHead>
+                  <TableHead>Late</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {departmentStats.map((d) => (
+                  <TableRow key={d.department_name}>
+                    <TableCell>{d.department_name}</TableCell>
+                    <TableCell>{d.total_records}</TableCell>
+                    <TableCell>{d.present_count}</TableCell>
+                    <TableCell>{d.late_count}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       </div>
     </AppLayout>
   );

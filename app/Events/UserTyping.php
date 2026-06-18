@@ -2,11 +2,7 @@
 
 namespace App\Events;
 
-use App\Models\User;
-use App\Models\Conversation;
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -16,48 +12,36 @@ class UserTyping implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $user;
-    public $conversation;
+    public array $data;
 
-    /**
-     * Create a new event instance.
-     */
-    public function __construct(User $user, Conversation $conversation)
-    {
-        $this->user = $user;
-        $this->conversation = $conversation;
+    public function __construct(
+        public int $conversationId,
+        array $data = [],
+    ) {
+        $this->data = array_merge([
+            'user_id' => null,
+            'user_name' => null,
+            'guest_session_id' => null,
+            'is_typing' => true,
+            'conversation_id' => $conversationId,
+            'timestamp' => now()->toISOString(),
+        ], $data);
     }
 
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
-     */
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('conversation.' . $this->conversation->id),
+            new PrivateChannel('conversation.' . $this->conversationId),
         ];
     }
 
-    /**
-     * The event's broadcast name.
-     */
     public function broadcastAs(): string
     {
         return 'user.typing';
     }
 
-    /**
-     * Get the data to broadcast.
-     */
     public function broadcastWith(): array
     {
-        return [
-            'user_id' => $this->user->id,
-            'user_name' => $this->user->name,
-            'conversation_id' => $this->conversation->id,
-            'timestamp' => now()->toISOString(),
-        ];
+        return $this->data;
     }
 }

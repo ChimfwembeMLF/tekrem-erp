@@ -22,6 +22,7 @@ return [
     'website' => env('COMPANY_WEBSITE', 'www.tekreminnovations.com'),
     'tax_number' => env('COMPANY_TAX_NUMBER', '2003620656'),
     'logo' => env('COMPANY_LOGO', 'https://www.tekreminnovations.com/logo-blue.png'),
+    'tagline' => env('COMPANY_TAGLINE', 'INNOVATION CREATIVITY VALUE'),
 
     /*
     |--------------------------------------------------------------------------

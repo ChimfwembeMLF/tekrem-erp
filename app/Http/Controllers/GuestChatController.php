@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\ChatMessageSent;
+use App\Events\MessageSent;
+use App\Events\UserTyping;
 use App\Models\Chat;
 use App\Models\Conversation;
 use App\Models\GuestSession;
@@ -151,8 +152,8 @@ class GuestChatController extends Controller
         // Load relationships
         $message->load(['conversation']);
 
-        // Broadcast the message to staff
-        broadcast(new ChatMessageSent($message))->toOthers();
+        // Broadcast the message to all participants
+        broadcast(new MessageSent($message));
 
         // Notify available staff members
         $this->notifyAvailableStaff($conversation, $message, $guestSession);
@@ -254,7 +255,7 @@ class GuestChatController extends Controller
                 $staff,
                 'chat',
                 $notificationMessage,
-                route('crm.livechat.show', $conversation->id)
+                route('crm.livechat.index', ['conversation' => $conversation->id])
             );
         }
     }
@@ -320,8 +321,8 @@ class GuestChatController extends Controller
             'last_message_at' => now(),
         ]);
 
-        // Broadcast AI response to guest
-        broadcast(new ChatMessageSent($aiMessage))->toOthers();
+        // Broadcast AI response in real time
+        broadcast(new MessageSent($aiMessage));
 
         return $aiMessage;
     }
@@ -390,11 +391,21 @@ class GuestChatController extends Controller
         })->toArray();
     }
 
-     public function typingEvent(Request $request)
+     public function typingEvent(Request $request): JsonResponse
         {
-            // Handle typing indicator event
-            // Broadcast typing event to other participants
-            // ...implementation...
+            $sessionId = $request->session()->getId();
+            $guestSession = GuestSession::where('session_id', $sessionId)->first();
+
+            if (!$guestSession?->conversation) {
+                return response()->json(['status' => 'ok']);
+            }
+
+            broadcast(new UserTyping($guestSession->conversation->id, [
+                'guest_session_id' => $guestSession->id,
+                'user_name' => $guestSession->display_name,
+                'is_typing' => $request->boolean('is_typing', true),
+            ]))->toOthers();
+
             return response()->json(['status' => 'ok']);
         }
 

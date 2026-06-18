@@ -71,7 +71,7 @@ class PayrollController extends Controller
         $employee = Employee::findOrFail($data['employee_id']);
         $service = new PayrollService();
         $payroll = $service->processPayroll($employee, $data['period']);
-        return redirect()->route('hr.payroll.index')->with('success', 'Payroll processed and posted to finance.');
+        return redirect()->route('hr.payroll.index')->with('success', 'Payroll processed successfully. Pending approval.');
     }
 
     public function show(Payroll $payroll)
@@ -114,20 +114,24 @@ class PayrollController extends Controller
         return redirect()->route('hr.payroll.index')->with('success', 'Payroll record deleted.');
     }
 
-     public function approve(Payroll $payroll)
+    public function approve(Payroll $payroll)
     {
         $payroll->status = 'approved';
         $payroll->approved_by = Auth::id();
         $payroll->approved_at = Carbon::now();
         $payroll->rejected_reason = null;
         $payroll->save();
+
+        (new PayrollService())->postToFinance($payroll);
+
         \App\Models\HR\PayrollAudit::create([
             'payroll_id' => $payroll->id,
             'user_id' => Auth::id(),
             'action' => 'approved',
             'changes' => ['status' => 'approved'],
         ]);
-        return redirect()->back()->with('success', 'Payroll approved.');
+
+        return redirect()->back()->with('success', 'Payroll approved and posted to finance.');
     }
 
     public function reject(Request $request, Payroll $payroll)

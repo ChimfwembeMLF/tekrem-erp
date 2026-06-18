@@ -105,21 +105,24 @@ class Service extends Model
      */
     public function testConnection(): array
     {
-        try {
-            // This would implement actual connection testing
-            // For now, return a mock response
-            return [
-                'success' => true,
-                'message' => 'Connection successful',
-                'response_time' => rand(100, 500) . 'ms'
-            ];
-        } catch (\Exception $e) {
-            return [
-                'success' => false,
-                'message' => 'Connection failed: ' . $e->getMessage(),
-                'error' => $e->getMessage()
-            ];
-        }
+        $aiService = app(\App\Services\AIService::class);
+
+        $overrides = array_filter([
+            'api_key' => $this->api_key,
+            'model' => $this->configuration['model'] ?? null,
+            'temperature' => $this->configuration['temperature'] ?? null,
+            'max_tokens' => $this->max_tokens_per_request,
+            'organization' => $this->configuration['organization'] ?? null,
+            'enabled' => $this->is_enabled,
+        ], fn ($value) => $value !== null && $value !== '');
+
+        $result = $aiService->testConnection($this->provider, $overrides);
+
+        return [
+            'success' => $result['status'] === 'success',
+            'message' => $result['message'],
+            'response' => $result['response'] ?? null,
+        ];
     }
 
     /**

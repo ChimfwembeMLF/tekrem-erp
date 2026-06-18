@@ -1,67 +1,77 @@
 import React from 'react';
-import { Head, Link } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
-import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/card';
+import { Link, router } from '@inertiajs/react';
+import HrPageShell, { HrStatCard } from '@/Components/HR/HrPageShell';
 import { Button } from '@/Components/ui/button';
-import { Plus, Eye, Edit } from 'lucide-react';
+import { Badge } from '@/Components/ui/badge';
+import { Progress } from '@/Components/ui/progress';
+import { Plus, UserPlus } from 'lucide-react';
 import useRoute from '@/Hooks/useRoute';
 
 interface Onboarding {
   id: number;
-  title: string;
+  title?: string;
   status: string;
+  start_date: string;
   employee_name: string;
+  progress: number;
 }
 
-interface OnboardingIndexProps {
+interface Props {
   onboardings: Onboarding[];
+  stats: { in_progress: number; completed: number };
 }
 
-export default function OnboardingIndex({ onboardings = [] }: OnboardingIndexProps) {
+export default function OnboardingIndex({ onboardings, stats }: Props) {
   const route = useRoute();
+
   return (
-    <AppLayout title="Onboarding Workflows">
-      <Head title="Onboarding Workflows" />
-      <div className="max-w-5xl mx-auto py-8">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Onboarding Workflows</h1>
-          <Link href={route('hr.onboarding.create')}><Button><Plus className="h-4 w-4 mr-2" />Add Workflow</Button></Link>
-        </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Onboarding List</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {onboardings.length === 0 ? (
-              <div className="text-center text-muted-foreground py-8">No onboarding workflows found.</div>
-            ) : (
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead>
-                  <tr>
-                    <th className="px-4 py-2 text-left">Title</th>
-                    <th className="px-4 py-2 text-left">Status</th>
-                    <th className="px-4 py-2 text-left">Employee</th>
-                    <th className="px-4 py-2"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {onboardings.map((ob) => (
-                    <tr key={ob.id}>
-                      <td className="px-4 py-2">{ob.title}</td>
-                      <td className="px-4 py-2">{ob.status}</td>
-                      <td className="px-4 py-2">{ob.employee_name}</td>
-                      <td className="px-4 py-2 flex gap-2">
-                        <Link href={route('hr.onboarding.show', ob.id)}><Button size="sm" variant="outline"><Eye className="h-4 w-4" /></Button></Link>
-                        <Link href={route('hr.onboarding.edit', ob.id)}><Button size="sm" variant="ghost"><Edit className="h-4 w-4" /></Button></Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </CardContent>
-        </Card>
+    <HrPageShell
+      title="Onboarding"
+      description="Track new hire orientation from offer acceptance through first-day readiness."
+      actions={
+        <Button onClick={() => router.get(route('hr.onboarding.create'))}>
+          <Plus className="mr-2 h-4 w-4" />
+          Start onboarding
+        </Button>
+      }
+    >
+      <div className="grid gap-4 sm:grid-cols-2">
+        <HrStatCard label="In progress" value={stats.in_progress} />
+        <HrStatCard label="Completed" value={stats.completed} />
       </div>
-    </AppLayout>
+
+      <div className="space-y-3">
+        {onboardings.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border py-12 text-center">
+            <UserPlus className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">No onboarding workflows yet.</p>
+          </div>
+        ) : (
+          onboardings.map((o) => (
+            <Link
+              key={o.id}
+              href={route('hr.onboarding.show', o.id)}
+              className="block rounded-xl border border-border bg-card p-4 transition-shadow hover:shadow-sm"
+            >
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-medium text-foreground">{o.title ?? `Onboarding — ${o.employee_name}`}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {o.employee_name} · Starts {o.start_date}
+                  </p>
+                </div>
+                <div className="flex items-center gap-4 sm:min-w-[200px]">
+                  <div className="flex-1">
+                    <Progress value={o.progress} className="h-2" />
+                    <p className="mt-1 text-xs text-muted-foreground">{o.progress}% complete</p>
+                  </div>
+                  <Badge variant={o.status === 'completed' ? 'default' : 'secondary'}>{o.status}</Badge>
+                </div>
+              </div>
+            </Link>
+          ))
+        )}
+      </div>
+    </HrPageShell>
   );
 }

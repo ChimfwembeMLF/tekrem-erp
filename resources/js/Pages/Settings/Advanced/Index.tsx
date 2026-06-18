@@ -9,6 +9,7 @@ import { Switch } from '@/Components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
 import { Separator } from '@/Components/ui/separator';
+import { Textarea } from '@/Components/ui/textarea';
 import { Badge } from '@/Components/ui/badge';
 import {
   ArrowLeft,
@@ -25,11 +26,6 @@ import {
   AlertTriangle,
   CheckCircle,
   Info,
-  Facebook,
-  Twitter,
-  Instagram,
-  Linkedin,
-  MessageCircle,
   Bot,
   Eye,
   EyeOff,
@@ -64,7 +60,15 @@ export default function AdvancedSettings({
 
   // Integration state
   const [showApiKeys, setShowApiKeys] = useState<Record<string, boolean>>({});
-  const [connectionStatus, setConnectionStatus] = useState<Record<string, string>>({});
+  const [connectionStatus, setConnectionStatus] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {};
+    Object.entries(integrationSettings.ai_services || {}).forEach(([service, config]: [string, any]) => {
+      if (config?.status && config.status !== 'disconnected') {
+        initial[`ai-${service}`] = config.status;
+      }
+    });
+    return initial;
+  });
   const [testingConnection, setTestingConnection] = useState<Record<string, boolean>>({});
 
   // Notification settings form
@@ -98,15 +102,6 @@ export default function AdvancedSettings({
 
   // Integration settings form
   const integrationForm = useForm(integrationSettings);
-
-  // Social platform forms
-  const socialPlatformForms = {
-    facebook: useForm(integrationSettings.social_platforms?.facebook || {}),
-    twitter: useForm(integrationSettings.social_platforms?.twitter || {}),
-    instagram: useForm(integrationSettings.social_platforms?.instagram || {}),
-    linkedin: useForm(integrationSettings.social_platforms?.linkedin || {}),
-    whatsapp: useForm(integrationSettings.social_platforms?.whatsapp || {}),
-  };
 
   // AI service forms
   const aiServiceForms = {
@@ -233,28 +228,6 @@ export default function AdvancedSettings({
     }));
   };
 
-  const handleSocialPlatformSubmit = (platform: string) => {
-    const form = socialPlatformForms[platform as keyof typeof socialPlatformForms];
-    const { enabled, ...settings } = form.data;
-
-    router.put(route('settings.advanced.social-platforms.update'), {
-      platform,
-      enabled,
-      settings
-    }, {
-      onSuccess: () => {
-        toast.success(`${platform.charAt(0).toUpperCase() + platform.slice(1)} integration updated!`, {
-          description: 'Social platform settings have been saved successfully.'
-        });
-      },
-      onError: () => {
-        toast.error('Failed to update social platform settings', {
-          description: 'Please check the form for errors and try again.'
-        });
-      }
-    });
-  };
-
   const handleAIServiceSubmit = (service: string) => {
     const form = aiServiceForms[service as keyof typeof aiServiceForms];
     const { enabled, ...settings } = form.data;
@@ -277,16 +250,12 @@ export default function AdvancedSettings({
     });
   };
 
-  const testConnection = async (type: 'social' | 'ai', service: string) => {
-    const key = `${type}-${service}`;
+  const testConnection = async (service: string) => {
+    const key = `ai-${service}`;
     setTestingConnection(prev => ({ ...prev, [key]: true }));
 
     try {
-      const form = type === 'social'
-        ? socialPlatformForms[service as keyof typeof socialPlatformForms]
-        : aiServiceForms[service as keyof typeof aiServiceForms];
-
-      const { enabled, ...settings } = form.data;
+      const form = aiServiceForms[service as keyof typeof aiServiceForms];
 
       const response = await fetch(route('settings.advanced.test-connection'), {
         method: 'POST',
@@ -295,9 +264,9 @@ export default function AdvancedSettings({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          type,
+          type: 'ai',
           service,
-          settings
+          settings: form.data,
         }),
       });
 
@@ -330,13 +299,15 @@ export default function AdvancedSettings({
     }
   };
 
-  const getConnectionStatusBadge = (type: 'social' | 'ai', service: string) => {
-    const key = `${type}-${service}`;
+  const getConnectionStatusBadge = (service: string) => {
+    const key = `ai-${service}`;
     const status = connectionStatus[key] || 'disconnected';
 
     switch (status) {
       case 'connected':
         return <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">Connected</Badge>;
+      case 'configured':
+        return <Badge variant="outline" className="text-blue-800 border-blue-200">Configured</Badge>;
       case 'error':
         return <Badge variant="destructive">Error</Badge>;
       default:
@@ -344,22 +315,9 @@ export default function AdvancedSettings({
     }
   };
 
-  const getSocialPlatformIcon = (platform: string) => {
-    switch (platform) {
-      case 'facebook':
-        return <Facebook className="h-5 w-5 text-blue-600" />;
-      case 'twitter':
-        return <Twitter className="h-5 w-5 text-blue-400" />;
-      case 'instagram':
-        return <Instagram className="h-5 w-5 text-pink-600" />;
-      case 'linkedin':
-        return <Linkedin className="h-5 w-5 text-blue-700" />;
-      case 'whatsapp':
-        return <MessageCircle className="h-5 w-5 text-green-600" />;
-      default:
-        return <Plug className="h-5 w-5" />;
-    }
-  };
+  const defaultAiService = ['mistral', 'openai', 'anthropic'].find(
+    (service) => aiServiceForms[service as keyof typeof aiServiceForms]?.data?.enabled
+  );
 
   return (
     <AppLayout
@@ -694,9 +652,188 @@ export default function AdvancedSettings({
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSecuritySubmit} className="space-y-6">
-                  {/* Security settings form content will be added here */}
-                  <div className="text-center py-8 text-gray-500">
-                    Security settings form content coming soon...
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-medium">Transport &amp; authentication</h4>
+
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <Label htmlFor="force_https">Force HTTPS</Label>
+                          <p className="text-sm text-gray-500">Redirect all traffic to secure connections</p>
+                        </div>
+                        <Switch
+                          id="force_https"
+                          checked={securityForm.data.force_https}
+                          onCheckedChange={(checked) => securityForm.setData('force_https', checked)}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <Label htmlFor="csrf_protection">CSRF protection</Label>
+                          <p className="text-sm text-gray-500">Validate tokens on state-changing requests</p>
+                        </div>
+                        <Switch
+                          id="csrf_protection"
+                          checked={securityForm.data.csrf_protection}
+                          onCheckedChange={(checked) => securityForm.setData('csrf_protection', checked)}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <Label htmlFor="two_factor_required">Require two-factor auth</Label>
+                          <p className="text-sm text-gray-500">All users must enable 2FA</p>
+                        </div>
+                        <Switch
+                          id="two_factor_required"
+                          checked={securityForm.data.two_factor_required}
+                          onCheckedChange={(checked) => securityForm.setData('two_factor_required', checked)}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="password_expiry_days">Password expiry (days)</Label>
+                        <Input
+                          id="password_expiry_days"
+                          type="number"
+                          min="30"
+                          max="365"
+                          placeholder="Leave empty for no expiry"
+                          value={securityForm.data.password_expiry_days ?? ''}
+                          onChange={(e) => securityForm.setData('password_expiry_days', e.target.value ? parseInt(e.target.value) : null)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-medium">Login protection</h4>
+
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <Label htmlFor="failed_login_lockout">Failed login lockout</Label>
+                          <p className="text-sm text-gray-500">Temporarily lock accounts after failed attempts</p>
+                        </div>
+                        <Switch
+                          id="failed_login_lockout"
+                          checked={securityForm.data.failed_login_lockout}
+                          onCheckedChange={(checked) => securityForm.setData('failed_login_lockout', checked)}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="lockout_duration">Lockout duration (minutes)</Label>
+                        <Input
+                          id="lockout_duration"
+                          type="number"
+                          min="5"
+                          max="1440"
+                          value={securityForm.data.lockout_duration}
+                          onChange={(e) => securityForm.setData('lockout_duration', parseInt(e.target.value))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium">Rate limiting</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-1">
+                            <Label htmlFor="rate_limiting_enabled">Web rate limiting</Label>
+                            <p className="text-sm text-gray-500">Limit requests per IP on web routes</p>
+                          </div>
+                          <Switch
+                            id="rate_limiting_enabled"
+                            checked={securityForm.data.rate_limiting_enabled}
+                            onCheckedChange={(checked) => securityForm.setData('rate_limiting_enabled', checked)}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="rate_limit_requests">Max requests</Label>
+                          <Input
+                            id="rate_limit_requests"
+                            type="number"
+                            min="10"
+                            max="1000"
+                            value={securityForm.data.rate_limit_requests}
+                            onChange={(e) => securityForm.setData('rate_limit_requests', parseInt(e.target.value))}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="rate_limit_window">Time window (minutes)</Label>
+                          <Input
+                            id="rate_limit_window"
+                            type="number"
+                            min="1"
+                            max="60"
+                            value={securityForm.data.rate_limit_window}
+                            onChange={(e) => securityForm.setData('rate_limit_window', parseInt(e.target.value))}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-1">
+                            <Label htmlFor="api_rate_limiting">API rate limiting</Label>
+                            <p className="text-sm text-gray-500">Throttle API consumers</p>
+                          </div>
+                          <Switch
+                            id="api_rate_limiting"
+                            checked={securityForm.data.api_rate_limiting}
+                            onCheckedChange={(checked) => securityForm.setData('api_rate_limiting', checked)}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="api_rate_limit">API limit (requests / hour)</Label>
+                          <Input
+                            id="api_rate_limit"
+                            type="number"
+                            min="100"
+                            max="10000"
+                            value={securityForm.data.api_rate_limit}
+                            onChange={(e) => securityForm.setData('api_rate_limit', parseInt(e.target.value))}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium">IP access control</h4>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <Label htmlFor="ip_whitelist_enabled">Enable IP whitelist</Label>
+                        <p className="text-sm text-gray-500">Only allow admin access from listed addresses</p>
+                      </div>
+                      <Switch
+                        id="ip_whitelist_enabled"
+                        checked={securityForm.data.ip_whitelist_enabled}
+                        onCheckedChange={(checked) => securityForm.setData('ip_whitelist_enabled', checked)}
+                      />
+                    </div>
+
+                    {securityForm.data.ip_whitelist_enabled && (
+                      <div className="space-y-2">
+                        <Label htmlFor="ip_whitelist">Allowed IP addresses</Label>
+                        <Textarea
+                          id="ip_whitelist"
+                          rows={4}
+                          value={securityForm.data.ip_whitelist}
+                          onChange={(e) => securityForm.setData('ip_whitelist', e.target.value)}
+                          placeholder="One IP per line, e.g. 192.168.1.10"
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex justify-end">
@@ -728,9 +865,177 @@ export default function AdvancedSettings({
               </CardHeader>
               <CardContent>
                 <form onSubmit={handlePerformanceSubmit} className="space-y-6">
-                  {/* Performance settings form content will be added here */}
-                  <div className="text-center py-8 text-gray-500">
-                    Performance settings form content coming soon...
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-medium">Caching</h4>
+
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <Label htmlFor="cache_enabled">Application cache</Label>
+                          <p className="text-sm text-gray-500">Enable response and data caching</p>
+                        </div>
+                        <Switch
+                          id="cache_enabled"
+                          checked={performanceForm.data.cache_enabled}
+                          onCheckedChange={(checked) => performanceForm.setData('cache_enabled', checked)}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="cache_driver">Cache driver</Label>
+                        <Select
+                          value={performanceForm.data.cache_driver}
+                          onValueChange={(value) => performanceForm.setData('cache_driver', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="file">File</SelectItem>
+                            <SelectItem value="redis">Redis</SelectItem>
+                            <SelectItem value="memcached">Memcached</SelectItem>
+                            <SelectItem value="database">Database</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="cache_ttl">Default cache TTL (seconds)</Label>
+                        <Input
+                          id="cache_ttl"
+                          type="number"
+                          min="60"
+                          max="86400"
+                          value={performanceForm.data.cache_ttl}
+                          onChange={(e) => performanceForm.setData('cache_ttl', parseInt(e.target.value))}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-medium">Runtime drivers</h4>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="session_driver">Session driver</Label>
+                        <Select
+                          value={performanceForm.data.session_driver}
+                          onValueChange={(value) => performanceForm.setData('session_driver', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="file">File</SelectItem>
+                            <SelectItem value="cookie">Cookie</SelectItem>
+                            <SelectItem value="database">Database</SelectItem>
+                            <SelectItem value="redis">Redis</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="queue_driver">Queue driver</Label>
+                        <Select
+                          value={performanceForm.data.queue_driver}
+                          onValueChange={(value) => performanceForm.setData('queue_driver', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="sync">Sync (inline)</SelectItem>
+                            <SelectItem value="database">Database</SelectItem>
+                            <SelectItem value="redis">Redis</SelectItem>
+                            <SelectItem value="sqs">Amazon SQS</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-medium">Database monitoring</h4>
+
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <Label htmlFor="database_query_logging">Query logging</Label>
+                          <p className="text-sm text-gray-500">Log slow and expensive database queries</p>
+                        </div>
+                        <Switch
+                          id="database_query_logging"
+                          checked={performanceForm.data.database_query_logging}
+                          onCheckedChange={(checked) => performanceForm.setData('database_query_logging', checked)}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="slow_query_threshold">Slow query threshold (ms)</Label>
+                        <Input
+                          id="slow_query_threshold"
+                          type="number"
+                          min="100"
+                          max="10000"
+                          value={performanceForm.data.slow_query_threshold}
+                          onChange={(e) => performanceForm.setData('slow_query_threshold', parseInt(e.target.value))}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-medium">Asset delivery</h4>
+
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <Label htmlFor="compression_enabled">Gzip compression</Label>
+                          <p className="text-sm text-gray-500">Compress HTTP responses</p>
+                        </div>
+                        <Switch
+                          id="compression_enabled"
+                          checked={performanceForm.data.compression_enabled}
+                          onCheckedChange={(checked) => performanceForm.setData('compression_enabled', checked)}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <Label htmlFor="minify_assets">Minify assets</Label>
+                          <p className="text-sm text-gray-500">Minify CSS and JavaScript in production builds</p>
+                        </div>
+                        <Switch
+                          id="minify_assets"
+                          checked={performanceForm.data.minify_assets}
+                          onCheckedChange={(checked) => performanceForm.setData('minify_assets', checked)}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <Label htmlFor="cdn_enabled">CDN</Label>
+                          <p className="text-sm text-gray-500">Serve static assets from a CDN</p>
+                        </div>
+                        <Switch
+                          id="cdn_enabled"
+                          checked={performanceForm.data.cdn_enabled}
+                          onCheckedChange={(checked) => performanceForm.setData('cdn_enabled', checked)}
+                        />
+                      </div>
+
+                      {performanceForm.data.cdn_enabled && (
+                        <div className="space-y-2">
+                          <Label htmlFor="cdn_url">CDN base URL</Label>
+                          <Input
+                            id="cdn_url"
+                            type="url"
+                            value={performanceForm.data.cdn_url}
+                            onChange={(e) => performanceForm.setData('cdn_url', e.target.value)}
+                            placeholder="https://cdn.example.com"
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex justify-end">
@@ -1027,393 +1332,6 @@ export default function AdvancedSettings({
           {/* Integration Settings Tab */}
           <TabsContent value="integrations">
             <div className="space-y-6">
-              {/* Social Platform Integrations */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MessageCircle className="h-5 w-5" />
-                    Social Platform Integrations
-                  </CardTitle>
-                  <CardDescription>
-                    Connect with major social media platforms for enhanced customer engagement
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    {Object.entries(integrationSettings.social_platforms || {}).map(([platform, config]) => (
-                      <div key={platform} className="border rounded-lg p-6">
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                            {getSocialPlatformIcon(platform)}
-                            <div>
-                              <h4 className="font-medium capitalize">{platform}</h4>
-                              <p className="text-sm text-gray-500">
-                                {platform === 'facebook' && 'Connect with Facebook Pages and Messenger'}
-                                {platform === 'twitter' && 'Integrate with Twitter/X for social engagement'}
-                                {platform === 'instagram' && 'Connect Instagram Business accounts'}
-                                {platform === 'linkedin' && 'Integrate with LinkedIn for professional networking'}
-                                {platform === 'whatsapp' && 'Connect WhatsApp Business API'}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {getConnectionStatusBadge('social', platform)}
-                            <Switch
-                              checked={socialPlatformForms[platform as keyof typeof socialPlatformForms]?.data?.enabled || false}
-                              onCheckedChange={(checked) =>
-                                socialPlatformForms[platform as keyof typeof socialPlatformForms]?.setData('enabled', checked)
-                              }
-                            />
-                          </div>
-                        </div>
-
-                        {socialPlatformForms[platform as keyof typeof socialPlatformForms]?.data?.enabled && (
-                          <div className="space-y-4 border-t pt-4">
-                            {/* Platform-specific configuration fields */}
-                            {platform === 'facebook' && (
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                  <Label htmlFor={`${platform}_app_id`}>App ID</Label>
-                                  <Input
-                                    id={`${platform}_app_id`}
-                                    value={socialPlatformForms.facebook.data.app_id || ''}
-                                    onChange={(e) => socialPlatformForms.facebook.setData('app_id', e.target.value)}
-                                    placeholder="Enter Facebook App ID"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor={`${platform}_app_secret`}>App Secret</Label>
-                                  <div className="relative">
-                                    <Input
-                                      id={`${platform}_app_secret`}
-                                      type={showApiKeys[`${platform}_app_secret`] ? 'text' : 'password'}
-                                      value={socialPlatformForms.facebook.data.app_secret || ''}
-                                      onChange={(e) => socialPlatformForms.facebook.setData('app_secret', e.target.value)}
-                                      placeholder="Enter Facebook App Secret"
-                                    />
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                                      onClick={() => toggleApiKeyVisibility(`${platform}_app_secret`)}
-                                    >
-                                      {showApiKeys[`${platform}_app_secret`] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                    </Button>
-                                  </div>
-                                </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor={`${platform}_page_access_token`}>Page Access Token</Label>
-                                  <div className="relative">
-                                    <Input
-                                      id={`${platform}_page_access_token`}
-                                      type={showApiKeys[`${platform}_page_access_token`] ? 'text' : 'password'}
-                                      value={socialPlatformForms.facebook.data.page_access_token || ''}
-                                      onChange={(e) => socialPlatformForms.facebook.setData('page_access_token', e.target.value)}
-                                      placeholder="Enter Page Access Token"
-                                    />
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                                      onClick={() => toggleApiKeyVisibility(`${platform}_page_access_token`)}
-                                    >
-                                      {showApiKeys[`${platform}_page_access_token`] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                    </Button>
-                                  </div>
-                                </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor={`${platform}_webhook_verify_token`}>Webhook Verify Token</Label>
-                                  <Input
-                                    id={`${platform}_webhook_verify_token`}
-                                    value={socialPlatformForms.facebook.data.webhook_verify_token || ''}
-                                    onChange={(e) => socialPlatformForms.facebook.setData('webhook_verify_token', e.target.value)}
-                                    placeholder="Enter Webhook Verify Token"
-                                  />
-                                </div>
-                              </div>
-                            )}
-
-                            {platform === 'twitter' && (
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                  <Label htmlFor={`${platform}_api_key`}>API Key</Label>
-                                  <div className="relative">
-                                    <Input
-                                      id={`${platform}_api_key`}
-                                      type={showApiKeys[`${platform}_api_key`] ? 'text' : 'password'}
-                                      value={socialPlatformForms.twitter.data.api_key || ''}
-                                      onChange={(e) => socialPlatformForms.twitter.setData('api_key', e.target.value)}
-                                      placeholder="Enter Twitter API Key"
-                                    />
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                                      onClick={() => toggleApiKeyVisibility(`${platform}_api_key`)}
-                                    >
-                                      {showApiKeys[`${platform}_api_key`] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                    </Button>
-                                  </div>
-                                </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor={`${platform}_api_secret`}>API Secret</Label>
-                                  <div className="relative">
-                                    <Input
-                                      id={`${platform}_api_secret`}
-                                      type={showApiKeys[`${platform}_api_secret`] ? 'text' : 'password'}
-                                      value={socialPlatformForms.twitter.data.api_secret || ''}
-                                      onChange={(e) => socialPlatformForms.twitter.setData('api_secret', e.target.value)}
-                                      placeholder="Enter Twitter API Secret"
-                                    />
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                                      onClick={() => toggleApiKeyVisibility(`${platform}_api_secret`)}
-                                    >
-                                      {showApiKeys[`${platform}_api_secret`] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                    </Button>
-                                  </div>
-                                </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor={`${platform}_access_token`}>Access Token</Label>
-                                  <div className="relative">
-                                    <Input
-                                      id={`${platform}_access_token`}
-                                      type={showApiKeys[`${platform}_access_token`] ? 'text' : 'password'}
-                                      value={socialPlatformForms.twitter.data.access_token || ''}
-                                      onChange={(e) => socialPlatformForms.twitter.setData('access_token', e.target.value)}
-                                      placeholder="Enter Access Token"
-                                    />
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                                      onClick={() => toggleApiKeyVisibility(`${platform}_access_token`)}
-                                    >
-                                      {showApiKeys[`${platform}_access_token`] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                    </Button>
-                                  </div>
-                                </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor={`${platform}_access_token_secret`}>Access Token Secret</Label>
-                                  <div className="relative">
-                                    <Input
-                                      id={`${platform}_access_token_secret`}
-                                      type={showApiKeys[`${platform}_access_token_secret`] ? 'text' : 'password'}
-                                      value={socialPlatformForms.twitter.data.access_token_secret || ''}
-                                      onChange={(e) => socialPlatformForms.twitter.setData('access_token_secret', e.target.value)}
-                                      placeholder="Enter Access Token Secret"
-                                    />
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                                      onClick={() => toggleApiKeyVisibility(`${platform}_access_token_secret`)}
-                                    >
-                                      {showApiKeys[`${platform}_access_token_secret`] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                    </Button>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-
-
-                            {platform === 'instagram' && (
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                  <Label htmlFor={`${platform}_app_id`}>App ID</Label>
-                                  <Input
-                                    id={`${platform}_app_id`}
-                                    value={socialPlatformForms.instagram.data.app_id || ''}
-                                    onChange={(e) => socialPlatformForms.instagram.setData('app_id', e.target.value)}
-                                    placeholder="Enter Instagram App ID"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor={`${platform}_app_secret`}>App Secret</Label>
-                                  <div className="relative">
-                                    <Input
-                                      id={`${platform}_app_secret`}
-                                      type={showApiKeys[`${platform}_app_secret`] ? 'text' : 'password'}
-                                      value={socialPlatformForms.instagram.data.app_secret || ''}
-                                      onChange={(e) => socialPlatformForms.instagram.setData('app_secret', e.target.value)}
-                                      placeholder="Enter Instagram App Secret"
-                                    />
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                                      onClick={() => toggleApiKeyVisibility(`${platform}_app_secret`)}
-                                    >
-                                      {showApiKeys[`${platform}_app_secret`] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                    </Button>
-                                  </div>
-                                </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor={`${platform}_access_token`}>Access Token</Label>
-                                  <div className="relative">
-                                    <Input
-                                      id={`${platform}_access_token`}
-                                      type={showApiKeys[`${platform}_access_token`] ? 'text' : 'password'}
-                                      value={socialPlatformForms.instagram.data.access_token || ''}
-                                      onChange={(e) => socialPlatformForms.instagram.setData('access_token', e.target.value)}
-                                      placeholder="Enter Instagram Access Token"
-                                    />
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                                      onClick={() => toggleApiKeyVisibility(`${platform}_access_token`)}
-                                    >
-                                      {showApiKeys[`${platform}_access_token`] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                    </Button>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-
-                            {platform === 'linkedin' && (
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                  <Label htmlFor={`${platform}_client_id`}>Client ID</Label>
-                                  <Input
-                                    id={`${platform}_client_id`}
-                                    value={socialPlatformForms.linkedin.data.client_id || ''}
-                                    onChange={(e) => socialPlatformForms.linkedin.setData('client_id', e.target.value)}
-                                    placeholder="Enter LinkedIn Client ID"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor={`${platform}_client_secret`}>Client Secret</Label>
-                                  <div className="relative">
-                                    <Input
-                                      id={`${platform}_client_secret`}
-                                      type={showApiKeys[`${platform}_client_secret`] ? 'text' : 'password'}
-                                      value={socialPlatformForms.linkedin.data.client_secret || ''}
-                                      onChange={(e) => socialPlatformForms.linkedin.setData('client_secret', e.target.value)}
-                                      placeholder="Enter LinkedIn Client Secret"
-                                    />
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                                      onClick={() => toggleApiKeyVisibility(`${platform}_client_secret`)}
-                                    >
-                                      {showApiKeys[`${platform}_client_secret`] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                    </Button>
-                                  </div>
-                                </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor={`${platform}_access_token`}>Access Token</Label>
-                                  <div className="relative">
-                                    <Input
-                                      id={`${platform}_access_token`}
-                                      type={showApiKeys[`${platform}_access_token`] ? 'text' : 'password'}
-                                      value={socialPlatformForms.linkedin.data.access_token || ''}
-                                      onChange={(e) => socialPlatformForms.linkedin.setData('access_token', e.target.value)}
-                                      placeholder="Enter LinkedIn Access Token"
-                                    />
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                                      onClick={() => toggleApiKeyVisibility(`${platform}_access_token`)}
-                                    >
-                                      {showApiKeys[`${platform}_access_token`] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                    </Button>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-
-                            {platform === 'whatsapp' && (
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                  <Label htmlFor={`${platform}_business_id`}>Business ID</Label>
-                                  <Input
-                                    id={`${platform}_business_id`}
-                                    value={socialPlatformForms.whatsapp.data.business_id || ''}
-                                    onChange={(e) => socialPlatformForms.whatsapp.setData('business_id', e.target.value)}
-                                    placeholder="Enter WhatsApp Business ID"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor={`${platform}_access_token`}>Access Token</Label>
-                                  <div className="relative">
-                                    <Input
-                                      id={`${platform}_access_token`}
-                                      type={showApiKeys[`${platform}_access_token`] ? 'text' : 'password'}
-                                      value={socialPlatformForms.whatsapp.data.access_token || ''}
-                                      onChange={(e) => socialPlatformForms.whatsapp.setData('access_token', e.target.value)}
-                                      placeholder="Enter WhatsApp Access Token"
-                                    />
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                                      onClick={() => toggleApiKeyVisibility(`${platform}_access_token`)}
-                                    >
-                                      {showApiKeys[`${platform}_access_token`] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                    </Button>
-                                  </div>
-                                </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor={`${platform}_phone_number_id`}>Phone Number ID</Label>
-                                  <Input
-                                    id={`${platform}_phone_number_id`}
-                                    value={socialPlatformForms.whatsapp.data.phone_number_id || ''}
-                                    onChange={(e) => socialPlatformForms.whatsapp.setData('phone_number_id', e.target.value)}
-                                    placeholder="Enter WhatsApp Phone Number ID"
-                                  />
-                                </div>
-                              </div>
-                            )}
-
-                            <div className="flex justify-between items-center pt-4 border-t">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => testConnection('social', platform)}
-                                disabled={testingConnection[`social-${platform}`]}
-                                className="flex items-center gap-2"
-                              >
-                                {testingConnection[`social-${platform}`] ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <TestTube className="h-4 w-4" />
-                                )}
-                                Test Connection
-                              </Button>
-                              <Button
-                                type="button"
-                                onClick={() => handleSocialPlatformSubmit(platform)}
-                                className="flex items-center gap-2"
-                              >
-                                <Save className="h-4 w-4" />
-                                Save {platform.charAt(0).toUpperCase() + platform.slice(1)} Settings
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
               {/* AI Service Integrations */}
               <Card>
                 <CardHeader>
@@ -1435,7 +1353,7 @@ export default function AdvancedSettings({
                             <div>
                               <h4 className="font-medium capitalize flex items-center gap-2">
                                 {service}
-                                {service === 'mistral' && (
+                                {service === defaultAiService && (
                                   <Badge variant="default" className="bg-blue-100 text-blue-800 border-blue-200">
                                     Default
                                   </Badge>
@@ -1449,7 +1367,7 @@ export default function AdvancedSettings({
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            {getConnectionStatusBadge('ai', service)}
+                            {getConnectionStatusBadge(service)}
                             <Switch
                               checked={aiServiceForms[service as keyof typeof aiServiceForms]?.data?.enabled || false}
                               onCheckedChange={(checked) =>
@@ -1507,16 +1425,18 @@ export default function AdvancedSettings({
                                     )}
                                     {service === 'openai' && (
                                       <>
-                                        <SelectItem value="gpt-4">GPT-4</SelectItem>
+                                        <SelectItem value="gpt-4o">GPT-4o</SelectItem>
+                                        <SelectItem value="gpt-4o-mini">GPT-4o Mini</SelectItem>
                                         <SelectItem value="gpt-4-turbo">GPT-4 Turbo</SelectItem>
                                         <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
                                       </>
                                     )}
                                     {service === 'anthropic' && (
                                       <>
-                                        <SelectItem value="claude-3-sonnet-20240229">Claude 3 Sonnet</SelectItem>
+                                        <SelectItem value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</SelectItem>
+                                        <SelectItem value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</SelectItem>
+                                        <SelectItem value="claude-3-opus-20240229">Claude 3 Opus</SelectItem>
                                         <SelectItem value="claude-3-haiku-20240307">Claude 3 Haiku</SelectItem>
-                                        <SelectItem value="claude-2.1">Claude 2.1</SelectItem>
                                       </>
                                     )}
                                   </SelectContent>
@@ -1570,7 +1490,7 @@ export default function AdvancedSettings({
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                onClick={() => testConnection('ai', service)}
+                                onClick={() => testConnection(service)}
                                 disabled={testingConnection[`ai-${service}`]}
                                 className="flex items-center gap-2"
                               >

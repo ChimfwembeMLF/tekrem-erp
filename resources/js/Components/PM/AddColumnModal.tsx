@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from '@inertiajs/react';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/Components/ui/dialog';
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/Components/ui/sheet';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 // @ts-ignore
@@ -184,22 +184,22 @@ export default function AddColumnModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+    <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <SheetContent side="right" className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-xl">
+        <SheetHeader className="border-b px-6 py-4 text-left">
+          <SheetTitle className="flex items-center gap-2">
             <Columns className="h-5 w-5" />
             {editColumn ? 'Edit Column' : 'Add New Column'}
-          </DialogTitle>
-          <DialogDescription>
-            {editColumn 
+          </SheetTitle>
+          <SheetDescription>
+            {editColumn
               ? 'Update the column settings and configuration'
-              : 'Create a new column to organize your tasks and workflow'
-            }
-          </DialogDescription>
-        </DialogHeader>
+              : 'Create a new column to organize your tasks and workflow'}
+          </SheetDescription>
+        </SheetHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="flex flex-1 flex-col overflow-hidden">
+          <div className="flex-1 space-y-6 overflow-y-auto px-6 py-4">
           {/* Template Selection (only for new columns) */}
           {showTemplates && !editColumn && (
             <div className="space-y-3">
@@ -394,8 +394,9 @@ export default function AddColumnModal({
               </Button>
             </div>
           </div>
+          </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }

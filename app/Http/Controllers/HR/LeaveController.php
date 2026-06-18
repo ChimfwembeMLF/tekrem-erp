@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\HR\Leave;
 use App\Models\HR\LeaveType;
 use App\Models\HR\Employee;
+use App\Models\User;
+use App\Notifications\LeaveStatusChanged;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -129,6 +131,7 @@ class LeaveController extends Controller
         $validated['submitted_at'] = now();
 
         $leave = Leave::create($validated);
+        $this->notifyLeaveManagers($leave, 'submitted');
 
         return redirect()->route('hr.leave.show', $leave)
             ->with('success', 'Leave request submitted successfully.');
@@ -258,6 +261,8 @@ class LeaveController extends Controller
             return back()->withErrors(['leave' => 'Unable to approve this leave request.']);
         }
 
+        $this->notifyEmployee($leave, 'approved');
+
         return back()->with('success', 'Leave request approved successfully.');
     }
 
@@ -273,6 +278,8 @@ class LeaveController extends Controller
         if (!$leave->reject(Auth::user(), $request->rejection_reason)) {
             return back()->withErrors(['leave' => 'Unable to reject this leave request.']);
         }
+
+        $this->notifyEmployee($leave, 'rejected');
 
         return back()->with('success', 'Leave request rejected.');
     }
@@ -312,6 +319,28 @@ class LeaveController extends Controller
         LeaveType::create($validated);
 
         return back()->with('success', 'Leave type created successfully.');
+    }
+
+    private function notifyEmployee(Leave $leave, string $action): void
+    {
+        $leave->load(['employee.user', 'leaveType']);
+        $user = $leave->employee?->user;
+        if ($user) {
+            $user->notify(new LeaveStatusChanged($leave, $action));
+        }
+    }
+
+    private function notifyLeaveManagers(Leave $leave, string $action): void
+    {
+        $leave->load(['employee.user', 'leaveType']);
+
+        $managers = User::whereHas('roles', function ($q) {
+            $q->whereIn('name', ['super_user', 'admin', 'staff', 'manager']);
+        })->get();
+
+        foreach ($managers as $manager) {
+            $manager->notify(new LeaveStatusChanged($leave, $action));
+        }
     }
 
     /**

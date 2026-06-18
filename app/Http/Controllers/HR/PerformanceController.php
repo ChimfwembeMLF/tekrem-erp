@@ -197,12 +197,32 @@ class PerformanceController extends Controller
     }
 
     /**
-     * Approve a performance review.
+     * Move a submitted review into manager review.
      */
-    public function approve(Performance $performance): RedirectResponse
+    public function startReview(Performance $performance): RedirectResponse
     {
+        if (!$performance->startReview()) {
+            return back()->withErrors(['performance' => 'Unable to start review. The review must be submitted first.']);
+        }
+
+        return back()->with('success', 'Performance review is now in review.');
+    }
+
+    /**
+     * Approve and complete a performance review.
+     */
+    public function approve(Request $request, Performance $performance): RedirectResponse
+    {
+        $request->validate([
+            'bonus' => 'nullable|numeric|min:0',
+        ]);
+
+        if ($request->filled('bonus')) {
+            $performance->update(['bonus' => $request->bonus]);
+        }
+
         if (!$performance->complete()) {
-            return back()->withErrors(['performance' => 'Unable to approve this performance review.']);
+            return back()->withErrors(['performance' => 'Unable to approve this performance review. It must be in review first.']);
         }
 
         return back()->with('success', 'Performance review approved successfully.');

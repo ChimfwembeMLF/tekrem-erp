@@ -15,6 +15,7 @@ import {
   Star
 } from 'lucide-react';
 import GuestLayout from '@/Layouts/GuestLayout';
+import GuestPageHero from '@/Components/Website/GuestPageHero';
 
 interface Article {
   id: number;
@@ -43,15 +44,13 @@ export default function Index({ featuredArticles, categories }: Props) {
     <GuestLayout title="Support Center">
       <Head title="Support Center" />
       
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12">
-        <div className="container mx-auto px-4">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Support Center</h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Find answers to your questions, browse our knowledge base, or get in touch with our support team.
-            </p>
-          </div>
+      <GuestPageHero
+        title="Support center"
+        description="Find answers, browse articles, or open a ticket with our team."
+        icon={<HelpCircle className="h-6 w-6" />}
+      />
+
+      <div className="mx-auto max-w-6xl px-4 py-12">
 
           {/* Quick Actions */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
@@ -228,7 +227,6 @@ export default function Index({ featuredArticles, categories }: Props) {
             </CardContent>
           </Card>
         </div>
-      </div>
     </GuestLayout>
   );
 }

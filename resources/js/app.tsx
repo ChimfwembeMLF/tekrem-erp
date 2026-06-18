@@ -1,15 +1,36 @@
-import './bootstrap';          // Echo lives here now
+import './bootstrap';
+import './echo';
 import '../css/app.css';
 import './i18n';
+
+// Ensure Laravel XSRF-TOKEN cookie is set for axios / fetch CSRF
+fetch('/sanctum/csrf-cookie', { credentials: 'same-origin' }).catch(() => {});
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { createInertiaApp } from '@inertiajs/react';
+import { createInertiaApp, router } from '@inertiajs/react';
 import { RouteContext } from '@/Hooks/useRoute';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { initializeTheme } from '@/lib/themes';
 import CookieConsentBanner from '@/Components/CookieConsentBanner';
 
 initializeTheme();
+
+function handleSessionExpired() {
+    if ((window as { __sessionExpiredHandled?: boolean }).__sessionExpiredHandled) {
+        return;
+    }
+    (window as { __sessionExpiredHandled?: boolean }).__sessionExpiredHandled = true;
+    window.location.href = '/login';
+}
+
+window.addEventListener('session-expired', handleSessionExpired);
+
+router.on('invalid', (event) => {
+    if (event.detail.response?.status === 419) {
+        event.preventDefault();
+        handleSessionExpired();
+    }
+});
 
 const appName =
     window.document.getElementsByTagName('title')[0]?.innerText || 'Laravel';

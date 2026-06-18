@@ -5,12 +5,8 @@ import CustomerLayout from '@/Layouts/CustomerLayout';
 import { toast } from 'sonner';
 import useTypedPage from '@/Hooks/useTypedPage';
 import { Button } from '@/Components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
-import { Input } from '@/Components/ui/input';
-import { Textarea } from '@/Components/ui/textarea';
 import { Badge } from '@/Components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/Components/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
 import {
   Send,
   Paperclip,
@@ -54,7 +50,10 @@ import MessageEdit from '@/Components/LiveChat/MessageEdit';
 import MessageComments from '@/Components/LiveChat/MessageComments';
 import MessageEditHistory from '@/Components/LiveChat/MessageEditHistory';
 import PinnedMessages from '@/Components/LiveChat/PinnedMessages';
+import ConversationDetailsSheet from '@/Components/LiveChat/ConversationDetailsSheet';
 import useRoute from '@/Hooks/useRoute';
+import { useConversationChannel } from '@/Hooks/useConversationChannel';
+import { getBroadcastHeaders } from '@/echo';
 
 interface ConversationProps extends InertiaSharedProps {
   conversation: Conversation;
@@ -63,6 +62,7 @@ interface ConversationProps extends InertiaSharedProps {
   leads: any[];
   staff: any[];
   userRole: string;
+  embedded?: boolean;
   // Project-specific props
   project?: any;
   teamMembers?: any[];
@@ -81,23 +81,15 @@ export default function ConversationView({
   teamMembers = [],
   isProjectChat = false,
   isCustomerView = false,
-  messages: messagesProp
+  embedded = false,
+  messages: messagesProp,
 }: ConversationProps & { messages?: any[] }) {
   const route = useRoute();
   const page = useTypedPage();
   const [message, setMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-
-
-  const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(() => {
-    // Default to closed on mobile, open on desktop
-    if (typeof window !== 'undefined') {
-      return window.innerWidth >= 1024; // lg breakpoint
-    }
-    return true;
-  });
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
@@ -112,16 +104,6 @@ export default function ConversationView({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
-
-  // Helper function to get CSRF token
-  const getCsrfToken = () => {
-    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    if (!token) {
-      console.error('CSRF token not found');
-      throw new Error('CSRF token not found');
-    }
-    return token;
-  };
 
   // Common emojis for quick access
   const commonEmojis = [
@@ -141,10 +123,6 @@ export default function ConversationView({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [isCustomerView ? messagesProp : conversation.messages]);
-
   // Close emoji picker when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -159,21 +137,43 @@ export default function ConversationView({
     };
   }, []);
 
-  // Handle responsive sidebar behavior
-  useEffect(() => {
-    const handleResize = () => {
-      const isMobile = window.innerWidth < 1024; // lg breakpoint
-      if (isMobile && sidebarOpen) {
-        // Auto-close sidebar on mobile for better UX
-        setSidebarOpen(false);
-      }
-    };
+  const [liveMessages, setLiveMessages] = useState<any[]>(
+    isCustomerView && messagesProp ? messagesProp : conversation.messages || []
+  );
 
-    window.addEventListener('resize', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [sidebarOpen]);
+  const pageUser = page.props.auth?.user;
+  const typingUrl = isCustomerView
+    ? route('customer.conversations.typing', conversation.id)
+    : route('crm.livechat.typing', conversation.id);
+
+  const { typingUsers, notifyTyping } = useConversationChannel({
+    conversationId: conversation.id,
+    currentUserId: pageUser?.id ?? null,
+    typingUrl,
+    onMessage: (incoming) => {
+      setLiveMessages(prev => {
+        if (prev.some(m => m.id === incoming.id)) {
+          return prev;
+        }
+        return [...prev, incoming];
+      });
+    },
+  });
+
+  const appendMessage = (incoming: any) => {
+    setLiveMessages(prev => {
+      if (prev.some(m => m.id === incoming.id)) {
+        return prev;
+      }
+      return [...prev, incoming];
+    });
+  };
+
+  const messages = liveMessages;
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [liveMessages]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -211,18 +211,20 @@ export default function ConversationView({
       });
 
       // Use fetch for AJAX request instead of Inertia
-      const response = await fetch(route('crm.livechat.send-message', conversation.id), {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'X-CSRF-TOKEN': getCsrfToken(),
-          'X-Requested-With': 'XMLHttpRequest'
-        }
+      const sendUrl = isCustomerView
+        ? route('customer.conversations.messages.store', conversation.id)
+        : route('crm.livechat.send-message', conversation.id);
+
+      const { data } = await window.axios.post(sendUrl, formData, {
+        headers: getBroadcastHeaders(null),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to send message');
+      const sentMessage = data.message ?? data.chat;
+      if (sentMessage) {
+        appendMessage(sentMessage);
       }
+
+      notifyTyping(false);
 
       // Success notification
       toast.success('Message sent!', {
@@ -237,11 +239,18 @@ export default function ConversationView({
       setSelectedFiles([]);
       setSelectedImages([]);
       setShowEmojiPicker(false);
-
-      // Refresh the page to show the new message
-      router.reload();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to send message:', error);
+
+      const status = (error as { response?: { status?: number } })?.response?.status;
+      if (status === 419) {
+        toast.error('Session expired', {
+          id: toastId,
+          description: 'Redirecting to login…',
+        });
+        window.dispatchEvent(new CustomEvent('session-expired'));
+        return;
+      }
 
       // Error notification
       toast.error('Failed to send message', {
@@ -367,18 +376,11 @@ export default function ConversationView({
       formData.append('is_internal_note', '1'); // Use '1' for true in FormData
 
       // Use fetch for AJAX request instead of Inertia
-      const response = await fetch(route('crm.livechat.send-message', conversation.id), {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'X-CSRF-TOKEN': getCsrfToken(),
-          'X-Requested-With': 'XMLHttpRequest'
-        }
-      });
+      const sendUrl = isCustomerView
+        ? route('customer.conversations.messages.store', conversation.id)
+        : route('crm.livechat.send-message', conversation.id);
 
-      if (!response.ok) {
-        throw new Error('Failed to add note');
-      }
+      const { data } = await window.axios.post(sendUrl, formData);
 
       toast.success('Note added!', {
         id: toastId,
@@ -514,7 +516,7 @@ export default function ConversationView({
 
   const LayoutComponent = isCustomerView ? CustomerLayout : AppLayout;
 
-  const headerContent = (
+  const headerContent = embedded ? null : (
     <div className="flex justify-between items-center">
       <div className="flex items-center gap-4">
         <Button
@@ -557,11 +559,10 @@ export default function ConversationView({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              title={sidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
-              className={`transition-colors ${sidebarOpen ? 'bg-blue-50 border-blue-200 text-blue-700' : 'hover:bg-gray-100'}`}
+              onClick={() => setDetailsOpen(true)}
+              title="Chat details"
             >
-              {sidebarOpen ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+              <Info className="h-4 w-4" />
             </Button>
             <Button
               variant="outline"
@@ -585,34 +586,44 @@ export default function ConversationView({
     </div>
   );
 
-
-  // Use messages from props if provided (customer view), else from conversation
-  const [liveMessages, setLiveMessages] = useState<any[]>(isCustomerView && messagesProp ? messagesProp : conversation.messages || []);
-
-  // Echo: Listen for MessageSent events
-  useEffect(() => {
-    const channel = window.Echo && window.Echo.private(`conversation.${conversation.id}`)
-      .listen('MessageSent', (e: any) => {
-        setLiveMessages(prev => {
-          // Avoid duplicates
-          if (!prev.some(m => m.id === e.message.id)) {
-            return [...prev, e.message];
-          }
-          return prev;
-        });
-      });
-    return () => {
-      if (window.Echo) window.Echo.leave(`private-conversation.${conversation.id}`);
-    };
-  }, [conversation.id]);
-
-  const messages = liveMessages;
+  const chatContainerClass = embedded
+    ? 'h-full min-h-0 flex flex-col'
+    : isFullScreen
+      ? 'fixed inset-0 bg-background z-50 flex flex-col'
+      : 'h-[calc(100vh-8rem)] flex flex-col';
 
   const chatContent = (
-    <div>
+    <div className={embedded ? 'h-full flex flex-col min-h-0' : undefined}>
       <Head title={`Chat - ${conversation.display_title}`} />
 
-      <div className={isFullScreen ? "fixed inset-0 bg-white dark:bg-gray-900 z-50 flex flex-col" : "h-[calc(100vh-8rem)] flex"}>
+      <div className={chatContainerClass}>
+        {embedded && (
+          <div className="flex items-center justify-between gap-3 px-4 py-3 border-b bg-background shrink-0">
+            <div className="min-w-0">
+              <h3 className="font-semibold truncate">{conversation.display_title}</h3>
+              {conversation.conversable && (
+                <p className="text-xs text-muted-foreground truncate">
+                  {conversation.conversable.name}
+                </p>
+              )}
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Badge variant={conversation.status === 'active' ? 'default' : 'secondary'}>
+                {conversation.status}
+              </Badge>
+              {!isCustomerView && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setDetailsOpen(true)}
+                  title="Chat details"
+                >
+                  <Info className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
         {/* Full-screen header */}
         {isFullScreen && (
           <div className="flex justify-between items-center p-4 border-b bg-white dark:bg-gray-900">
@@ -655,11 +666,11 @@ export default function ConversationView({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                title={sidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
-                className={`transition-colors ${sidebarOpen ? 'bg-blue-50 border-blue-200 text-blue-700' : 'hover:bg-gray-100'}`}
+                onClick={() => setDetailsOpen(true)}
+                title="Chat details"
+                className={`transition-colors ${detailsOpen ? 'bg-muted' : ''}`}
               >
-                {sidebarOpen ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                <Info className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
@@ -681,30 +692,14 @@ export default function ConversationView({
           </div>
         )}
 
-        <div className={isFullScreen ? "flex-1 flex overflow-hidden" : "flex h-full w-full"}>
-          {/* Main Chat Area */}
-          <div className={`flex flex-col transition-all duration-300 ease-in-out relative ${(sidebarOpen && !isCustomerView) ? 'flex-1' : 'w-full'
-            }`}>
-            {/* Floating Sidebar Toggle Button (when sidebar is hidden) */}
-            {!sidebarOpen && !isCustomerView && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setSidebarOpen(true)}
-                title="Show sidebar"
-                className="absolute top-4 right-4 z-20 bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 border-gray-300 dark:border-gray-600"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-            )}
-            {/* Shuffleable Pinned Messages */}
+        <div className="flex min-h-0 flex-1 flex-col w-full">
+          <div className="relative flex min-h-0 flex-1 flex-col">
             <PinnedMessages
               pinnedMessages={pinnedMessages}
               onRefresh={handleRefresh}
             />
 
-            {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 space-y-3 overflow-y-auto bg-muted/20 p-4">
               {messages.map((msg) => (
                 <div
                   key={msg.id}
@@ -752,13 +747,13 @@ export default function ConversationView({
                       {/* Message bubble with WhatsApp-style reactions */}
                       <div className="relative">
                         <div
-                          className={`rounded-lg px-3 py-2 ${isCurrentUser(msg.user_id)
-                            ? 'bg-blue-600 text-white'
+                          className={`rounded-2xl px-3 py-2 shadow-sm ${isCurrentUser(msg.user_id)
+                            ? 'bg-primary text-primary-foreground'
                             : isAIMessage(msg)
-                              ? 'bg-purple-50 border border-purple-200 text-gray-900'
+                              ? 'border border-purple-200 bg-purple-50 text-foreground dark:border-purple-900 dark:bg-purple-950/40'
                               : isGuestMessage(msg)
-                                ? 'bg-blue-50 border border-blue-200 text-gray-900'
-                                : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
+                                ? 'border border-blue-200 bg-blue-50 text-foreground dark:border-blue-900 dark:bg-blue-950/40'
+                                : 'border bg-card text-card-foreground'
                             }`}
                         >
                           {/* Message sender header for non-current user messages */}
@@ -1010,43 +1005,43 @@ export default function ConversationView({
               </div>
             )}
 
-            {/* Message Input */}
-            <div className="p-4 border-t relative">
+            <div className="relative shrink-0 border-t bg-background p-3">
               <form
                 onSubmit={handleSendMessage}
-                className="rounded-full px-3 py-1.5 flex items-center gap-2 shadow-md"
+                className="flex items-end gap-2 rounded-2xl border bg-muted/40 px-3 py-2"
               >
-                {/* Image Upload */}
                 <Button
                   type="button"
-                  variant="unstyled"
+                  variant="ghost"
                   size="icon"
                   onClick={handleImageUpload}
                   title="Send images"
-                  className="text-gray-400 hover:text-white"
+                  className="shrink-0 text-muted-foreground"
                 >
                   <Image className="h-4 w-4" />
                 </Button>
 
-                {/* File Upload */}
                 <Button
                   type="button"
-                  variant="unstyled"
+                  variant="ghost"
                   size="icon"
                   onClick={handleFileUpload}
                   title="Send files"
-                  className="text-gray-400 hover:text-white"
+                  className="shrink-0 text-muted-foreground"
                 >
                   <Paperclip className="h-4 w-4" />
                 </Button>
 
-                {/* Textarea Input */}
-                <div className="flex-1 relative">
+                <div className="relative min-w-0 flex-1">
                   <textarea
                     value={message}
-                    onChange={(e) => setMessage(e.target.value)}
+                    onChange={(e) => {
+                      setMessage(e.target.value);
+                      notifyTyping(e.target.value.trim().length > 0);
+                    }}
+                    onBlur={() => notifyTyping(false)}
                     placeholder="Type a message..."
-                    className="w-full text-white bg-transparent border-none outline-none focus:outline-none focus:ring-0 resize-none text-sm pt-3"
+                    className="max-h-32 min-h-[40px] w-full resize-none border-0 bg-transparent py-2 text-sm text-foreground outline-none focus:ring-0"
                     rows={1}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
@@ -1055,30 +1050,27 @@ export default function ConversationView({
                       }
                     }}
                   />
-
-              
                 </div>
-    {/* Emoji Button (inside textarea wrapper) */}
-    <Button
-                    type="button"
-                    variant="unstyled"
-                    size="icon"
-                    className="text-gray-400 hover:text-white"
-                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  >
-                    <Smile className="h-4 w-4" />
-                  </Button>
-                {/* Send Button */}
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0 text-muted-foreground"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                >
+                  <Smile className="h-4 w-4" />
+                </Button>
+
                 <Button
                   type="submit"
-                  variant="ghost"
                   size="icon"
                   disabled={
                     !message.trim() &&
                     selectedFiles.length === 0 &&
                     selectedImages.length === 0
                   }
-                  className="hover:bg-blue-700  disabled:opacity-50"
+                  className="shrink-0"
                 >
                   <Send className="h-4 w-4" />
                 </Button>
@@ -1140,221 +1132,21 @@ export default function ConversationView({
             </div>
           </div>
 
-          {/* Toggleable Sidebar with Tabs */}
-          {!isCustomerView && (
-            <div className={`border-l transition-all duration-300 ease-in-out overflow-hidden ${sidebarOpen ? 'w-80 lg:w-80 md:w-72 sm:w-64 opacity-100' : 'w-0 opacity-0'
-              } ${sidebarOpen ? 'lg:relative md:absolute md:right-0 md:top-0 md:h-full md:z-30 md:shadow-lg' : ''}`}>
-              {sidebarOpen && (
-              <>
-                {/* Mobile Overlay */}
-                <div
-                  className="lg:hidden fixed inset-0 bg-black/50 z-20"
-                  onClick={() => setSidebarOpen(false)}
-                />
-                <Tabs defaultValue="info" className="h-full w-80 lg:w-80 md:w-72 sm:w-64 relative z-30">
-                  {/* Mobile Close Button */}
-                  <div className="lg:hidden flex justify-between items-center p-3 border-b bg-white dark:bg-gray-800">
-                    <h3 className="font-medium text-gray-900 dark:text-gray-100">Chat Details</h3>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSidebarOpen(false)}
-                      className="h-8 w-8 p-0"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  <TabsList className={`grid w-full dark:bg-black/0 rounded-none ${isProjectChat ? 'grid-cols-4' : 'grid-cols-3'}`}>
-                    <TabsTrigger value="info" className="flex items-center gap-1">
-                      <Info className="h-3 w-3" />
-                      Info
-                    </TabsTrigger>
-                    {isProjectChat && (
-                      <TabsTrigger value="team" className="flex items-center gap-1">
-                        <Users className="h-3 w-3" />
-                        Team
-                      </TabsTrigger>
-                    )}
-                    <TabsTrigger value="files" className="flex items-center gap-1">
-                      <Paperclip className="h-3 w-3" />
-                      Files
-                    </TabsTrigger>
-                    <TabsTrigger value="notes" className="flex items-center gap-1">
-                      <StickyNote className="h-3 w-3" />
-                      Notes
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="info" className="p-4 space-y-4 h-[calc(100%-3rem)] overflow-y-auto">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-sm">Conversation Details</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div>
-                          <label className="text-xs font-medium text-gray-500">Status</label>
-                          <p className="text-sm">{conversation.status}</p>
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium text-gray-500">Priority</label>
-                          <p className="text-sm">{conversation.priority}</p>
-                        </div>
-                        {conversation.assignee && (
-                          <div>
-                            <label className="text-xs font-medium text-gray-500">Assigned to</label>
-                            <p className="text-sm">{conversation.assignee.name}</p>
-                          </div>
-                        )}
-                        {conversation.conversable && (
-                          <div>
-                            <label className="text-xs font-medium text-gray-500">Contact</label>
-                            <p className="text-sm">{conversation.conversable.name}</p>
-                            <p className="text-xs text-gray-500">{conversation.conversable.email}</p>
-                          </div>
-                        )}
-                        <div>
-                          <label className="text-xs font-medium text-gray-500">Created</label>
-                          <p className="text-sm">{new Date(conversation.created_at).toLocaleDateString()}</p>
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium text-gray-500">Last Activity</label>
-                          <p className="text-sm">
-                            {conversation.last_message_at
-                              ? new Date(conversation.last_message_at).toLocaleDateString()
-                              : 'No messages yet'
-                            }
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-
-                  {isProjectChat && (
-                    <TabsContent value="team" className="p-4 space-y-4 h-[calc(100%-3rem)] overflow-y-auto">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-sm">Project Team</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          {teamMembers.map((member) => (
-                            <div key={member.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
-                              <Avatar className="h-8 w-8">
-                                <AvatarImage src={member.profile_photo_url} />
-                                <AvatarFallback>
-                                  {member.name.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium truncate">{member.name}</p>
-                                <p className="text-xs text-gray-500 truncate">{member.email}</p>
-                              </div>
-                              {member.id === project?.manager_id && (
-                                <Badge variant="secondary" className="text-xs">
-                                  Manager
-                                </Badge>
-                              )}
-                            </div>
-                          ))}
-                          {teamMembers.length === 0 && (
-                            <p className="text-sm text-gray-500">No team members assigned</p>
-                          )}
-                        </CardContent>
-                      </Card>
-                    </TabsContent>
-                  )}
-
-                  <TabsContent value="files" className="p-4 h-[calc(100%-3rem)] overflow-y-auto">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-sm">Shared Files</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          {messages.filter(msg => msg.attachments && msg.attachments.length > 0).length === 0 ? (
-                            <p className="text-sm text-gray-500">No files shared yet</p>
-                          ) : (
-                            messages
-                              ?.filter(msg => msg.attachments && msg.attachments.length > 0)
-                              .map(msg =>
-                                msg.attachments?.map((attachment, index) => (
-                                  <div key={`${msg.id}-${index}`} className="flex items-center gap-2 p-2 bg-white dark:bg-gray-800 rounded border">
-                                    <Paperclip className="h-4 w-4 text-gray-400" />
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-sm font-medium truncate">{attachment.name}</p>
-                                      <p className="text-xs text-gray-500">
-                                        Shared by {msg.user?.name} • {new Date(msg.created_at).toLocaleDateString()}
-                                      </p>
-                                    </div>
-                                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
-                                      <Download className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-                                ))
-                              )
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-
-                  <TabsContent value="notes" className="p-4 h-[calc(100%-3rem)] overflow-y-auto">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-sm">Internal Notes</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        {/* Add Note Form */}
-                        {userRole !== 'customer' && (
-                          <div className="space-y-2">
-                            <Textarea
-                              value={newNote}
-                              onChange={(e) => setNewNote(e.target.value)}
-                              placeholder="Add an internal note..."
-                              className="min-h-[60px] text-sm"
-                            />
-                            <Button
-                              size="sm"
-                              onClick={handleAddNote}
-                              disabled={!newNote.trim()}
-                              className="w-full"
-                            >
-                              <Plus className="h-3 w-3 mr-1" />
-                              Add Note
-                            </Button>
-                          </div>
-                        )}
-
-                        {/* Existing Notes */}
-                        <div className="space-y-2">
-                          {messages.filter(msg => msg.is_internal_note).length === 0 ? (
-                            <p className="text-sm text-gray-500">No internal notes yet</p>
-                          ) : (
-                            messages
-                              ?.filter(msg => msg.is_internal_note)
-                              .map(note => (
-                                <div key={note.id} className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">
-                                  <div className="flex items-start gap-2">
-                                    <StickyNote className="h-4 w-4 text-yellow-600 mt-0.5" />
-                                    <div className="flex-1">
-                                      <p className="text-sm">{note.message}</p>
-                                      <p className="text-xs text-gray-500 mt-1">
-                                        {note.user?.name} • {new Date(note.created_at).toLocaleDateString()}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                </Tabs>
-              </>
-              )}
-            </div>
-          )}
+        {!isCustomerView && (
+          <ConversationDetailsSheet
+            open={detailsOpen}
+            onOpenChange={setDetailsOpen}
+            conversation={conversation}
+            messages={messages}
+            userRole={userRole}
+            isProjectChat={isProjectChat}
+            teamMembers={teamMembers}
+            project={project}
+            newNote={newNote}
+            onNewNoteChange={setNewNote}
+            onAddNote={handleAddNote}
+          />
+        )}
         </div>
       </div>
 
@@ -1451,6 +1243,10 @@ export default function ConversationView({
       )}
     </div>
   );
+
+  if (embedded) {
+    return chatContent;
+  }
 
   return isCustomerView ? (
     <LayoutComponent

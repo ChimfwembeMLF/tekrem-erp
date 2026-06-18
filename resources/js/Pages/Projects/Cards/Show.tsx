@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import { ProjectShowSheet } from '@/Components/Projects/ProjectShowSheet';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
@@ -19,14 +19,13 @@ import {
   DropdownMenuLabel,
 } from '@/Components/ui/dropdown-menu';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/Components/ui/dialog';
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/Components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
 import { ScrollArea } from '@/Components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/Components/ui/avatar';
@@ -1094,12 +1093,12 @@ function UploadZone({ cardId, route }: UploadZoneProps) {
         <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Any file type accepted</p>
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Upload Attachment</DialogTitle>
-            <DialogDescription>Add a file to this card</DialogDescription>
-          </DialogHeader>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle>Upload Attachment</SheetTitle>
+            <SheetDescription>Add a file to this card</SheetDescription>
+          </SheetHeader>
           <form onSubmit={submitAttachment} className="space-y-4">
             <div>
               {!selectedFile ? (
@@ -1162,7 +1161,7 @@ function UploadZone({ cardId, route }: UploadZoneProps) {
               </div>
             )}
 
-            <DialogFooter>
+            <SheetFooter>
               <Button type="button" variant="outline" size="sm" onClick={() => setOpen(false)}>Cancel</Button>
               <Button type="submit" size="sm" disabled={attachmentForm.processing || !selectedFile}>
                 {attachmentForm.processing ? (
@@ -1171,10 +1170,10 @@ function UploadZone({ cardId, route }: UploadZoneProps) {
                   <><Upload className="h-3.5 w-3.5 mr-2" />Upload</>
                 )}
               </Button>
-            </DialogFooter>
+            </SheetFooter>
           </form>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }
@@ -1480,11 +1479,15 @@ export default function CardShow({ auth, card, project, board, board_invitations
 
   // ─── Render ───────────────────────────────────────────────────────────────
 
+  const cardBackUrl = project
+    ? route('projects.show', project.id)
+    : route('agile.board.show', board.id);
+
   return (
-    <AppLayout
-      title={card.title}
-      renderHeader={() => (
-        <div className="flex items-start justify-between gap-4">
+    <>
+      <Head title={`${card.title} · ${card.board?.name}`} />
+      <ProjectShowSheet backUrl={cardBackUrl} size="full" className="sm:max-w-6xl">
+        <div className="mb-4 flex items-start justify-between gap-4">
           {/* Breadcrumb + Title */}
           <div className="min-w-0">
             <nav className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 mb-2 flex-wrap">
@@ -1623,13 +1626,8 @@ export default function CardShow({ auth, card, project, board, board_invitations
             </DropdownMenu>
           </div>
         </div>
-      )}
-    >
-      <Head title={`${card.title} · ${card.board?.name}`} />
 
-      <div className="py-6">
-        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
             {/* ── Main Column ─────────────────────────────────────────────── */}
             <div className="xl:col-span-2 space-y-6">
 
@@ -2271,8 +2269,7 @@ export default function CardShow({ auth, card, project, board, board_invitations
             </div>
             {/* ── End Sidebar ─────────────────────────────────────────────── */}
           </div>
-        </div>
-      </div>
-    </AppLayout>
+      </ProjectShowSheet>
+    </>
   );
 }

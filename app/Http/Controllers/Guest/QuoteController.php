@@ -27,11 +27,11 @@ class QuoteController extends Controller
                 'custom' => 'Custom Solution'
             ],
             'budgetRanges' => [
-                'under_5k' => 'Under $5,000',
-                '5k_10k' => '$5,000 - $10,000',
-                '10k_25k' => '$10,000 - $25,000',
-                '25k_50k' => '$25,000 - $50,000',
-                '50k_plus' => '$50,000+'
+                'under_150k' => 'Under K 150,000',
+                '150k_400k' => 'K 150,000 – K 400,000',
+                '400k_1m' => 'K 400,000 – K 1,000,000',
+                '1m_2_5m' => 'K 1,000,000 – K 2,500,000',
+                '2_5m_plus' => 'K 2,500,000+',
             ],
             'timelines' => [
                 'asap' => 'ASAP',
@@ -62,7 +62,7 @@ class QuoteController extends Controller
             'position' => 'nullable|string|max:255',
             'service_type' => 'required|string|in:web_development,mobile_app,ai_solution,consulting,custom',
             'project_description' => 'required|string|max:5000',
-            'budget_range' => 'nullable|string|in:under_5k,5k_10k,10k_25k,25k_50k,50k_plus',
+            'budget_range' => 'nullable|string|in:under_150k,150k_400k,400k_1m,1m_2_5m,2_5m_plus',
             'timeline' => 'nullable|string|in:asap,1_month,3_months,6_months,flexible',
             'requirements' => 'nullable|array',
             'requirements.*' => 'string|max:500',
@@ -242,29 +242,19 @@ class QuoteController extends Controller
     private function notifyStaff(GuestQuoteRequest $quoteRequest): void
     {
         try {
-            $notificationService = app(NotificationService::class);
-            
-            // Get sales team and managers
-            $users = \App\Models\User::whereHas('roles', function($q) {
+            $users = \App\Models\User::whereHas('roles', function ($q) {
                 $q->whereIn('name', ['super_user', 'admin', 'manager']);
-            })->orWhereHas('permissions', function($q) {
+            })->orWhereHas('permissions', function ($q) {
                 $q->whereIn('name', ['manage quotes', 'manage sales']);
             })->get();
-            
-            foreach ($users as $user) {
-                $notificationService->send(
-                    $user,
-                    'New Quote Request',
-                    "New {$quoteRequest->service_type} quote request from {$quoteRequest->name}",
-                    [
-                        'type' => 'guest_quote_request',
-                        'quote_request_id' => $quoteRequest->id,
-                        'reference_number' => $quoteRequest->reference_number,
-                        'priority' => $quoteRequest->priority,
-                        'budget_range' => $quoteRequest->budget_range
-                    ]
-                );
-            }
+
+            NotificationService::notifyUsers(
+                $users,
+                'guest_quote_request',
+                "New {$quoteRequest->service_type} quote request from {$quoteRequest->name}",
+                null,
+                $quoteRequest
+            );
         } catch (\Exception $e) {
             \Log::error('Failed to send quote request notification: ' . $e->getMessage());
         }
@@ -276,33 +266,24 @@ class QuoteController extends Controller
     private function notifyQuoteAcceptance(GuestQuoteRequest $quoteRequest): void
     {
         try {
-            $notificationService = app(NotificationService::class);
-            
-            // Notify assigned user and managers
             $users = collect();
             if ($quoteRequest->assignedTo) {
                 $users->push($quoteRequest->assignedTo);
             }
-            
-            $managers = \App\Models\User::whereHas('roles', function($q) {
+
+            $managers = \App\Models\User::whereHas('roles', function ($q) {
                 $q->whereIn('name', ['super_user', 'admin', 'manager']);
             })->get();
-            
+
             $users = $users->merge($managers)->unique('id');
-            
-            foreach ($users as $user) {
-                $notificationService->send(
-                    $user,
-                    'Quote Accepted',
-                    "Quote {$quoteRequest->reference_number} has been accepted by {$quoteRequest->name}",
-                    [
-                        'type' => 'quote_accepted',
-                        'quote_request_id' => $quoteRequest->id,
-                        'reference_number' => $quoteRequest->reference_number,
-                        'quoted_amount' => $quoteRequest->quoted_amount
-                    ]
-                );
-            }
+
+            NotificationService::notifyUsers(
+                $users,
+                'quote_accepted',
+                "Quote {$quoteRequest->reference_number} has been accepted by {$quoteRequest->name}",
+                null,
+                $quoteRequest
+            );
         } catch (\Exception $e) {
             \Log::error('Failed to send quote acceptance notification: ' . $e->getMessage());
         }

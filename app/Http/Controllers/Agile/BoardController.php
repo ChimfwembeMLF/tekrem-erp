@@ -18,7 +18,7 @@ class BoardController extends Controller
             ->with(['columns.cards.assignee', 'columns.cards.reporter'])
             ->get();
 
-        return Inertia::render('Agile/Boards/Index', [
+        return Inertia::render('Projects/Boards/Index', [
             'project' => $project,
             'boards' => $boards,
         ]);
@@ -46,7 +46,7 @@ class BoardController extends Controller
             ->where('status', 'active')
             ->first();
 
-        return Inertia::render('Agile/Board', [
+        return Inertia::render('Projects/Board', [
             'board' => $board,
             'project' => $board->project,
             'columns' => $board->columns,
@@ -61,7 +61,7 @@ class BoardController extends Controller
     {
         // $this->authorize('update', $project);
 
-        return Inertia::render('Agile/Boards/Create', [
+        return Inertia::render('Projects/Boards/Create', [
             'project' => $project,
         ]);
     }
@@ -98,7 +98,7 @@ class BoardController extends Controller
     {
         // $this->authorize('update', $board->project);
 
-        return Inertia::render('Agile/Boards/Edit', [
+        return Inertia::render('Projects/Boards/Edit', [
             'board' => $board,
             'project' => $board->project,
         ]);
@@ -133,7 +133,7 @@ class BoardController extends Controller
     {
         // $this->authorize('update', $board->project);
 
-        return Inertia::render('Agile/Boards/Settings', [
+        return Inertia::render('Projects/Boards/Settings', [
             'board' => $board->load('columns'),
             'project' => $board->project,
         ]);

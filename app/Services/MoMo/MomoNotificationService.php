@@ -183,7 +183,7 @@ class MomoNotificationService
                     'error' => $error,
                     'timestamp' => now()->toISOString(),
                 ],
-                'action_url' => route('finance.momo.providers'),
+                'action_url' => route('settings.finance.payments.pawapay'),
             ];
 
             foreach ($adminUsers as $user) {

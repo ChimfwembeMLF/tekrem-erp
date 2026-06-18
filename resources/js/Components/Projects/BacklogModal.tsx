@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Button } from '@/Components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/Components/ui/sheet';
 import { BacklogItem } from '@/types/BacklogItem';
 import { Input } from '@/Components/ui/input';
 import { Textarea } from '@/Components/ui/textarea';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/Components/ui/select';
 import { Label } from '@/Components/ui/label';
-import { Badge } from '@/Components/ui/badge';
-import { X, Layers, Flag, User, GitBranch, Zap, Hash, AlignLeft, Tag, BarChart2 } from 'lucide-react';
+import { Layers, Flag, User, GitBranch, Zap, Hash, AlignLeft, Tag, BarChart2 } from 'lucide-react';
 
 interface BacklogModalProps {
   projectId: number;
@@ -90,46 +90,22 @@ export default function BacklogModal({
   const isEditing = !!backlogItem;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      onClick={e => e.target === e.currentTarget && onClose()}
-    >
-      {/* Backdrop */}
-      <div className="absolute inset-0 backdrop-blur-sm bg-black/50" />
-
-      {/* Modal */}
-      <div className="relative z-10 w-full sm:max-w-xl max-h-[92vh] sm:max-h-[85vh] flex flex-col rounded-t-2xl sm:rounded-2xl backdrop-blur-md bg-gray-900/90 border border-white/10 shadow-2xl overflow-hidden">
-
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5 flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-secondary to-primary flex items-center justify-center">
-              <Layers className="w-4 h-4 text-white" />
+    <Sheet open onOpenChange={(open) => !open && onClose()}>
+      <SheetContent side="right" className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-xl">
+        <SheetHeader className="border-b px-6 py-4 text-left">
+          <div className="flex items-center gap-3 pr-8">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-secondary to-primary">
+              <Layers className="h-4 w-4 text-white" />
             </div>
             <div>
-              <h3 className="text-white font-semibold text-base leading-none">
-                {isEditing ? 'Edit Backlog Item' : 'New Backlog Item'}
-              </h3>
-              <p className="text-white/40 text-xs mt-0.5">Project #{projectId}</p>
+              <SheetTitle>{isEditing ? 'Edit Backlog Item' : 'New Backlog Item'}</SheetTitle>
+              <p className="text-xs text-muted-foreground">Project #{projectId}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            {/* Current status badge */}
-            <Badge className={`text-xs border ${priorityConfig[priority]?.bg} ${priorityConfig[priority]?.color} hidden sm:flex`}>
-              {priority}
-            </Badge>
-            <button
-              onClick={onClose}
-              className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all duration-200"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+        </SheetHeader>
 
-        {/* Scrollable form body */}
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5 scrollbar-thin scrollbar-thumb-white/10">
+        <form onSubmit={handleSubmit} className="flex flex-1 flex-col overflow-hidden">
+          <div className="flex-1 space-y-5 overflow-y-auto px-6 py-5">
 
             {/* Title */}
             <FieldGroup icon={AlignLeft} label="Title">
@@ -320,29 +296,21 @@ export default function BacklogModal({
           </div>
 
           {/* Footer actions */}
-          <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-white/10 bg-white/5 flex-shrink-0">
-            <p className="text-white/30 text-xs hidden sm:block">
+          <div className="flex flex-shrink-0 items-center justify-between gap-3 border-t px-6 py-4">
+            <p className="hidden text-xs text-muted-foreground sm:block">
               {isEditing ? `Editing item #${backlogItem?.id}` : 'New item will be added to the backlog'}
             </p>
-            <div className="flex gap-2 ml-auto">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onClose}
-                className="bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
-              >
+            <div className="ml-auto flex gap-2">
+              <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                className="bg-gradient-to-r from-secondary to-primary hover:from-primary hover:to-secondary text-white font-semibold px-6"
-              >
+              <Button type="submit">
                 {isEditing ? 'Save Changes' : 'Create Item'}
               </Button>
             </div>
           </div>
         </form>
-      </div>
-    </div>
+      </SheetContent>
+    </Sheet>
   );
 }

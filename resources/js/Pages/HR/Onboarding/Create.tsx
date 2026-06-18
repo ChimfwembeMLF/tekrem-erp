@@ -1,7 +1,6 @@
-
 import React from 'react';
-import { Head, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import { useForm } from '@inertiajs/react';
+import HrPageShell from '@/Components/HR/HrPageShell';
 import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -18,78 +17,73 @@ interface Employee {
 
 interface CreateOnboardingProps {
   employees: Employee[];
+  workflowTitles: string[];
 }
 
-export default function CreateOnboarding({ employees = [] }: CreateOnboardingProps) {
+export default function CreateOnboarding({ employees = [], workflowTitles = [] }: CreateOnboardingProps) {
   const route = useRoute();
   const { data, setData, post, processing, errors } = useForm({
     title: '',
-    status: '',
     employee_id: '',
     start_date: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    post(route('hr.onboarding.store'));
-  };
-
   return (
-    <AppLayout title="Add Onboarding Workflow">
-      <Head title="Add Onboarding Workflow" />
-      <div className="max-w-xl mx-auto py-8">
+    <HrPageShell title="Start onboarding" description="A checklist will be created automatically for the new hire.">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          post(route('hr.onboarding.store'));
+        }}
+        className="mx-auto max-w-lg space-y-4"
+      >
         <Card>
           <CardHeader>
-            <CardTitle>Add Onboarding Workflow</CardTitle>
+            <CardTitle className="text-base">New hire</CardTitle>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="title">Title</Label>
-                <Input id="title" type="text" value={data.title} onChange={e => setData('title', e.target.value)} />
-                {errors.title && <div className="text-red-500 text-xs mt-1">{errors.title}</div>}
-              </div>
-              <div>
-                <Label htmlFor="employee_id">Employee</Label>
-                <Select value={data.employee_id} onValueChange={value => setData('employee_id', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Employee" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {employees.map(emp => (
-                      <SelectItem key={emp.id} value={emp.id.toString()}>
-                        {emp.name} ({emp.email})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.employee_id && <div className="text-red-500 text-xs mt-1">{errors.employee_id}</div>}
-              </div>
-              <div>
-                <Label htmlFor="start_date">Start Date</Label>
-                <Input id="start_date" type="date" value={data.start_date} onChange={e => setData('start_date', e.target.value)} />
-                {errors.start_date && <div className="text-red-500 text-xs mt-1">{errors.start_date}</div>}
-              </div>
-              <div>
-                <Label htmlFor="status">Status</Label>
-                <Select value={data.status} onValueChange={value => setData('status', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-                {errors.status && <div className="text-red-500 text-xs mt-1">{errors.status}</div>}
-              </div>
-              <Button type="submit" disabled={processing}>Save Workflow</Button>
-            </form>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="employee_id">Employee</Label>
+              <Select value={data.employee_id} onValueChange={(v) => setData('employee_id', v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select employee" />
+                </SelectTrigger>
+                <SelectContent>
+                  {employees.map((emp) => (
+                    <SelectItem key={emp.id} value={emp.id.toString()}>
+                      {emp.name} ({emp.employee_id})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.employee_id && <p className="mt-1 text-sm text-destructive">{errors.employee_id}</p>}
+            </div>
+            <div>
+              <Label htmlFor="title">Workflow title</Label>
+              <Select value={data.title} onValueChange={(v) => setData('title', v === '__default__' ? '' : v)}>
+                <SelectTrigger id="title">
+                  <SelectValue placeholder="Select workflow" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__default__">Default (employee name)</SelectItem>
+                  {workflowTitles.map((title) => (
+                    <SelectItem key={title} value={title}>
+                      {title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.title && <p className="mt-1 text-sm text-destructive">{errors.title}</p>}
+            </div>
+            <div>
+              <Label htmlFor="start_date">Start date</Label>
+              <Input id="start_date" type="date" value={data.start_date} onChange={(e) => setData('start_date', e.target.value)} />
+              {errors.start_date && <p className="mt-1 text-sm text-destructive">{errors.start_date}</p>}
+            </div>
           </CardContent>
         </Card>
-      </div>
-    </AppLayout>
+        <Button type="submit" disabled={processing}>Start onboarding</Button>
+      </form>
+    </HrPageShell>
   );
 }

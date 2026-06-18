@@ -2,21 +2,26 @@
 
 namespace App\Http\Controllers\Support;
 
+use App\Events\SupportChatbotEvent;
 use App\Http\Controllers\Controller;
 use App\Models\Support\Ticket;
-use App\Models\Support\KnowledgeBaseArticle;
-use App\Models\Support\FAQ;
+use App\Models\Support\SupportChatbotMessage;
 use App\Services\Support\SupportAIService;
+use App\Services\Support\SupportChatStaffNotifier;
+use App\Services\Support\SupportChatbotStore;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class ChatbotController extends Controller
 {
     public function __construct(
-        private SupportAIService $aiService
+        private SupportAIService $aiService,
+        private SupportChatbotStore $chatbotStore,
     ) {}
     
     public function index()
@@ -29,44 +34,96 @@ class ChatbotController extends Controller
      */
     public function chat(Request $request): JsonResponse
     {
+        $user = Auth::user();
+
         $validated = $request->validate([
-            'message' => ['required', 'string', 'max:1000'],
-            'conversation_id' => ['nullable', 'string'],
-            'context' => ['nullable', 'array'],
+            'message' => ['nullable', 'string', 'max:1000'],
+            'conversation_id' => ['nullable', 'string', 'uuid'],
+            'context' => ['nullable'],
+            'attachments' => ['nullable', 'array', 'max:5'],
+            'attachments.*' => ['file', 'max:10240'],
         ]);
 
-        $conversationId = $validated['conversation_id'] ?? $this->generateConversationId();
-        $userMessage = $validated['message'];
         $context = $validated['context'] ?? [];
+        if (is_string($context)) {
+            $decoded = json_decode($context, true);
+            $context = is_array($decoded) ? $decoded : [];
+        }
 
-        // Get conversation history
-        $conversation = $this->getConversationHistory($conversationId);
-        
-        // Add user message to conversation
-        $conversation[] = [
-            'role' => 'user',
-            'message' => $userMessage,
-            'timestamp' => now()->toISOString(),
-        ];
+        $userMessage = trim($validated['message'] ?? '');
+        $attachments = $this->processAttachments($request);
 
-        // Analyze user intent
+        if ($userMessage === '' && empty($attachments)) {
+            return response()->json([
+                'message' => 'Please enter a message or attach a file.',
+                'errors' => ['message' => ['A message or attachment is required.']],
+            ], 422);
+        }
+
+        if ($userMessage === '' && !empty($attachments)) {
+            $userMessage = '[Attachment sent]';
+        }
+
+        $conversationId = $validated['conversation_id'] ?? (string) Str::uuid();
+        $conversation = $this->chatbotStore->resolveConversation($conversationId, $user);
+
+        $this->chatbotStore->addMessage($conversation, 'user', $userMessage, [
+            'attachments' => $attachments ?: null,
+        ]);
+
+        try {
+            SupportChatStaffNotifier::notify(
+                $user,
+                $conversationId,
+                'message',
+                SupportChatStaffNotifier::previewMessage($userMessage, !empty($attachments)),
+                !empty($attachments),
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Support chat staff notification failed', ['error' => $e->getMessage()]);
+        }
+
+        $conversationHistory = $this->chatbotStore->getHistory($conversationId, $user);
         $intent = $this->analyzeIntent($userMessage, $context);
 
-        // Generate AI response based on intent
-        $response = $this->generateResponse($userMessage, $intent, $conversation, $context);
+        broadcast(new SupportChatbotEvent($conversationId, 'typing', [
+            'is_typing' => true,
+            'actor' => 'assistant',
+        ]));
 
-        // Add AI response to conversation
-        $conversation[] = [
-            'role' => 'assistant',
-            'message' => $response['message'],
+        $response = $this->buildChatbotReply($userMessage, $intent, $conversationHistory, $context);
+
+        $suggestedTicketTitle = in_array($intent, ['ticket_inquiry', 'bug_report', 'billing_help'], true)
+            || $this->userWantsTicket($userMessage)
+            ? $this->aiService->suggestTicketTitle($conversationHistory, $userMessage)
+            : null;
+
+        broadcast(new SupportChatbotEvent($conversationId, 'typing', [
+            'is_typing' => false,
+            'actor' => 'assistant',
+        ]));
+
+        $assistantMessage = $this->chatbotStore->addMessage($conversation, 'assistant', $response['message'], [
             'intent' => $intent,
             'suggestions' => $response['suggestions'] ?? [],
             'actions' => $response['actions'] ?? [],
-            'timestamp' => now()->toISOString(),
+            'confidence' => $response['confidence'] ?? 0.8,
+            'requires_human' => $response['requires_human'] ?? false,
+        ]);
+
+        $assistantPayload = [
+            'id' => $assistantMessage->id,
+            'role' => 'assistant',
+            'message' => $response['message'],
+            'timestamp' => $assistantMessage->created_at?->toISOString(),
+            'intent' => $intent,
+            'suggestions' => $response['suggestions'] ?? [],
+            'actions' => $response['actions'] ?? [],
+            'confidence' => $response['confidence'] ?? 0.8,
+            'requires_human' => $response['requires_human'] ?? false,
         ];
 
-        // Store conversation
-        $this->storeConversation($conversationId, $conversation);
+        broadcast(new SupportChatbotEvent($conversationId, 'message', $assistantPayload));
 
         return response()->json([
             'conversation_id' => $conversationId,
@@ -76,6 +133,8 @@ class ChatbotController extends Controller
             'actions' => $response['actions'] ?? [],
             'confidence' => $response['confidence'] ?? 0.8,
             'requires_human' => $response['requires_human'] ?? false,
+            'suggested_ticket_title' => $suggestedTicketTitle,
+            'message_id' => $assistantMessage->id,
         ]);
     }
 
@@ -85,14 +144,15 @@ class ChatbotController extends Controller
     public function getConversation(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'conversation_id' => ['required', 'string'],
+            'conversation_id' => ['required', 'string', 'uuid'],
         ]);
 
-        $conversation = $this->getConversationHistory($validated['conversation_id']);
+        $user = Auth::user();
+        $messages = $this->chatbotStore->getHistory($validated['conversation_id'], $user);
 
         return response()->json([
             'conversation_id' => $validated['conversation_id'],
-            'messages' => $conversation,
+            'messages' => $messages,
         ]);
     }
 
@@ -102,62 +162,118 @@ class ChatbotController extends Controller
     public function createTicketFromChat(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'conversation_id' => ['required', 'string'],
+            'conversation_id' => ['required', 'string', 'uuid'],
             'title' => ['required', 'string', 'max:255'],
             'priority' => ['required', 'in:low,medium,high,urgent'],
             'category_id' => ['nullable', 'exists:ticket_categories,id'],
         ]);
 
-        $conversation = $this->getConversationHistory($validated['conversation_id']);
-        
-        if (empty($conversation)) {
+        $user = Auth::user();
+        $conversation = $this->chatbotStore->resolveConversation($validated['conversation_id'], $user);
+        $conversation->load('messages');
+
+        $conversationMessages = $conversation->messages->map->toChatArray()->all();
+
+        if (empty($conversationMessages)) {
+            $description = "Ticket created from support chat:\n\n{$validated['title']}\n";
+        } else {
+            $description = "Ticket created from support chat:\n\n";
+            foreach ($conversationMessages as $message) {
+                $speaker = $message['role'] === 'user' ? 'Customer' : 'AI Assistant';
+                $description .= "{$speaker}: {$message['message']}\n\n";
+            }
+        }
+
+        $categoryId = $validated['category_id'] ?? null;
+        $conversationAttachments = $this->collectConversationAttachments($conversationMessages);
+
+        try {
+            $ticket = Ticket::create([
+                'title' => $validated['title'],
+                'description' => $description,
+                'priority' => $validated['priority'],
+                'category_id' => $categoryId,
+                'status' => 'open',
+                'source' => 'support_chatbot',
+                'requester_type' => get_class($user),
+                'requester_id' => $user->id,
+                'created_by' => $user->id,
+                'attachments' => $conversationAttachments ?: null,
+                'metadata' => [
+                    'created_from_chat' => true,
+                    'conversation_id' => $validated['conversation_id'],
+                    'requester_email' => $user->email,
+                ],
+            ]);
+
+            if (!$categoryId) {
+                $categoryId = $this->aiService->categorizeTicket($ticket);
+                if ($categoryId) {
+                    $ticket->update(['category_id' => $categoryId]);
+                }
+            }
+
+            $aiPriority = $this->aiService->determinePriority($ticket->fresh());
+            if ($validated['priority'] === 'medium' && $aiPriority !== 'medium') {
+                $ticket->update(['priority' => $aiPriority]);
+            }
+
+            $conversation->update([
+                'ticket_id' => $ticket->id,
+                'status' => 'ticket_created',
+            ]);
+
+            try {
+                SupportChatStaffNotifier::notify(
+                    $user,
+                    $validated['conversation_id'],
+                    'ticket',
+                    "Created ticket #{$ticket->ticket_number}: {$ticket->title}",
+                    !empty($conversationAttachments),
+                    route('support.tickets.show', $ticket),
+                );
+            } catch (\Throwable $e) {
+                Log::warning('Support ticket notification failed', ['error' => $e->getMessage()]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'ticket' => $ticket->fresh(['category']),
+                'message' => "Ticket #{$ticket->ticket_number} created successfully. Our team will review it shortly.",
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Support chatbot ticket creation failed', [
+                'conversation_id' => $validated['conversation_id'],
+                'error' => $e->getMessage(),
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Conversation not found.'
-            ], 404);
+                'message' => 'Failed to create ticket. Please try again.',
+            ], 500);
         }
+    }
 
-        // Build description from conversation
-        $description = "Ticket created from chatbot conversation:\n\n";
-        foreach ($conversation as $message) {
-            if ($message['role'] === 'user') {
-                $description .= "Customer: " . $message['message'] . "\n";
-            } else {
-                $description .= "AI Assistant: " . $message['message'] . "\n";
-            }
-            $description .= "\n";
-        }
-
-        // Create ticket
-        $user = Auth::user();
-        $ticket = Ticket::create([
-            'title' => $validated['title'],
-            'description' => $description,
-            'priority' => $validated['priority'],
-            'category_id' => $validated['category_id'],
-            'status' => 'open',
-            'requester_type' => get_class($user),
-            'requester_id' => $user->id,
-            'requester_email' => $user->email,
-            'created_by' => $user->id,
-            'metadata' => [
-                'created_from_chat' => true,
-                'conversation_id' => $validated['conversation_id'],
-            ],
+    /**
+     * Suggest a ticket title from an existing conversation.
+     */
+    public function suggestTicketTitle(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'conversation_id' => ['required', 'string', 'uuid'],
         ]);
 
-        // Auto-categorize and set priority using AI if not provided
-        if (!$validated['category_id']) {
-            $categoryId = $this->aiService->categorizeTicket($ticket);
-            if ($categoryId) {
-                $ticket->update(['category_id' => $categoryId]);
-            }
+        $user = Auth::user();
+        $conversation = $this->chatbotStore->getHistory($validated['conversation_id'], $user);
+        if (empty($conversation)) {
+            return response()->json(['title' => 'Support request from chat']);
         }
 
+        $lastUser = collect($conversation)->where('role', 'user')->last();
+        $latest = $lastUser['message'] ?? 'Support request';
+
         return response()->json([
-            'success' => true,
-            'ticket' => $ticket,
-            'message' => 'Ticket created successfully from conversation.'
+            'title' => $this->aiService->suggestTicketTitle($conversation, $latest),
         ]);
     }
 
@@ -188,6 +304,11 @@ class ChatbotController extends Controller
                 'category' => 'Billing'
             ],
             [
+                'text' => 'Create a support ticket for my issue',
+                'intent' => 'ticket_inquiry',
+                'category' => 'General'
+            ],
+            [
                 'text' => 'How do I use this feature?',
                 'intent' => 'feature_help',
                 'category' => 'General'
@@ -205,25 +326,33 @@ class ChatbotController extends Controller
     public function rateResponse(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'conversation_id' => ['required', 'string'],
-            'message_index' => ['required', 'integer'],
+            'conversation_id' => ['required', 'string', 'uuid'],
+            'message_id' => ['required', 'string', 'uuid'],
             'rating' => ['required', 'in:helpful,not_helpful'],
             'feedback' => ['nullable', 'string', 'max:500'],
         ]);
 
-        // Store rating in conversation metadata
-        $conversation = $this->getConversationHistory($validated['conversation_id']);
-        
-        if (isset($conversation[$validated['message_index']])) {
-            $conversation[$validated['message_index']]['rating'] = $validated['rating'];
-            $conversation[$validated['message_index']]['feedback'] = $validated['feedback'] ?? null;
-            
-            $this->storeConversation($validated['conversation_id'], $conversation);
+        $user = Auth::user();
+        $conversation = $this->chatbotStore->resolveConversation($validated['conversation_id'], $user);
+
+        $message = SupportChatbotMessage::query()
+            ->where('id', $validated['message_id'])
+            ->where('conversation_id', $conversation->id)
+            ->where('role', 'assistant')
+            ->first();
+
+        if (!$message) {
+            return response()->json(['success' => false, 'message' => 'Message not found.'], 404);
         }
+
+        $message->update([
+            'rating' => $validated['rating'],
+            'feedback' => $validated['feedback'] ?? null,
+        ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Thank you for your feedback!'
+            'message' => 'Thank you for your feedback!',
         ]);
     }
 
@@ -233,20 +362,38 @@ class ChatbotController extends Controller
     public function escalateToHuman(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'conversation_id' => ['required', 'string'],
+            'conversation_id' => ['required', 'string', 'uuid'],
             'reason' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $conversation = $this->getConversationHistory($validated['conversation_id']);
-        
-        // Mark conversation as escalated
-        $escalationData = [
-            'escalated_at' => now()->toISOString(),
-            'reason' => $validated['reason'] ?? 'User requested human assistance',
-            'user_id' => Auth::id(),
-        ];
+        $user = Auth::user();
+        $conversation = $this->chatbotStore->resolveConversation($validated['conversation_id'], $user);
+        $conversation->load('messages');
+        $conversationMessages = $conversation->messages->map->toChatArray()->all();
 
-        $this->storeConversationMetadata($validated['conversation_id'], 'escalation', $escalationData);
+        $conversation->update([
+            'status' => 'escalated',
+            'escalated_at' => now(),
+            'metadata' => array_merge($conversation->metadata ?? [], [
+                'escalation' => [
+                    'reason' => $validated['reason'] ?? 'User requested human assistance',
+                    'user_id' => $user->id,
+                    'escalated_at' => now()->toISOString(),
+                ],
+            ]),
+        ]);
+
+        try {
+            SupportChatStaffNotifier::notify(
+                $user,
+                $validated['conversation_id'],
+                'escalation',
+                $validated['reason'] ?? 'Requested human assistance',
+                $this->conversationHasAttachments($conversationMessages),
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Support escalation notification failed', ['error' => $e->getMessage()]);
+        }
 
         return response()->json([
             'success' => true,
@@ -261,6 +408,10 @@ class ChatbotController extends Controller
     private function analyzeIntent(string $message, array $context = []): string
     {
         $message = strtolower($message);
+
+        if ($this->userWantsTicket($message)) {
+            return 'ticket_inquiry';
+        }
 
         // Simple intent detection - could be enhanced with AI
         if (str_contains($message, 'login') || str_contains($message, 'sign in')) {
@@ -283,124 +434,61 @@ class ChatbotController extends Controller
     /**
      * Generate AI response based on intent and context.
      */
-    private function generateResponse(string $message, string $intent, array $conversation, array $context): array
+    private function buildChatbotReply(string $message, string $intent, array $conversation, array $context): array
     {
-        // Build conversation context for AI
-        $conversationContext = '';
-        foreach (array_slice($conversation, -5) as $msg) {
-            $conversationContext .= "{$msg['role']}: {$msg['message']}\n";
-        }
-
-        // Get relevant knowledge base content
-        $relevantContent = $this->findRelevantContent($message, $intent);
-
-        // Build AI prompt
-        $prompt = $this->buildChatbotPrompt($message, $intent, $conversationContext, $relevantContent);
-
         try {
-            $aiResponse = $this->aiService->generateResponse($prompt);
-            
+            $aiResponse = $this->aiService->generateChatResponse('', $conversation, $message);
+
+            $actions = $this->generateActions($intent);
+            if ($this->userWantsTicket($message) && !collect($actions)->contains(fn ($a) => ($a['action'] ?? null) === 'create_ticket')) {
+                array_unshift($actions, ['type' => 'action', 'label' => 'Create Support Ticket', 'action' => 'create_ticket']);
+            }
+
             return [
                 'message' => $aiResponse,
                 'confidence' => 0.85,
                 'suggestions' => $this->generateSuggestions($intent),
-                'actions' => $this->generateActions($intent),
+                'actions' => $actions,
                 'requires_human' => $this->shouldEscalateToHuman($message, $intent),
             ];
 
         } catch (\Exception $e) {
             return [
-                'message' => "I'm sorry, I'm having trouble processing your request right now. Would you like me to connect you with a human agent?",
+                'message' => "I'm sorry, I'm having trouble processing your request right now. Would you like me to create a support ticket for you?",
                 'confidence' => 0.1,
                 'requires_human' => true,
-                'actions' => [['type' => 'escalate', 'label' => 'Connect with Human Agent']],
+                'actions' => [
+                    ['type' => 'action', 'label' => 'Create Support Ticket', 'action' => 'create_ticket'],
+                    ['type' => 'action', 'label' => 'Connect with Human Agent', 'action' => 'escalate'],
+                ],
             ];
         }
     }
 
-    /**
-     * Build chatbot prompt for AI.
-     */
-    private function buildChatbotPrompt(string $message, string $intent, string $context, array $content): string
+    private function userWantsTicket(string $message): bool
     {
-        $prompt = "You are a helpful customer support chatbot. Respond professionally and helpfully.\n\n";
-        $prompt .= "User Intent: {$intent}\n";
-        $prompt .= "Current Message: {$message}\n\n";
-        
-        if (!empty($context)) {
-            $prompt .= "Conversation History:\n{$context}\n";
-        }
+        $message = strtolower($message);
+        $phrases = [
+            'create a ticket',
+            'create ticket',
+            'open a ticket',
+            'open ticket',
+            'submit a ticket',
+            'file a ticket',
+            'report this',
+            'report an issue',
+            'report a bug',
+            'log a ticket',
+            'raise a ticket',
+        ];
 
-        if (!empty($content)) {
-            $prompt .= "Relevant Information:\n";
-            foreach ($content as $item) {
-                $prompt .= "- {$item['title']}: {$item['content']}\n";
+        foreach ($phrases as $phrase) {
+            if (str_contains($message, $phrase)) {
+                return true;
             }
-            $prompt .= "\n";
         }
 
-        $prompt .= "Guidelines:\n";
-        $prompt .= "- Be concise but helpful\n";
-        $prompt .= "- Provide step-by-step instructions when appropriate\n";
-        $prompt .= "- If you can't fully resolve the issue, suggest creating a support ticket\n";
-        $prompt .= "- Be empathetic and professional\n";
-        $prompt .= "- If the issue is complex, recommend human assistance\n\n";
-        $prompt .= "Respond to the user's message:";
-
-        return $prompt;
-    }
-
-    /**
-     * Find relevant content for the user's query.
-     */
-    private function findRelevantContent(string $message, string $intent): array
-    {
-        $keywords = explode(' ', strtolower($message));
-        $content = [];
-
-        // Search FAQs
-        $faqs = FAQ::published()
-            ->where(function ($query) use ($keywords) {
-                foreach ($keywords as $keyword) {
-                    if (strlen($keyword) > 3) {
-                        $query->orWhere('question', 'like', "%{$keyword}%")
-                              ->orWhere('answer', 'like', "%{$keyword}%");
-                    }
-                }
-            })
-            ->limit(2)
-            ->get();
-
-        foreach ($faqs as $faq) {
-            $content[] = [
-                'title' => $faq->question,
-                'content' => substr($faq->answer, 0, 200),
-                'type' => 'faq'
-            ];
-        }
-
-        // Search knowledge base
-        $articles = KnowledgeBaseArticle::published()
-            ->where(function ($query) use ($keywords) {
-                foreach ($keywords as $keyword) {
-                    if (strlen($keyword) > 3) {
-                        $query->orWhere('title', 'like', "%{$keyword}%")
-                              ->orWhere('content', 'like', "%{$keyword}%");
-                    }
-                }
-            })
-            ->limit(2)
-            ->get();
-
-        foreach ($articles as $article) {
-            $content[] = [
-                'title' => $article->title,
-                'content' => substr($article->content, 0, 200),
-                'type' => 'article'
-            ];
-        }
-
-        return $content;
+        return false;
     }
 
     /**
@@ -423,7 +511,13 @@ class ChatbotController extends Controller
             'bug_report' => [
                 'Provide steps to reproduce the issue',
                 'Include screenshots if possible',
-                'Note your browser and operating system'
+                'Note your browser and operating system',
+                'Create a support ticket with full details',
+            ],
+            'ticket_inquiry' => [
+                'Click "Create Support Ticket" to log your issue',
+                'Include error messages if any',
+                'Describe what you expected vs what happened',
             ],
             default => [
                 'Browse our knowledge base',
@@ -439,21 +533,22 @@ class ChatbotController extends Controller
     private function generateActions(string $intent): array
     {
         return match($intent) {
+            'ticket_inquiry' => [
+                ['type' => 'action', 'label' => 'Create Support Ticket', 'action' => 'create_ticket'],
+            ],
             'login_help' => [
                 ['type' => 'link', 'label' => 'Reset Password', 'url' => '/password/reset'],
-                ['type' => 'link', 'label' => 'Contact Support', 'url' => '/support/create']
+                ['type' => 'action', 'label' => 'Create Support Ticket', 'action' => 'create_ticket'],
             ],
             'bug_report' => [
-                ['type' => 'action', 'label' => 'Create Bug Report', 'action' => 'create_ticket'],
+                ['type' => 'action', 'label' => 'Create Bug Report Ticket', 'action' => 'create_ticket'],
             ],
             'billing_help' => [
-                ['type' => 'link', 'label' => 'View Billing', 'url' => '/billing'],
-                ['type' => 'action', 'label' => 'Contact Billing Support', 'action' => 'create_ticket']
+                ['type' => 'action', 'label' => 'Create Billing Ticket', 'action' => 'create_ticket'],
             ],
             default => [
-                ['type' => 'link', 'label' => 'Browse Knowledge Base', 'url' => '/support/knowledge-base'],
-                ['type' => 'action', 'label' => 'Create Support Ticket', 'action' => 'create_ticket']
-            ]
+                ['type' => 'action', 'label' => 'Create Support Ticket', 'action' => 'create_ticket'],
+            ],
         };
     }
 
@@ -473,36 +568,54 @@ class ChatbotController extends Controller
         return false;
     }
 
-    /**
-     * Generate unique conversation ID.
-     */
-    private function generateConversationId(): string
+    private function processAttachments(Request $request): array
     {
-        return 'chat_' . uniqid() . '_' . time();
+        $attachments = [];
+
+        if (!$request->hasFile('attachments')) {
+            return $attachments;
+        }
+
+        foreach ($request->file('attachments') as $file) {
+            $path = $file->store('support-chatbot-attachments', 'public');
+            $attachments[] = [
+                'id' => (string) Str::uuid(),
+                'name' => $file->getClientOriginalName(),
+                'type' => $file->getMimeType(),
+                'size' => $file->getSize(),
+                'url' => Storage::url($path),
+                'uploaded_at' => now()->toISOString(),
+            ];
+        }
+
+        return $attachments;
     }
 
-    /**
-     * Get conversation history from session/cache.
-     */
-    private function getConversationHistory(string $conversationId): array
+    private function collectConversationAttachments(array $conversation): array
     {
-        return Session::get("chatbot_conversation_{$conversationId}", []);
+        $attachments = [];
+
+        foreach ($conversation as $message) {
+            if (($message['role'] ?? null) !== 'user' || empty($message['attachments'])) {
+                continue;
+            }
+
+            foreach ($message['attachments'] as $attachment) {
+                $attachments[] = $attachment;
+            }
+        }
+
+        return $attachments;
     }
 
-    /**
-     * Store conversation in session/cache.
-     */
-    private function storeConversation(string $conversationId, array $conversation): void
+    private function conversationHasAttachments(array $conversation): bool
     {
-        Session::put("chatbot_conversation_{$conversationId}", $conversation);
-    }
+        foreach ($conversation as $message) {
+            if (!empty($message['attachments'])) {
+                return true;
+            }
+        }
 
-    /**
-     * Store conversation metadata.
-     */
-    private function storeConversationMetadata(string $conversationId, string $key, mixed $data): void
-    {
-        $metadataKey = "chatbot_metadata_{$conversationId}_{$key}";
-        Session::put($metadataKey, $data);
+        return false;
     }
 }

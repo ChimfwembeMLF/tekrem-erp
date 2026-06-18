@@ -67,22 +67,6 @@ use App\Models\CardAttachment;
 use App\Models\Notification;
 use App\Models\Chat;
 
-// Social Media
-use App\Models\SocialMedia\FacebookPage;
-use App\Models\SocialMedia\FacebookLead;
-use App\Models\SocialMedia\InstagramAccount;
-use App\Models\SocialMedia\InstagramMedia;
-use App\Models\SocialMedia\LinkedInCompany;
-use App\Models\SocialMedia\LinkedInLead;
-use App\Models\SocialMedia\SocialPost;
-use App\Models\SocialMedia\SocialWebhook;
-use App\Models\SocialMedia\Tweet;
-use App\Models\SocialMedia\TwitterAccount;
-use App\Models\SocialMedia\WhatsAppAccount;
-use App\Models\SocialMedia\WhatsAppChat;
-use App\Models\SocialMedia\WhatsAppContact;
-use App\Models\SocialMedia\WhatsAppMessage;
-
 // Approval
 use App\Models\Approval\ApprovalRequest;
 use App\Models\Approval\ApprovalStep;
@@ -93,9 +77,6 @@ use App\Models\Guest\GuestInquiry;
 use App\Models\Guest\GuestProjectInquiry;
 use App\Models\Guest\GuestQuoteRequest;
 use App\Models\Guest\GuestSupportTicket;
-
-// CMS
-use App\Models\CMS\Page;
 
 // AI
 use App\Models\AI\AIModel;
@@ -144,12 +125,6 @@ class AIContextService
                 'icon' => 'life-buoy',
                 'color' => 'red',
             ],
-            'social_media' => [
-                'label' => 'Social Media',
-                'description' => 'Access to social media accounts, posts, and integrations',
-                'icon' => 'share-2',
-                'color' => 'teal',
-            ],
             'approval' => [
                 'label' => 'Approval',
                 'description' => 'Access to approval requests, steps, and workflows',
@@ -161,12 +136,6 @@ class AIContextService
                 'description' => 'Access to guest inquiries, quote requests, and support tickets',
                 'icon' => 'user',
                 'color' => 'pink',
-            ],
-            'cms' => [
-                'label' => 'CMS',
-                'description' => 'Access to content management pages',
-                'icon' => 'file-text',
-                'color' => 'indigo',
             ],
             'general' => [
                 'label' => 'General - System Wide',
@@ -188,29 +157,13 @@ class AIContextService
             'projects' => $this->getProjectsSchema(),
             'hr' => $this->getHRSchema(),
             'support' => $this->getSupportSchema(),
-            'social_media' => $this->getSocialMediaSchema(),
             'approval' => $this->getApprovalSchema(),
             'guest' => $this->getGuestSchema(),
-            'cms' => $this->getCMSSchema(),
             'general' => $this->getGeneralSchema(),
             default => [],
         };
     }
 
-            /**
-         * Get CMS module schema
-         */
-        private function getCMSSchema(): array
-        {
-            return [
-                'Page' => [
-                    'table' => 'pages',
-                    'fillable' => (new Page())->getFillable(),
-                    'relationships' => [],
-                    'record_count' => Page::count(),
-                ],
-            ];
-        }
     /**
      * Get Guest module schema
      */
@@ -533,98 +486,6 @@ class AIContextService
                 ],
             ];
         }
-    /**
-     * Get Social Media module schema
-     */
-    private function getSocialMediaSchema(): array
-    {
-        return [
-            'FacebookPage' => [
-                'table' => 'facebook_pages',
-                'fillable' => (new FacebookPage())->getFillable(),
-                'relationships' => [],
-                'record_count' => FacebookPage::count(),
-            ],
-            'FacebookLead' => [
-                'table' => 'facebook_leads',
-                'fillable' => (new FacebookLead())->getFillable(),
-                'relationships' => [],
-                'record_count' => FacebookLead::count(),
-            ],
-            'InstagramAccount' => [
-                'table' => 'instagram_accounts',
-                'fillable' => (new InstagramAccount())->getFillable(),
-                'relationships' => [],
-                'record_count' => InstagramAccount::count(),
-            ],
-            'InstagramMedia' => [
-                'table' => 'instagram_media',
-                'fillable' => (new InstagramMedia())->getFillable(),
-                'relationships' => [],
-                'record_count' => InstagramMedia::count(),
-            ],
-            'LinkedInCompany' => [
-                'table' => 'linkedin_companies',
-                'fillable' => (new LinkedInCompany())->getFillable(),
-                'relationships' => [],
-                'record_count' => LinkedInCompany::count(),
-            ],
-            'LinkedInLead' => [
-                'table' => 'linkedin_leads',
-                'fillable' => (new LinkedInLead())->getFillable(),
-                'relationships' => [],
-                'record_count' => LinkedInLead::count(),
-            ],
-            'SocialPost' => [
-                'table' => 'social_posts',
-                'fillable' => (new SocialPost())->getFillable(),
-                'relationships' => [],
-                'record_count' => SocialPost::count(),
-            ],
-            'SocialWebhook' => [
-                'table' => 'social_webhooks',
-                'fillable' => (new SocialWebhook())->getFillable(),
-                'relationships' => [],
-                'record_count' => SocialWebhook::count(),
-            ],
-            'Tweet' => [
-                'table' => 'tweets',
-                'fillable' => (new Tweet())->getFillable(),
-                'relationships' => [],
-                'record_count' => Tweet::count(),
-            ],
-            'TwitterAccount' => [
-                'table' => 'twitter_accounts',
-                'fillable' => (new TwitterAccount())->getFillable(),
-                'relationships' => [],
-                'record_count' => TwitterAccount::count(),
-            ],
-            'WhatsAppAccount' => [
-                'table' => 'whatsapp_accounts',
-                'fillable' => (new WhatsAppAccount())->getFillable(),
-                'relationships' => [],
-                'record_count' => WhatsAppAccount::count(),
-            ],
-            'WhatsAppChat' => [
-                'table' => 'whatsapp_chats',
-                'fillable' => (new WhatsAppChat())->getFillable(),
-                'relationships' => [],
-                'record_count' => WhatsAppChat::count(),
-            ],
-            'WhatsAppContact' => [
-                'table' => 'whatsapp_contacts',
-                'fillable' => (new WhatsAppContact())->getFillable(),
-                'relationships' => [],
-                'record_count' => WhatsAppContact::count(),
-            ],
-            'WhatsAppMessage' => [
-                'table' => 'whatsapp_messages',
-                'fillable' => (new WhatsAppMessage())->getFillable(),
-                'relationships' => [],
-                'record_count' => WhatsAppMessage::count(),
-            ],
-        ];
-    }
     /**
      * Get Projects module schema
      */

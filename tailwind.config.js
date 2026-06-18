@@ -151,6 +151,38 @@ export default {
     				to: {
     					height: '0'
     				}
+    			},
+    			'launcher-pulse': {
+    				'0%': {
+    					transform: 'scale(1)',
+    					opacity: '0.5'
+    				},
+    				'70%': {
+    					transform: 'scale(1.45)',
+    					opacity: '0'
+    				},
+    				'100%': {
+    					transform: 'scale(1.45)',
+    					opacity: '0'
+    				}
+    			},
+    			'launcher-bob': {
+    				'0%, 100%': {
+    					transform: 'translateY(0)'
+    				},
+    				'50%': {
+    					transform: 'translateY(-4px)'
+    				}
+    			},
+    			'chat-panel-in': {
+    				from: {
+    					opacity: '0',
+    					transform: 'translateY(16px) scale(0.98)'
+    				},
+    				to: {
+    					opacity: '1',
+    					transform: 'translateY(0) scale(1)'
+    				}
     			}
     		},
     		animation: {
@@ -168,7 +200,10 @@ export default {
     			'scale-in': 'scale-in 0.2s ease-out both',
     			shimmer: 'shimmer 3s linear infinite',
     			'accordion-down': 'accordion-down 0.2s ease-out',
-    			'accordion-up': 'accordion-up 0.2s ease-out'
+    			'accordion-up': 'accordion-up 0.2s ease-out',
+    			'launcher-pulse': 'launcher-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+    			'launcher-bob': 'launcher-bob 2.5s ease-in-out infinite',
+    			'chat-panel-in': 'chat-panel-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both'
     		},
     		colors: {
     			primary: '#0D3A69',

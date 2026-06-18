@@ -50,13 +50,31 @@ Route::get('/services/mobile-apps', [WebsiteController::class, 'mobileApps'])->n
 Route::get('/services/ai-solutions', [WebsiteController::class, 'aiSolutions'])->name('services.ai-solutions');
 Route::get('/services/cloud-services', [WebsiteController::class, 'cloudServices'])->name('services.cloud-services');
 
-Route::get('/portfolio', [WebsiteController::class, 'portfolio'])->name('portfolio');
+Route::get('/pricing', [WebsiteController::class, 'pricing'])->name('pricing');
 
 Route::get('/contact', [WebsiteController::class, 'contact'])->name('contact');
 
-// Guest Help & FAQ Routes
-Route::get('/help', [WebsiteController::class, 'help'])->name('help');
+Route::get('/careers', [\App\Http\Controllers\CareerController::class, 'index'])->name('careers.index');
+Route::get('/careers/{slug}', [\App\Http\Controllers\CareerController::class, 'show'])->name('careers.show');
+Route::post('/careers/{slug}/apply', [\App\Http\Controllers\CareerController::class, 'apply'])->name('careers.apply');
+
+// FAQ (help content consolidated here)
+Route::redirect('/help', '/faq');
 Route::get('/faq', [WebsiteController::class, 'faq'])->name('faq');
+
+// Public Ecommerce Shop
+Route::prefix('shop')->name('shop.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Ecommerce\ShopController::class, 'index'])->name('index');
+    Route::get('/cart', [\App\Http\Controllers\Ecommerce\ShopController::class, 'cart'])->name('cart');
+    Route::patch('/cart/items/{cartItem}', [\App\Http\Controllers\Ecommerce\ShopController::class, 'updateCartItem'])->name('cart.update');
+    Route::delete('/cart/items/{cartItem}', [\App\Http\Controllers\Ecommerce\ShopController::class, 'removeCartItem'])->name('cart.remove');
+    Route::get('/checkout', [\App\Http\Controllers\Ecommerce\ShopController::class, 'checkout'])->name('checkout');
+    Route::post('/checkout', [\App\Http\Controllers\Ecommerce\ShopController::class, 'placeOrder'])->name('checkout.store');
+    Route::get('/order/{order}/confirmation', [\App\Http\Controllers\Ecommerce\ShopController::class, 'confirmation'])->name('order.confirmation');
+    Route::get('/order/{order}/receipt', [\App\Http\Controllers\Commerce\ReceiptController::class, 'shopOrder'])->name('order.receipt');
+    Route::get('/{product}', [\App\Http\Controllers\Ecommerce\ShopController::class, 'show'])->name('show');
+    Route::post('/{product}/cart', [\App\Http\Controllers\Ecommerce\ShopController::class, 'addToCart'])->name('cart.add');
+});
 
 // Direct Quote Request Route (alias to guest.quote.create)
 Route::get('/quote-request', function () {
@@ -140,6 +158,18 @@ Route::middleware([
     'verified',
 ])->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/session/ping', fn () => response()->json(['ok' => true]))->name('session.ping');
+
+    // Support chatbot API — any authenticated user (floating widget)
+    Route::prefix('support/chatbot')->name('support.chatbot.')->group(function () {
+        Route::post('chat', [\App\Http\Controllers\Support\ChatbotController::class, 'chat'])->name('chat');
+        Route::get('conversation', [\App\Http\Controllers\Support\ChatbotController::class, 'getConversation'])->name('conversation');
+        Route::get('suggest-ticket-title', [\App\Http\Controllers\Support\ChatbotController::class, 'suggestTicketTitle'])->name('suggest-ticket-title');
+        Route::post('create-ticket', [\App\Http\Controllers\Support\ChatbotController::class, 'createTicketFromChat'])->name('create-ticket');
+        Route::get('suggestions', [\App\Http\Controllers\Support\ChatbotController::class, 'getSuggestions'])->name('suggestions');
+        Route::post('rate', [\App\Http\Controllers\Support\ChatbotController::class, 'rateResponse'])->name('rate');
+        Route::post('escalate', [\App\Http\Controllers\Support\ChatbotController::class, 'escalateToHuman'])->name('escalate');
+    });
 
     // Notification routes
     Route::prefix('notifications')->name('notifications.')->group(function () {
@@ -640,6 +670,7 @@ Route::middleware([
         // Reports
         Route::resource('reports', \App\Http\Controllers\Finance\ReportController::class);
         Route::get('reports/{report}/download', [\App\Http\Controllers\Finance\ReportController::class, 'download'])->name('reports.download');
+        Route::get('reports/{report}/export/{format}', [\App\Http\Controllers\Finance\ReportController::class, 'export'])->name('reports.export');
 
         // Specific Report Types
         Route::prefix('reports')->name('reports.')->group(function () {
@@ -681,8 +712,8 @@ Route::middleware([
             Route::get('/audit', [\App\Http\Controllers\Finance\MomoController::class, 'audit'])->name('audit');
             Route::get('/audit/export', [\App\Http\Controllers\Finance\MomoController::class, 'exportAudit'])->name('audit.export');
 
-            // Provider Management
-            Route::get('/providers', [\App\Http\Controllers\Finance\MomoController::class, 'providers'])->name('providers');
+            // Provider management removed — payments use PawaPay (see Settings → Finance → Payments)
+            Route::redirect('/providers', '/settings/finance/payments/pawapay')->name('providers');
 
             // Statistics and Analytics
             Route::get('/statistics', [\App\Http\Controllers\Finance\MomoController::class, 'statistics'])->name('statistics');
@@ -710,6 +741,59 @@ Route::middleware([
             Route::get('audit-logs/export', [\App\Http\Controllers\Finance\ZraController::class, 'exportAuditLogs'])->name('audit-logs.export');
             Route::get('statistics', [\App\Http\Controllers\Finance\ZraController::class, 'statistics'])->name('statistics');
         });
+    });
+
+    // Inventory routes
+    Route::prefix('inventory')->name('inventory.')->middleware('permission:view inventory')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Inventory\DashboardController::class, 'index'])->name('dashboard');
+        Route::resource('products', \App\Http\Controllers\Inventory\ProductController::class);
+        Route::get('warehouses', [\App\Http\Controllers\Inventory\WarehouseController::class, 'index'])->name('warehouses.index');
+        Route::post('warehouses', [\App\Http\Controllers\Inventory\WarehouseController::class, 'store'])->name('warehouses.store');
+        Route::put('warehouses/{warehouse}', [\App\Http\Controllers\Inventory\WarehouseController::class, 'update'])->name('warehouses.update');
+        Route::get('warehouses/{warehouse}/stock', [\App\Http\Controllers\Inventory\WarehouseController::class, 'stock'])->name('warehouses.stock');
+    });
+
+    // Procurement routes
+    Route::prefix('procurement')->name('procurement.')->middleware('permission:view procurement')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Procurement\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('suppliers', [\App\Http\Controllers\Procurement\SupplierController::class, 'index'])->name('suppliers.index');
+        Route::post('suppliers', [\App\Http\Controllers\Procurement\SupplierController::class, 'store'])->name('suppliers.store');
+        Route::put('suppliers/{supplier}', [\App\Http\Controllers\Procurement\SupplierController::class, 'update'])->name('suppliers.update');
+        Route::resource('purchase-orders', \App\Http\Controllers\Procurement\PurchaseOrderController::class)->only(['index', 'create', 'store', 'show']);
+        Route::post('purchase-orders/{purchaseOrder}/approve', [\App\Http\Controllers\Procurement\PurchaseOrderController::class, 'approve'])->name('purchase-orders.approve');
+        Route::post('purchase-orders/{purchaseOrder}/receive', [\App\Http\Controllers\Procurement\PurchaseOrderController::class, 'receive'])->name('purchase-orders.receive');
+    });
+
+    // Sales / Order Management routes
+    Route::prefix('sales')->name('sales.')->middleware('permission:view sales orders')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Sales\DashboardController::class, 'index'])->name('dashboard');
+        Route::resource('orders', \App\Http\Controllers\Sales\SalesOrderController::class)->only(['index', 'create', 'store', 'show']);
+        Route::post('orders/{order}/confirm', [\App\Http\Controllers\Sales\SalesOrderController::class, 'confirm'])->name('orders.confirm');
+        Route::post('orders/{order}/fulfill', [\App\Http\Controllers\Sales\SalesOrderController::class, 'fulfill'])->name('orders.fulfill');
+    });
+
+    // POS routes
+    Route::prefix('pos')->name('pos.')->middleware('permission:access pos')->group(function () {
+        Route::get('/', [\App\Http\Controllers\POS\PosController::class, 'index'])->name('index');
+        Route::get('registers/{register}/terminal', [\App\Http\Controllers\POS\PosController::class, 'terminal'])->name('terminal');
+        Route::post('registers/{register}/open', [\App\Http\Controllers\POS\PosController::class, 'openSession'])->name('sessions.open');
+        Route::post('sessions/{session}/close', [\App\Http\Controllers\POS\PosController::class, 'closeSession'])->name('sessions.close');
+        Route::post('sessions/{session}/sale', [\App\Http\Controllers\POS\PosController::class, 'sale'])->name('sale');
+        Route::post('sessions/{session}/momo-sale', [\App\Http\Controllers\POS\PosController::class, 'momoSale'])->name('momo-sale');
+        Route::post('momo/{transaction}/status', [\App\Http\Controllers\POS\PosController::class, 'momoStatus'])->name('momo.status');
+        Route::get('sales/{sale}/receipt', [\App\Http\Controllers\Commerce\ReceiptController::class, 'posSale'])->name('sales.receipt');
+
+        Route::middleware('permission:manage pos registers')->group(function () {
+            Route::get('terminals', [\App\Http\Controllers\POS\PosRegisterController::class, 'index'])->name('registers.index');
+            Route::post('terminals', [\App\Http\Controllers\POS\PosRegisterController::class, 'store'])->name('registers.store');
+            Route::put('terminals/{register}', [\App\Http\Controllers\POS\PosRegisterController::class, 'update'])->name('registers.update');
+            Route::delete('terminals/{register}', [\App\Http\Controllers\POS\PosRegisterController::class, 'destroy'])->name('registers.destroy');
+        });
+    });
+
+    // Ecommerce admin routes
+    Route::prefix('ecommerce')->name('ecommerce.')->middleware('permission:view ecommerce')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Ecommerce\AdminController::class, 'index'])->name('dashboard');
     });
 
     // HR routes
@@ -741,13 +825,14 @@ Route::middleware([
         // Performance Management
         Route::resource('performance', \App\Http\Controllers\HR\PerformanceController::class);
         Route::post('performance/{performance}/submit', [\App\Http\Controllers\HR\PerformanceController::class, 'submit'])->name('performance.submit');
+        Route::post('performance/{performance}/start-review', [\App\Http\Controllers\HR\PerformanceController::class, 'startReview'])->name('performance.start-review');
         Route::post('performance/{performance}/approve', [\App\Http\Controllers\HR\PerformanceController::class, 'approve'])->name('performance.approve');
 
         // Attendance
-        Route::resource('attendance', \App\Http\Controllers\HR\AttendanceController::class);
+        Route::get('attendance/reports', [\App\Http\Controllers\HR\AttendanceController::class, 'reports'])->name('attendance.reports');
         Route::post('attendance/clock-in', [\App\Http\Controllers\HR\AttendanceController::class, 'clockIn'])->name('attendance.clock-in');
         Route::post('attendance/clock-out', [\App\Http\Controllers\HR\AttendanceController::class, 'clockOut'])->name('attendance.clock-out');
-        Route::get('attendance/reports', [\App\Http\Controllers\HR\AttendanceController::class, 'reports'])->name('attendance.reports');
+        Route::resource('attendance', \App\Http\Controllers\HR\AttendanceController::class);
 
         // Training & Development
         Route::resource('training', \App\Http\Controllers\HR\TrainingController::class);
@@ -766,8 +851,34 @@ Route::middleware([
         // Document Management
         Route::resource('documents', \App\Http\Controllers\HR\DocumentController::class);
 
-        // Org Chart
-        Route::get('orgchart', [\App\Http\Controllers\HR\OrgChartController::class, 'index'])->name('orgchart.index');
+        // Org Chart → redirects to departments hierarchy
+        Route::get('orgchart', fn () => redirect()->route('hr.departments.index'))->name('orgchart.index');
+
+        // Recruitment
+        Route::prefix('recruitment')->name('recruitment.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\HR\RecruitmentController::class, 'index'])->name('index');
+            Route::get('/create', [\App\Http\Controllers\HR\RecruitmentController::class, 'create'])->name('create');
+            Route::post('/', [\App\Http\Controllers\HR\RecruitmentController::class, 'store'])->name('store');
+            Route::get('/applications/{application}', [\App\Http\Controllers\HR\RecruitmentController::class, 'showApplication'])->name('applications.show');
+            Route::get('/applications/{application}/resume', [\App\Http\Controllers\HR\RecruitmentController::class, 'downloadResume'])->name('applications.resume');
+            Route::get('/{recruitment}', [\App\Http\Controllers\HR\RecruitmentController::class, 'show'])->name('show');
+            Route::get('/{recruitment}/edit', [\App\Http\Controllers\HR\RecruitmentController::class, 'edit'])->name('edit');
+            Route::put('/{recruitment}', [\App\Http\Controllers\HR\RecruitmentController::class, 'update'])->name('update');
+            Route::delete('/{recruitment}', [\App\Http\Controllers\HR\RecruitmentController::class, 'destroy'])->name('destroy');
+            Route::post('/{recruitment}/publish', [\App\Http\Controllers\HR\RecruitmentController::class, 'publish'])->name('publish');
+            Route::post('/{recruitment}/close', [\App\Http\Controllers\HR\RecruitmentController::class, 'close'])->name('close');
+            Route::patch('/applications/{application}', [\App\Http\Controllers\HR\RecruitmentController::class, 'updateApplication'])->name('applications.update');
+        });
+
+        // Offboarding & exit interviews
+        Route::prefix('offboarding')->name('offboarding.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\HR\OffboardingController::class, 'index'])->name('index');
+            Route::get('/create', [\App\Http\Controllers\HR\OffboardingController::class, 'create'])->name('create');
+            Route::post('/', [\App\Http\Controllers\HR\OffboardingController::class, 'store'])->name('store');
+            Route::get('/{offboarding}', [\App\Http\Controllers\HR\OffboardingController::class, 'show'])->name('show');
+            Route::patch('/{offboarding}/checklist', [\App\Http\Controllers\HR\OffboardingController::class, 'updateChecklist'])->name('checklist');
+            Route::patch('/{offboarding}/exit-interview', [\App\Http\Controllers\HR\OffboardingController::class, 'saveExitInterview'])->name('exit-interview');
+        });
 
         // Payroll
         // Payroll CRUD routes
@@ -782,11 +893,19 @@ Route::middleware([
         // Custom payroll actions (if needed)
         Route::post('payroll/{payroll}/approve', [\App\Http\Controllers\HR\PayrollController::class, 'approve'])->name('payroll.approve');
         Route::post('payroll/{payroll}/reject', [\App\Http\Controllers\HR\PayrollController::class, 'reject'])->name('payroll.reject');
-        // Route::post('payroll/{payroll}/approve', [\App\Http\Controllers\HR\PayrollController::class, 'approve'])->name('payroll.approve');
-        // Route::post('payroll/{payroll}/reject', [\App\Http\Controllers\HR\PayrollController::class, 'reject'])->name('payroll.reject');
+
+        // HR Setup
+        Route::get('setup', [\App\Http\Controllers\HR\SetupController::class, 'index'])->name('setup.index');
+        Route::put('setup/payroll', [\App\Http\Controllers\HR\SetupController::class, 'updatePayroll'])->name('setup.payroll');
+        Route::put('setup/attendance', [\App\Http\Controllers\HR\SetupController::class, 'updateAttendance'])->name('setup.attendance');
+        Route::put('setup/leave', [\App\Http\Controllers\HR\SetupController::class, 'updateLeave'])->name('setup.leave');
+        Route::put('setup/performance', [\App\Http\Controllers\HR\SetupController::class, 'updatePerformance'])->name('setup.performance');
+        Route::put('setup/training', [\App\Http\Controllers\HR\SetupController::class, 'updateTraining'])->name('setup.training');
+        Route::put('setup/general', [\App\Http\Controllers\HR\SetupController::class, 'updateGeneral'])->name('setup.general');
 
         // Onboarding
         Route::resource('onboarding', \App\Http\Controllers\HR\OnboardingController::class);
+        Route::patch('onboarding/{onboarding}/checklist', [\App\Http\Controllers\HR\OnboardingController::class, 'updateChecklist'])->name('onboarding.checklist');
     });
 
     // Support routes
@@ -817,6 +936,13 @@ Route::middleware([
         Route::post('faq/{faq}/publish', [\App\Http\Controllers\Support\FAQController::class, 'publish'])->name('faq.publish');
         Route::post('faq/{faq}/helpful', [\App\Http\Controllers\Support\FAQController::class, 'markHelpful'])->name('faq.helpful');
         Route::post('faq/{faq}/not-helpful', [\App\Http\Controllers\Support\FAQController::class, 'markNotHelpful'])->name('faq.not-helpful');
+
+        // Bot knowledge (grounded AI context for guest + support bots)
+        Route::get('bot-knowledge', [\App\Http\Controllers\Support\BotKnowledgeController::class, 'index'])->name('bot-knowledge.index');
+        Route::put('bot-knowledge/settings', [\App\Http\Controllers\Support\BotKnowledgeController::class, 'updateSettings'])->name('bot-knowledge.settings');
+        Route::post('bot-knowledge', [\App\Http\Controllers\Support\BotKnowledgeController::class, 'store'])->name('bot-knowledge.store');
+        Route::put('bot-knowledge/{botKnowledge}', [\App\Http\Controllers\Support\BotKnowledgeController::class, 'update'])->name('bot-knowledge.update');
+        Route::delete('bot-knowledge/{botKnowledge}', [\App\Http\Controllers\Support\BotKnowledgeController::class, 'destroy'])->name('bot-knowledge.destroy');
 
         // Categories
         Route::resource('categories', \App\Http\Controllers\Support\CategoryController::class);
@@ -867,15 +993,9 @@ Route::middleware([
             Route::get('test', [\App\Http\Controllers\Support\AIAnalysisController::class, 'testAIService'])->name('test');
         });
 
-        // AI Chatbot Routes
+        // AI Chatbot admin page (staff with support access)
         Route::prefix('chatbot')->name('chatbot.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Support\ChatbotController::class, 'index'])->name('support.chatbot.index');
-            Route::post('chat', [\App\Http\Controllers\Support\ChatbotController::class, 'chat'])->name('chat');
-            Route::get('conversation', [\App\Http\Controllers\Support\ChatbotController::class, 'getConversation'])->name('conversation');
-            Route::post('create-ticket', [\App\Http\Controllers\Support\ChatbotController::class, 'createTicketFromChat'])->name('create-ticket');
-            Route::get('suggestions', [\App\Http\Controllers\Support\ChatbotController::class, 'getSuggestions'])->name('suggestions');
-            Route::post('rate', [\App\Http\Controllers\Support\ChatbotController::class, 'rateResponse'])->name('rate');
-            Route::post('escalate', [\App\Http\Controllers\Support\ChatbotController::class, 'escalateToHuman'])->name('escalate');
         });
     });
 
@@ -930,62 +1050,6 @@ Route::middleware([
             Route::post('prioritize-tasks', [\App\Http\Controllers\AI\ProjectPlanningController::class, 'prioritizeTasks'])->name('prioritize-tasks');
             Route::post('generate-comprehensive-plan', [\App\Http\Controllers\AI\ProjectPlanningController::class, 'generateComprehensivePlan'])->name('generate-comprehensive-plan');
         });
-    });
-
-    // CMS Routes
-    Route::prefix('cms')->name('cms.')->middleware(['auth', 'verified', 'permission:view cms'])->group(function () {
-        // Pages Management
-        Route::resource('pages', \App\Http\Controllers\CMS\PageController::class);
-        Route::post('pages/{page}/publish', [\App\Http\Controllers\CMS\PageController::class, 'publish'])->name('pages.publish');
-        Route::post('pages/{page}/unpublish', [\App\Http\Controllers\CMS\PageController::class, 'unpublish'])->name('pages.unpublish');
-        Route::post('pages/{page}/schedule', [\App\Http\Controllers\CMS\PageController::class, 'schedule'])->name('pages.schedule');
-        Route::post('pages/{page}/duplicate', [\App\Http\Controllers\CMS\PageController::class, 'duplicate'])->name('pages.duplicate');
-        Route::post('pages/{page}/restore-revision', [\App\Http\Controllers\CMS\PageController::class, 'restoreRevision'])->name('pages.restore-revision');
-        Route::get('pages/{page}/preview', [\App\Http\Controllers\CMS\PageController::class, 'preview'])->name('pages.preview');
-        Route::get('pages/{page}/seo-analysis', [\App\Http\Controllers\CMS\PageController::class, 'seoAnalysis'])->name('pages.seo-analysis');
-        Route::get('pages/search', [\App\Http\Controllers\CMS\PageController::class, 'search'])->name('pages.search');
-        Route::post('pages/bulk-action', [\App\Http\Controllers\CMS\PageController::class, 'bulkAction'])->name('pages.bulk-action');
-
-        // Media Management
-        Route::get('media', [\App\Http\Controllers\CMS\MediaController::class, 'index'])->name('media.index');
-        Route::post('media/upload', [\App\Http\Controllers\CMS\MediaController::class, 'upload'])->name('media.upload');
-        Route::get('media/search', [\App\Http\Controllers\CMS\MediaController::class, 'search'])->name('media.search');
-        Route::get('media/picker', [\App\Http\Controllers\CMS\MediaController::class, 'picker'])->name('media.picker');
-        Route::get('media/{media}', [\App\Http\Controllers\CMS\MediaController::class, 'show'])->name('media.show');
-        Route::get('media/{media}/download', [\App\Http\Controllers\CMS\MediaController::class, 'download'])->name('media.download');
-        Route::put('media/{media}', [\App\Http\Controllers\CMS\MediaController::class, 'update'])->name('media.update');
-        Route::delete('media/{media}', [\App\Http\Controllers\CMS\MediaController::class, 'destroy'])->name('media.destroy');
-        Route::post('media/bulk-action', [\App\Http\Controllers\CMS\MediaController::class, 'bulkAction'])->name('media.bulk-action');
-        Route::post('media/{media}/variants', [\App\Http\Controllers\CMS\MediaController::class, 'generateVariants'])->name('media.variants');
-        Route::post('media/cleanup', [\App\Http\Controllers\CMS\MediaController::class, 'cleanup'])->name('media.cleanup');
-
-        // Media Folder Management
-        Route::post('media/folders', [\App\Http\Controllers\CMS\MediaController::class, 'createFolder'])->name('media.folders.create');
-        Route::put('media/folders/{folder}', [\App\Http\Controllers\CMS\MediaController::class, 'updateFolder'])->name('media.folders.update');
-        Route::delete('media/folders/{folder}', [\App\Http\Controllers\CMS\MediaController::class, 'deleteFolder'])->name('media.folders.delete');
-
-        // Templates Management
-        Route::resource('templates', \App\Http\Controllers\CMS\TemplateController::class);
-        Route::post('templates/{template}/set-default', [\App\Http\Controllers\CMS\TemplateController::class, 'setDefault'])->name('templates.set-default');
-        Route::post('templates/{template}/duplicate', [\App\Http\Controllers\CMS\TemplateController::class, 'duplicate'])->name('templates.duplicate');
-        Route::get('templates/{template}/preview', [\App\Http\Controllers\CMS\TemplateController::class, 'preview'])->name('templates.preview');
-
-        // Menus Management
-        Route::resource('menus', \App\Http\Controllers\CMS\MenuController::class);
-        Route::resource('menus.items', \App\Http\Controllers\CMS\MenuItemController::class)->except(['index', 'show']);
-        Route::post('menu-items/{item}/move', [\App\Http\Controllers\CMS\MenuItemController::class, 'move'])->name('menu-items.move');
-        Route::post('menu-items/reorder', [\App\Http\Controllers\CMS\MenuItemController::class, 'reorder'])->name('menu-items.reorder');
-
-        // Redirects Management
-        Route::resource('redirects', \App\Http\Controllers\CMS\RedirectController::class);
-        Route::post('redirects/bulk-action', [\App\Http\Controllers\CMS\RedirectController::class, 'bulkAction'])->name('redirects.bulk-action');
-        Route::get('redirects/statistics', [\App\Http\Controllers\CMS\RedirectController::class, 'statistics'])->name('redirects.statistics');
-
-        // CMS Dashboard
-        Route::get('dashboard', [\App\Http\Controllers\CMS\DashboardController::class, 'index'])->name('dashboard');
-        Route::get('analytics', [\App\Http\Controllers\CMS\AnalyticsController::class, 'index'])->name('analytics');
-        Route::get('sitemap', [\App\Http\Controllers\CMS\SitemapController::class, 'index'])->name('sitemap');
-        Route::post('sitemap/generate', [\App\Http\Controllers\CMS\SitemapController::class, 'generate'])->name('sitemap.generate');
     });
 
     // Customer Portal Routes
@@ -1051,30 +1115,10 @@ Route::middleware([
             Route::get('/communications/{communication}', [\App\Http\Controllers\Customer\CRMController::class, 'showCommunication'])->name('communications.show');
         });
 
-        // Customer HR
-        Route::prefix('hr')->name('hr.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Customer\HRController::class, 'index'])->name('index');
-            Route::get('/profile', [\App\Http\Controllers\Customer\HRController::class, 'profile'])->name('profile');
-            Route::get('/leaves', [\App\Http\Controllers\Customer\HRController::class, 'leaves'])->name('leaves');
-            Route::get('/trainings', [\App\Http\Controllers\Customer\HRController::class, 'trainings'])->name('trainings');
-            Route::get('/attendance', [\App\Http\Controllers\Customer\HRController::class, 'attendance'])->name('attendance');
-            Route::get('/team', [\App\Http\Controllers\Customer\HRController::class, 'team'])->name('team');
-        });
-
-        // Customer CMS
-        Route::prefix('cms')->name('cms.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Customer\CMSController::class, 'index'])->name('index');
-            Route::get('/pages', [\App\Http\Controllers\Customer\CMSController::class, 'pages'])->name('pages');
-            Route::get('/pages/{page:slug}', [\App\Http\Controllers\Customer\CMSController::class, 'showPage'])->name('pages.show');
-            Route::get('/media', [\App\Http\Controllers\Customer\CMSController::class, 'media'])->name('media');
-            Route::get('/media/{media}', [\App\Http\Controllers\Customer\CMSController::class, 'showMedia'])->name('media.show');
-            Route::get('/search', [\App\Http\Controllers\Customer\CMSController::class, 'search'])->name('search');
-            Route::get('/menu', [\App\Http\Controllers\Customer\CMSController::class, 'menu'])->name('menu');
-        });
-
         // Customer Conversations (Chat)
         Route::resource('conversations', App\Http\Controllers\Customer\ConversationController::class);
         Route::post('/conversations/{conversation}/messages', [\App\Http\Controllers\Customer\ConversationController::class, 'sendMessage'])->name('conversations.messages.store');
+        Route::post('/conversations/{conversation}/typing', [\App\Http\Controllers\Customer\ConversationController::class, 'typing'])->name('conversations.typing');
         // GET route for fetching conversation messages (RESTful and polling)
         Route::get('/conversations/{conversation}/messages', [\App\Http\Controllers\Customer\ConversationController::class, 'getMessages']);        
 
@@ -1142,11 +1186,11 @@ Route::middleware([
         Route::prefix('finance')->name('finance.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Settings\FinanceSettingsController::class, 'index'])->name('index');
 
-            // MoMo Settings
-            Route::prefix('momo')->name('momo.')->group(function () {
-                Route::get('/api', [\App\Http\Controllers\Settings\FinanceSettingsController::class, 'momoApiConfiguration'])->name('api');
-                Route::put('/api', [\App\Http\Controllers\Settings\FinanceSettingsController::class, 'updateMomoApiConfiguration'])->name('api.update');
-                Route::post('/api/test', [\App\Http\Controllers\Settings\FinanceSettingsController::class, 'testMomoApiConnection'])->name('api.test');
+            // Payments (PawaPay)
+            Route::prefix('payments')->name('payments.')->group(function () {
+                Route::get('/pawapay', [\App\Http\Controllers\Settings\FinanceSettingsController::class, 'pawaPayConfiguration'])->name('pawapay');
+                Route::put('/pawapay', [\App\Http\Controllers\Settings\FinanceSettingsController::class, 'updatePawaPayConfiguration'])->name('pawapay.update');
+                Route::post('/pawapay/test', [\App\Http\Controllers\Settings\FinanceSettingsController::class, 'testPawaPayConnection'])->name('pawapay.test');
             });
 
             // ZRA Settings
@@ -1172,7 +1216,6 @@ Route::middleware([
         Route::put('/advanced/performance', [\App\Http\Controllers\Settings\AdvancedSettingsController::class, 'updatePerformance'])->name('advanced.performance.update');
         Route::put('/advanced/integrations', [\App\Http\Controllers\Settings\AdvancedSettingsController::class, 'updateIntegrations'])->name('advanced.integrations.update');
         Route::put('/advanced/notifications', [\App\Http\Controllers\Settings\AdvancedSettingsController::class, 'updateNotifications'])->name('advanced.notifications.update');
-        Route::put('/advanced/social-platforms', [\App\Http\Controllers\Settings\AdvancedSettingsController::class, 'updateSocialPlatforms'])->name('advanced.social-platforms.update');
         Route::put('/advanced/ai-services', [\App\Http\Controllers\Settings\AdvancedSettingsController::class, 'updateAIServices'])->name('advanced.ai-services.update');
         Route::post('/advanced/test-connection', [\App\Http\Controllers\Settings\AdvancedSettingsController::class, 'testConnection'])->name('advanced.test-connection');
 
@@ -1188,85 +1231,4 @@ Route::middleware([
         Route::post('/maintenance/backup', [\App\Http\Controllers\Settings\MaintenanceController::class, 'createBackup'])->name('maintenance.backup');
         Route::get('/maintenance/system-info', [\App\Http\Controllers\Settings\MaintenanceController::class, 'systemInfo'])->name('maintenance.system-info');
     });
-
-    // Social Media Routes
-    Route::prefix('social-media')->name('social-media.')->middleware('permission:view social_media')->group(function () {
-        // WhatsApp Integration
-        Route::prefix('whatsapp')->name('whatsapp.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\SocialMedia\WhatsAppController::class, 'index'])->name('index');
-            Route::post('/sync-accounts', [\App\Http\Controllers\SocialMedia\WhatsAppController::class, 'syncAccounts'])->name('sync-accounts');
-            Route::post('/messages', [\App\Http\Controllers\SocialMedia\WhatsAppController::class, 'sendMessage'])->name('messages.send');
-            Route::get('/analytics', [\App\Http\Controllers\SocialMedia\WhatsAppController::class, 'getAnalytics'])->name('analytics');
-            Route::get('/test-connection', [\App\Http\Controllers\SocialMedia\WhatsAppController::class, 'testConnection'])->name('test-connection');
-        });
-        // Unified Dashboard
-        Route::get('/', [\App\Http\Controllers\SocialMedia\SocialMediaDashboardController::class, 'index'])->name('dashboard');
-        Route::post('/cross-platform-post', [\App\Http\Controllers\SocialMedia\SocialMediaDashboardController::class, 'createCrossPlatformPost'])->name('cross-platform-post');
-        Route::get('/analytics-summary', [\App\Http\Controllers\SocialMedia\SocialMediaDashboardController::class, 'getAnalyticsSummary'])->name('analytics-summary');
-        Route::post('/sync-all', [\App\Http\Controllers\SocialMedia\SocialMediaDashboardController::class, 'syncAllPlatforms'])->name('sync-all');
-        // Facebook Integration
-        Route::prefix('facebook')->name('facebook.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\SocialMedia\FacebookController::class, 'index'])->name('index');
-            Route::post('/sync-pages', [\App\Http\Controllers\SocialMedia\FacebookController::class, 'syncPages'])->name('sync-pages');
-            Route::post('/subscribe-webhooks', [\App\Http\Controllers\SocialMedia\FacebookController::class, 'subscribeWebhooks'])->name('subscribe-webhooks');
-            Route::post('/sync-leads', [\App\Http\Controllers\SocialMedia\FacebookController::class, 'syncLeads'])->name('sync-leads');
-            Route::post('/posts', [\App\Http\Controllers\SocialMedia\FacebookController::class, 'createPost'])->name('posts.create');
-            Route::post('/posts/{post}/publish', [\App\Http\Controllers\SocialMedia\FacebookController::class, 'publishPost'])->name('posts.publish');
-            Route::get('/insights', [\App\Http\Controllers\SocialMedia\FacebookController::class, 'getInsights'])->name('insights');
-            Route::get('/test-connection', [\App\Http\Controllers\SocialMedia\FacebookController::class, 'testConnection'])->name('test-connection');
-        });
-
-        // Instagram Integration
-        Route::prefix('instagram')->name('instagram.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\SocialMedia\InstagramController::class, 'index'])->name('index');
-            Route::post('/sync-accounts', [\App\Http\Controllers\SocialMedia\InstagramController::class, 'syncAccounts'])->name('sync-accounts');
-            Route::post('/sync-media', [\App\Http\Controllers\SocialMedia\InstagramController::class, 'syncMedia'])->name('sync-media');
-            // Route::post('/search-hashtags', ...) // Incomplete/removed due to syntax error
-            Route::post('/hashtag-info', [\App\Http\Controllers\SocialMedia\InstagramController::class, 'getHashtagInfo'])->name('hashtag-info');
-            Route::post('/posts', [\App\Http\Controllers\SocialMedia\InstagramController::class, 'createPost'])->name('posts.create');
-            Route::post('/posts/{post}/publish', [\App\Http\Controllers\SocialMedia\InstagramController::class, 'publishPost'])->name('posts.publish');
-            Route::get('/insights', [\App\Http\Controllers\SocialMedia\InstagramController::class, 'getInsights'])->name('insights');
-            Route::get('/test-connection', [\App\Http\Controllers\SocialMedia\InstagramController::class, 'testConnection'])->name('test-connection');
-        });
-
-        // LinkedIn Integration
-        Route::prefix('linkedin')->name('linkedin.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\SocialMedia\LinkedInController::class, 'index'])->name('index');
-            Route::post('/sync-companies', [\App\Http\Controllers\SocialMedia\LinkedInController::class, 'syncCompanies'])->name('sync-companies');
-            Route::post('/search-leads', [\App\Http\Controllers\SocialMedia\LinkedInController::class, 'searchLeads'])->name('search-leads');
-            Route::post('/import-lead', [\App\Http\Controllers\SocialMedia\LinkedInController::class, 'importLead'])->name('import-lead');
-            Route::post('/posts', [\App\Http\Controllers\SocialMedia\LinkedInController::class, 'createPost'])->name('posts.create');
-            Route::post('/posts/{post}/publish', [\App\Http\Controllers\SocialMedia\LinkedInController::class, 'publishPost'])->name('posts.publish');
-            Route::get('/analytics', [\App\Http\Controllers\SocialMedia\LinkedInController::class, 'getAnalytics'])->name('analytics');
-            Route::get('/test-connection', [\App\Http\Controllers\SocialMedia\LinkedInController::class, 'testConnection'])->name('test-connection');
-        });
-
-        // Twitter/X Integration
-        Route::prefix('twitter')->name('twitter.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\SocialMedia\TwitterController::class, 'index'])->name('index');
-            Route::post('/sync-accounts', [\App\Http\Controllers\SocialMedia\TwitterController::class, 'syncAccounts'])->name('sync-accounts');
-            Route::post('/tweets', [\App\Http\Controllers\SocialMedia\TwitterController::class, 'createTweet'])->name('tweets.create');
-            Route::post('/tweets/{tweet}/publish', [\App\Http\Controllers\SocialMedia\TwitterController::class, 'publishTweet'])->name('tweets.publish');
-            Route::get('/analytics', [\App\Http\Controllers\SocialMedia\TwitterController::class, 'getAnalytics'])->name('analytics');
-            Route::get('/test-connection', [\App\Http\Controllers\SocialMedia\TwitterController::class, 'testConnection'])->name('test-connection');
-        });
-    });
-});
-
-// Social Media Webhooks (no auth required)
-Route::get('/webhooks/facebook', [\App\Http\Controllers\SocialMedia\WebhookController::class, 'verifyFacebookWebhook'])->name('webhooks.facebook.verify');
-Route::post('/webhooks/facebook', [\App\Http\Controllers\SocialMedia\WebhookController::class, 'handleFacebookWebhook'])->name('webhooks.facebook.handle');
-Route::get('/webhooks/instagram', [\App\Http\Controllers\SocialMedia\WebhookController::class, 'verifyInstagramWebhook'])->name('webhooks.instagram.verify');
-Route::post('/webhooks/instagram', [\App\Http\Controllers\SocialMedia\WebhookController::class, 'handleInstagramWebhook'])->name('webhooks.instagram.handle');
-Route::get('/webhooks/linkedin', [\App\Http\Controllers\SocialMedia\WebhookController::class, 'verifyLinkedInWebhook'])->name('webhooks.linkedin.verify');
-Route::post('/webhooks/linkedin', [\App\Http\Controllers\SocialMedia\WebhookController::class, 'handleLinkedInWebhook'])->name('webhooks.linkedin.handle');
-
-// WhatsApp Chat API
-Route::prefix('/whatsapp')->middleware(['auth'])->group(function () {
-    Route::get('/chats', [\App\Http\Controllers\SocialMedia\WhatsAppChatController::class, 'index']);
-    Route::get('/chats/{chat}', [\App\Http\Controllers\SocialMedia\WhatsAppChatController::class, 'show']);
-    Route::post('/chats/{chat}/send', [\App\Http\Controllers\SocialMedia\WhatsAppChatController::class, 'send']);
-    Route::post('/chats/{chat}/read', [\App\Http\Controllers\SocialMedia\WhatsAppChatController::class, 'markAsRead']);
-    Route::post('/chats/{chat}/typing', [\App\Http\Controllers\SocialMedia\WhatsAppChatController::class, 'typing']);
-    Route::post('/chats/{chat}/upload', [\App\Http\Controllers\SocialMedia\WhatsAppChatController::class, 'uploadMedia']);
 });

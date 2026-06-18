@@ -94,30 +94,55 @@ class LiveChatController extends Controller
         ->where('status', '!=', 'read')
         ->count();
 
-        return Inertia::render('CRM/LiveChat/Dashboard', [
+        $selectedConversation = null;
+        $pinnedMessages = [];
+
+        if ($request->filled('conversation')) {
+            $conversation = Conversation::find($request->integer('conversation'));
+            if ($conversation) {
+                $this->authorizeConversationAccess($conversation, $user);
+                $selectedConversation = $this->loadConversationWithMessages($conversation, $user);
+                $pinnedMessages = $this->getPinnedMessages($conversation);
+            }
+        }
+
+        $isStaff = !$user->hasRole('customer');
+
+        return Inertia::render('CRM/LiveChat/Index', [
             'conversations' => $conversations,
             'unreadCount' => $unreadCount,
-            'filters' => $request->only(['status', 'priority', 'search', 'assigned_to_me']),
+            'filters' => $request->only(['status', 'priority', 'search', 'assigned_to_me', 'conversation']),
             'userRole' => $user->getRoleNames()->first(),
+            'selectedConversation' => $selectedConversation,
+            'pinnedMessages' => $pinnedMessages,
+            'clients' => $isStaff ? Client::select('id', 'name', 'email')->get() : [],
+            'leads' => $isStaff ? Lead::select('id', 'name', 'email')->get() : [],
+            'staff' => $isStaff ? User::role(['admin', 'staff'])->select('id', 'name', 'email')->get() : [],
         ]);
     }
 
     /**
-     * Show a specific conversation.
+     * Redirect legacy conversation URLs to the unified livechat index.
      */
-    public function show(Conversation $conversation): Response
+    public function show(Conversation $conversation): RedirectResponse
     {
-        $user = Auth::user();
+        $this->authorizeConversationAccess($conversation, Auth::user());
 
-        // Check if user has access to this conversation
+        return redirect()->route('crm.livechat.index', ['conversation' => $conversation->id]);
+    }
+
+    private function authorizeConversationAccess(Conversation $conversation, User $user): void
+    {
         if ($user->hasRole('customer')) {
             if ($conversation->created_by !== $user->id &&
                 !$conversation->hasParticipant($user->id)) {
                 abort(403, 'Access denied to this conversation.');
             }
         }
+    }
 
-        // Load conversation with messages including comments and reactions
+    private function loadConversationWithMessages(Conversation $conversation, User $user): Conversation
+    {
         $conversation->load([
             'conversable',
             'creator',
@@ -126,35 +151,22 @@ class LiveChatController extends Controller
             'messages.replyTo.user',
             'messages.replies.user',
             'messages.comments.user',
-            'messages.pinnedBy'
+            'messages.pinnedBy',
         ]);
 
-        // Get pinned messages (max 3, ordered by pinned date)
-        $pinnedMessages = Chat::where('conversation_id', $conversation->id)
+        $conversation->markAsReadFor($user);
+
+        return $conversation;
+    }
+
+    private function getPinnedMessages(Conversation $conversation)
+    {
+        return Chat::where('conversation_id', $conversation->id)
             ->where('is_pinned', true)
             ->with(['user', 'pinnedBy'])
             ->orderBy('pinned_at', 'desc')
             ->limit(3)
             ->get();
-
-
-
-        // Mark messages as read for current user
-        $conversation->markAsReadFor($user);
-
-        // Get available clients and leads for staff
-        $clients = $user->hasRole('customer') ? [] : Client::select('id', 'name', 'email')->get();
-        $leads = $user->hasRole('customer') ? [] : Lead::select('id', 'name', 'email')->get();
-        $staff = $user->hasRole('customer') ? [] : User::role(['admin', 'staff'])->select('id', 'name', 'email')->get();
-
-        return Inertia::render('CRM/LiveChat/Conversation', [
-            'conversation' => $conversation,
-            'pinnedMessages' => $pinnedMessages,
-            'clients' => $clients,
-            'leads' => $leads,
-            'staff' => $staff,
-            'userRole' => $user->getRoleNames()->first(),
-        ]);
     }
 
     /**
@@ -335,7 +347,11 @@ class LiveChatController extends Controller
     {
         $user = Auth::user();
 
-        broadcast(new UserTyping($user, $conversation))->toOthers();
+        broadcast(new UserTyping($conversation->id, [
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'is_typing' => $request->boolean('is_typing', true),
+        ]))->toOthers();
 
         return response()->json(['success' => true]);
     }
@@ -440,7 +456,7 @@ class LiveChatController extends Controller
         }
 
         // Redirect to the conversation
-        return redirect()->route('crm.livechat.show', $conversation);
+        return redirect()->route('crm.livechat.index', ['conversation' => $conversation->id]);
     }
 
     /**

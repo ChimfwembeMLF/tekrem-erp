@@ -35,7 +35,8 @@ import {
   ExternalLink,
   RefreshCw,
   Eye,
-  History
+  History,
+  Smartphone,
 } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
 import { toast } from 'sonner';
@@ -621,12 +622,20 @@ export default function Show({ invoice }: Props) {
                 {/* Quick Actions */}
                 <div className="pt-4 border-t space-y-2">
                   {remainingAmount > 0 && (
-                    <Button asChild className="w-full">
-                      <Link href={route('finance.payments.create', { invoice: invoice.id })}>
-                        <CreditCard className="h-4 w-4 mr-2" />
-                        {t('finance.record_payment', 'Record Payment')}
-                      </Link>
-                    </Button>
+                    <>
+                      <Button asChild className="w-full">
+                        <Link href={route('finance.payments.create', { invoice: invoice.id })}>
+                          <CreditCard className="h-4 w-4 mr-2" />
+                          {t('finance.record_payment', 'Record Payment')}
+                        </Link>
+                      </Button>
+                      <Button variant="secondary" asChild className="w-full">
+                        <Link href={route('finance.momo.create', { invoice_id: invoice.id })}>
+                          <Smartphone className="h-4 w-4 mr-2" />
+                          {t('finance.collect_momo', 'Collect via Mobile Money')}
+                        </Link>
+                      </Button>
+                    </>
                   )}
                   <Button variant="outline" asChild className="w-full">
                     <Link href={route('finance.invoices.pdf', invoice.id)} target="_blank">

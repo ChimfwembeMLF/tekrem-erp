@@ -39,11 +39,11 @@ class ProjectController extends Controller
                 'other' => 'Other'
             ],
             'budgetRanges' => [
-                'under_5k' => 'Under $5,000',
-                '5k_10k' => '$5,000 - $10,000',
-                '10k_25k' => '$10,000 - $25,000',
-                '25k_50k' => '$25,000 - $50,000',
-                '50k_plus' => '$50,000+'
+                'under_150k' => 'Under K 150,000',
+                '150k_400k' => 'K 150,000 – K 400,000',
+                '400k_1m' => 'K 400,000 – K 1,000,000',
+                '1m_2_5m' => 'K 1,000,000 – K 2,500,000',
+                '2_5m_plus' => 'K 2,500,000+',
             ],
             'timelines' => [
                 'asap' => 'ASAP',
@@ -84,7 +84,7 @@ class ProjectController extends Controller
             'features_required.*' => 'string|max:500',
             'features_nice_to_have' => 'nullable|array',
             'features_nice_to_have.*' => 'string|max:500',
-            'budget_range' => 'nullable|string|in:under_5k,5k_10k,10k_25k,25k_50k,50k_plus',
+            'budget_range' => 'nullable|string|in:under_150k,150k_400k,400k_1m,1m_2_5m,2_5m_plus',
             'timeline' => 'nullable|string|in:asap,1_month,3_months,6_months,flexible',
             'preferred_start_date' => 'nullable|date|after:today',
             'required_completion_date' => 'nullable|date|after:preferred_start_date',
@@ -220,31 +220,19 @@ class ProjectController extends Controller
     private function notifyStaff(GuestProjectInquiry $inquiry): void
     {
         try {
-            $notificationService = app(NotificationService::class);
-            
-            // Get project managers and admins
-            $users = \App\Models\User::whereHas('roles', function($q) {
+            $users = \App\Models\User::whereHas('roles', function ($q) {
                 $q->whereIn('name', ['super_user', 'admin', 'manager']);
-            })->orWhereHas('permissions', function($q) {
+            })->orWhereHas('permissions', function ($q) {
                 $q->whereIn('name', ['manage projects', 'view projects']);
             })->get();
-            
-            foreach ($users as $user) {
-                $notificationService->send(
-                    $user,
-                    'New Project Inquiry',
-                    "New {$inquiry->project_type} project inquiry from {$inquiry->name} - {$inquiry->project_title}",
-                    [
-                        'type' => 'guest_project_inquiry',
-                        'inquiry_id' => $inquiry->id,
-                        'reference_number' => $inquiry->reference_number,
-                        'priority' => $inquiry->priority,
-                        'project_type' => $inquiry->project_type,
-                        'budget_range' => $inquiry->budget_range,
-                        'estimated_complexity' => $inquiry->estimated_complexity
-                    ]
-                );
-            }
+
+            NotificationService::notifyUsers(
+                $users,
+                'guest_project_inquiry',
+                "New {$inquiry->project_type} project inquiry from {$inquiry->name} - {$inquiry->project_title}",
+                null,
+                $inquiry
+            );
         } catch (\Exception $e) {
             \Log::error('Failed to send project inquiry notification: ' . $e->getMessage());
         }

@@ -32,6 +32,7 @@ import useRoute from '@/Hooks/useRoute';
 import ApplicationMark from '@/Components/ApplicationMark';
 import { ThemeToggle } from '@/Components/ThemeProvider';
 import useTypedPage from '@/Hooks/useTypedPage';
+import SupportChatWidget from '@/Components/Support/SupportChatWidget';
 
 interface User {
     id: number;
@@ -254,6 +255,7 @@ export default function CustomerLayout({ children }: Props) {
                     </div>
                 </main>
             </div>
+            <SupportChatWidget />
         </div>
     );
 }

@@ -9,6 +9,9 @@ use App\Models\Finance\Invoice;
 use App\Services\MoMo\MomoTransactionService;
 use App\Services\MoMo\MomoReconciliationService;
 use App\Services\MoMo\MomoAuditService;
+use App\Services\Payments\PawaPayApiClient;
+use App\Services\Payments\PawaPayService;
+use App\Services\Payments\PawaPayTransactionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
@@ -19,15 +22,24 @@ class MomoController extends Controller
     protected MomoTransactionService $transactionService;
     protected MomoReconciliationService $reconciliationService;
     protected MomoAuditService $auditService;
+    protected PawaPayService $pawaPayService;
+    protected PawaPayTransactionService $pawaPayTransactionService;
+    protected PawaPayApiClient $pawaPayApiClient;
 
     public function __construct(
         MomoTransactionService $transactionService,
         MomoReconciliationService $reconciliationService,
-        MomoAuditService $auditService
+        MomoAuditService $auditService,
+        PawaPayService $pawaPayService,
+        PawaPayTransactionService $pawaPayTransactionService,
+        PawaPayApiClient $pawaPayApiClient
     ) {
         $this->transactionService = $transactionService;
         $this->reconciliationService = $reconciliationService;
         $this->auditService = $auditService;
+        $this->pawaPayService = $pawaPayService;
+        $this->pawaPayTransactionService = $pawaPayTransactionService;
+        $this->pawaPayApiClient = $pawaPayApiClient;
     }
 
     /**
@@ -64,17 +76,20 @@ class MomoController extends Controller
             ->limit(10)
             ->get();
 
-        // Get provider statistics
-        $providerStats = MomoTransaction::with('provider')
+        // Get network statistics (PawaPay correspondents)
+        $networkStats = MomoTransaction::query()
             ->where('created_at', '>=', $thisMonth)
             ->get()
-            ->groupBy('provider.code')
-            ->map(function ($group) {
+            ->groupBy(fn ($transaction) => $transaction->correspondent ?? 'pawapay')
+            ->map(function ($group, $code) {
+                $label = $group->first()->correspondent_label ?? 'PawaPay';
+
                 return [
-                    'name' => $group->first()->provider->display_name,
+                    'name' => $label,
+                    'code' => $code,
                     'count' => $group->count(),
                     'amount' => $group->sum('amount'),
-                    'success_rate' => $group->count() > 0 
+                    'success_rate' => $group->count() > 0
                         ? round(($group->where('status', 'completed')->count() / $group->count()) * 100, 2)
                         : 0,
                 ];
@@ -90,8 +105,9 @@ class MomoController extends Controller
         return Inertia::render('Finance/MoMo/Dashboard', [
             'stats' => $stats,
             'recentTransactions' => $recentTransactions,
-            'providerStats' => $providerStats,
+            'providerStats' => $networkStats,
             'pendingTransactions' => $pendingTransactions,
+            'pawapay' => $this->pawaPayService->getPublicConfiguration(),
         ]);
     }
 
@@ -104,8 +120,8 @@ class MomoController extends Controller
             ->orderBy('created_at', 'desc');
 
         // Apply filters
-        if ($request->filled('provider_id')) {
-            $query->where('provider_id', $request->provider_id);
+        if ($request->filled('correspondent')) {
+            $query->where('metadata->correspondent', $request->correspondent);
         }
 
         if ($request->filled('status')) {
@@ -128,19 +144,18 @@ class MomoController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('transaction_number', 'like', "%{$search}%")
-                  ->orWhere('phone_number', 'like', "%{$search}%")
+                  ->orWhere('customer_phone', 'like', "%{$search}%")
                   ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
         $transactions = $query->paginate(20)->withQueryString();
 
-        $providers = MomoProvider::where('is_active', true)->get();
-
         return Inertia::render('Finance/MoMo/Index', [
             'transactions' => $transactions,
-            'providers' => $providers,
-            'filters' => $request->only(['provider_id', 'status', 'type', 'date_from', 'date_to', 'search']),
+            'networks' => $this->pawaPayTransactionService->getNetworks(),
+            'pawapay' => $this->pawaPayService->getPublicConfiguration(),
+            'filters' => $request->only(['correspondent', 'status', 'type', 'date_from', 'date_to', 'search']),
         ]);
     }
 
@@ -161,47 +176,81 @@ class MomoController extends Controller
      */
     public function create(Request $request)
     {
-        $providers = MomoProvider::where('is_active', true)->get();
         $invoice = null;
 
         if ($request->filled('invoice_id')) {
             $invoice = Invoice::findOrFail($request->invoice_id);
+            $invoice->setAttribute('balance_due', max(0, (float) $invoice->total_amount - (float) $invoice->paid_amount));
         }
 
+        $refundableDeposits = MomoTransaction::query()
+            ->where('type', 'payment')
+            ->where('status', 'completed')
+            ->whereNotNull('provider_transaction_id')
+            ->latest()
+            ->limit(50)
+            ->get(['id', 'transaction_number', 'provider_transaction_id', 'amount', 'currency', 'customer_phone', 'created_at']);
+
         return Inertia::render('Finance/MoMo/Create', [
-            'providers' => $providers,
+            'networks' => $this->pawaPayTransactionService->getNetworks(),
+            'pawapay' => $this->pawaPayService->getPublicConfiguration(),
+            'refundableDeposits' => $refundableDeposits,
             'invoice' => $invoice,
         ]);
     }
 
     /**
-     * Initiate MoMo payment.
+     * Initiate a PawaPay deposit, payout, or refund.
      */
     public function store(Request $request)
     {
         $request->validate([
-            'amount' => 'required|numeric|min:1',
-            'phone_number' => 'required|string|regex:/^(09[4-9])\d{7}$/',
-            'provider_code' => 'nullable|string|exists:momo_providers,code',
-            'type' => 'required|in:collection,disbursement',
+            'amount' => 'required_unless:type,refund|nullable|numeric|min:1',
+            'phone_number' => 'required_unless:type,refund|nullable|string',
+            'correspondent' => 'nullable|string|in:MTN_MOMO_ZMB,AIRTEL_OAPI_ZMB,ZAMTEL_ZMB',
+            'type' => 'required|in:payment,payout,refund',
             'description' => 'nullable|string|max:255',
             'invoice_id' => 'nullable|exists:invoices,id',
-            'payer_message' => 'nullable|string|max:160',
-            'payee_note' => 'nullable|string|max:160',
+            'customer_name' => 'nullable|string|max:255',
+            'customer_email' => 'nullable|email|max:255',
+            'customer_message' => 'nullable|string|max:22',
+            'deposit_id' => 'required_if:type,refund|nullable|uuid',
         ]);
+
+        if (!$this->pawaPayService->isConfigured()) {
+            return Redirect::back()
+                ->withErrors(['error' => 'Configure PawaPay in Finance Settings before initiating transactions.'])
+                ->withInput();
+        }
+
+        if (
+            $request->input('type') !== 'refund'
+            && !$this->pawaPayApiClient->isValidZambianMsisdn((string) $request->input('phone_number', ''))
+        ) {
+            return Redirect::back()
+                ->withErrors([
+                    'phone_number' => 'Enter a valid Zambian mobile number (e.g. 076274499, 077274499, or 26076274499).',
+                ])
+                ->withInput();
+        }
 
         $data = $request->only([
-            'amount', 'phone_number', 'provider_code', 'type', 
-            'description', 'invoice_id', 'payer_message', 'payee_note'
+            'amount', 'phone_number', 'correspondent', 'type',
+            'description', 'invoice_id', 'customer_name', 'customer_email',
+            'customer_message', 'deposit_id',
         ]);
-
         $data['user_id'] = auth()->id();
 
-        $result = $this->transactionService->initiatePayment($data);
+        $result = match ($request->input('type')) {
+            'payment' => $this->pawaPayTransactionService->initiateDeposit($data),
+            'payout' => $this->pawaPayTransactionService->initiatePayout($data),
+            'refund' => $this->pawaPayTransactionService->initiateRefund($data),
+            default => ['success' => false, 'error' => 'Unsupported transaction type'],
+        };
 
         if ($result['success']) {
             return Redirect::route('finance.momo.show', $result['transaction'])
-                ->with('success', 'MoMo payment initiated successfully');
+                ->with('success', 'PawaPay transaction initiated successfully');
         }
 
         return Redirect::back()
@@ -210,36 +259,13 @@ class MomoController extends Controller
     }
 
     /**
-     * Process MoMo payout.
+     * @deprecated Use store() with type=payout
      */
     public function payout(Request $request)
     {
-        $request->validate([
-            'amount' => 'required|numeric|min:1',
-            'phone_number' => 'required|string|regex:/^(09[4-9])\d{7}$/',
-            'provider_code' => 'nullable|string|exists:momo_providers,code',
-            'description' => 'nullable|string|max:255',
-            'payer_message' => 'nullable|string|max:160',
-            'payee_note' => 'nullable|string|max:160',
-        ]);
+        $request->merge(['type' => 'payout']);
 
-        $data = $request->only([
-            'amount', 'phone_number', 'provider_code', 
-            'description', 'payer_message', 'payee_note'
-        ]);
-
-        $data['user_id'] = auth()->id();
-
-        $result = $this->transactionService->processPayout($data);
-
-        if ($result['success']) {
-            return Redirect::route('finance.momo.show', $result['transaction'])
-                ->with('success', 'MoMo payout processed successfully');
-        }
-
-        return Redirect::back()
-            ->withErrors(['error' => $result['error']])
-            ->withInput();
+        return $this->store($request);
     }
 
     /**
@@ -268,24 +294,22 @@ class MomoController extends Controller
      */
     public function reconciliation(Request $request)
     {
-        $providers = MomoProvider::where('is_active', true)->get();
-        $selectedProvider = null;
+        $providers = MomoProvider::where('code', 'pawapay')->get();
+        $selectedProvider = $providers->first();
         $reconciliationData = null;
 
-        if ($request->filled('provider_id')) {
-            $selectedProvider = MomoProvider::findOrFail($request->provider_id);
-            
-            $startDate = $request->filled('start_date') 
-                ? Carbon::parse($request->start_date) 
+        if ($selectedProvider) {
+            $startDate = $request->filled('start_date')
+                ? Carbon::parse($request->start_date)
                 : Carbon::now()->subDays(30);
-                
-            $endDate = $request->filled('end_date') 
-                ? Carbon::parse($request->end_date) 
+
+            $endDate = $request->filled('end_date')
+                ? Carbon::parse($request->end_date)
                 : Carbon::now();
 
             $reconciliationData = $this->reconciliationService->getReconciliationReport(
-                $selectedProvider, 
-                $startDate, 
+                $selectedProvider,
+                $startDate,
                 $endDate
             );
         }
@@ -294,7 +318,7 @@ class MomoController extends Controller
             'providers' => $providers,
             'selectedProvider' => $selectedProvider,
             'reconciliationData' => $reconciliationData,
-            'filters' => $request->only(['provider_id', 'start_date', 'end_date']),
+            'filters' => $request->only(['start_date', 'end_date']),
         ]);
     }
 
@@ -304,12 +328,11 @@ class MomoController extends Controller
     public function autoReconcile(Request $request)
     {
         $request->validate([
-            'provider_id' => 'required|exists:momo_providers,id',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
         ]);
 
-        $provider = MomoProvider::findOrFail($request->provider_id);
+        $provider = MomoProvider::where('code', 'pawapay')->firstOrFail();
         $startDate = Carbon::parse($request->start_date);
         $endDate = Carbon::parse($request->end_date);
 
@@ -394,20 +417,6 @@ class MomoController extends Controller
     }
 
     /**
-     * Show provider configuration.
-     */
-    public function providers()
-    {
-        $providers = MomoProvider::with('cashAccount', 'feeAccount', 'receivableAccount')
-            ->orderBy('display_name')
-            ->get();
-
-        return Inertia::render('Finance/MoMo/Providers', [
-            'providers' => $providers,
-        ]);
-    }
-
-    /**
      * Show provider statistics.
      */
     public function statistics(Request $request)
@@ -432,12 +441,24 @@ class MomoController extends Controller
             'success_rate' => $transactions->count() > 0 
                 ? round(($transactions->where('status', 'completed')->count() / $transactions->count()) * 100, 2)
                 : 0,
-            'provider_breakdown' => $transactions->groupBy('provider.code')->map(function ($group) {
+            'network_breakdown' => $transactions->groupBy(fn ($transaction) => $transaction->correspondent ?? 'pawapay')->map(function ($group, $code) {
                 return [
-                    'name' => $group->first()->provider->display_name,
+                    'name' => $group->first()->correspondent_label ?? 'PawaPay',
+                    'code' => $code,
                     'count' => $group->count(),
                     'amount' => $group->sum('amount'),
-                    'success_rate' => $group->count() > 0 
+                    'success_rate' => $group->count() > 0
+                        ? round(($group->where('status', 'completed')->count() / $group->count()) * 100, 2)
+                        : 0,
+                ];
+            }),
+            'provider_breakdown' => $transactions->groupBy(fn ($transaction) => $transaction->correspondent ?? 'pawapay')->map(function ($group, $code) {
+                return [
+                    'name' => $group->first()->correspondent_label ?? 'PawaPay',
+                    'code' => $code,
+                    'count' => $group->count(),
+                    'amount' => $group->sum('amount'),
+                    'success_rate' => $group->count() > 0
                         ? round(($group->where('status', 'completed')->count() / $group->count()) * 100, 2)
                         : 0,
                 ];

@@ -1,7 +1,6 @@
 export interface ServiceFeature {
   title: string;
   description: string;
-  icon?: string;
 }
 
 export interface ServiceBenefit {
@@ -12,6 +11,7 @@ export interface ServiceBenefit {
 export interface ServicePackage {
   name: string;
   price: string;
+  priceNote?: string;
   description: string;
   features: string[];
   popular?: boolean;
@@ -22,73 +22,55 @@ export interface ServiceData {
   title: string;
   shortDescription: string;
   fullDescription: string;
-  heroImage?: string;
+  icon: string;
+  routeName: string;
+  illustration?: string;
   features: ServiceFeature[];
   benefits: ServiceBenefit[];
   packages: ServicePackage[];
   technologies: string[];
   processSteps: string[];
-  faq: Array<{
-    question: string;
-    answer: string;
-  }>;
+  faq: Array<{ question: string; answer: string }>;
 }
+
+export const serviceIllustrations: Record<string, string> = {
+  'web-development': '/assets/illustrations/web-services-illustration.png',
+  'mobile-apps': '/assets/illustrations/services-illustration.png',
+  'ai-solutions': '/assets/illustrations/services-illustration.png',
+  'cloud-services': '/assets/illustrations/cloud-services-illustration.png',
+};
 
 export const servicesData: Record<string, ServiceData> = {
   'web-development': {
     id: 'web-development',
     title: 'Web Development',
     shortDescription: 'Custom websites and web applications',
-    fullDescription: 'We create modern, responsive, and scalable web solutions tailored to your business needs. From simple websites to complex web applications, our team delivers high-quality solutions using the latest technologies.',
+    fullDescription:
+      'We create modern, responsive, and scalable web solutions tailored to your business needs — from marketing sites to full web applications.',
+    icon: '💻',
+    routeName: 'services.web-development',
     features: [
-      {
-        title: 'Responsive Design',
-        description: 'Mobile-first approach ensuring your website looks great on all devices',
-      },
-      {
-        title: 'Modern Technologies',
-        description: 'Built with React, Laravel, and other cutting-edge frameworks',
-      },
-      {
-        title: 'SEO Optimized',
-        description: 'Search engine friendly code and structure for better visibility',
-      },
-      {
-        title: 'Fast Performance',
-        description: 'Optimized for speed and performance with modern best practices',
-      },
+      { title: 'Responsive Design', description: 'Mobile-first layouts that work on every device' },
+      { title: 'Modern Stack', description: 'React, Laravel, and proven frameworks' },
+      { title: 'SEO Ready', description: 'Structured for search visibility from day one' },
+      { title: 'Fast Performance', description: 'Optimized assets, caching, and clean architecture' },
     ],
     benefits: [
-      {
-        title: 'Increased Online Presence',
-        description: 'Professional website that represents your brand effectively',
-      },
-      {
-        title: 'Better User Experience',
-        description: 'Intuitive navigation and design that converts visitors to customers',
-      },
-      {
-        title: 'Scalable Solutions',
-        description: 'Built to grow with your business needs',
-      },
+      { title: 'Stronger Online Presence', description: 'A professional site that represents your brand' },
+      { title: 'Better Conversions', description: 'Clear UX that turns visitors into customers' },
+      { title: 'Room to Grow', description: 'Built to scale as your business expands' },
     ],
     packages: [
       {
         name: 'Starter',
-        price: '$2,999',
-        description: 'Perfect for small businesses and startups',
-        features: [
-          'Up to 5 pages',
-          'Responsive design',
-          'Contact form',
-          'Basic SEO',
-          '3 months support',
-        ],
+        price: 'K 75,000',
+        description: 'For small businesses and startups',
+        features: ['Up to 5 pages', 'Responsive design', 'Contact form', 'Basic SEO', '3 months support'],
       },
       {
         name: 'Professional',
-        price: '$5,999',
-        description: 'Ideal for growing businesses',
+        price: 'K 150,000',
+        description: 'For growing businesses',
         features: [
           'Up to 15 pages',
           'Custom design',
@@ -101,38 +83,28 @@ export const servicesData: Record<string, ServiceData> = {
       },
       {
         name: 'Enterprise',
-        price: 'Custom',
-        description: 'For large organizations with complex needs',
+        price: 'Custom quote',
+        description: 'For complex or large-scale projects',
         features: [
           'Unlimited pages',
           'Custom functionality',
           'API integrations',
           'Advanced security',
-          'Performance optimization',
+          'Performance tuning',
           '12 months support',
         ],
       },
     ],
     technologies: ['React', 'Laravel', 'TypeScript', 'Tailwind CSS', 'MySQL', 'Redis'],
-    processSteps: [
-      'Discovery & Planning',
-      'Design & Wireframing',
-      'Development & Testing',
-      'Launch & Deployment',
-      'Maintenance & Support',
-    ],
+    processSteps: ['Discovery', 'Design', 'Development', 'Launch', 'Support'],
     faq: [
       {
-        question: 'How long does it take to build a website?',
-        answer: 'Typically 4-12 weeks depending on complexity and requirements.',
+        question: 'How long does a website take?',
+        answer: 'Typically 4–12 weeks depending on scope and content readiness.',
       },
       {
-        question: 'Do you provide ongoing maintenance?',
-        answer: 'Yes, we offer maintenance packages to keep your website updated and secure.',
-      },
-      {
-        question: 'Can you redesign my existing website?',
-        answer: 'Absolutely! We can redesign and modernize your existing website.',
+        question: 'Do you offer maintenance?',
+        answer: 'Yes — we offer ongoing maintenance and support packages.',
       },
     ],
   },
@@ -140,73 +112,49 @@ export const servicesData: Record<string, ServiceData> = {
     id: 'mobile-apps',
     title: 'Mobile Apps',
     shortDescription: 'Native and cross-platform mobile solutions',
-    fullDescription: 'We develop high-performance mobile applications for iOS and Android platforms. Whether you need a native app or cross-platform solution, we deliver user-friendly mobile experiences that engage your audience.',
+    fullDescription:
+      'High-performance mobile apps for iOS and Android — native or cross-platform — designed for real users and real business outcomes.',
+    icon: '📱',
+    routeName: 'services.mobile-apps',
     features: [
-      {
-        title: 'Cross-Platform Development',
-        description: 'Single codebase for both iOS and Android using React Native',
-      },
-      {
-        title: 'Native Performance',
-        description: 'Optimized for speed and smooth user experience',
-      },
-      {
-        title: 'Offline Functionality',
-        description: 'Apps that work even without internet connection',
-      },
-      {
-        title: 'Push Notifications',
-        description: 'Keep users engaged with targeted notifications',
-      },
+      { title: 'Cross-Platform', description: 'One codebase for iOS and Android where it makes sense' },
+      { title: 'Native Performance', description: 'Smooth, responsive experiences' },
+      { title: 'Offline Support', description: 'Core flows that work without connectivity' },
+      { title: 'Push Notifications', description: 'Re-engage users with timely updates' },
     ],
     benefits: [
-      {
-        title: 'Reach More Customers',
-        description: 'Access to millions of mobile users on app stores',
-      },
-      {
-        title: 'Enhanced User Engagement',
-        description: 'Direct communication channel with your customers',
-      },
-      {
-        title: 'Competitive Advantage',
-        description: 'Stand out from competitors with a professional mobile presence',
-      },
+      { title: 'Reach More Customers', description: 'Meet users on the devices they use daily' },
+      { title: 'Higher Engagement', description: 'A direct channel to your audience' },
+      { title: 'Competitive Edge', description: 'Stand out with a polished mobile product' },
     ],
     packages: [
       {
         name: 'Basic App',
-        price: '$8,999',
-        description: 'Simple app with core functionality',
-        features: [
-          'Cross-platform development',
-          'Basic UI/UX design',
-          'User authentication',
-          'Push notifications',
-          'App store submission',
-        ],
+        price: 'K 225,000',
+        description: 'Core functionality for MVPs',
+        features: ['Cross-platform build', 'UI/UX design', 'Authentication', 'Push notifications', 'Store submission'],
       },
       {
         name: 'Advanced App',
-        price: '$15,999',
-        description: 'Feature-rich app with custom functionality',
+        price: 'K 400,000',
+        description: 'Feature-rich apps with integrations',
         features: [
-          'Custom design & animations',
+          'Custom design',
           'API integrations',
-          'Offline functionality',
+          'Offline mode',
           'In-app purchases',
-          'Analytics integration',
+          'Analytics',
           'Admin dashboard',
         ],
         popular: true,
       },
       {
         name: 'Enterprise App',
-        price: 'Custom',
-        description: 'Complex app with enterprise features',
+        price: 'Custom quote',
+        description: 'Complex apps with enterprise requirements',
         features: [
           'Advanced security',
-          'Multi-language support',
+          'Multi-language',
           'Custom backend',
           'Third-party integrations',
           'Performance optimization',
@@ -215,25 +163,15 @@ export const servicesData: Record<string, ServiceData> = {
       },
     ],
     technologies: ['React Native', 'Flutter', 'Swift', 'Kotlin', 'Firebase', 'Node.js'],
-    processSteps: [
-      'Concept & Strategy',
-      'UI/UX Design',
-      'Development & Testing',
-      'App Store Submission',
-      'Launch & Marketing',
-    ],
+    processSteps: ['Strategy', 'Design', 'Development', 'Store Launch', 'Iteration'],
     faq: [
       {
-        question: 'Should I choose native or cross-platform development?',
-        answer: 'Cross-platform is cost-effective for most businesses, while native offers maximum performance.',
+        question: 'Native or cross-platform?',
+        answer: 'We recommend cross-platform for most businesses; native when maximum performance is critical.',
       },
       {
-        question: 'How much does app store submission cost?',
-        answer: 'Apple App Store: $99/year, Google Play Store: $25 one-time fee.',
-      },
-      {
-        question: 'Do you help with app store optimization?',
-        answer: 'Yes, we assist with app store listings, keywords, and screenshots.',
+        question: 'Do you handle app store submission?',
+        answer: 'Yes — we guide you through Apple and Google submission.',
       },
     ],
   },
@@ -241,100 +179,66 @@ export const servicesData: Record<string, ServiceData> = {
     id: 'ai-solutions',
     title: 'AI Solutions',
     shortDescription: 'Intelligent automation and data analysis',
-    fullDescription: 'Harness the power of artificial intelligence to automate processes, gain insights from data, and enhance customer experiences. Our AI solutions are designed to solve real business problems and drive growth.',
+    fullDescription:
+      'Practical AI — chatbots, automation, and analytics — built around your data and workflows, not hype.',
+    icon: '🤖',
+    routeName: 'services.ai-solutions',
     features: [
-      {
-        title: 'Machine Learning Models',
-        description: 'Custom ML models trained on your specific data and use cases',
-      },
-      {
-        title: 'Natural Language Processing',
-        description: 'Chatbots, sentiment analysis, and text processing capabilities',
-      },
-      {
-        title: 'Computer Vision',
-        description: 'Image recognition, object detection, and visual analysis',
-      },
-      {
-        title: 'Predictive Analytics',
-        description: 'Forecast trends and make data-driven decisions',
-      },
+      { title: 'Custom Models', description: 'ML tailored to your data and use cases' },
+      { title: 'NLP & Chatbots', description: 'Support and sales assistants grounded in your content' },
+      { title: 'Automation', description: 'Reduce manual work with smart workflows' },
+      { title: 'Analytics', description: 'Forecast trends and surface actionable insights' },
     ],
     benefits: [
-      {
-        title: 'Increased Efficiency',
-        description: 'Automate repetitive tasks and reduce manual work',
-      },
-      {
-        title: 'Better Decision Making',
-        description: 'Data-driven insights for strategic business decisions',
-      },
-      {
-        title: 'Enhanced Customer Experience',
-        description: 'Personalized interactions and 24/7 AI assistance',
-      },
+      { title: 'Higher Efficiency', description: 'Automate repetitive tasks' },
+      { title: 'Smarter Decisions', description: 'Data-backed recommendations' },
+      { title: 'Better CX', description: '24/7 intelligent assistance for customers' },
     ],
     packages: [
       {
         name: 'AI Starter',
-        price: '$12,999',
-        description: 'Basic AI implementation for small businesses',
-        features: [
-          'Chatbot development',
-          'Basic data analysis',
-          'Simple automation',
-          'Integration support',
-          '3 months training',
-        ],
+        price: 'K 325,000',
+        description: 'First AI use cases for SMEs',
+        features: ['Chatbot', 'Basic analytics', 'Simple automation', 'Integration support', '3 months training'],
       },
       {
         name: 'AI Professional',
-        price: '$25,999',
-        description: 'Advanced AI solutions for growing businesses',
+        price: 'K 650,000',
+        description: 'Advanced AI for growing teams',
         features: [
           'Custom ML models',
           'Advanced analytics',
           'Process automation',
           'API integrations',
-          'Performance monitoring',
+          'Monitoring',
           '6 months support',
         ],
         popular: true,
       },
       {
         name: 'AI Enterprise',
-        price: 'Custom',
-        description: 'Comprehensive AI transformation',
+        price: 'Custom quote',
+        description: 'Full AI transformation programs',
         features: [
-          'Full AI strategy',
-          'Multiple AI models',
+          'AI strategy',
+          'Multiple models',
           'Enterprise integrations',
           'Custom training',
-          'Ongoing optimization',
+          'Optimization',
           'Dedicated support',
         ],
       },
     ],
-    technologies: ['Python', 'TensorFlow', 'PyTorch', 'OpenAI', 'Mistral AI', 'AWS AI'],
-    processSteps: [
-      'AI Strategy & Assessment',
-      'Data Preparation',
-      'Model Development',
-      'Testing & Validation',
-      'Deployment & Monitoring',
-    ],
+    technologies: ['Python', 'TensorFlow', 'PyTorch', 'OpenAI', 'Mistral AI', 'AWS'],
+    processSteps: ['Assessment', 'Data Prep', 'Build', 'Validate', 'Deploy'],
     faq: [
       {
-        question: 'What data do I need for AI implementation?',
-        answer: 'The amount and type of data depends on your specific use case. We can assess your data readiness.',
+        question: 'What data do I need?',
+        answer: 'It depends on the use case — we assess readiness in discovery.',
       },
       {
-        question: 'How long does AI development take?',
-        answer: 'Typically 3-6 months depending on complexity and data availability.',
-      },
-      {
-        question: 'Can AI integrate with my existing systems?',
-        answer: 'Yes, we design AI solutions to work seamlessly with your current infrastructure.',
+        question: 'Can AI plug into our ERP?',
+        answer: 'Yes — we integrate with existing systems including this platform.',
       },
     ],
   },
@@ -342,100 +246,68 @@ export const servicesData: Record<string, ServiceData> = {
     id: 'cloud-services',
     title: 'Cloud Services',
     shortDescription: 'Scalable and secure cloud infrastructure',
-    fullDescription: 'Migrate to the cloud and leverage scalable, secure, and cost-effective infrastructure solutions. We help businesses modernize their IT infrastructure and take advantage of cloud computing benefits.',
+    fullDescription:
+      'Migrate, host, and operate on cloud infrastructure that scales with demand — secure, monitored, and cost-aware.',
+    icon: '☁️',
+    routeName: 'services.cloud-services',
     features: [
-      {
-        title: 'Cloud Migration',
-        description: 'Seamless migration of your existing systems to the cloud',
-      },
-      {
-        title: 'Auto Scaling',
-        description: 'Automatically scale resources based on demand',
-      },
-      {
-        title: 'Security & Compliance',
-        description: 'Enterprise-grade security and compliance standards',
-      },
-      {
-        title: '24/7 Monitoring',
-        description: 'Continuous monitoring and proactive maintenance',
-      },
+      { title: 'Cloud Migration', description: 'Move legacy systems with minimal downtime' },
+      { title: 'Auto Scaling', description: 'Resources that grow and shrink with traffic' },
+      { title: 'Security', description: 'Hardening, backups, and compliance-aware setup' },
+      { title: 'Monitoring', description: 'Proactive alerts and performance visibility' },
     ],
     benefits: [
-      {
-        title: 'Cost Reduction',
-        description: 'Pay only for what you use and reduce infrastructure costs',
-      },
-      {
-        title: 'Improved Reliability',
-        description: 'High availability and disaster recovery capabilities',
-      },
-      {
-        title: 'Enhanced Security',
-        description: 'Advanced security features and regular updates',
-      },
+      { title: 'Lower Costs', description: 'Pay for what you use' },
+      { title: 'Reliability', description: 'HA and disaster recovery options' },
+      { title: 'Peace of Mind', description: 'Managed operations and support' },
     ],
     packages: [
       {
         name: 'Cloud Starter',
-        price: '$999/month',
-        description: 'Basic cloud setup for small businesses',
-        features: [
-          'Cloud migration assessment',
-          'Basic infrastructure setup',
-          'Security configuration',
-          'Monthly monitoring',
-          'Email support',
-        ],
+        price: 'K 25,000',
+        priceNote: '/month',
+        description: 'Essential cloud for small teams',
+        features: ['Migration assessment', 'Basic setup', 'Security baseline', 'Monthly monitoring', 'Email support'],
       },
       {
         name: 'Cloud Professional',
-        price: '$2,999/month',
-        description: 'Comprehensive cloud solution',
+        price: 'K 75,000',
+        priceNote: '/month',
+        description: 'Production-grade cloud operations',
         features: [
-          'Full cloud migration',
-          'Auto-scaling setup',
+          'Full migration',
+          'Auto-scaling',
           'Advanced monitoring',
-          'Backup & disaster recovery',
+          'Backup & DR',
           'Priority support',
-          'Performance optimization',
+          'Optimization',
         ],
         popular: true,
       },
       {
         name: 'Cloud Enterprise',
-        price: 'Custom',
-        description: 'Enterprise-grade cloud infrastructure',
+        price: 'Custom quote',
+        description: 'Multi-cloud and enterprise SLAs',
         features: [
           'Multi-cloud strategy',
           'Custom architecture',
           'Advanced security',
-          'Compliance management',
-          'Dedicated support team',
+          'Compliance',
+          'Dedicated team',
           'SLA guarantees',
         ],
       },
     ],
     technologies: ['AWS', 'Azure', 'Google Cloud', 'Docker', 'Kubernetes', 'Terraform'],
-    processSteps: [
-      'Cloud Assessment',
-      'Migration Planning',
-      'Infrastructure Setup',
-      'Data Migration',
-      'Testing & Optimization',
-    ],
+    processSteps: ['Assessment', 'Plan', 'Setup', 'Migrate', 'Optimize'],
     faq: [
       {
-        question: 'Which cloud provider should I choose?',
-        answer: 'We help you choose the best provider based on your specific needs and budget.',
+        question: 'Which cloud provider?',
+        answer: 'We help you choose based on workload, budget, and compliance needs.',
       },
       {
-        question: 'How long does cloud migration take?',
-        answer: 'Typically 2-8 weeks depending on the complexity of your current infrastructure.',
-      },
-      {
-        question: 'What about data security during migration?',
-        answer: 'We use encrypted channels and follow best practices to ensure data security throughout the process.',
+        question: 'How long is migration?',
+        answer: 'Usually 2–8 weeks depending on complexity.',
       },
     ],
   },
@@ -443,4 +315,10 @@ export const servicesData: Record<string, ServiceData> = {
 
 export const getAllServices = () => Object.values(servicesData);
 
-export const getServiceBySlug = (slug: string) => servicesData[slug] || null;
+export const getServiceBySlug = (slug: string) => servicesData[slug] ?? null;
+
+export const getStartingPrice = (service: ServiceData): string => {
+  const starter = service.packages[0];
+  if (!starter) return 'Custom quote';
+  return starter.priceNote ? `${starter.price}${starter.priceNote}` : starter.price;
+};
