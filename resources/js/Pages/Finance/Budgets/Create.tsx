@@ -1,6 +1,5 @@
 import React from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  Link, useForm } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -23,6 +22,7 @@ import {
   Target
 } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
+import { FinanceFormShell } from '@/Components/Module/moduleFormWrappers';
 import { toast } from 'sonner';
 
 interface Account {
@@ -118,13 +118,17 @@ export default function Create({ accounts = [], categories = [], periodTypes = {
   const selectedAccount = accounts?.find(acc => acc.id.toString() === data.account_id);
 
   return (
-    <AppLayout
-      title={t('finance.create_budget', 'Create Budget')}
-      >
-      <Head title={t('finance.create_budget', 'Create Budget')} />
+    <FinanceFormShell
+      title={"Create Budget"}
+      backHref={route('finance.budgets.index')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
+    >
 
-      <div className="space-y-6">
-        {/* Header */}
+{/* Header */}
         <div className="flex items-center gap-4">
           <Button variant="outline" size="sm" asChild>
             <Link href={route('finance.budgets.index')}>
@@ -142,8 +146,7 @@ export default function Create({ accounts = [], categories = [], periodTypes = {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-2">
             {/* Budget Details */}
             <Card>
               <CardHeader>
@@ -396,8 +399,7 @@ export default function Create({ accounts = [], categories = [], periodTypes = {
               {processing ? t('common.saving', 'Saving...') : t('finance.create_budget', 'Create Budget')}
             </Button>
           </div>
-        </form>
-      </div>
-    </AppLayout>
+        
+</FinanceFormShell>
   );
 }

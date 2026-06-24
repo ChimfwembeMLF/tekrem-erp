@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  useForm } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -18,6 +17,7 @@ import {
 } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
 import useRoute from '@/Hooks/useRoute';
+import { SupportFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface Category {
   id: number;
@@ -53,11 +53,17 @@ export default function Create({ categories }: Props) {
   };
 
   return (
-    <AppLayout>
-      <Head title={t('support.create_faq', 'Create FAQ')} />
+    <SupportFormShell
+      title={"Create FAQ"}
+      backHref={route('support.faq.index')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
+    >
 
-      <div className="space-y-6">
-        {/* Header */}
+{/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button variant="outline" size="sm" asChild>
@@ -87,8 +93,7 @@ export default function Create({ categories }: Props) {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-6 lg:grid-cols-3">
             {/* Main Form */}
             <div className="lg:col-span-2 space-y-6">
               <Card>
@@ -247,8 +252,7 @@ export default function Create({ categories }: Props) {
               </Alert>
             </div>
           </div>
-        </form>
-      </div>
-    </AppLayout>
+        
+</SupportFormShell>
   );
 }

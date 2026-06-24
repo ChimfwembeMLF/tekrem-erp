@@ -53,8 +53,8 @@ export default function NotificationSettings({ settings }: NotificationSettingsP
     sms_notifications: settings.sms_notifications ?? false,
     push_notifications: settings.push_notifications ?? true,
     notification_frequency: settings.notification_frequency ?? 'immediate',
-    email_from_name: settings.email_from_name ?? 'TekRem ERP',
-    email_from_address: settings.email_from_address ?? 'noreply@tekrem.com',
+    email_from_name: settings.email_from_name ?? 'Tekrem ERP',
+    email_from_address: settings.email_from_address ?? 'noreply@Tekrem.com',
     smtp_host: settings.smtp_host ?? '',
     smtp_port: settings.smtp_port ?? 587,
     smtp_username: settings.smtp_username ?? '',
@@ -230,7 +230,7 @@ export default function NotificationSettings({ settings }: NotificationSettingsP
                             type="text"
                             value={data.email_from_name}
                             onChange={(e) => setData('email_from_name', e.target.value)}
-                            placeholder="TekRem ERP"
+                            placeholder="Tekrem ERP"
                           />
                           {errors.email_from_name && (
                             <p className="text-sm text-red-600">{errors.email_from_name}</p>
@@ -244,7 +244,7 @@ export default function NotificationSettings({ settings }: NotificationSettingsP
                             type="email"
                             value={data.email_from_address}
                             onChange={(e) => setData('email_from_address', e.target.value)}
-                            placeholder="noreply@tekrem.com"
+                            placeholder="noreply@Tekrem.com"
                           />
                           {errors.email_from_address && (
                             <p className="text-sm text-red-600">{errors.email_from_address}</p>

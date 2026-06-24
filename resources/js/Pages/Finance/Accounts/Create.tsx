@@ -1,6 +1,5 @@
 import React from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  Link, useForm } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -16,6 +15,7 @@ import {
 } from '@/Components/ui/select';
 import { ArrowLeft, Save, Wallet } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
+import { FinanceFormShell } from '@/Components/Module/moduleFormWrappers';
 import { toast } from 'sonner';
 
 interface Props {
@@ -52,11 +52,17 @@ export default function Create({ accountTypes = {}, currencies = {} }: Props) {
   };
 
   return (
-    <AppLayout title={t('finance.create_account', 'Create Account')}>
-      <Head title={t('finance.create_account', 'Create Account')} />
+    <FinanceFormShell
+      title={"Create Account"}
+      backHref={route('finance.accounts.index')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
+    >
 
-      <div className="space-y-6">
-        {/* Header */}
+{/* Header */}
         <div className="flex items-center gap-4">
           <Button variant="outline" size="sm" asChild>
             <Link href={route('finance.accounts.index')}>
@@ -86,8 +92,7 @@ export default function Create({ accountTypes = {}, currencies = {} }: Props) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Account Name */}
                 <div className="space-y-2">
                   <Label htmlFor="name">
@@ -252,7 +257,6 @@ export default function Create({ accountTypes = {}, currencies = {} }: Props) {
             </form>
           </CardContent>
         </Card>
-      </div>
-    </AppLayout>
+</FinanceFormShell>
   );
 }

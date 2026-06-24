@@ -1,10 +1,12 @@
 import React from 'react';
-import { Link } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Separator } from '@/Components/ui/separator';
+import { Link } from '@inertiajs/react';
+import { ShoppingBag, Truck } from 'lucide-react';
 import { formatZmw } from '@/lib/formatCurrency';
 import { ShopCartItem, ShopTotals } from '@/lib/shopTotals';
+import { useShopSheets } from '@/Components/Shop/ShopSheetProvider';
 
 interface OrderSummaryProps {
   items: ShopCartItem[];
@@ -69,19 +71,26 @@ export default function OrderSummary({ items, totals, action, showItems = true }
 interface ShopHeaderProps {
   title: string;
   subtitle?: string;
-  cartCount?: number;
 }
 
-export function ShopHeader({ title, subtitle, cartCount = 0 }: ShopHeaderProps) {
+export function ShopHeader({ title, subtitle }: ShopHeaderProps) {
+  const { cartCount, openCart } = useShopSheets();
+
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
         {subtitle && <p className="mt-1 text-muted-foreground">{subtitle}</p>}
       </div>
-      <Button asChild variant="outline">
-        <Link href={route('shop.cart')}>Cart ({Number(cartCount).toFixed(0)})</Link>
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" variant="ghost" size="sm" asChild>
+          <Link href={route('shop.tracking')}><Truck className="mr-2 h-4 w-4" />Track</Link>
+        </Button>
+        <Button type="button" variant="outline" onClick={openCart}>
+          <ShoppingBag className="mr-2 h-4 w-4" />
+          Cart ({Number(cartCount).toFixed(0)})
+        </Button>
+      </div>
     </div>
   );
 }

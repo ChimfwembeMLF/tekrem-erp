@@ -84,7 +84,7 @@ export default function WebsiteHero({
 
           {image && (
             <div className="mt-12 lg:col-span-6 lg:mt-0">
-              <div className="relative rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-800">
+              <div className="relative">
                 <img src={image} alt={imageAlt} className="w-full rounded-xl object-contain" />
               </div>
             </div>

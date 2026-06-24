@@ -1,7 +1,7 @@
 <?php
 
 /**
- * TekRem ERP Migration Reordering Script
+ * Tekrem ERP Migration Reordering Script
  * 
  * This script reorders Laravel migrations in the correct dependency order
  * to prevent foreign key constraint errors.
@@ -119,7 +119,7 @@ $migrationOrder = [
 
 $migrationsPath = __DIR__ . '/database/migrations/';
 
-echo "🔄 Starting TekRem ERP Migration Reordering...\n";
+echo "🔄 Starting Tekrem ERP Migration Reordering...\n";
 echo "📁 Migration path: {$migrationsPath}\n";
 echo "📊 Total migrations to reorder: " . count($migrationOrder) . "\n\n";
 

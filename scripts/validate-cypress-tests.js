@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Cypress Test Validation Script for TekRem ERP AI Modules
+ * Cypress Test Validation Script for Tekrem ERP AI Modules
  * This script validates the test structure and simulates test execution
  */
 
@@ -333,7 +333,7 @@ function generateReport(results) {
 
 // Main execution
 function main() {
-  logHeader('TekRem ERP Cypress AI Module Test Validation');
+  logHeader('Tekrem ERP Cypress AI Module Test Validation');
 
   log('🚀 Starting comprehensive test validation...', 'bright');
 

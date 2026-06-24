@@ -32,9 +32,11 @@ class PurchaseOrderController extends Controller
     public function create()
     {
         return Inertia::render('Procurement/PurchaseOrders/Create', [
-            'suppliers' => Supplier::where('is_active', true)->get(['id', 'name', 'code']),
-            'warehouses' => Warehouse::where('is_active', true)->get(['id', 'name', 'code']),
-            'products' => Product::where('is_active', true)->get(['id', 'name', 'sku', 'cost_price']),
+            'suppliers' => Supplier::where('is_active', true)->orderBy('name')->get(['id', 'name', 'code']),
+            'warehouses' => Warehouse::where('is_active', true)->orderBy('name')->get(['id', 'name', 'code']),
+            'products' => Product::where('is_active', true)->orderBy('name')->get(['id', 'name', 'sku', 'cost_price']),
+            'selectedSupplierId' => session('new_supplier_id'),
+            'selectedWarehouseId' => session('new_warehouse_id'),
         ]);
     }
 

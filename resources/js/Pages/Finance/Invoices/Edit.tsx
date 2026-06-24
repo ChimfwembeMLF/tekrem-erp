@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  Link, useForm } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -25,6 +24,7 @@ import {
 import useTranslate from '@/Hooks/useTranslate';
 import { toast } from 'sonner';
 import useRoute from '@/Hooks/useRoute';
+import { FinanceFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface Client {
   id: number;
@@ -155,12 +155,17 @@ export default function Edit({ invoice, clients, leads, currencies, statuses }: 
   };
 
   return (
-    <AppLayout
-      title={`${t('common.edit', 'Edit')} ${t('finance.invoice', 'Invoice')} ${invoice.invoice_number}`}
+    <FinanceFormShell
+      title={"Additional Information"}
+      backHref={route('finance.invoices.show')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
     >
 
-      <div className="space-y-6">
-        {/* Header */}
+{/* Header */}
         <div className="flex items-center gap-4">
           <Button variant="outline" size="sm" asChild>
             <Link href={route('finance.invoices.show', invoice.id)}>
@@ -178,8 +183,7 @@ export default function Edit({ invoice, clients, leads, currencies, statuses }: 
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-2">
             {/* Invoice Details */}
             <Card>
               <CardHeader>
@@ -529,8 +533,7 @@ export default function Edit({ invoice, clients, leads, currencies, statuses }: 
               {processing ? t('common.saving', 'Saving...') : t('finance.update_invoice', 'Update Invoice')}
             </Button>
           </div>
-        </form>
-      </div>
-    </AppLayout>
+        
+</FinanceFormShell>
   );
 }

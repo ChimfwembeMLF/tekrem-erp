@@ -15,6 +15,7 @@ class SupportChatbotMessage extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
+        'id',
         'conversation_id',
         'role',
         'message',

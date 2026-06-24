@@ -16,6 +16,10 @@ interface ChatMessageProps {
 
 export function ChatMessage({ message, onRate, onCreateTicket, onEscalate }: ChatMessageProps) {
   const isUser = message.role === "user"
+  const canRate = !isUser
+    && !message.rating
+    && message.intent !== 'greeting'
+    && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(message.id)
 
   return (
     <div className={`flex gap-3 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
@@ -143,7 +147,7 @@ export function ChatMessage({ message, onRate, onCreateTicket, onEscalate }: Cha
           </CardContent>
         </Card>
 
-        {!isUser && !message.rating && message.intent !== 'greeting' && (
+        {canRate && (
           <div className="flex gap-1 mt-2 justify-start">
             <Button variant="ghost" size="sm" onClick={() => onRate(message.id, 'helpful')} className="h-6 w-6 p-0 hover:bg-green-100">
               <ThumbsUp className="w-3 h-3" />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
+import {  Link, useForm } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/Components/ui/switch';
 import { Badge } from '@/Components/ui/badge';
 import { Alert, AlertDescription } from '@/Components/ui/alert';
-import AppLayout from '@/Layouts/AppLayout';
 import {
     Bot,
     ArrowLeft,
@@ -21,6 +20,7 @@ import {
     Save
 } from 'lucide-react';
 import { useTranslate } from '@/Hooks/useTranslate';
+import { AIFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface Service {
     id: number;
@@ -146,36 +146,17 @@ export default function Edit({ model, services }: Props) {
     };
 
     return (
-        <AppLayout
-            title={t('Edit AI Model')}
-            renderHeader={() => (
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                        <Link href={route('ai.models.show', model.id)}>
-                            <Button variant="ghost" size="sm">
-                                <ArrowLeft className="h-4 w-4 mr-2" />
-                                {t('Back to Model')}
-                            </Button>
-                        </Link>
-                        <div>
-                            <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                                {t('Edit AI Model')}
-                            </h2>
-                            <p className="text-gray-600 text-sm mt-1">
-                                {t('Update model configuration and settings')}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            )}
-        >
-            <Head title={t('Edit AI Model')} />
+        <AIFormShell
+      title={"Form"}
+      backHref={route('ai.models.show')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
+    >
 
-            <div className="py-6">
-                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
-                    <form onSubmit={handleSubmit} className="space-y-6">
-
-                        {/* Model Information */}
+{/* Model Information */}
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center">
@@ -554,9 +535,7 @@ export default function Edit({ model, services }: Props) {
                                 </AlertDescription>
                             </Alert>
                         )}
-                    </form>
-                </div>
-            </div>
-        </AppLayout>
+                    
+</AIFormShell>
     );
 }

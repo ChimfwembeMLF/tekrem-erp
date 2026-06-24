@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Guest\GuestSupportTicket;
 use App\Models\Support\KnowledgeBaseArticle;
 use App\Models\Support\KnowledgeBaseCategory;
+use App\Services\CRM\LeadCaptureService;
 use App\Services\NotificationService;
+use App\Services\Support\GuestTicketBridgeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -214,6 +216,8 @@ class SupportController extends Controller
 
         try {
             $ticket = GuestSupportTicket::create($data);
+
+            app(GuestTicketBridgeService::class)->syncFromGuestTicket($ticket);
 
             // Send notification to support staff
             $this->notifySupport($ticket);

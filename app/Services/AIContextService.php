@@ -253,7 +253,7 @@ class AIContextService
         $contextInfo = $this->getAvailableContextTypes()[$contextType] ?? [];
         
         $context = "SYSTEM CONTEXT:\n";
-        $context .= "You are an AI assistant integrated into TekRem ERP system.\n";
+        $context .= "You are an AI assistant integrated into Tekrem ERP system.\n";
         $context .= "Module: " . ($contextInfo['label'] ?? 'General') . "\n";
         $context .= "Description: " . ($contextInfo['description'] ?? '') . "\n\n";
         

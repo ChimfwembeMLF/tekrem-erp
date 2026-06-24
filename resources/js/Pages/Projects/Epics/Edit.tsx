@@ -1,12 +1,12 @@
 import React from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  Link, useForm } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import useRoute from '@/Hooks/useRoute';
+import { ProjectsFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface Epic {
   id: number;
@@ -50,16 +50,22 @@ export default function EditEpic({ auth, epic, project }: Props) {
   };
 
   return (
-    <AppLayout auth={auth} title={`Edit Epic: ${epic.name}`}>
-      <Head title={`Edit Epic: ${epic.name}`} />
-      <div className="max-w-2xl mx-auto py-8">
-        <Card>
+    <ProjectsFormShell
+      title={"Form"}
+      backHref={route('agile.epics.show')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
+    >
+
+<Card>
           <CardHeader>
             <CardTitle>Edit Epic</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
+            <div>
                 <Label htmlFor="name">Name *</Label>
                 <Input
                   id="name"
@@ -126,7 +132,6 @@ export default function EditEpic({ auth, epic, project }: Props) {
             </form>
           </CardContent>
         </Card>
-      </div>
-    </AppLayout>
+</ProjectsFormShell>
   );
 }

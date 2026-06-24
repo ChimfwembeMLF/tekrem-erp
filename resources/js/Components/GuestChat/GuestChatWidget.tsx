@@ -11,6 +11,7 @@ import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { cn } from '@/lib/utils';
+import { lockEmbedFrame, notifyEmbedParent, unlockEmbedFrame } from '@/lib/embedFrame';
 
 interface Message {
   id: number;
@@ -53,38 +54,59 @@ const appendUniqueMessage = (prev: Message[], incoming: Message) => {
 function ChatLauncher({
   unreadCount,
   onOpen,
+  embedded = false,
 }: {
   unreadCount: number;
   onOpen: () => void;
+  embedded?: boolean;
 }) {
+  const launcher = (
+    <button
+      type="button"
+      onClick={onOpen}
+      aria-label="Open chat"
+      className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-lg shadow-primary/25 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-primary/30 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+    >
+      <span
+        aria-hidden
+        className="absolute inset-0 rounded-full bg-primary/40 animate-launcher-pulse"
+      />
+      <span
+        aria-hidden
+        className="absolute -inset-1 rounded-full border border-primary/25"
+      />
+      <span className="relative z-10 flex animate-launcher-bob items-center justify-center">
+        <MessageCircle className="h-6 w-6" strokeWidth={2.25} />
+      </span>
+      {unreadCount > 0 && (
+        <Badge
+          variant="destructive"
+          className="absolute -right-1 -top-1 z-20 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold animate-scale-in border-2 border-background"
+        >
+          {unreadCount > 9 ? '9+' : unreadCount}
+        </Badge>
+      )}
+    </button>
+  );
+
+  if (embedded) {
+    return (
+      <div
+        className="fixed inset-0 z-[999] flex items-end justify-end p-6 pointer-events-none"
+        onMouseEnter={lockEmbedFrame}
+        onMouseLeave={unlockEmbedFrame}
+      >
+        <div className="pointer-events-auto">{launcher}</div>
+        <span className="pointer-events-none absolute bottom-[88px] right-6 hidden whitespace-nowrap rounded-md bg-foreground px-2.5 py-1 text-xs font-medium text-background opacity-0 shadow-md transition-opacity group-hover:opacity-100 sm:block">
+          Chat with us
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div className="group fixed bottom-5 right-5 z-[999] sm:bottom-6 sm:right-6">
-      <button
-        type="button"
-        onClick={onOpen}
-        aria-label="Open chat"
-        className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-lg shadow-primary/25 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-primary/30 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-      >
-        <span
-          aria-hidden
-          className="absolute inset-0 rounded-full bg-primary/40 animate-launcher-pulse"
-        />
-        <span
-          aria-hidden
-          className="absolute -inset-1 rounded-full border border-primary/25"
-        />
-        <span className="relative z-10 flex animate-launcher-bob items-center justify-center">
-          <MessageCircle className="h-6 w-6" strokeWidth={2.25} />
-        </span>
-        {unreadCount > 0 && (
-          <Badge
-            variant="destructive"
-            className="absolute -right-1 -top-1 z-20 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold animate-scale-in border-2 border-background"
-          >
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </Badge>
-        )}
-      </button>
+      {launcher}
       <span className="pointer-events-none absolute -top-9 right-0 hidden whitespace-nowrap rounded-md bg-foreground px-2.5 py-1 text-xs font-medium text-background opacity-0 shadow-md transition-opacity group-hover:opacity-100 sm:block">
         Chat with us
       </span>
@@ -92,7 +114,17 @@ function ChatLauncher({
   );
 }
 
-export default function GuestChatWidget() {
+interface GuestChatWidgetProps {
+  embedded?: boolean;
+  source?: string;
+  theme?: string;
+}
+
+export default function GuestChatWidget({
+  embedded = false,
+  source = 'website',
+  theme = 'light',
+}: GuestChatWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [initialized, setInitialized] = useState(false);
@@ -135,6 +167,19 @@ export default function GuestChatWidget() {
   });
 
   useEffect(() => {
+    if (!embedded || typeof document === 'undefined') return;
+    document.documentElement.style.backgroundColor = 'transparent';
+    document.body.style.backgroundColor = 'transparent';
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.style.colorScheme = 'dark';
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.style.colorScheme = 'light';
+    }
+  }, [embedded, theme]);
+
+  useEffect(() => {
     if (isOpen && !isMinimized) {
       const original = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
@@ -150,10 +195,14 @@ export default function GuestChatWidget() {
       setInitError(null);
       setConnectionStatus('connecting');
       const storedSessionId = localStorage.getItem('guest_chat_session_id');
+      const initBody: Record<string, string> = {};
+      if (storedSessionId) initBody.session_id = storedSessionId;
+      if (embedded && source) initBody.embed_source = source;
+
       const res = await fetchWithSession('/guest-chat/initialize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: storedSessionId ? JSON.stringify({ session_id: storedSessionId }) : undefined,
+        body: Object.keys(initBody).length > 0 ? JSON.stringify(initBody) : undefined,
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
@@ -173,7 +222,7 @@ export default function GuestChatWidget() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [embedded, source]);
 
   useEffect(() => {
     async function setupPush() {
@@ -195,8 +244,10 @@ export default function GuestChatWidget() {
   }, [initialized, guestSession]);
 
   useEffect(() => {
-    if (isOpen && !initialized) initializeSession();
-  }, [isOpen, initialized, initializeSession]);
+    if (isOpen) {
+      initializeSession();
+    }
+  }, [isOpen, initializeSession]);
 
   useEffect(() => {
     if (window.Echo && initialized) {
@@ -276,16 +327,26 @@ export default function GuestChatWidget() {
   const openWidget = () => {
     setIsOpen(true);
     setUnreadCount(0);
+    if (embedded) {
+      lockEmbedFrame();
+      notifyEmbedParent('open');
+    }
     requestAnimationFrame(() => requestAnimationFrame(() => setAnimateOpen(true)));
   };
 
   const closeWidget = () => {
     setAnimateOpen(false);
-    setTimeout(() => setIsOpen(false), 280);
+    setTimeout(() => {
+      setIsOpen(false);
+      if (embedded) {
+        unlockEmbedFrame();
+        notifyEmbedParent('close');
+      }
+    }, 280);
   };
 
   if (!isOpen) {
-    return <ChatLauncher unreadCount={unreadCount} onOpen={openWidget} />;
+    return <ChatLauncher unreadCount={unreadCount} onOpen={openWidget} embedded={embedded} />;
   }
 
   if (initError) {
@@ -326,14 +387,14 @@ export default function GuestChatWidget() {
 
       <div
         className={cn(
-          'fixed z-[1000] flex flex-col pointer-events-none',
-          'inset-0 sm:inset-auto sm:bottom-6 sm:right-6',
+          'fixed z-[1000] flex flex-col',
+          embedded ? 'inset-0 sm:inset-auto sm:bottom-6 sm:right-6 sm:left-auto' : 'inset-0 sm:inset-auto sm:bottom-6 sm:right-6',
           'sm:h-[min(680px,calc(100dvh-48px))] sm:w-[400px]',
         )}
       >
         <div
           className={cn(
-            'pointer-events-auto flex h-full w-full flex-col overflow-hidden border-border bg-background shadow-2xl',
+            'flex h-full w-full flex-col overflow-hidden border-border bg-background shadow-2xl',
             'sm:rounded-2xl sm:border',
             'transition-all duration-300 ease-out',
             animateOpen

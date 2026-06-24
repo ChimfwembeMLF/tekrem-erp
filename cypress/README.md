@@ -1,6 +1,6 @@
-# TekRem ERP Cypress E2E Testing Suite
+# Tekrem ERP Cypress E2E Testing Suite
 
-This directory contains comprehensive end-to-end tests for the TekRem ERP AI module using Cypress.
+This directory contains comprehensive end-to-end tests for the Tekrem ERP AI module using Cypress.
 
 ## 🚀 Quick Start
 
@@ -144,9 +144,9 @@ Configure in `cypress.config.ts`:
 ```typescript
 env: {
   apiUrl: 'http://localhost:8000/api',
-  adminEmail: 'admin@tekrem.com',
+  adminEmail: 'admin@Tekrem.com',
   adminPassword: 'password',
-  staffEmail: 'staff@tekrem.com',
+  staffEmail: 'staff@Tekrem.com',
   staffPassword: 'password'
 }
 ```

@@ -126,7 +126,7 @@ class ChatbotController extends Controller
         broadcast(new SupportChatbotEvent($conversationId, 'message', $assistantPayload));
 
         return response()->json([
-            'conversation_id' => $conversationId,
+            'conversation_id' => $conversation->id,
             'response' => $response['message'],
             'intent' => $intent,
             'suggestions' => $response['suggestions'] ?? [],
@@ -148,11 +148,28 @@ class ChatbotController extends Controller
         ]);
 
         $user = Auth::user();
+        $conversation = $this->chatbotStore->findForUser($validated['conversation_id'], $user);
+        $conversation?->load('ticket:id,ticket_number,title,status');
         $messages = $this->chatbotStore->getHistory($validated['conversation_id'], $user);
 
         return response()->json([
             'conversation_id' => $validated['conversation_id'],
             'messages' => $messages,
+            'status' => $conversation?->status,
+            'ticket_id' => $conversation?->ticket_id,
+            'ticket_number' => $conversation?->ticket?->ticket_number,
+        ]);
+    }
+
+    /**
+     * List the authenticated user's saved support chat conversations.
+     */
+    public function listConversations(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+
+        return response()->json([
+            'conversations' => $this->chatbotStore->listForUser($user),
         ]);
     }
 
@@ -333,16 +350,27 @@ class ChatbotController extends Controller
         ]);
 
         $user = Auth::user();
-        $conversation = $this->chatbotStore->resolveConversation($validated['conversation_id'], $user);
 
         $message = SupportChatbotMessage::query()
             ->where('id', $validated['message_id'])
-            ->where('conversation_id', $conversation->id)
             ->where('role', 'assistant')
+            ->whereHas('conversation', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
             ->first();
 
         if (!$message) {
             return response()->json(['success' => false, 'message' => 'Message not found.'], 404);
+        }
+
+        if ($message->conversation_id !== $validated['conversation_id']) {
+            // Client may still have a stale conversation id from before the UUID fix.
+            Log::info('Support chatbot rating used mismatched conversation id', [
+                'requested_conversation_id' => $validated['conversation_id'],
+                'actual_conversation_id' => $message->conversation_id,
+                'message_id' => $validated['message_id'],
+                'user_id' => $user->id,
+            ]);
         }
 
         $message->update([
@@ -353,6 +381,7 @@ class ChatbotController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Thank you for your feedback!',
+            'conversation_id' => $message->conversation_id,
         ]);
     }
 

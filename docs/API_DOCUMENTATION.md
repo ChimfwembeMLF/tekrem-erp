@@ -1,8 +1,8 @@
-# TekRem ERP - API Documentation
+# Tekrem ERP - API Documentation
 
 ## Overview
 
-The TekRem ERP API provides comprehensive access to all system features including CRM, Finance, Projects, HR, Support, CMS, Social Media, and AI modules. All API endpoints require authentication and proper permissions.
+The Tekrem ERP API provides comprehensive access to all system features including CRM, Finance, Projects, HR, Support, CMS, Social Media, and AI modules. All API endpoints require authentication and proper permissions.
 
 ## Authentication
 
@@ -478,7 +478,7 @@ X-RateLimit-Reset: 1640995200
 ### JavaScript/TypeScript
 ```javascript
 // Example API client
-class TekRemAPI {
+class TekremAPI {
     constructor(token, baseURL = 'https://yourdomain.com/api') {
         this.token = token;
         this.baseURL = baseURL;
@@ -511,14 +511,14 @@ class TekRemAPI {
 }
 
 // Usage
-const api = new TekRemAPI('your_api_token');
+const api = new TekremAPI('your_api_token');
 const result = await api.testFacebookConnection();
 ```
 
 ### PHP
 ```php
 // Example API client
-class TekRemAPI {
+class TekremAPI {
     private $token;
     private $baseURL;
     
@@ -556,7 +556,7 @@ class TekRemAPI {
 }
 
 // Usage
-$api = new TekRemAPI('your_api_token');
+$api = new TekremAPI('your_api_token');
 $result = $api->testFacebookConnection();
 ```
 

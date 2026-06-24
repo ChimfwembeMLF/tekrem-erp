@@ -26,8 +26,11 @@ class SupplierController extends Controller
             'address' => 'nullable|string',
             'payment_terms' => 'nullable|string|max:100',
         ]);
-        Supplier::create($data);
-        return back()->with('success', 'Supplier created.');
+        $supplier = Supplier::create(array_merge(['is_active' => true], $data));
+
+        return back()
+            ->with('success', 'Supplier created.')
+            ->with('new_supplier_id', $supplier->id);
     }
 
     public function update(Request $request, Supplier $supplier)

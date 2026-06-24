@@ -1,6 +1,5 @@
 import React from 'react';
-import { Head, useForm, Link } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  useForm, Link } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -11,6 +10,7 @@ import { Badge } from '@/Components/ui/badge';
 import { X, Plus } from 'lucide-react';
 import useRoute from '@/Hooks/useRoute';
 import { ProjectTemplate } from '@/types';
+import { ProjectsFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface TemplateEditProps {
   auth: {
@@ -112,20 +112,17 @@ export default function TemplateEdit({ auth, template }: TemplateEditProps) {
   };
 
   return (
-    <AppLayout
-      title={`Edit ${template.name}`}
-      renderHeader={() => (
-        <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-          Edit Template: {template.name}
-        </h2>
-      )}
+    <ProjectsFormShell
+      title={"Form"}
+      backHref={route('projects.templates.show')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
     >
-      <Head title={`Edit ${template.name}`} />
 
-      <div className="py-12">
-        <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-6">
+<div className="space-y-6">
               {/* Basic Information */}
               <Card>
                 <CardHeader>
@@ -384,9 +381,7 @@ export default function TemplateEdit({ auth, template }: TemplateEditProps) {
                 </Button>
               </div>
             </div>
-          </form>
-        </div>
-      </div>
-    </AppLayout>
+          
+</ProjectsFormShell>
   );
 }

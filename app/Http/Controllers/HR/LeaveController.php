@@ -332,13 +332,18 @@ class LeaveController extends Controller
 
     private function notifyLeaveManagers(Leave $leave, string $action): void
     {
-        $leave->load(['employee.user', 'leaveType']);
+        $leave->load(['employee.user', 'employee.manager.user', 'leaveType']);
 
-        $managers = User::whereHas('roles', function ($q) {
-            $q->whereIn('name', ['super_user', 'admin', 'staff', 'manager']);
-        })->get();
+        $recipients = collect();
 
-        foreach ($managers as $manager) {
+        if ($leave->employee?->manager?->user) {
+            $recipients->push($leave->employee->manager->user);
+        }
+
+        $managers = User::permission('view hr')->get();
+        $recipients = $recipients->merge($managers)->unique('id');
+
+        foreach ($recipients as $manager) {
             $manager->notify(new LeaveStatusChanged($leave, $action));
         }
     }

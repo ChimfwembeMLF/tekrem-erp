@@ -28,10 +28,10 @@ class ZraConfigurationSeeder extends Seeder
             'client_secret' => encrypt('sandbox_client_secret'),
             'api_key' => encrypt('sandbox_api_key'),
             'taxpayer_tpin' => '1234567890',
-            'taxpayer_name' => 'TekRem ERP Sandbox',
+            'taxpayer_name' => 'Tekrem ERP Sandbox',
             'taxpayer_address' => 'Sandbox Address, Lusaka, Zambia',
             'taxpayer_phone' => '+260XXX000000',
-            'taxpayer_email' => 'sandbox@tekrem.com',
+            'taxpayer_email' => 'sandbox@Tekrem.com',
             'tax_rates' => [
                 'default' => 16.0,
                 'standard' => 16.0,

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  Link, useForm } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -25,6 +24,7 @@ import {
   Download
 } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
+import { FinanceFormShell } from '@/Components/Module/moduleFormWrappers';
 import { toast } from 'sonner';
 
 interface Account {
@@ -112,13 +112,17 @@ export default function Edit({ expense, accounts, categories, statuses }: Props)
   const selectedAccount = accounts.find(acc => acc.id.toString() === data.account_id);
 
   return (
-    <AppLayout
-      title={t('finance.edit_expense', 'Edit Expense')}
-      >
-      <Head title={t('finance.edit_expense', 'Edit Expense')} />
+    <FinanceFormShell
+      title={"Edit Expense"}
+      backHref={route('finance.expenses.show')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
+    >
 
-      <div className="space-y-6">
-        {/* Header */}
+{/* Header */}
         <div className="flex items-center gap-4">
           <Button variant="outline" size="sm" asChild>
             <Link href={route('finance.expenses.show', expense.id)}>
@@ -136,8 +140,7 @@ export default function Edit({ expense, accounts, categories, statuses }: Props)
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-2">
             {/* Expense Details */}
             <Card>
               <CardHeader>
@@ -407,8 +410,7 @@ export default function Edit({ expense, accounts, categories, statuses }: Props)
               {processing ? t('common.saving', 'Saving...') : t('finance.update_expense', 'Update Expense')}
             </Button>
           </div>
-        </form>
-      </div>
-    </AppLayout>
+        
+</FinanceFormShell>
   );
 }

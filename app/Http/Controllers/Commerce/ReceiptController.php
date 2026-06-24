@@ -38,16 +38,22 @@ class ReceiptController extends Controller
 
     public function shopOrder(SalesOrder $order)
     {
-        abort_unless(in_array($order->source, ['ecommerce', 'pos'], true), 404);
+        abort_unless($order->source === 'ecommerce', 404);
 
-        if ($order->source === 'ecommerce') {
-            return Inertia::render('Commerce/Receipt/Print', [
-                'receipt' => $this->receiptService->fromSalesOrder($order),
-                'backUrl' => route('shop.order.confirmation', $order),
-                'backLabel' => 'Back to Order',
-            ]);
+        $token = request()->query('token');
+        $authorized = $token && hash_equals((string) $order->access_token, (string) $token);
+        if (!$authorized && auth()->check()) {
+            $user = auth()->user();
+            $authorized = $order->user_id === $user->id
+                || ($user->client_id && $order->client_id === $user->client_id)
+                || (($order->metadata['customer_email'] ?? null) === $user->email);
         }
+        abort_unless($authorized, 403);
 
-        abort(404);
+        return Inertia::render('Commerce/Receipt/Print', [
+            'receipt' => $this->receiptService->fromSalesOrder($order),
+            'backUrl' => route('shop.order.confirmation', ['order' => $order->id, 'token' => $order->access_token]),
+            'backLabel' => 'Back to Order',
+        ]);
     }
 }

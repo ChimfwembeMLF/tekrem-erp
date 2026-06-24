@@ -465,7 +465,7 @@ class ZraApiService
                 'total' => $invoice->total,
             ],
             'metadata' => [
-                'system' => 'TekRem ERP',
+                'system' => 'Tekrem ERP',
                 'version' => '1.0',
                 'submission_time' => now()->toISOString(),
                 'test_mode' => $this->config->environment === 'sandbox',

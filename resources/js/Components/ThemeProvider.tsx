@@ -1,6 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import useTypedPage from '@/Hooks/useTypedPage';
-import { Theme, getTheme, setTheme as setSystemTheme, themes, initializeTheme } from '@/lib/themes';
+import {
+  Theme,
+  getTheme,
+  getResolvedTheme,
+  setTheme as setSystemTheme,
+  themes,
+  initializeTheme,
+} from '@/lib/themes';
 import { Moon, Sun } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 
@@ -12,12 +19,14 @@ interface ThemeProviderProps {
 
 interface ThemeProviderState {
   theme: Theme;
+  resolvedTheme: 'light' | 'dark';
   setTheme: (theme: Theme) => void;
   themes: typeof themes;
 }
 
 const initialState: ThemeProviderState = {
   theme: 'system',
+  resolvedTheme: 'light',
   setTheme: () => null,
   themes,
 };
@@ -27,7 +36,7 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 export function ThemeProvider({
   children,
   defaultTheme = 'system',
-  storageKey = 'tekrem-ui-theme',
+  storageKey = 'Tekrem-ui-theme',
   ...props
 }: ThemeProviderProps) {
   // Try to use Inertia page context, but don't fail if it's not available
@@ -61,6 +70,8 @@ export function ThemeProvider({
     return defaultTheme;
   });
 
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(() => getResolvedTheme());
+
   // Initialize theme system
   useEffect(() => {
     return initializeTheme();
@@ -69,6 +80,16 @@ export function ThemeProvider({
   // Apply theme changes
   useEffect(() => {
     setSystemTheme(theme);
+    setResolvedTheme(getResolvedTheme());
+  }, [theme]);
+
+  // Keep resolved theme in sync when OS preference changes
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = () => setResolvedTheme(getResolvedTheme());
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
   }, [theme]);
 
   // Theme setter function
@@ -79,6 +100,7 @@ export function ThemeProvider({
 
   const value = {
     theme,
+    resolvedTheme,
     setTheme,
     themes,
   };
@@ -102,16 +124,25 @@ export const useTheme = () => {
 // ThemeToggle component for easy theme switching
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { theme, resolvedTheme, setTheme } = useTheme();
+
+  const toggleTheme = () => {
+    if (theme === 'system') {
+      setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+      return;
+    }
+
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
 
   return (
     <Button
       variant="ghost"
       size="icon"
-      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-      title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+      onClick={toggleTheme}
+      title={resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
     >
-      {theme === 'dark' ? (
+      {resolvedTheme === 'dark' ? (
         <Sun className="h-5 w-5 text-yellow-500" />
       ) : (
         <Moon className="h-5 w-5" />

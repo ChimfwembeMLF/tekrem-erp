@@ -1,11 +1,13 @@
-export function formatZmw(amount: number | null | undefined): string {
-  if (amount == null || Number.isNaN(amount)) {
-    return '—';
+export const DEFAULT_CURRENCY = 'ZMW';
+
+export function formatZmw(amount: number | null | undefined, fallback = '—'): string {
+  if (amount == null || Number.isNaN(Number(amount))) {
+    return fallback;
   }
 
   return new Intl.NumberFormat('en-ZM', {
     style: 'currency',
-    currency: 'ZMW',
+    currency: DEFAULT_CURRENCY,
     minimumFractionDigits: 2,
-  }).format(amount);
+  }).format(Number(amount));
 }

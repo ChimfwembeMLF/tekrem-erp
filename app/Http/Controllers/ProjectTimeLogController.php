@@ -53,6 +53,7 @@ class ProjectTimeLogController extends Controller
 
         return Inertia::render('Projects/TimeLogs/Index', [
             'project' => $project,
+            'boardId' => \App\Support\ProjectNav::boardId($project),
             'timeLogs' => $timeLogs,
             'users' => $users,
             'filters' => $request->only(['search', 'status', 'user_id', 'date_from', 'date_to']),

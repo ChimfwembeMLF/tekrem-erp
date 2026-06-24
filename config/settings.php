@@ -12,7 +12,7 @@ return [
     */
 
     // General settings
-    'site_name' => 'TekRem ERP',
+    'site_name' => 'Tekrem ERP',
     'site_description' => 'Technology Remedies Innovations',
 
     // Theme settings
@@ -22,7 +22,7 @@ return [
 
     // Company settings
     'company_name' => 'Technology Remedies Innovations',
-    'company_email' => 'tekremsolutions@gmail.com',
+    'company_email' => 'Tekremsolutions@gmail.com',
     'company_phone' => '+260 976607840',
     'company_address' => 'Lusaka, Zambia',
 ];

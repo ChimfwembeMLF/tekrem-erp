@@ -1,6 +1,6 @@
 # Terms of Service
 
-Welcome to **Tekrem Innovation**. By accessing or using our website [tekreminnovations.com](https://tekreminnovations.com), you agree to be bound by these Terms of Service ("Terms").
+Welcome to **Tekrem Innovation**. By accessing or using our website [Tekreminnovations.com](https://Tekreminnovations.com), you agree to be bound by these Terms of Service ("Terms").
 
 ## 1. Acceptance
 By using the Site you acknowledge that you have read, understood, and agree to these Terms, our [Privacy Policy](/privacy-policy) and our [Refund Policy](/refund-policy).
@@ -27,4 +27,4 @@ These Terms shall be governed by the laws of the jurisdiction in which **Tekrem 
 We may amend these Terms from time to time. Continued use of the Site after changes constitute acceptance of the revised Terms.
 
 ## 9. Contact
-If you have any questions about these Terms, please contact us at [tekremsolutions@gmail.com]
+If you have any questions about these Terms, please contact us at [Tekremsolutions@gmail.com]

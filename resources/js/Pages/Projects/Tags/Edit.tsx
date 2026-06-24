@@ -1,6 +1,5 @@
 import React from 'react';
-import { Head, useForm, Link } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  useForm, Link } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -10,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/Components/ui/checkbox';
 import useRoute from '@/Hooks/useRoute';
 import { Tag } from '@/types';
+import { ProjectsFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface TagEditProps {
   auth: {
@@ -47,20 +47,17 @@ export default function TagEdit({ auth, tag }: TagEditProps) {
   ];
 
   return (
-    <AppLayout
-      title={`Edit ${tag.name}`}
-      renderHeader={() => (
-        <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-          Edit Tag: {tag.name}
-        </h2>
-      )}
+    <ProjectsFormShell
+      title={"Form"}
+      backHref={route('projects.tags.index')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
     >
-      <Head title={`Edit ${tag.name}`} />
 
-      <div className="py-12">
-        <div className="max-w-2xl mx-auto sm:px-6 lg:px-8">
-          <form onSubmit={handleSubmit}>
-            <Card>
+<Card>
               <CardHeader>
                 <CardTitle>Tag Information</CardTitle>
                 <CardDescription>
@@ -184,9 +181,7 @@ export default function TagEdit({ auth, tag }: TagEditProps) {
                 </div>
               </CardContent>
             </Card>
-          </form>
-        </div>
-      </div>
-    </AppLayout>
+          
+</ProjectsFormShell>
   );
 }

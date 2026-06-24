@@ -1,8 +1,8 @@
-# TekRem ERP - Mobile Money & ZRA Smart Invoice Integration API Documentation
+# Tekrem ERP - Mobile Money & ZRA Smart Invoice Integration API Documentation
 
 ## Overview
 
-This document provides comprehensive API documentation for the Mobile Money (MoMo) and ZRA Smart Invoice integration features in TekRem ERP. These integrations enable seamless payment processing through Zambian mobile money providers and automated tax compliance through ZRA Smart Invoice submission.
+This document provides comprehensive API documentation for the Mobile Money (MoMo) and ZRA Smart Invoice integration features in Tekrem ERP. These integrations enable seamless payment processing through Zambian mobile money providers and automated tax compliance through ZRA Smart Invoice submission.
 
 ## Table of Contents
 

@@ -823,18 +823,17 @@ class LiveChatController extends Controller
         $leads = $user->hasRole('customer') ? [] : Lead::select('id', 'name', 'email')->get();
         $staff = $user->hasRole('customer') ? [] : User::role(['admin', 'staff'])->select('id', 'name', 'email')->get();
 
-        // Use the existing LiveChat Conversation component but with project context
-        return Inertia::render('CRM/LiveChat/Conversation', [
+        // Use project shell with shared tab bar
+        return Inertia::render('Projects/Chat', [
             'conversation' => $conversation,
             'pinnedMessages' => $pinnedMessages,
             'clients' => $clients,
             'leads' => $leads,
             'staff' => $staff,
             'userRole' => $user->getRoleNames()->first(),
-            // Add project-specific data
             'project' => $project->load(['client', 'manager']),
+            'boardId' => \App\Support\ProjectNav::boardId($project),
             'teamMembers' => $teamMembers,
-            'isProjectChat' => true, // Flag to customize the UI for project context
         ]);
     }
 }

@@ -155,8 +155,8 @@ class ProjectSeeder extends Seeder
         // Create sample projects
         $projects = [
             [
-                'name' => 'TekRem ERP Enhancement',
-                'description' => 'Enhance the existing TekRem ERP system with new features and improvements',
+                'name' => 'Tekrem ERP Enhancement',
+                'description' => 'Enhance the existing Tekrem ERP system with new features and improvements',
                 'status' => 'active',
                 'priority' => 'high',
                 'category' => 'Web Development',

@@ -1,7 +1,6 @@
 import React from 'react'
-import { Button } from "@/Components/ui/button"
-import { Badge } from "@/Components/ui/badge"
-import type { Suggestion } from "@/types/chatbot"
+import { cn } from '@/lib/utils'
+import type { Suggestion } from '@/types/chatbot'
 
 interface SuggestionButtonsProps {
   suggestions: Suggestion[]
@@ -10,20 +9,23 @@ interface SuggestionButtonsProps {
 
 export function SuggestionButtons({ suggestions, onSuggestionClick }: SuggestionButtonsProps) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-1.5">
       {suggestions.map((suggestion, index) => (
-        <Button
-          key={index}
-          variant="outline"
-          size="sm"
+        <button
+          key={`${suggestion.intent}-${index}`}
+          type="button"
           onClick={() => onSuggestionClick(suggestion)}
-          className="text-left justify-start h-auto p-3 flex-col items-start"
+          className={cn(
+            'inline-flex max-w-full items-center gap-1.5 rounded-full border border-border/60 bg-muted/40 px-2.5 py-1 text-left',
+            'text-[11px] leading-tight text-foreground/90 transition-colors',
+            'hover:border-primary/30 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+          )}
         >
-          <span className="text-sm">{suggestion.text}</span>
-          <Badge variant="secondary" className="text-xs mt-1">
+          <span className="truncate">{suggestion.text}</span>
+          <span className="shrink-0 rounded-full bg-background/80 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground">
             {suggestion.category}
-          </Badge>
-        </Button>
+          </span>
+        </button>
       ))}
     </div>
   )

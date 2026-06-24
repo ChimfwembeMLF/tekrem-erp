@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import {  useForm } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/Components/ui/switch';
 import { Badge } from '@/Components/ui/badge';
 import { Alert, AlertDescription } from '@/Components/ui/alert';
-import AppLayout from '@/Layouts/AppLayout';
 import {
     FileText,
     ArrowLeft,
@@ -22,6 +21,7 @@ import {
     Lock
 } from 'lucide-react';
 import { useTranslate } from '@/Hooks/useTranslate';
+import { AIFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface Props {
     categories: string[];
@@ -129,38 +129,17 @@ export default function Create({ categories }: Props) {
     };
 
     return (
-        <AppLayout
-            title={t('Create Prompt Template')}
-            renderHeader={() => (
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => window.history.back()}
-                        >
-                            <ArrowLeft className="h-4 w-4 mr-2" />
-                            {t('Back')}
-                        </Button>
-                        <div>
-                            <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                                {t('Create Prompt Template')}
-                            </h2>
-                            <p className="text-gray-600 text-sm mt-1">
-                                {t('Create a reusable prompt template for AI interactions')}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            )}
-        >
-            <Head title={t('Create Prompt Template')} />
+        <AIFormShell
+      title={"Form"}
+      backHref={route('')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
+    >
 
-            <div className="py-6">
-                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
-                    <form onSubmit={handleSubmit} className="space-y-6">
-
-                        {/* Basic Information */}
+{/* Basic Information */}
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center">
@@ -478,9 +457,7 @@ export default function Create({ categories }: Props) {
                                 </AlertDescription>
                             </Alert>
                         )}
-                    </form>
-                </div>
-            </div>
-        </AppLayout>
+                    
+</AIFormShell>
     );
 }

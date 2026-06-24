@@ -392,7 +392,7 @@ export default function CustomerConversationsIndex({ conversations, selectedConv
                 <div className="flex items-center justify-between gap-3">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">Conversations</h1>
-                        <p className="text-muted-foreground">Support chat with the TekRem team</p>
+                        <p className="text-muted-foreground">Support chat with the Tekrem team</p>
                     </div>
 
                     <Sheet open={newConversationOpen} onOpenChange={setNewConversationOpen}>

@@ -416,7 +416,7 @@ export default function useBreadcrumbs(): BreadcrumbItem[] {
       if (currentRoute.startsWith('projects.')) {
         breadcrumbs.push({
           label: t('projects.title', 'Projects'),
-          href: route('projects.dashboard'),
+          href: route('projects.index'),
         });
 
         if (currentRoute === 'projects.dashboard') {

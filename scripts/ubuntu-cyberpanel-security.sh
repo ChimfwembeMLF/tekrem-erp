@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# TekRem ERP — Ubuntu + CyberPanel + LiteSpeed
+# Tekrem ERP — Ubuntu + CyberPanel + LiteSpeed
 # One-shot incident response, cleanup, and hardening script.
 #
 # Usage:
@@ -345,7 +345,7 @@ install_cron() {
 SHELL=/bin/bash
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
-# TekRem ERP integrity check every 6 hours
+# Tekrem ERP integrity check every 6 hours
 0 */6 * * * $SITE_USER cd $APP_ROOT && $PHP_BIN artisan security:integrity-check >> /var/log/erp-integrity.log 2>&1
 CRON
 
@@ -409,7 +409,7 @@ main() {
   mkdir -p "$(dirname "$LOG_FILE")"
   mkdir -p "$BACKUP_DIR"
 
-  log "TekRem ERP security script — Ubuntu / CyberPanel / LiteSpeed"
+  log "Tekrem ERP security script — Ubuntu / CyberPanel / LiteSpeed"
   log "Log: $LOG_FILE"
 
   detect_app_root

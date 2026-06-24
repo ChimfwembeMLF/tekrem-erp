@@ -44,6 +44,7 @@ class BacklogController extends Controller
         return Inertia::render('Projects/Backlog', [
             'project' => $project,
             'board' => $board,
+            'boardId' => \App\Support\ProjectNav::boardId($project),
             'productBacklog' => $productBacklog,
             'sprintBacklogs' => $sprintBacklogs,
             'sprints' => $sprints,

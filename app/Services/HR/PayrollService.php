@@ -13,7 +13,6 @@ use App\Models\HR\LeaveType;
 use App\Models\HR\Payroll;
 use App\Models\HR\PayrollAudit;
 use App\Models\HR\Performance;
-use Illuminate\Support\Facades\Storage;
 
 class PayrollService
 {
@@ -109,7 +108,7 @@ class PayrollService
             'payslip_file_path' => null,
         ]);
 
-        $payslipPath = $this->generatePayslipText($employee, $period, $breakdown);
+        $payslipPath = app(PayslipPdfService::class)->generate($employee, $period, $breakdown, 'pending');
         $payroll->update(['payslip_file_path' => $payslipPath]);
 
         Document::create([
@@ -174,29 +173,5 @@ class PayrollService
         $hourly = $dailyRate / max(HrSettings::workHoursPerDay(), 1);
 
         return round($hourly * HrSettings::overtimeMultiplier(), 2);
-    }
-
-    private function generatePayslipText(Employee $employee, string $period, array $breakdown): string
-    {
-        $path = "payslips/{$employee->id}_{$period}.txt";
-        $lines = [
-            "PAYSLIP — {$period}",
-            "Employee: {$employee->user?->name}",
-            "ID: {$employee->employee_id}",
-            str_repeat('-', 40),
-            "Base salary:      " . number_format($breakdown['base_salary'], 2),
-            "Overtime ({$breakdown['overtime_hours']}h): " . number_format($breakdown['overtime_pay'], 2),
-            "Bonus:            " . number_format($breakdown['bonus'], 2),
-            "Allowances/net:   " . number_format($breakdown['allowances_deductions_net'], 2),
-            "Absence deduct:   -" . number_format($breakdown['absence_deduction'], 2),
-            "Unpaid leave:     -" . number_format($breakdown['unpaid_leave_deduction'], 2),
-            str_repeat('-', 40),
-            "Gross:            " . number_format($breakdown['gross'], 2),
-            "Net pay:          " . number_format($breakdown['net'], 2),
-            "Status: PENDING APPROVAL",
-        ];
-        Storage::put($path, implode("\n", $lines));
-
-        return $path;
     }
 }

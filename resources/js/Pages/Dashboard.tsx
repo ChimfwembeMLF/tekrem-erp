@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import AppLayout from '@/Layouts/AppLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
+import ModuleDashboardShell from '@/Components/Dashboard/ModuleDashboardShell';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/Components/ui/alert';
@@ -104,38 +104,28 @@ export default function Dashboard({
   const formatNumber = (num: number) => new Intl.NumberFormat().format(num);
 
   return (
-    <AppLayout
+    <ModuleDashboardShell
       title={t('dashboard.title', 'Dashboard')}
-      renderHeader={() => (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-xl font-semibold tracking-tight text-foreground">
-              {t('dashboard.title', 'Dashboard')}
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {t('dashboard.subtitle', 'Overview of your ERP modules and operations')}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => { setRefreshing(true); window.location.reload(); }} disabled={refreshing}>
-              <RefreshCw className={cn('mr-2 h-4 w-4', refreshing && 'animate-spin')} />
-              Refresh
+      description={t('dashboard.subtitle', 'Overview of your ERP modules and operations')}
+      workspaceLabel="Operations hub"
+      heroAccent="from-primary/15 via-primary/5 to-secondary/10"
+      actions={
+        <>
+          <Button variant="outline" size="sm" onClick={() => { setRefreshing(true); window.location.reload(); }} disabled={refreshing}>
+            <RefreshCw className={cn('mr-2 h-4 w-4', refreshing && 'animate-spin')} />
+            Refresh
+          </Button>
+          {hasAnyRole(['admin', 'super_user']) && (
+            <Button size="sm" asChild>
+              <Link href="/settings">
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </Link>
             </Button>
-            {hasAnyRole(['admin', 'super_user']) && (
-              <Button size="sm" asChild>
-                <Link href="/settings">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </Link>
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
+          )}
+        </>
+      }
     >
-      <Head title={t('dashboard.title', 'Dashboard')} />
-
-      <div className="space-y-6 pb-8">
         {notifications?.length > 0 && (
           <div className="space-y-2">
             {notifications.map((notification, index) => (
@@ -235,7 +225,6 @@ export default function Dashboard({
             </TabsContent>
           </Tabs>
         )}
-      </div>
-    </AppLayout>
+    </ModuleDashboardShell>
   );
 }

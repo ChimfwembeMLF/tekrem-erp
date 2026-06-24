@@ -16,7 +16,7 @@ class SettingsSeeder extends Seeder
             // General settings
             [
                 'key' => 'site_name',
-                'value' => 'TekRem ERP',
+                'value' => 'Tekrem ERP',
                 'group' => 'general',
                 'type' => 'string',
                 'label' => 'Site Name',
@@ -82,7 +82,7 @@ class SettingsSeeder extends Seeder
             ],
             [
                 'key' => 'company_email',
-                'value' => 'tekremsolutions@gmail.com',
+                'value' => 'Tekremsolutions@gmail.com',
                 'group' => 'company',
                 'type' => 'email',
                 'label' => 'Company Email',
@@ -114,7 +114,7 @@ class SettingsSeeder extends Seeder
             // Additional General Settings
             [
                 'key' => 'admin_email',
-                'value' => 'admin@tekrem.com',
+                'value' => 'admin@Tekrem.com',
                 'group' => 'general',
                 'type' => 'email',
                 'label' => 'Admin Email',
@@ -249,6 +249,18 @@ class SettingsSeeder extends Seeder
                 'description' => 'Key ID used for signed financial requests',
                 'is_public' => false,
                 'order' => 7,
+            ],
+
+            // Shop storefront
+            [
+                'key' => 'shop.hero_background',
+                'value' => '',
+                'group' => 'shop',
+                'type' => 'file',
+                'label' => 'Shop Hero Background',
+                'description' => 'Storage path for the shop featured carousel background (2560×840 px recommended, 3:1).',
+                'is_public' => false,
+                'order' => 1,
             ],
         ];
 

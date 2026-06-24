@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Guest;
 
 use App\Http\Controllers\Controller;
 use App\Models\Guest\GuestInquiry;
+use App\Services\CRM\LeadCaptureService;
 use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -90,6 +91,8 @@ class InquiryController extends Controller
 
         try {
             $inquiry = GuestInquiry::create($data);
+
+            app(LeadCaptureService::class)->fromInquiry($inquiry);
 
             // Send notification to staff
             $this->notifyStaff($inquiry);

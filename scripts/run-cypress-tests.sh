@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# TekRem ERP Cypress Test Runner
+# Tekrem ERP Cypress Test Runner
 # This script sets up the environment and runs Cypress tests
 
 set -e  # Exit on any error
@@ -265,7 +265,7 @@ main() {
         trap cleanup EXIT
     fi
     
-    print_status "Starting TekRem ERP Cypress Test Runner"
+    print_status "Starting Tekrem ERP Cypress Test Runner"
     print_status "Command: $command"
     
     # Check required commands

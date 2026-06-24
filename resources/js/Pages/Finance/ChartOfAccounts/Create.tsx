@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  Link, useForm } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -17,6 +16,7 @@ import {
 import { ArrowLeft, Save } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
 import useRoute from '@/Hooks/useRoute';
+import { FinanceFormShell } from '@/Components/Module/moduleFormWrappers';
 import { toast } from 'sonner';
 
 interface ParentAccount {
@@ -94,11 +94,17 @@ export default function Create({
   };
 
   return (
-    <AppLayout>
-      <Head title={t('Create Account')} />
+    <FinanceFormShell
+      title={"Form"}
+      backHref={route('')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
+    >
 
-      <div className="space-y-6">
-        {/* Header */}
+{/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Button variant="outline" size="sm" asChild>
@@ -116,8 +122,7 @@ export default function Create({
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Information */}
             <div className="lg:col-span-2">
               <Card>
@@ -383,8 +388,7 @@ export default function Create({
               </div>
             </div>
           </div>
-        </form>
-      </div>
-    </AppLayout>
+        
+</FinanceFormShell>
   );
 }

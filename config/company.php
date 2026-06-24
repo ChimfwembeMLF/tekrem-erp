@@ -18,10 +18,10 @@ return [
     'postal_code' => env('COMPANY_POSTAL_CODE', '10101'),
     'country' => env('COMPANY_COUNTRY', 'Zambia'),
     'phone' => env('COMPANY_PHONE', '+260 976607840'),
-    'email' => env('COMPANY_EMAIL', 'tekremsolutions@gmail.com'),
-    'website' => env('COMPANY_WEBSITE', 'www.tekreminnovations.com'),
+    'email' => env('COMPANY_EMAIL', 'Tekremsolutions@gmail.com'),
+    'website' => env('COMPANY_WEBSITE', 'www.Tekreminnovations.com'),
     'tax_number' => env('COMPANY_TAX_NUMBER', '2003620656'),
-    'logo' => env('COMPANY_LOGO', 'https://www.tekreminnovations.com/logo-blue.png'),
+    'logo' => env('COMPANY_LOGO', 'https://www.Tekreminnovations.com/logo-blue.png'),
     'tagline' => env('COMPANY_TAGLINE', 'INNOVATION CREATIVITY VALUE'),
 
     /*
@@ -35,7 +35,7 @@ return [
 
     'bank' => [
         'name' => env('COMPANY_BANK_NAME', 'Business Bank'),
-        'account_name' => env('COMPANY_BANK_ACCOUNT_NAME', 'TekRem ERP'),
+        'account_name' => env('COMPANY_BANK_ACCOUNT_NAME', 'Tekrem ERP'),
         'account_number' => env('COMPANY_BANK_ACCOUNT_NUMBER', '1234567890'),
         'routing_number' => env('COMPANY_BANK_ROUTING_NUMBER', '123456789'),
         'swift_code' => env('COMPANY_BANK_SWIFT_CODE', 'BANKUS33'),

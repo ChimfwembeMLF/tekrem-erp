@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import {  useForm } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -8,7 +8,6 @@ import { Textarea } from '@/Components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { Switch } from '@/Components/ui/switch';
 import { Alert, AlertDescription } from '@/Components/ui/alert';
-import AppLayout from '@/Layouts/AppLayout';
 import {
     Bot,
     ArrowLeft,
@@ -19,6 +18,7 @@ import {
     DollarSign
 } from 'lucide-react';
 import { useTranslate } from '@/Hooks/useTranslate';
+import { AIFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface Service {
     id: number;
@@ -113,38 +113,17 @@ export default function Create({ services }: Props) {
     };
 
     return (
-        <AppLayout
-            title={t('Create AI Model')}
-            renderHeader={() => (
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => window.history.back()}
-                        >
-                            <ArrowLeft className="h-4 w-4 mr-2" />
-                            {t('Back')}
-                        </Button>
-                        <div>
-                            <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                                {t('Create AI Model')}
-                            </h2>
-                            <p className="text-gray-600 text-sm mt-1">
-                                {t('Add a new AI model to your system')}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            )}
-        >
-            <Head title={t('Create AI Model')} />
+        <AIFormShell
+      title={"Form"}
+      backHref={route('ai.models.index')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
+    >
 
-            <div className="py-6">
-                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
-                    <form onSubmit={handleSubmit} className="space-y-6">
-
-                        {/* Basic Information */}
+{/* Basic Information */}
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center">
@@ -527,9 +506,7 @@ export default function Create({ services }: Props) {
                                 </AlertDescription>
                             </Alert>
                         )}
-                    </form>
-                </div>
-            </div>
-        </AppLayout>
+                    
+</AIFormShell>
     );
 }

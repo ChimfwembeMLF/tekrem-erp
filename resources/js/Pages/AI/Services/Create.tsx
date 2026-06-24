@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  useForm } from '@inertiajs/react';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
@@ -11,6 +10,7 @@ import { Switch } from '@/Components/ui/switch';
 import { Badge } from '@/Components/ui/badge';
 import { Bot, Brain, Zap, ArrowLeft, Save, TestTube } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
+import { AIFormShell } from '@/Components/Module/moduleFormWrappers';
 import { toast } from 'sonner';
 
 interface FormData {
@@ -147,31 +147,17 @@ export default function CreateService() {
   };
 
   return (
-    <AppLayout
-      title={t('ai.create_service', 'Create AI Service')}
-      renderHeader={() => (
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => window.history.back()}
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              {t('common.back', 'Back')}
-            </Button>
-            <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-              {t('ai.create_service', 'Create AI Service')}
-            </h2>
-          </div>
-        </div>
-      )}
+    <AIFormShell
+      title={"Create AI Service"}
+      backHref={route('ai.services.index')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
     >
-      <Head title={t('ai.create_service', 'Create AI Service')} />
 
-      <div className="max-w-4xl mx-auto">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <Card>
+<Card>
             <CardHeader>
               <CardTitle>{t('ai.service_configuration', 'Service Configuration')}</CardTitle>
               <CardDescription>
@@ -383,8 +369,7 @@ export default function CreateService() {
               {processing ? t('common.saving', 'Saving...') : t('common.save', 'Save')}
             </Button>
           </div>
-        </form>
-      </div>
-    </AppLayout>
+        
+</AIFormShell>
   );
 }

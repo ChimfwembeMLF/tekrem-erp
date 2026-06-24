@@ -87,8 +87,8 @@ export default function AdvancedSettings({
     performance_alerts: false,
     webhook_url: '',
     slack_webhook_url: '',
-    email_from_name: 'TekRem ERP',
-    email_from_address: 'noreply@tekrem.com',
+    email_from_name: 'Tekrem ERP',
+    email_from_address: 'noreply@Tekrem.com',
   });
 
   // System settings form
@@ -1183,7 +1183,7 @@ export default function AdvancedSettings({
                           id="email_from_name"
                           value={notificationForm.data.email_from_name}
                           onChange={(e) => notificationForm.setData('email_from_name', e.target.value)}
-                          placeholder="TekRem ERP"
+                          placeholder="Tekrem ERP"
                         />
                       </div>
 
@@ -1196,7 +1196,7 @@ export default function AdvancedSettings({
                           type="email"
                           value={notificationForm.data.email_from_address}
                           onChange={(e) => notificationForm.setData('email_from_address', e.target.value)}
-                          placeholder="noreply@tekrem.com"
+                          placeholder="noreply@Tekrem.com"
                         />
                       </div>
                     </div>

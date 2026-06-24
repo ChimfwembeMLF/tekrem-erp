@@ -1,12 +1,12 @@
 import React from 'react';
-import { Head, useForm, Link } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  useForm, Link } from '@inertiajs/react';
 import { Card } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { FileText, ArrowLeft } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
 import useRoute from '@/Hooks/useRoute';
+import { FinanceFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface Props {
   types: Record<string, string>;
@@ -31,12 +31,17 @@ export default function Create({ types }: Props) {
   };
 
   return (
-    <AppLayout title={t('finance.create_report', 'Create Report')}>
-      <Head title={t('finance.create_report', 'Create Report')} />
+    <FinanceFormShell
+      title={"Create Report"}
+      backHref={route('finance.reports.index')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
+    >
 
-      <div className="py-12">
-        <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
-          <div className="mb-6">
+<div className="mb-6">
             <Link href={route('finance.reports.index')}>
               <Button variant="ghost">
                 <ArrowLeft className="h-4 w-4 mr-2" />
@@ -57,8 +62,7 @@ export default function Create({ types }: Props) {
                 </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Report Name */}
                   <div className="space-y-2">
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700">
@@ -232,8 +236,6 @@ export default function Create({ types }: Props) {
               </form>
             </div>
           </Card>
-        </div>
-      </div>
-    </AppLayout>
+</FinanceFormShell>
   );
 }

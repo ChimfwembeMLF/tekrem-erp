@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  Link, useForm } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -28,6 +27,7 @@ import useTranslate from '@/Hooks/useTranslate';
 import InvoiceItemsGenerator from '@/Components/Finance/InvoiceItemsGenerator';
 import { toast } from 'sonner';
 import useRoute from '@/Hooks/useRoute';
+import { FinanceFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface Client {
   id: number;
@@ -163,13 +163,17 @@ export default function Create({ clients = [], leads = [], currencies = {}, stat
   };
 
   return (
-    <AppLayout
-      title={t('finance.create_invoice', 'Create Invoice')}
+    <FinanceFormShell
+      title={"Create Invoice"}
+      backHref={route('finance.invoices.index')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
     >
-      <Head title={t('finance.create_invoice', 'Create Invoice')} />
 
-      <div className="space-y-6">
-        {/* Header */}
+{/* Header */}
         <div className="flex items-center gap-4">
           <Button variant="outline" size="sm" asChild>
             <Link href={route('finance.invoices.index')}>
@@ -187,8 +191,7 @@ export default function Create({ clients = [], leads = [], currencies = {}, stat
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-2">
             {/* Invoice Details */}
             <Card>
               <CardHeader>
@@ -559,8 +562,7 @@ export default function Create({ clients = [], leads = [], currencies = {}, stat
               {processing ? t('common.saving', 'Saving...') : t('finance.create_invoice', 'Create Invoice')}
             </Button>
           </div>
-        </form>
-      </div>
-    </AppLayout>
+        
+</FinanceFormShell>
   );
 }

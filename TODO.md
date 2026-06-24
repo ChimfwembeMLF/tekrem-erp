@@ -1,4 +1,4 @@
-# TekRem ERP - Implementation TODO List
+# Tekrem ERP - Implementation TODO List
 
 ## Initial Setup
 - [ ] Create new Laravel 12 project with Jetstream (Inertia + React)

@@ -33,7 +33,7 @@ export default function Home({ canLogin, canRegister }: Props) {
       gradient: "from-blue-500 to-blue-600",
       color: "blue",
       rating: 5,
-      quote: "TekRem transformed our entire digital banking infrastructure. The new platform resulted in a 40% increase in online transactions, dramatically improved customer satisfaction scores, and positioned us as a leader in digital financial services across Zambia.",
+      quote: "Tekrem transformed our entire digital banking infrastructure. The new platform resulted in a 40% increase in online transactions, dramatically improved customer satisfaction scores, and positioned us as a leader in digital financial services across Zambia.",
       author: "Michael Banda",
       position: "IT Director",
       metrics: [
@@ -85,7 +85,7 @@ export default function Home({ canLogin, canRegister }: Props) {
       gradient: "from-orange-500 to-red-600",
       color: "orange",
       rating: 5,
-      quote: "TekRem's IoT monitoring system improved our operational efficiency by 45% and significantly enhanced workplace safety protocols. The real-time data analytics have been game-changing.",
+      quote: "Tekrem's IoT monitoring system improved our operational efficiency by 45% and significantly enhanced workplace safety protocols. The real-time data analytics have been game-changing.",
       author: "Sarah Phiri",
       position: "Operations Director",
       metrics: [
@@ -102,7 +102,7 @@ export default function Home({ canLogin, canRegister }: Props) {
       gradient: "from-emerald-500 to-green-600",
       color: "emerald",
       rating: 5,
-      quote: "The farm management platform developed by TekRem has revolutionized how we track crop yields and manage resources. Our productivity has increased by 55% in just one growing season.",
+      quote: "The farm management platform developed by Tekrem has revolutionized how we track crop yields and manage resources. Our productivity has increased by 55% in just one growing season.",
       author: "Joseph Mwanza",
       position: "Farm Operations Manager",
       metrics: [
@@ -338,7 +338,7 @@ export default function Home({ canLogin, canRegister }: Props) {
         <div
           className="absolute inset-0 bg-cover bg-center animate-zoom"
           style={{
-            backgroundImage: "url('/assets/illustrations/tekrem-hero-section-image.jpeg')",
+            backgroundImage: "url('/assets/illustrations/Tekrem-hero-section-image.jpeg')",
             backgroundRepeat: 'no-repeat',
           }}
         />

@@ -1,4 +1,4 @@
-# TekRem ERP - Mobile Money & ZRA Smart Invoice User Guide
+# Tekrem ERP - Mobile Money & ZRA Smart Invoice User Guide
 
 ## Table of Contents
 
@@ -12,7 +12,7 @@
 
 ## Introduction
 
-TekRem ERP now includes comprehensive Mobile Money (MoMo) integration and ZRA Smart Invoice compliance features designed specifically for Zambian businesses. These features enable:
+Tekrem ERP now includes comprehensive Mobile Money (MoMo) integration and ZRA Smart Invoice compliance features designed specifically for Zambian businesses. These features enable:
 
 - **Mobile Money Integration**: Accept payments and process payouts through MTN MoMo, Airtel Money, and Zamtel Money
 - **ZRA Smart Invoice Compliance**: Automatically submit invoices to ZRA and maintain tax compliance
@@ -355,4 +355,4 @@ Access detailed logs for troubleshooting:
 
 ---
 
-For technical support or additional questions, please contact the TekRem ERP support team or refer to the comprehensive API documentation.
+For technical support or additional questions, please contact the Tekrem ERP support team or refer to the comprehensive API documentation.

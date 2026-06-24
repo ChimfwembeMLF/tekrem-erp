@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  Link, useForm } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -20,6 +19,7 @@ import AISuggestions from '@/Components/Finance/AISuggestions';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/Components/ui/alert';
 import useRoute from '@/Hooks/useRoute';
+import { FinanceFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface Account {
   id: number;
@@ -155,11 +155,17 @@ export default function Create({
   };
 
   return (
-    <AppLayout title={t('finance.create_transaction', 'Create Transaction')}>
-      <Head title={t('finance.create_transaction', 'Create Transaction')} />
+    <FinanceFormShell
+      title={"Create Transaction"}
+      backHref={route('finance.transactions.index')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
+    >
 
-      <div className="space-y-6">
-        {/* Header */}
+{/* Header */}
         <div className="flex items-center gap-4">
           <Button variant="outline" size="sm" asChild>
             <Link href={route('finance.transactions.index')}>
@@ -189,8 +195,7 @@ export default function Create({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Transaction Type */}
                 <div className="space-y-2">
                   <Label htmlFor="type">
@@ -437,7 +442,6 @@ export default function Create({
             </form>
           </CardContent>
         </Card>
-      </div>
-    </AppLayout>
+</FinanceFormShell>
   );
 }

@@ -170,7 +170,7 @@ Route::get('conversations/statistics', [\App\Http\Controllers\AI\ConversationCon
 - ✅ Responsive design for all screen sizes
 - ✅ Loading states and error handling
 - ✅ Toast notifications for actions
-- ✅ Consistent design with TekRem ERP theme
+- ✅ Consistent design with Tekrem ERP theme
 - ✅ Accessibility features and keyboard navigation
 
 ---
@@ -195,7 +195,7 @@ Route::get('conversations/statistics', [\App\Http\Controllers\AI\ConversationCon
 
 ### **Consistent Design**:
 - ✅ shadcn/ui components throughout
-- ✅ TekRem ERP color scheme and styling
+- ✅ Tekrem ERP color scheme and styling
 - ✅ Responsive grid layouts
 - ✅ Proper spacing and typography
 
@@ -240,7 +240,7 @@ Route::get('conversations/statistics', [\App\Http\Controllers\AI\ConversationCon
 - Delete conversations with confirmation
 
 **UI Components**: ✅ **COMPLETE AND POLISHED**
-- Professional design matching TekRem ERP
+- Professional design matching Tekrem ERP
 - Responsive layouts for all devices
 - Comprehensive error handling
 - Intuitive user experience

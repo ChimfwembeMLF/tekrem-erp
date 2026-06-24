@@ -1,6 +1,5 @@
 import React from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  Link, useForm } from '@inertiajs/react';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
@@ -10,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ArrowLeft, Save } from 'lucide-react';
 import { Communication, Client, Lead, InertiaSharedProps } from '@/types/index';
 import useRoute from '@/Hooks/useRoute';
+import { CrmFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface CommunicationEditProps extends InertiaSharedProps {
   communication: Communication;
@@ -40,29 +40,17 @@ export default function CommunicationEdit({ communication, clients, leads }: Com
   };
 
   return (
-    <AppLayout
-      title="Edit Communication"
-      renderHeader={() => (
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Link href={route('crm.communications.show', communication.id)}>
-              <Button variant="outline" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Communication
-              </Button>
-            </Link>
-            <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-              Edit Communication
-            </h2>
-          </div>
-        </div>
-      )}
+    <CrmFormShell
+      title={"Edit Communication"}
+      backHref={route('crm.communications.show')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
     >
-      <Head title="Edit Communication" />
 
-      <div className="py-12">
-        <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
-          <Card>
+<Card>
             <CardHeader>
               <CardTitle>Edit Communication</CardTitle>
               <CardDescription>
@@ -70,8 +58,7 @@ export default function CommunicationEdit({ communication, clients, leads }: Com
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Associated Entity Info */}
+              {/* Associated Entity Info */}
                 {communication.communicable && (
                   <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                     <h4 className="font-medium mb-2">
@@ -204,8 +191,6 @@ export default function CommunicationEdit({ communication, clients, leads }: Com
               </form>
             </CardContent>
           </Card>
-        </div>
-      </div>
-    </AppLayout>
+</CrmFormShell>
   );
 }

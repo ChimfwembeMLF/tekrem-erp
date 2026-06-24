@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->command->info('🌱 Starting TekRem ERP Database Seeding...');
+        $this->command->info('🌱 Starting Tekrem ERP Database Seeding...');
 
         // 1. Foundation - Roles and Permissions (must be first)
         $this->command->info('📋 Seeding roles and permissions...');
@@ -95,12 +95,12 @@ class DatabaseSeeder extends Seeder
         $this->command->info('🛒 Seeding commerce module...');
         $this->call(CommerceSeeder::class);
 
-        $this->command->info('✅ TekRem ERP Database Seeding Completed Successfully!');
+        $this->command->info('✅ Tekrem ERP Database Seeding Completed Successfully!');
         $this->command->info('');
         $this->command->info('🎉 All modules have been seeded with sample data.');
         $this->command->info('📧 Default login credentials:');
-        $this->command->info('   Admin: admin@tekrem.com / password');
-        $this->command->info('   Staff: staff@tekrem.com / password');
-        $this->command->info('   Customer: customer@tekrem.com / password');
+        $this->command->info('   Admin: admin@Tekrem.com / password');
+        $this->command->info('   Staff: staff@Tekrem.com / password');
+        $this->command->info('   Customer: customer@Tekrem.com / password');
     }
 }

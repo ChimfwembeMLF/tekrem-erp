@@ -127,10 +127,10 @@ class SupportModuleSeeder extends Seeder
         if ($user) {
             // Create Knowledge Base Articles
             KnowledgeBaseArticle::create([
-                'title' => 'Getting Started with TekRem ERP',
-                'slug' => 'getting-started-with-tekrem-erp',
-                'content' => '<h2>Welcome to TekRem ERP</h2><p>This guide will help you get started with our comprehensive ERP system...</p>',
-                'excerpt' => 'Learn the basics of using TekRem ERP system',
+                'title' => 'Getting Started with Tekrem ERP',
+                'slug' => 'getting-started-with-Tekrem-erp',
+                'content' => '<h2>Welcome to Tekrem ERP</h2><p>This guide will help you get started with our comprehensive ERP system...</p>',
+                'excerpt' => 'Learn the basics of using Tekrem ERP system',
                 'category_id' => $generalCategory->id,
                 'author_id' => $user->id,
                 'status' => 'published',

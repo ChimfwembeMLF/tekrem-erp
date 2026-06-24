@@ -112,13 +112,13 @@ export default function About() {
       <Head title="About Us" />
 
       <WebsiteHero
-        badge="About TekRem"
+        badge="About Tekrem"
         badgeIcon="🏢"
         title="About"
         highlight={settings.company_name || 'Technology Remedies Innovations'}
         description="Founded in 2020, we've established ourselves as a leading technology partner in Zambia — web, mobile, AI, cloud, and ERP for businesses across Africa."
         image={aboutUsIllustration}
-        imageAlt="About TekRem"
+        imageAlt="About Tekrem"
         primaryCta={{ label: 'Our Services', href: route('services') }}
         secondaryCta={{ label: 'View Pricing', href: route('pricing') }}
       />

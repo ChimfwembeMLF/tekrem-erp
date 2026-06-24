@@ -1,8 +1,8 @@
-Perfect — here is your **cleaned, corrected, and fully professional architecture plan** for **TekRem ERP using Laravel 12 + Jetstream React** in a **modular frontend **. All typos are fixed, Laravel version updated, and setup commands are refined to be valid for Laravel 12.
+Perfect — here is your **cleaned, corrected, and fully professional architecture plan** for **Tekrem ERP using Laravel 12 + Jetstream React** in a **modular frontend **. All typos are fixed, Laravel version updated, and setup commands are refined to be valid for Laravel 12.
 
 ---
 
-# 🧠 TekRem ERP – Architecture Plan
+# 🧠 Tekrem ERP – Architecture Plan
 
 **Technology Remedies Innovations** | 🇿🇲 Zambia | 2025
 
@@ -10,7 +10,7 @@ Perfect — here is your **cleaned, corrected, and fully professional architectu
 
 ## ✅ Base Stack
 
-The TekRem ERP is a **modular frontend ** built with:
+The Tekrem ERP is a **modular frontend ** built with:
 
 * ✅ **Laravel 12** (Jetstream + Inertia + React)
 * ✅ React (TypeScript + TailwindCSS + shadcn/ui)
@@ -123,7 +123,7 @@ RBAC powered by **Spatie**:
 ### `/about`
 
 * Mission, Vision, Values
-* Why TekRem? Team Overview
+* Why Tekrem? Team Overview
 
 ### `/services`
 
@@ -203,9 +203,9 @@ php artisan migrate --seed
 
 | Role     | Email                                             | Password | Permissions                 |
 | -------- | ------------------------------------------------- | -------- | --------------------------- |
-| Admin    | [admin@tekrem.com](mailto:admin@tekrem.com)       | password | All access                  |
-| Staff    | [staff@tekrem.com](mailto:staff@tekrem.com)       | password | Access to CRM, HR, Projects |
-| Customer | [customer@tekrem.com](mailto:customer@tekrem.com) | password | Service request portal      |
+| Admin    | [admin@Tekrem.com](mailto:admin@Tekrem.com)       | password | All access                  |
+| Staff    | [staff@Tekrem.com](mailto:staff@Tekrem.com)       | password | Access to CRM, HR, Projects |
+| Customer | [customer@Tekrem.com](mailto:customer@Tekrem.com) | password | Service request portal      |
 
 ---
 
@@ -222,7 +222,7 @@ php artisan migrate --seed
 
 ## 🚀 Projects Module - Enterprise Project Management
 
-The Projects module is implemented as a comprehensive, enterprise-grade project management system with AI assistance capabilities, similar to GitHub Projects but enhanced with advanced features. It integrates seamlessly with the existing TekRem ERP system architecture and follows established design patterns using shadcn/ui components, TypeScript, and the existing tech stack.
+The Projects module is implemented as a comprehensive, enterprise-grade project management system with AI assistance capabilities, similar to GitHub Projects but enhanced with advanced features. It integrates seamlessly with the existing Tekrem ERP system architecture and follows established design patterns using shadcn/ui components, TypeScript, and the existing tech stack.
 
 ### Core Project Management Features:
 - **Interactive Kanban Boards**: Drag-and-drop functionality with customizable columns, swimlanes, and WIP limits
@@ -269,7 +269,7 @@ The Projects module is implemented as a comprehensive, enterprise-grade project 
 - **API Integration**: REST API and webhook support for third-party tools
 - **Document Management**: Version control, collaborative editing, and asset libraries
 
-### Integration with TekRem ERP:
+### Integration with Tekrem ERP:
 - **CRM Integration**: Client project tracking and billing
 - **Finance Integration**: Project budgeting, expense tracking, and invoicing
 - **User Management**: Existing role and permission system integration
@@ -288,8 +288,8 @@ The Projects module is implemented as a comprehensive, enterprise-grade project 
 
 ## 📫 Contact
 
-* **Email:** [tekremsolutions@gmail.com](mailto:tekremsolutions@gmail.com)
-* **Website:** [www.tekrem.site](http://www.tekrem.site)
+* **Email:** [Tekremsolutions@gmail.com](mailto:Tekremsolutions@gmail.com)
+* **Website:** [www.Tekrem.site](http://www.Tekrem.site)
 * **Phone:** +260 976607840
 * **Location:** Lusaka, Zambia
 

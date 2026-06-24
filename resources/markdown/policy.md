@@ -78,4 +78,4 @@ If you have any questions or concerns about this Privacy Policy or our data prac
 Tekrem Solutions
 [PLOT NO 03/84 ESTHER LUNGU ROAD MISISI COMPOUND Lusaka]
 [+260 976 607 840]
-[tekremsolutions@gmail.com]
+[Tekremsolutions@gmail.com]

@@ -22,6 +22,7 @@ class EpicController extends Controller
 
         return Inertia::render('Projects/Epics/Index', [
             'project' => $project,
+            'boardId' => \App\Support\ProjectNav::boardId($project),
             'epics' => $epics,
             'boards' => $boards,
         ]);

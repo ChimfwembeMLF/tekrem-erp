@@ -11,7 +11,7 @@ class Product extends Model
     protected $fillable = [
         'sku', 'name', 'slug', 'description', 'category_id', 'barcode', 'unit',
         'cost_price', 'sale_price', 'tax_rate', 'track_inventory', 'is_active',
-        'is_published', 'images', 'videos', 'metadata',
+        'is_published', 'is_featured', 'images', 'videos', 'metadata',
     ];
 
     protected $appends = ['image_urls', 'video_items'];
@@ -23,6 +23,7 @@ class Product extends Model
         'track_inventory' => 'boolean',
         'is_active' => 'boolean',
         'is_published' => 'boolean',
+        'is_featured' => 'boolean',
         'images' => 'array',
         'videos' => 'array',
         'metadata' => 'array',
@@ -51,6 +52,16 @@ class Product extends Model
     public function stockMovements(): HasMany
     {
         return $this->hasMany(StockMovement::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(\App\Models\Ecommerce\ShopProductReview::class, 'product_id');
+    }
+
+    public function approvedReviews(): HasMany
+    {
+        return $this->reviews()->where('is_approved', true);
     }
 
     public function getStockOnHandAttribute(): float

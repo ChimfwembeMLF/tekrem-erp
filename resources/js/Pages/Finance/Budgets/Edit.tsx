@@ -1,6 +1,5 @@
 import React from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  Link, useForm } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -23,6 +22,7 @@ import {
   Target
 } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
+import { FinanceFormShell } from '@/Components/Module/moduleFormWrappers';
 import { toast } from 'sonner';
 
 interface Account {
@@ -132,13 +132,17 @@ export default function Edit({ budget, accounts, categories, periodTypes, status
   const selectedAccount = accounts.find(acc => acc.id.toString() === data.account_id);
 
   return (
-    <AppLayout
-      title={t('finance.edit_budget', 'Edit Budget')}
-      >
-      <Head title={t('finance.edit_budget', 'Edit Budget')} />
+    <FinanceFormShell
+      title={"Edit Budget"}
+      backHref={route('finance.budgets.show')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
+    >
 
-      <div className="space-y-6">
-        {/* Header */}
+{/* Header */}
         <div className="flex items-center gap-4">
           <Button variant="outline" size="sm" asChild>
             <Link href={route('finance.budgets.show', budget.id)}>
@@ -156,8 +160,7 @@ export default function Edit({ budget, accounts, categories, periodTypes, status
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-2">
             {/* Budget Details */}
             <Card>
               <CardHeader>
@@ -410,8 +413,7 @@ export default function Edit({ budget, accounts, categories, periodTypes, status
               {processing ? t('common.saving', 'Saving...') : t('finance.update_budget', 'Update Budget')}
             </Button>
           </div>
-        </form>
-      </div>
-    </AppLayout>
+        
+</FinanceFormShell>
   );
 }

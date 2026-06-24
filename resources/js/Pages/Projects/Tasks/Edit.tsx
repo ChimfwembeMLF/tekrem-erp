@@ -1,6 +1,5 @@
 import React from 'react';
-import { Head, useForm, Link } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  useForm, Link } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -10,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/Components/ui/checkbox';
 import useRoute from '@/Hooks/useRoute';
 import { Project, User, ProjectMilestone, ProjectTask, Tag } from '@/types';
+import { ProjectsFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface TaskEditProps {
   auth: {
@@ -74,20 +74,17 @@ export default function TaskEdit({ auth, project, task, milestones, staffUsers, 
   };
 
   return (
-    <AppLayout
-      title={`Edit ${task.title}`}
-      renderHeader={() => (
-        <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-          Edit Task: {task.title}
-        </h2>
-      )}
+    <ProjectsFormShell
+      title={"Form"}
+      backHref={route('projects.tasks.show')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
     >
-      <Head title={`Edit ${task.title}`} />
 
-      <div className="py-12">
-        <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-6">
+<div className="space-y-6">
               {/* Basic Information */}
               <Card>
                 <CardHeader>
@@ -293,9 +290,7 @@ export default function TaskEdit({ auth, project, task, milestones, staffUsers, 
                 </Button>
               </div>
             </div>
-          </form>
-        </div>
-      </div>
-    </AppLayout>
+          
+</ProjectsFormShell>
   );
 }

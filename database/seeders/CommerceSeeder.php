@@ -58,8 +58,8 @@ class CommerceSeeder extends Seeder
         Supplier::firstOrCreate(
             ['code' => 'SUP-001'],
             [
-                'name' => 'TekRem Supplies Ltd',
-                'email' => 'supplies@tekrem.com',
+                'name' => 'Tekrem Supplies Ltd',
+                'email' => 'supplies@Tekrem.com',
                 'phone' => '+260970000000',
                 'payment_terms' => 'Net 30',
                 'is_active' => true,

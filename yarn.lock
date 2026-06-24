@@ -3069,6 +3069,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/jsbarcode@npm:^3.11.4":
+  version: 3.11.4
+  resolution: "@types/jsbarcode@npm:3.11.4"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 10c0/3a44ae4090c6008411463c07c1c0c00d97d5e57f0f8e1ff74d0175a2da85f59e5e4b7b172cd9cdc203026c93d8a02386f5a612b2ee97dc059dc15088ffb1017b
+  languageName: node
+  linkType: hard
+
 "@types/lodash@npm:^4.17.17":
   version: 4.17.17
   resolution: "@types/lodash@npm:4.17.17"
@@ -5604,6 +5613,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jsbarcode@npm:^3.12.3":
+  version: 3.12.3
+  resolution: "jsbarcode@npm:3.12.3"
+  checksum: 10c0/da6683fe036eb288b92159d4f46b96cc376bcd0b7048715aaa7dc47f20e3d6d505b59e645818ed9685c399ed79c513197e30cf0540c94627d9dee19d0a67ddaa
+  languageName: node
+  linkType: hard
+
 "jsbn@npm:~0.1.0":
   version: 0.1.1
   resolution: "jsbn@npm:0.1.1"
@@ -7944,6 +7960,7 @@ __metadata:
     "@tailwindcss/forms": "npm:^0.5.10"
     "@tailwindcss/typography": "npm:^0.5.16"
     "@tailwindcss/vite": "npm:^4.0.0"
+    "@types/jsbarcode": "npm:^3.11.4"
     "@types/lodash": "npm:^4.17.17"
     "@types/node": "npm:^22.15.21"
     "@types/react": "npm:^18.3.22"
@@ -7965,6 +7982,7 @@ __metadata:
     framer-motion: "npm:^12.23.24"
     i18next: "npm:^25.2.0"
     install: "npm:^0.13.0"
+    jsbarcode: "npm:^3.12.3"
     laravel-echo: "npm:^2.3.4"
     laravel-vite-plugin: "npm:^1.2.0"
     lodash: "npm:^4.17.21"

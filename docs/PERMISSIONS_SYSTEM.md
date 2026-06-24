@@ -1,8 +1,8 @@
-# TekRem ERP - Permissions System Documentation
+# Tekrem ERP - Permissions System Documentation
 
 ## Overview
 
-The TekRem ERP permissions system implements a comprehensive Role-Based Access Control (RBAC) system with four primary roles and granular permissions for all modules. This system ensures secure access control across the entire application.
+The Tekrem ERP permissions system implements a comprehensive Role-Based Access Control (RBAC) system with four primary roles and granular permissions for all modules. This system ensures secure access control across the entire application.
 
 ## System Architecture
 

@@ -33,6 +33,26 @@ export interface Suggestion {
   category: string
 }
 
+export interface ConversationSummary {
+  id: string
+  status: string
+  ticket_id?: number | null
+  ticket_number?: string | null
+  ticket_title?: string | null
+  message_count: number
+  preview?: string | null
+  last_message_at?: string
+  created_at?: string
+}
+
+export interface ConversationDetail {
+  conversation_id: string
+  messages: Message[]
+  status?: string
+  ticket_id?: number | null
+  ticket_number?: string | null
+}
+
 export interface ChatResponse {
   conversation_id: string
   response: string

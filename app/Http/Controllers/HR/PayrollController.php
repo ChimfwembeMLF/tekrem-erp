@@ -8,6 +8,10 @@ use Inertia\Inertia;
 use App\Models\HR\Payroll;
 use App\Models\HR\Employee;
 use App\Services\HR\PayrollService;
+use App\Services\HR\PayrollAutoGenerationService;
+use App\Services\HR\HrSettings;
+use App\Services\HR\PayslipPdfService;
+use App\Notifications\PayrollApproved;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
@@ -43,6 +47,11 @@ class PayrollController extends Controller
                 'employee' => $request->input('employee'),
                 'period' => $request->input('period'),
                 'status' => $request->input('status'),
+            ],
+            'payrollGeneration' => [
+                'defaultPeriod' => app(PayrollAutoGenerationService::class)->defaultPeriod(),
+                'autoGenerateEnabled' => HrSettings::autoGeneratePayroll(),
+                'payrollStartDay' => HrSettings::payrollStartDay(),
             ],
         ]);
     }
@@ -114,13 +123,15 @@ class PayrollController extends Controller
         return redirect()->route('hr.payroll.index')->with('success', 'Payroll record deleted.');
     }
 
-    public function approve(Payroll $payroll)
+    public function approve(Payroll $payroll, PayslipPdfService $payslipPdfService)
     {
         $payroll->status = 'approved';
         $payroll->approved_by = Auth::id();
         $payroll->approved_at = Carbon::now();
         $payroll->rejected_reason = null;
         $payroll->save();
+
+        $payslipPdfService->regenerateForPayroll($payroll, 'approved');
 
         (new PayrollService())->postToFinance($payroll);
 
@@ -130,6 +141,11 @@ class PayrollController extends Controller
             'action' => 'approved',
             'changes' => ['status' => 'approved'],
         ]);
+
+        $payroll->load('employee.user');
+        if ($payroll->employee?->user) {
+            $payroll->employee->user->notify(new PayrollApproved($payroll));
+        }
 
         return redirect()->back()->with('success', 'Payroll approved and posted to finance.');
     }
@@ -151,5 +167,30 @@ class PayrollController extends Controller
             'changes' => ['status' => 'rejected', 'reason' => $data['reason']],
         ]);
         return redirect()->back()->with('success', 'Payroll rejected.');
+    }
+
+    public function generateAll(Request $request, PayrollAutoGenerationService $service)
+    {
+        $data = $request->validate([
+            'period' => 'nullable|regex:/^\d{4}-\d{2}$/',
+            'force' => 'boolean',
+        ]);
+
+        $period = $data['period'] ?? $service->defaultPeriod();
+        $result = $service->generateForPeriod($period, null, (bool) ($data['force'] ?? false));
+
+        $message = "Generated {$result['created']} payroll record(s) for {$period}.";
+
+        if ($result['skipped'] > 0) {
+            $message .= " {$result['skipped']} skipped (already exist).";
+        }
+
+        if ($result['failed'] > 0) {
+            $message .= " {$result['failed']} failed.";
+        }
+
+        return redirect()
+            ->route('hr.payroll.index', ['period' => $period])
+            ->with('success', $message);
     }
 }

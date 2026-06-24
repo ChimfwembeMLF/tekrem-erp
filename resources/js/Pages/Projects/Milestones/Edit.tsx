@@ -1,6 +1,5 @@
 import React from 'react';
-import { Head, useForm, Link } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  useForm, Link } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -11,6 +10,7 @@ import { Checkbox } from '@/Components/ui/checkbox';
 import { Slider } from '@/Components/ui/slider';
 import useRoute from '@/Hooks/useRoute';
 import { Project, User, ProjectMilestone } from '@/types';
+import { ProjectsFormShell } from '@/Components/Module/moduleFormWrappers';
 import { ArrowLeft } from 'lucide-react';
 
 interface MilestoneEditProps {
@@ -59,31 +59,17 @@ export default function MilestoneEdit({ auth, project, milestone, users, availab
   };
 
   return (
-    <AppLayout
-      title={`Edit ${milestone.name}`}
-       renderHeader={() => (
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-              Edit Milestone for {project.name}
-            </h2>
-            <Link href={route('projects.time-logs.index', project.id)}>
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Milestones
-              </Button>
-            </Link>
-          </div>
-
-        </div>
-      )}
+    <ProjectsFormShell
+      title={"Form"}
+      backHref={route('projects.milestones.show')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
     >
-      <Head title={`Edit ${milestone.name}`} />
 
-      <div className="py-12">
-        <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-6">
+<div className="space-y-6">
               {/* Basic Information */}
               <Card>
                 <CardHeader>
@@ -219,9 +205,7 @@ export default function MilestoneEdit({ auth, project, milestone, users, availab
                 </Button>
               </div>
             </div>
-          </form>
-        </div>
-      </div>
-    </AppLayout>
+          
+</ProjectsFormShell>
   );
 }

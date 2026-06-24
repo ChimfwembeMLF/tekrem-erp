@@ -1,8 +1,8 @@
-# TekRem ERP - Mobile Money & ZRA Integration Security & Compliance Audit
+# Tekrem ERP - Mobile Money & ZRA Integration Security & Compliance Audit
 
 ## Executive Summary
 
-This document presents the comprehensive security and compliance audit results for the Mobile Money (MoMo) and ZRA Smart Invoice integration features in TekRem ERP. The audit covers data protection, API security, financial compliance, and regulatory requirements.
+This document presents the comprehensive security and compliance audit results for the Mobile Money (MoMo) and ZRA Smart Invoice integration features in Tekrem ERP. The audit covers data protection, API security, financial compliance, and regulatory requirements.
 
 ## Audit Scope
 
@@ -306,7 +306,7 @@ The identified minor issues are low-risk and can be addressed through routine se
 
 ---
 
-**Audit Conducted By**: TekRem Security Team  
+**Audit Conducted By**: Tekrem Security Team  
 **Audit Date**: January 2024  
 **Next Review Date**: July 2024  
 **Document Classification**: Confidential

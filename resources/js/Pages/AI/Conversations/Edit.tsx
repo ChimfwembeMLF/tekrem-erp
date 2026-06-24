@@ -1,12 +1,11 @@
 import React from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
+import {  Link, useForm } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Badge } from '@/Components/ui/badge';
 import { Alert, AlertDescription } from '@/Components/ui/alert';
-import AppLayout from '@/Layouts/AppLayout';
 import {
     MessageSquare,
     Bot,
@@ -17,6 +16,7 @@ import {
     Archive
 } from 'lucide-react';
 import { useTranslate } from '@/Hooks/useTranslate';
+import { AIFormShell, ModuleFormSection, ModuleFormGrid, ModuleFormField } from '@/Components/Module/moduleFormWrappers';
 
 interface Conversation {
     id: number;
@@ -103,199 +103,108 @@ export default function Edit({ conversation }: Props) {
     };
 
     return (
-        <AppLayout
+        <AIFormShell
             title={t('Edit Conversation')}
-            renderHeader={() => (
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                        <Link href={route('ai.conversations.show', conversation.id)}>
-                            <Button variant="ghost" size="sm">
-                                <ArrowLeft className="h-4 w-4 mr-2" />
-                                {t('Back to Conversation')}
-                            </Button>
-                        </Link>
-                        <div>
-                            <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                                {t('Edit Conversation')}
-                            </h2>
-                            <p className="text-gray-600 text-sm mt-1">
-                                {t('Update conversation details and settings')}
-                            </p>
+            description={t('Update conversation details and settings')}
+            backHref={route('ai.conversations.show', conversation.id)}
+            backLabel={t('Back to Conversation')}
+            icon={<MessageSquare className="h-7 w-7" />}
+            onSubmit={handleSubmit}
+            processing={processing}
+            submitLabel={t('Save Changes')}
+            maxWidth="4xl"
+        >
+            <ModuleFormSection title={t('Conversation Information')}>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-600">{t('AI Model')}</Label>
+                        <div className="flex items-center space-x-2">
+                            <Bot className="h-4 w-4 text-gray-600" />
+                            <span className="font-medium">{conversation.ai_model.name}</span>
+                            <Badge variant="outline">{conversation.ai_model.type}</Badge>
+                        </div>
+                        <p className="text-sm text-gray-500">
+                            {conversation.ai_model.service.name} ({conversation.ai_model.service.provider})
+                        </p>
+                    </div>
+                    <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-600">{t('Context')}</Label>
+                        <div className="flex items-center space-x-2">
+                            {conversation.context_type ? (
+                                <>
+                                    <Badge className={getContextColor(conversation.context_type)}>
+                                        {conversation.context_type.toUpperCase()}
+                                    </Badge>
+                                    {conversation.context_id && (
+                                        <span className="text-sm text-gray-600">ID: {conversation.context_id}</span>
+                                    )}
+                                </>
+                            ) : (
+                                <span className="text-sm text-gray-500">{t('No context')}</span>
+                            )}
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-600">{t('Statistics')}</Label>
+                        <div className="space-y-1 text-sm">
+                            <div>{t('Messages')}: <span className="font-medium">{conversation.message_count}</span></div>
+                            <div>{t('Tokens')}: <span className="font-medium">{conversation.total_tokens.toLocaleString()}</span></div>
+                            <div>{t('Cost')}: <span className="font-medium">{formatCurrency(conversation.total_cost)}</span></div>
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-600">{t('Dates')}</Label>
+                        <div className="space-y-1 text-sm">
+                            <div>{t('Created')}: <span className="font-medium">{formatDate(conversation.created_at)}</span></div>
+                            <div>{t('Last Message')}: <span className="font-medium">{formatDate(conversation.last_message_at)}</span></div>
                         </div>
                     </div>
                 </div>
-            )}
-        >
-            <Head title={t('Edit Conversation')} />
+                {conversation.is_archived && (
+                    <Alert className="mt-4">
+                        <Archive className="h-4 w-4" />
+                        <AlertDescription>{t('This conversation is currently archived.')}</AlertDescription>
+                    </Alert>
+                )}
+            </ModuleFormSection>
 
-            <div className="py-6">
-                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
-
-                    {/* Conversation Info */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center">
-                                <MessageSquare className="h-5 w-5 mr-2" />
-                                {t('Conversation Information')}
-                            </CardTitle>
-                            <CardDescription>
-                                {t('Current conversation details and statistics')}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label className="text-sm font-medium text-gray-600">{t('AI Model')}</Label>
-                                    <div className="flex items-center space-x-2">
-                                        <Bot className="h-4 w-4 text-gray-600" />
-                                        <span className="font-medium">{conversation.ai_model.name}</span>
-                                        <Badge variant="outline">{conversation.ai_model.type}</Badge>
-                                    </div>
-                                    <p className="text-sm text-gray-500">
-                                        {conversation.ai_model.service.name} ({conversation.ai_model.service.provider})
-                                    </p>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label className="text-sm font-medium text-gray-600">{t('Context')}</Label>
-                                    <div className="flex items-center space-x-2">
-                                        {conversation.context_type ? (
-                                            <>
-                                                <Badge className={getContextColor(conversation.context_type)}>
-                                                    {conversation.context_type.toUpperCase()}
-                                                </Badge>
-                                                {conversation.context_id && (
-                                                    <span className="text-sm text-gray-600">ID: {conversation.context_id}</span>
-                                                )}
-                                            </>
-                                        ) : (
-                                            <span className="text-sm text-gray-500">{t('No context')}</span>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label className="text-sm font-medium text-gray-600">{t('Statistics')}</Label>
-                                    <div className="text-sm space-y-1">
-                                        <div>{t('Messages')}: <span className="font-medium">{conversation.message_count}</span></div>
-                                        <div>{t('Tokens')}: <span className="font-medium">{conversation.total_tokens.toLocaleString()}</span></div>
-                                        <div>{t('Cost')}: <span className="font-medium">{formatCurrency(conversation.total_cost)}</span></div>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label className="text-sm font-medium text-gray-600">{t('Dates')}</Label>
-                                    <div className="text-sm space-y-1">
-                                        <div>{t('Created')}: <span className="font-medium">{formatDate(conversation.created_at)}</span></div>
-                                        <div>{t('Last Message')}: <span className="font-medium">{formatDate(conversation.last_message_at)}</span></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {conversation.is_archived && (
-                                <Alert>
-                                    <Archive className="h-4 w-4" />
-                                    <AlertDescription>
-                                        {t('This conversation is currently archived.')}
-                                    </AlertDescription>
-                                </Alert>
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    {/* Edit Form */}
-                    <form onSubmit={handleSubmit}>
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>{t('Edit Details')}</CardTitle>
-                                <CardDescription>
-                                    {t('Update the conversation title and metadata')}
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-
-                                {/* Title */}
-                                <div className="space-y-2">
-                                    <Label htmlFor="title">{t('Conversation Title')} *</Label>
-                                    <Input
-                                        id="title"
-                                        type="text"
-                                        value={data.title}
-                                        onChange={(e) => setData('title', e.target.value)}
-                                        placeholder={t('Enter a descriptive title for this conversation')}
-                                        className={errors.title ? 'border-red-500' : ''}
-                                    />
-                                    {errors.title && (
-                                        <p className="text-sm text-red-600">{errors.title}</p>
-                                    )}
-                                    <p className="text-sm text-gray-600">
-                                        {t('A clear title helps identify the conversation purpose')}
-                                    </p>
-                                </div>
-
-                                {/* Metadata Info */}
-                                <div className="space-y-2">
-                                    <Label className="text-sm font-medium text-gray-600">{t('Metadata')}</Label>
-                                    <div className="bg-gray-50 p-3 rounded-md">
-                                        <p className="text-sm text-gray-600 mb-2">
-                                            {t('Current metadata:')}
-                                        </p>
-                                        {Object.keys(data.metadata).length > 0 ? (
-                                            <pre className="text-xs bg-white p-2 rounded border overflow-x-auto">
-                                                {JSON.stringify(data.metadata, null, 2)}
-                                            </pre>
-                                        ) : (
-                                            <p className="text-sm text-gray-500 italic">
-                                                {t('No metadata available')}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Action Buttons */}
-                                <div className="flex items-center justify-between pt-4 border-t">
-                                    <Link href={route('ai.conversations.show', conversation.id)}>
-                                        <Button type="button" variant="outline">
-                                            {t('Cancel')}
-                                        </Button>
-                                    </Link>
-
-                                    <div className="flex items-center space-x-3">
-                                        {processing && (
-                                            <div className="flex items-center text-sm text-gray-600">
-                                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                                {t('Saving changes...')}
-                                            </div>
-                                        )}
-                                        <Button
-                                            type="submit"
-                                            disabled={processing || !data.title}
-                                        >
-                                            <Save className="h-4 w-4 mr-2" />
-                                            {t('Save Changes')}
-                                        </Button>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Validation Errors */}
-                        {Object.keys(errors).length > 0 && (
-                            <Alert variant="destructive">
-                                <AlertCircle className="h-4 w-4" />
-                                <AlertDescription>
-                                    {t('Please fix the following errors:')}
-                                    <ul className="mt-2 list-disc list-inside">
-                                        {Object.entries(errors).map(([field, message]) => (
-                                            <li key={field} className="text-sm">{message}</li>
-                                        ))}
-                                    </ul>
-                                </AlertDescription>
-                            </Alert>
+            <ModuleFormSection title={t('Edit Details')} description={t('Update the conversation title and metadata')}>
+                <ModuleFormField label={t('Conversation Title')} htmlFor="title" error={errors.title} required>
+                    <Input
+                        id="title"
+                        type="text"
+                        value={data.title}
+                        onChange={(e) => setData('title', e.target.value)}
+                        placeholder={t('Enter a descriptive title for this conversation')}
+                    />
+                </ModuleFormField>
+                <div className="mt-5 space-y-2">
+                    <Label className="text-sm font-medium text-gray-600">{t('Metadata')}</Label>
+                    <div className="rounded-md bg-gray-50 p-3">
+                        {Object.keys(data.metadata).length > 0 ? (
+                            <pre className="overflow-x-auto rounded border bg-white p-2 text-xs">
+                                {JSON.stringify(data.metadata, null, 2)}
+                            </pre>
+                        ) : (
+                            <p className="text-sm italic text-gray-500">{t('No metadata available')}</p>
                         )}
-                    </form>
+                    </div>
                 </div>
-            </div>
-        </AppLayout>
+            </ModuleFormSection>
+
+            {Object.keys(errors).length > 0 && (
+                <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                        {t('Please fix the following errors:')}
+                        <ul className="mt-2 list-inside list-disc">
+                            {Object.entries(errors).map(([field, message]) => (
+                                <li key={field} className="text-sm">{message}</li>
+                            ))}
+                        </ul>
+                    </AlertDescription>
+                </Alert>
+            )}
+        </AIFormShell>
     );
 }

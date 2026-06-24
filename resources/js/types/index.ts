@@ -13,6 +13,11 @@ export interface InertiaSharedProps {
   auth: {
     user: User | null;
   };
+  flash?: {
+    success?: string | null;
+    error?: string | null;
+    message?: string | null;
+  };
   settings?: Record<string, any>;
   flash?: {
     message?: string;

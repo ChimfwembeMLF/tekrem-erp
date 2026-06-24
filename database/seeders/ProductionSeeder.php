@@ -7,7 +7,7 @@ use Illuminate\Database\Seeder;
 class ProductionSeeder extends Seeder
 {
     /**
-     * Seed only the data required to run TekRem ERP in production.
+     * Seed only the data required to run Tekrem ERP in production.
      *
      * Does NOT create demo clients, projects, HR records, tickets, or sample reports.
      * Safe to re-run: existing records are updated or skipped where possible.

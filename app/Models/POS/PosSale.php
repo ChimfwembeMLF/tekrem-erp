@@ -35,6 +35,10 @@ class PosSale extends Model
                     4, '0', STR_PAD_LEFT
                 );
             }
+
+            if ($sale->discount_amount === null) {
+                $sale->discount_amount = 0;
+            }
         });
     }
 

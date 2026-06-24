@@ -42,6 +42,7 @@ class ProjectFileController extends Controller
 
         return Inertia::render('Projects/Files/Index', [
             'project' => $project,
+            'boardId' => \App\Support\ProjectNav::boardId($project),
             'files' => $files,
             'filters' => $request->only(['search', 'category']),
             'settings' => [

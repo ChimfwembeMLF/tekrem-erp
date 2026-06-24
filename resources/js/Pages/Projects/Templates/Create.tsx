@@ -1,6 +1,5 @@
 import React from 'react';
-import { Head, useForm, Link } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  useForm, Link } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -11,6 +10,7 @@ import { Checkbox } from '@/Components/ui/checkbox';
 import { Badge } from '@/Components/ui/badge';
 import { X, Plus } from 'lucide-react';
 import useRoute from '@/Hooks/useRoute';
+import { ProjectsFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface TemplateCreateProps {
   auth: {
@@ -120,20 +120,17 @@ export default function TemplateCreate({ auth }: TemplateCreateProps) {
   };
 
   return (
-    <AppLayout
-      title="Create Project Template"
-      renderHeader={() => (
-        <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-          Create Project Template
-        </h2>
-      )}
+    <ProjectsFormShell
+      title={"Create Project Template"}
+      backHref={route('projects.templates.index')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
     >
-      <Head title="Create Project Template" />
 
-      <div className="py-12">
-        <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-6">
+<div className="space-y-6">
               {/* Basic Information */}
               <Card>
                 <CardHeader>
@@ -392,9 +389,7 @@ export default function TemplateCreate({ auth }: TemplateCreateProps) {
                 </Button>
               </div>
             </div>
-          </form>
-        </div>
-      </div>
-    </AppLayout>
+          
+</ProjectsFormShell>
   );
 }

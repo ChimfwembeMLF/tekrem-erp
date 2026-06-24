@@ -12,7 +12,7 @@ import {
   Clock,
   Target,
   Users,
-  DollarSign,
+  Banknote,
   Lightbulb,
   Loader2
 } from 'lucide-react';
@@ -189,7 +189,7 @@ const handleCustomAnalysis = async () => {
           </div>
 
           <div className="text-center">
-            <div className="flex items-center justify-center mb-1"><DollarSign className="h-4 w-4 text-green-600" /></div>
+            <div className="flex items-center justify-center mb-1"><Banknote className="h-4 w-4 text-green-600" /></div>
             <div className="text-sm font-medium">{budgetUsed}</div>
             <div className="text-xs text-gray-600">Budget Used</div>
           </div>

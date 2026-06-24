@@ -49,6 +49,24 @@ export type InertiaSharedProps<T = {}> = T & {
     hasEmailVerification: boolean;
   };
   auth: Auth;
+  flash?: {
+    success?: string | null;
+    error?: string | null;
+    message?: string | null;
+  };
+  staffClock?: {
+    employee_id: number;
+    employee_name: string;
+    date: string;
+    clock_in: string | null;
+    clock_out: string | null;
+    is_clocked_in: boolean;
+    can_clock_in: boolean;
+    can_clock_out: boolean;
+    require_location: boolean;
+    location_enforced: boolean;
+    mock_location: { latitude: number; longitude: number };
+  } | null;
   errorBags: any;
   errors: any;
 };

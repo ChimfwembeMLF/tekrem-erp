@@ -13,7 +13,7 @@ export default function Contact() {
   const page = useTypedPage();
   const settings: Record<string, string> = page.props.settings || {};
 
-  const email = settings.company_email || 'tekremsolutions@gmail.com';
+  const email = settings.company_email || 'Tekremsolutions@gmail.com';
   const phone = settings.company_phone || '+260 976 607 840';
   const address = settings.company_address || 'Lusaka, Zambia';
 

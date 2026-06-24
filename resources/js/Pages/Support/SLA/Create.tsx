@@ -1,6 +1,5 @@
 import React from 'react';
-import { Head, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  useForm } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -17,6 +16,7 @@ import {
 } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
 import useRoute from '@/Hooks/useRoute';
+import { SupportFormShell } from '@/Components/Module/moduleFormWrappers';
 
 export default function Create() {
   const { t } = useTranslate();
@@ -57,11 +57,17 @@ export default function Create() {
   };
 
   return (
-    <AppLayout>
-      <Head title={t('support.create_sla', 'Create SLA Policy')} />
+    <SupportFormShell
+      title={"Create SLA Policy"}
+      backHref={route('support.sla.index')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
+    >
 
-      <div className="space-y-6">
-        {/* Header */}
+{/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button variant="outline" size="sm" asChild>
@@ -81,8 +87,7 @@ export default function Create() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-6 lg:grid-cols-3">
             {/* Main Form */}
             <div className="lg:col-span-2 space-y-6">
               <Card>
@@ -323,8 +328,7 @@ export default function Create() {
               </Alert>
             </div>
           </div>
-        </form>
-      </div>
-    </AppLayout>
+        
+</SupportFormShell>
   );
 }

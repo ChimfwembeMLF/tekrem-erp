@@ -7,10 +7,9 @@ import {
   LogOut, 
   Globe, 
   Check, 
-  ChevronDown,
-  Bell
 } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/Components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,7 +26,7 @@ import useTypedPage from '@/Hooks/useTypedPage';
 import { ThemeToggle } from '@/Components/ThemeProvider';
 import { Team } from '@/types';
 import NotificationComponent from '@/Components/NotificationComponent';
-import ApplicationLogo from './ApplicationLogo';
+import StaffClockWidget from '@/Components/HR/StaffClockWidget';
 
 interface TopNavProps {
   settings: Record<string, any>;
@@ -56,23 +55,45 @@ export default function TopNav({ settings }: TopNavProps) {
     router.post(route('logout'));
   }
 
-  
-  return (
-    <div className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 md:pl-[calc(256px+24px)]">  
-      {/* Page Title */}
-      <div className="flex-1">
-        {/* <h1 className="text-lg font-semibold">{settings.site_name || 'TekRem ERP'}</h1> */}
-      </div>
+  const user = page.props.auth?.user;
+  const userInitials = user?.name
+    ? user.name
+        .split(' ')
+        .filter(Boolean)
+        .map((part: string) => part[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
+    : '?';
 
-      {/* Right side items */}
-      <div className="flex items-center gap-4">
-        {/* Theme Toggle */}
+  return (
+    <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center border-b bg-background pl-14 pr-3 sm:pl-16 sm:pr-4 md:px-6 md:pl-[calc(256px+24px)]">
+      <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1">
+        <StaffClockWidget />
+
+        {(page.props as { staffPortal?: { dashboard_url: string; pending_team_leaves?: number } }).staffPortal && (
+          <Button variant="ghost" size="sm" className="hidden sm:inline-flex" asChild>
+            <Link href={(page.props as any).staffPortal.dashboard_url}>
+              My HR
+              {(page.props as any).staffPortal.pending_team_leaves > 0 && (
+                <span className="ml-1.5 rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                  {(page.props as any).staffPortal.pending_team_leaves}
+                </span>
+              )}
+            </Link>
+          </Button>
+        )}
+
         <ThemeToggle />
 
-        {/* Language Switcher */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hidden h-9 w-9 shrink-0 sm:inline-flex"
+              title={t('common.language', 'Language')}
+            >
               <Globe className="h-5 w-5" />
               <span className="sr-only">{t('common.language', 'Language')}</span>
             </Button>
@@ -104,36 +125,47 @@ export default function TopNav({ settings }: TopNavProps) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Notifications */}
         <NotificationComponent />
 
-        {/* User Profile Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            {page.props.jetstream.managesProfilePhotos ? (
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <img
-                  className="h-8 w-8 rounded-full object-cover"
-                  src={page.props.auth.user?.profile_photo_url}
-                  alt={page.props.auth.user?.name}
-                />
-              </Button>
-            ) : (
-              <Button variant="ghost" className="flex items-center gap-1">
-                {page.props.auth.user?.name}
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            )}
+            <Button
+              variant="ghost"
+              className="relative h-9 w-9 shrink-0 rounded-full p-0"
+              title={user?.name ?? 'Account'}
+            >
+              <Avatar className="h-9 w-9">
+                <AvatarImage src={user?.profile_photo_url} alt={user?.name ?? 'User'} />
+                <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
+                  {userInitials}
+                </AvatarFallback>
+              </Avatar>
+            </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>Manage Account</DropdownMenuLabel>
-
+            <DropdownMenuLabel>
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium leading-none">{user?.name}</p>
+                {user?.email && (
+                  <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                )}
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href={route('profile.show')} className="flex items-center">
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </Link>
             </DropdownMenuItem>
+            {(page.props as { staffPortal?: { dashboard_url: string } }).staffPortal && (
+              <DropdownMenuItem asChild>
+                <Link href={(page.props as any).staffPortal.dashboard_url} className="flex items-center">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>My HR</span>
+                </Link>
+              </DropdownMenuItem>
+            )}
 
             {page.props.jetstream.hasApiFeatures && (
               <DropdownMenuItem asChild>
@@ -158,6 +190,6 @@ export default function TopNav({ settings }: TopNavProps) {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-    </div>
+    </header>
   );
 }

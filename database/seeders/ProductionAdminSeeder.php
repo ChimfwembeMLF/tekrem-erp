@@ -10,7 +10,7 @@ class ProductionAdminSeeder extends Seeder
 {
     public function run(): void
     {
-        $email = env('SEED_ADMIN_EMAIL', 'admin@tekrem.com');
+        $email = env('SEED_ADMIN_EMAIL', 'admin@Tekrem.com');
         $name = env('SEED_ADMIN_NAME', 'Administrator');
         $password = env('SEED_ADMIN_PASSWORD');
 

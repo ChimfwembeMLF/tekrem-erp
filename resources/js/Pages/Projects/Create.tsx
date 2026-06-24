@@ -1,6 +1,5 @@
 import React from 'react';
-import { Head, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  useForm } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -15,6 +14,7 @@ import useRoute from '@/Hooks/useRoute';
 import { Client, User, ProjectTemplate } from '@/types';
 import AIProjectPlanning from '@/Components/Projects/AIProjectPlanning';
 import TagSelector from '@/Components/Projects/TagSelector';
+import { ProjectsFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface Tag {
   id: number;
@@ -99,20 +99,17 @@ export default function ProjectCreate({ auth, clients, users, templates, tags }:
   };
 
   return (
-    <AppLayout
-      title="Create Project"
-      renderHeader={() => (
-        <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-          Create New Project
-        </h2>
-      )}
+    <ProjectsFormShell
+      title={"Create Project"}
+      backHref={route('projects.index')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
     >
-      <Head title="Create Project" />
 
-      <div className="py-12">
-        <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-6">
+<div className="space-y-6">
               {/* Basic Information */}
               <Card>
                 <CardHeader>
@@ -533,9 +530,7 @@ export default function ProjectCreate({ auth, clients, users, templates, tags }:
                 </Button>
               </div>
             </div>
-          </form>
-        </div>
-      </div>
-    </AppLayout>
+          
+</ProjectsFormShell>
   );
 }

@@ -1,6 +1,5 @@
 import React from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  Link, useForm } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -15,6 +14,7 @@ import {
 } from '@/Components/ui/select';
 import { Checkbox } from '@/Components/ui/checkbox';
 import useRoute from '@/Hooks/useRoute';
+import { ProjectsFormShell } from '@/Components/Module/moduleFormWrappers';
 import { ArrowLeft } from 'lucide-react';
 
 interface Milestone {
@@ -57,28 +57,16 @@ export default function CreateTimeLog({ project, milestones, users }: CreateTime
   };
 
   return (
-    <AppLayout
-      title={`Add Time Log - ${project.name}`}
-      renderHeader={() => (
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="font-semibold text-xl text-foreground leading-tight">
-              Add Time Log
-            </h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Log time spent on {project.name}
-            </p>
-          </div>
-          <Link href={route('projects.time-logs.index', project.id)}>
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Time Logs
-            </Button>
-          </Link>
-        </div>
-      )}
+    <ProjectsFormShell
+      title={"Form"}
+      backHref={route('projects.show')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
     >
-      <Head title={`Add Time Log - ${project.name}`} />
+
 
       <div className="w-full">
         <Card>
@@ -86,8 +74,7 @@ export default function CreateTimeLog({ project, milestones, users }: CreateTime
             <CardTitle>Time Log Details</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* User */}
+            {/* User */}
               <div className="space-y-2">
                 <Label htmlFor="user_id">
                   Team Member <span className="text-destructive">*</span>
@@ -254,7 +241,6 @@ export default function CreateTimeLog({ project, milestones, users }: CreateTime
             </form>
           </CardContent>
         </Card>
-      </div>
-    </AppLayout>
+</ProjectsFormShell>
   );
 }

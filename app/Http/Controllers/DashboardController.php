@@ -61,7 +61,7 @@ class DashboardController extends Controller
 
         // Cache dashboard data for 5 minutes to improve performance
         return Cache::remember("admin_dashboard_{$user->id}", 300, function () use ($user) {
-            return [
+            $data = [
                 'stats' => $this->getOverviewStats(),
                 'systemHealth' => $this->getSystemHealth(),
                 'recentActivity' => $this->getRecentActivity(),
@@ -72,6 +72,21 @@ class DashboardController extends Controller
                 'notifications' => $this->getSystemNotifications(),
                 'isAdmin' => $user->hasAnyRole(['admin', 'super_user']),
             ];
+
+            if ($user->can('view hr')) {
+                $hrQueue = app(\App\Services\HR\HrActionQueueService::class)->hrQueue();
+                $data['peopleActionQueue'] = [
+                    ...$hrQueue,
+                    'total' => app(\App\Services\HR\HrActionQueueService::class)->totalHrActions($hrQueue),
+                ];
+            }
+
+            $managerQueue = app(\App\Services\HR\HrActionQueueService::class)->managerQueue($user);
+            if ($managerQueue) {
+                $data['managerTeamQueue'] = $managerQueue;
+            }
+
+            return $data;
         });
     }
 

@@ -1,4 +1,4 @@
-# Cypress Troubleshooting Guide for TekRem ERP
+# Cypress Troubleshooting Guide for Tekrem ERP
 
 ## 🚨 Common Issues and Solutions
 

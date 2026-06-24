@@ -25,9 +25,9 @@ export default defineConfig({
       apiUrl: 'http://localhost:8000/api',
       
       // Test user credentials
-      adminEmail: 'admin@tekrem.com',
+      adminEmail: 'admin@Tekrem.com',
       adminPassword: 'password',
-      staffEmail: 'staff@tekrem.com',
+      staffEmail: 'staff@Tekrem.com',
       staffPassword: 'password',
       
       // AI module specific

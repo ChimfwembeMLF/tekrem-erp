@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  Link, useForm } from '@inertiajs/react';
 import {
   Card,
   CardContent,
@@ -21,6 +20,7 @@ import {
 } from '@/Components/ui/select';
 import useRoute from '@/Hooks/useRoute';
 import { Board } from '@/types';
+import { ProjectsFormShell } from '@/Components/Module/moduleFormWrappers';
 
 type IdLike = number | string;
 
@@ -71,38 +71,16 @@ export default function CreateSprint({ auth, project, boards = [] }: Props) {
 
   console.log('boards',boards)
   return (
-    <AppLayout
-      title={`Create Sprint - ${project.name}`}
-      renderHeader={() => (
-        <div>
-          <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            Create Sprint
-          </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            <Link
-              href={route('projects.show', project.id)}
-              className="hover:underline"
-            >
-              {project.name}
-            </Link>{' '}
-            · Sprints
-          </p>
-
-          {selectedBoard && (
-            <p className="text-sm text-blue-600 mt-2">
-              Board: <span className="font-semibold">{selectedBoard.name}</span>
-            </p>
-          )}
-
-          {!selectedBoard && boards.length > 0 && (
-            <p className="text-sm text-blue-600 mt-2">
-              Boards available: <span className="font-semibold">{boards.length}</span>
-            </p>
-          )}
-        </div>
-      )}
+    <ProjectsFormShell
+      title={"Form"}
+      backHref={route('projects.show')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
     >
-      <Head title={`Create Sprint - ${project.name}`} />
+
 
       <div className="mx-auto max-w-full sm:px-6">
         <Card>
@@ -112,8 +90,7 @@ export default function CreateSprint({ auth, project, boards = [] }: Props) {
           </CardHeader>
 
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Board */}
+            {/* Board */}
               {boards.length > 0 && (
                 <div className="space-y-2">
                   <Label htmlFor="board_id">Board *</Label>
@@ -233,7 +210,6 @@ export default function CreateSprint({ auth, project, boards = [] }: Props) {
             </form>
           </CardContent>
         </Card>
-      </div>
-    </AppLayout>
+</ProjectsFormShell>
   );
 }

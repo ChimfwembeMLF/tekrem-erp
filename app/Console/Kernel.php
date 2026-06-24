@@ -12,7 +12,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        //
+        $schedule->command('payroll:generate --scheduled')->dailyAt('06:00');
     }
 
     /**

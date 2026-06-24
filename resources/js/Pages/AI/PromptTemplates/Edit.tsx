@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
+import {  Link, useForm } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/Components/ui/switch';
 import { Badge } from '@/Components/ui/badge';
 import { Alert, AlertDescription } from '@/Components/ui/alert';
-import AppLayout from '@/Layouts/AppLayout';
 import {
     FileText,
     ArrowLeft,
@@ -23,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useTranslate } from '@/Hooks/useTranslate';
 import useRoute from '@/Hooks/useRoute';
+import { AIFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface PromptTemplate {
     id: number;
@@ -122,46 +122,17 @@ export default function Edit({ template }: Props) {
     };
 
     return (
-        <AppLayout
-            title={t('Edit Prompt Template')}
-            renderHeader={() => (
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                        <Link href={route('ai.prompt-templates.show', template.id)}>
-                            <Button variant="ghost" size="sm">
-                                <ArrowLeft className="h-4 w-4 mr-2" />
-                                {t('Back to Template')}
-                            </Button>
-                        </Link>
-                        <div>
-                            <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                                {t('Edit Prompt Template')}
-                            </h2>
-                            <p className="text-gray-600 text-sm mt-1">
-                                {t('Update template configuration and content')}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setPreviewMode(!previewMode)}
-                        >
-                            <Eye className="h-4 w-4 mr-2" />
-                            {previewMode ? t('Edit Mode') : t('Preview Mode')}
-                        </Button>
-                    </div>
-                </div>
-            )}
-        >
-            <Head title={t('Edit Prompt Template')} />
+        <AIFormShell
+      title={"Form"}
+      backHref={route('')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
+    >
 
-            <div className="py-6">
-                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
-                    <form onSubmit={handleSubmit} className="space-y-6">
-
-                        {/* System Template Warning */}
+{/* System Template Warning */}
                         {template.is_system && (
                             <Alert>
                                 <AlertCircle className="h-4 w-4" />
@@ -457,9 +428,7 @@ export default function Edit({ template }: Props) {
                                 </AlertDescription>
                             </Alert>
                         )}
-                    </form>
-                </div>
-            </div>
-        </AppLayout>
+                    
+</AIFormShell>
     );
 }

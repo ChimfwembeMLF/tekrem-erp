@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Board;
+use App\Models\BoardCard;
 use App\Models\Project;
 use App\Models\ProjectTask;
 use App\Models\User;
@@ -53,6 +55,7 @@ class ProjectTaskController extends Controller
 
         return Inertia::render('Projects/Tasks/Index', [
             'project' => $project,
+            'boardId' => \App\Support\ProjectNav::boardId($project),
             'tasks' => $tasks,
             'staffUsers' => $staffUsers,
             'filters' => $request->only(['search', 'status', 'type', 'priority', 'assigned_to']),
@@ -326,11 +329,129 @@ class ProjectTaskController extends Controller
      */
     public function myTasks(Request $request)
     {
-        $user = Auth::user();        
-        $query = ProjectTask::with(['project', 'milestone', 'tags'])
-            ->where('assigned_to', $user->id);
+        $user = Auth::user();
+        $userId = $user->id;
 
-        // Apply filters
+        $projectIds = Project::query()
+            ->where('manager_id', $userId)
+            ->orWhereJsonContains('team_members', $userId)
+            ->orWhereHas('tasks', fn ($q) => $q->where('assigned_to', $userId))
+            ->pluck('id');
+
+        $boardIdsWithCards = BoardCard::where('assignee_id', $userId)->pluck('board_id');
+
+        $boards = Board::with('project:id,name')
+            ->where(function ($q) use ($projectIds, $boardIdsWithCards) {
+                $q->whereIn('project_id', $projectIds)
+                    ->orWhereIn('id', $boardIdsWithCards);
+            })
+            ->orderBy('name')
+            ->get()
+            ->map(function (Board $board) use ($userId) {
+                return [
+                    'id' => $board->id,
+                    'name' => $board->name,
+                    'project_id' => $board->project_id,
+                    'project_name' => $board->project->name,
+                    'my_cards_count' => BoardCard::where('board_id', $board->id)
+                        ->where('assignee_id', $userId)
+                        ->count(),
+                ];
+            })
+            ->values();
+
+        $view = $request->get('view', $boards->isNotEmpty() ? 'board' : 'list');
+        $boardId = $request->get('board_id');
+
+        $selectedBoard = null;
+        $columns = null;
+        $taskColumns = null;
+
+        if ($view === 'board') {
+            if ($boardId === 'tasks' || $boards->isEmpty()) {
+                $boardId = 'tasks';
+                $taskColumns = $this->buildTaskColumns($userId, $request);
+            } else {
+                if (! $boardId) {
+                    $withCards = $boards->firstWhere('my_cards_count', '>', 0);
+                    $boardId = $withCards['id'] ?? $boards->first()['id'];
+                }
+
+                $board = Board::with([
+                    'project:id,name',
+                    'columns' => fn ($q) => $q->orderBy('order'),
+                ])->find($boardId);
+
+                if ($board) {
+                    $selectedBoard = [
+                        'id' => $board->id,
+                        'name' => $board->name,
+                        'project_id' => $board->project_id,
+                        'project' => $board->project,
+                    ];
+
+                    $columns = $board->columns->map(function ($column) use ($userId) {
+                        $cards = BoardCard::where('column_id', $column->id)
+                            ->where('assignee_id', $userId)
+                            ->with(['assignee:id,name', 'epic:id,name,color', 'sprint:id,name'])
+                            ->orderBy('order')
+                            ->get();
+
+                        return [
+                            'id' => $column->id,
+                            'name' => $column->name,
+                            'order' => $column->order,
+                            'wip_limit' => $column->wip_limit ?? null,
+                            'cards' => $cards,
+                        ];
+                    })->values();
+                }
+            }
+        }
+
+        $taskQuery = ProjectTask::with(['project:id,name', 'milestone:id,name', 'tags'])
+            ->where('assigned_to', $userId);
+
+        if ($request->filled('status')) {
+            $taskQuery->where('status', $request->status);
+        }
+
+        if ($request->filled('priority')) {
+            $taskQuery->where('priority', $request->priority);
+        }
+
+        $tasks = $taskQuery->orderBy('due_date')->paginate(15)->withQueryString();
+
+        return Inertia::render('Projects/Tasks/MyTasks', [
+            'boards' => $boards,
+            'selectedBoardId' => $boardId,
+            'board' => $selectedBoard,
+            'columns' => $columns,
+            'taskColumns' => $taskColumns,
+            'tasks' => $tasks,
+            'view' => $view,
+            'filters' => $request->only(['status', 'priority', 'board_id', 'view']),
+        ]);
+    }
+
+    /**
+     * Build virtual kanban columns from the user's project tasks.
+     */
+    private function buildTaskColumns(int $userId, Request $request): array
+    {
+        $statusOrder = ['todo', 'in-progress', 'review', 'testing', 'done', 'cancelled'];
+        $statusLabels = [
+            'todo' => 'To Do',
+            'in-progress' => 'In Progress',
+            'review' => 'Review',
+            'testing' => 'Testing',
+            'done' => 'Done',
+            'cancelled' => 'Cancelled',
+        ];
+
+        $query = ProjectTask::with(['project:id,name', 'milestone:id,name'])
+            ->where('assigned_to', $userId);
+
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
@@ -339,19 +460,14 @@ class ProjectTaskController extends Controller
             $query->where('priority', $request->priority);
         }
 
-        $tasks = $query->orderBy('due_date')->paginate(15);
+        $allTasks = $query->orderBy('due_date')->get();
 
-        // Fetch BoardCards assigned to the user
-        $cards = \App\Models\BoardCard::with(['board', 'column', 'sprint', 'epic', 'assignee'])
-            ->where('assignee_id', $user->id)
-            ->orderBy('due_date')
-            ->get();
-
-        return Inertia::render('Projects/Tasks/MyTasks', [
-            'tasks' => $tasks,
-            'cards' => $cards,
-            'filters' => $request->only(['status', 'priority']),
-        ]);
+        return collect($statusOrder)->map(fn (string $status) => [
+            'id' => $status,
+            'name' => $statusLabels[$status],
+            'order' => array_search($status, $statusOrder),
+            'cards' => $allTasks->where('status', $status)->values(),
+        ])->values()->all();
     }
 
     /**

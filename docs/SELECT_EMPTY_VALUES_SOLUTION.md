@@ -1,6 +1,6 @@
 # Select Empty Values Solution
 
-This document explains how to properly handle empty/null values in Select components within the TekRem ERP system, specifically addressing the issue where `value="empty"` was being used as a workaround.
+This document explains how to properly handle empty/null values in Select components within the Tekrem ERP system, specifically addressing the issue where `value="empty"` was being used as a workaround.
 
 ## The Problem
 
@@ -234,4 +234,4 @@ If you encounter similar issues in other parts of the system:
 4. **Don't assume** empty string and null are the same in all contexts
 5. **Always test** both selection and deselection scenarios
 
-This solution provides a clean, maintainable approach to handling optional Select values throughout the TekRem ERP system.
+This solution provides a clean, maintainable approach to handling optional Select values throughout the Tekrem ERP system.

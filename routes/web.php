@@ -41,11 +41,14 @@ Route::get('/about', [WebsiteController::class, 'about'])->name('about');
 
 Route::get('/services', [WebsiteController::class, 'services'])->name('services');
 
-// Individual Service Detail Pages
-Route::get('/services/web-development', [WebsiteController::class, 'webDevelopment'])->name('services.web-development');
-Route::get('/services/mobile-apps', [WebsiteController::class, 'mobileApps'])->name('services.mobile-apps');
-Route::get('/services/ai-solutions', [WebsiteController::class, 'aiSolutions'])->name('services.ai-solutions');
-Route::get('/services/cloud-services', [WebsiteController::class, 'cloudServices'])->name('services.cloud-services');
+// Individual service detail pages (official catalogue)
+Route::redirect('/services/web-development', '/services/website-development');
+Route::redirect('/services/mobile-apps', '/services/mobile-app-development');
+Route::redirect('/services/ai-solutions', '/services/software-solutions');
+Route::redirect('/services/cloud-services', '/services/domain-hosting');
+Route::get('/services/{slug}', [WebsiteController::class, 'serviceShow'])
+    ->where('slug', '[a-z0-9\-]+')
+    ->name('services.show');
 
 Route::get('/pricing', [WebsiteController::class, 'pricing'])->name('pricing');
 
@@ -65,9 +68,18 @@ Route::prefix('shop')->name('shop.')->group(function () {
     Route::get('/cart', [\App\Http\Controllers\Ecommerce\ShopController::class, 'cart'])->name('cart');
     Route::patch('/cart/items/{cartItem}', [\App\Http\Controllers\Ecommerce\ShopController::class, 'updateCartItem'])->name('cart.update');
     Route::delete('/cart/items/{cartItem}', [\App\Http\Controllers\Ecommerce\ShopController::class, 'removeCartItem'])->name('cart.remove');
+    Route::get('/api/cart', [\App\Http\Controllers\Ecommerce\ShopController::class, 'cartData'])->name('api.cart');
+    Route::post('/api/coupon', [\App\Http\Controllers\Ecommerce\ShopController::class, 'validateCoupon'])->name('api.coupon');
     Route::get('/checkout', [\App\Http\Controllers\Ecommerce\ShopController::class, 'checkout'])->name('checkout');
     Route::post('/checkout', [\App\Http\Controllers\Ecommerce\ShopController::class, 'placeOrder'])->name('checkout.store');
+    Route::get('/orders', [\App\Http\Controllers\Ecommerce\ShopController::class, 'orders'])->middleware('auth')->name('orders');
+    Route::get('/wishlist', [\App\Http\Controllers\Ecommerce\ShopController::class, 'wishlist'])->middleware('auth')->name('wishlist');
+    Route::post('/{product}/wishlist', [\App\Http\Controllers\Ecommerce\ShopController::class, 'toggleWishlist'])->middleware('auth')->name('wishlist.toggle');
+    Route::post('/{product}/reviews', [\App\Http\Controllers\Ecommerce\ShopController::class, 'storeReview'])->name('reviews.store');
+    Route::get('/tracking', [\App\Http\Controllers\Ecommerce\ShopController::class, 'tracking'])->name('tracking');
+    Route::get('/tracking/{trackingNumber}', [\App\Http\Controllers\Ecommerce\ShopController::class, 'tracking'])->name('tracking.show');
     Route::get('/order/{order}/confirmation', [\App\Http\Controllers\Ecommerce\ShopController::class, 'confirmation'])->name('order.confirmation');
+    Route::get('/order/{order}/receipt-data', [\App\Http\Controllers\Ecommerce\ShopController::class, 'receiptData'])->name('order.receipt-data');
     Route::get('/order/{order}/receipt', [\App\Http\Controllers\Commerce\ReceiptController::class, 'shopOrder'])->name('order.receipt');
     Route::get('/{product}', [\App\Http\Controllers\Ecommerce\ShopController::class, 'show'])->name('show');
     Route::post('/{product}/cart', [\App\Http\Controllers\Ecommerce\ShopController::class, 'addToCart'])->name('cart.add');
@@ -137,6 +149,15 @@ Route::get('/support/embed/ticket', function (\Illuminate\Http\Request $request)
     ]);
 })->name('support.embed.ticket')->middleware(\App\Http\Middleware\AllowIframe::class);
 
+// Embeddable guest AI chat widget
+Route::get('/support/embed/chat', function (\Illuminate\Http\Request $request) {
+    return \Inertia\Inertia::render('Support/Embed/GuestChat', [
+        'source' => $request->query('source', 'External System'),
+        'theme' => $request->query('theme', 'light'),
+        'primary_color' => $request->query('primary_color', ''),
+    ]);
+})->name('support.embed.chat')->middleware(\App\Http\Middleware\AllowIframe::class);
+
 // AI Service Test Route (for development/testing)
 Route::post('/test-ai-service', function (\Illuminate\Http\Request $request) {
     $aiService = new \App\Services\AIService;
@@ -157,10 +178,33 @@ Route::middleware([
     Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
     Route::get('/session/ping', fn () => response()->json(['ok' => true]))->name('session.ping');
 
+    // Staff self-service attendance (any authenticated user with a linked employee record)
+    Route::prefix('staff/attendance')->name('staff.attendance.')->group(function () {
+        Route::post('clock-in', [\App\Http\Controllers\HR\StaffClockController::class, 'clockIn'])->name('clock-in');
+        Route::post('clock-out', [\App\Http\Controllers\HR\StaffClockController::class, 'clockOut'])->name('clock-out');
+    });
+
+    // Employee self-service portal (requires linked active employee record)
+    Route::prefix('staff')->name('staff.')->middleware('staff.employee')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Staff\StaffPortalController::class, 'index'])->name('dashboard');
+        Route::get('/leave', [\App\Http\Controllers\Staff\StaffLeaveController::class, 'index'])->name('leave.index');
+        Route::get('/leave/create', [\App\Http\Controllers\Staff\StaffLeaveController::class, 'create'])->name('leave.create');
+        Route::post('/leave', [\App\Http\Controllers\Staff\StaffLeaveController::class, 'store'])->name('leave.store');
+        Route::get('/attendance', [\App\Http\Controllers\Staff\StaffAttendanceController::class, 'index'])->name('attendance.index');
+        Route::get('/payslips', [\App\Http\Controllers\Staff\StaffPayslipController::class, 'index'])->name('payslips.index');
+        Route::get('/payslips/{payroll}/download', [\App\Http\Controllers\Staff\StaffPayslipController::class, 'download'])->name('payslips.download');
+        Route::get('/profile', [\App\Http\Controllers\Staff\StaffProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('/profile', [\App\Http\Controllers\Staff\StaffProfileController::class, 'update'])->name('profile.update');
+        Route::get('/team', [\App\Http\Controllers\Staff\ManagerTeamController::class, 'index'])->name('team.index');
+        Route::post('/team/leaves/{leave}/approve', [\App\Http\Controllers\Staff\ManagerTeamController::class, 'approve'])->name('team.leaves.approve');
+        Route::post('/team/leaves/{leave}/reject', [\App\Http\Controllers\Staff\ManagerTeamController::class, 'reject'])->name('team.leaves.reject');
+    });
+
     // Support chatbot API — any authenticated user (floating widget)
     Route::prefix('support/chatbot')->name('support.chatbot.')->group(function () {
         Route::post('chat', [\App\Http\Controllers\Support\ChatbotController::class, 'chat'])->name('chat');
         Route::get('conversation', [\App\Http\Controllers\Support\ChatbotController::class, 'getConversation'])->name('conversation');
+        Route::get('conversations', [\App\Http\Controllers\Support\ChatbotController::class, 'listConversations'])->name('conversations');
         Route::get('suggest-ticket-title', [\App\Http\Controllers\Support\ChatbotController::class, 'suggestTicketTitle'])->name('suggest-ticket-title');
         Route::post('create-ticket', [\App\Http\Controllers\Support\ChatbotController::class, 'createTicketFromChat'])->name('create-ticket');
         Route::get('suggestions', [\App\Http\Controllers\Support\ChatbotController::class, 'getSuggestions'])->name('suggestions');
@@ -257,7 +301,7 @@ Route::middleware([
         Route::post('communications/analyze-sentiment', [\App\Http\Controllers\CRM\CommunicationController::class, 'analyzeSentiment'])->name('communications.analyze-sentiment');
         Route::post('communications/generate-email-template', [\App\Http\Controllers\CRM\CommunicationController::class, 'generateEmailTemplate'])->name('communications.generate-email-template');
 
-        // TekRem LiveChat
+        // Tekrem LiveChat
         Route::prefix('livechat')->name('livechat.')->group(function () {
             Route::get('/', [\App\Http\Controllers\CRM\LiveChatController::class, 'index'])->name('index');
             Route::get('/conversations/{conversation}', [\App\Http\Controllers\CRM\LiveChatController::class, 'show'])->name('show');
@@ -302,9 +346,10 @@ Route::middleware([
 
     // Projects routes
     Route::prefix('projects')->name('projects.')->middleware('permission:view projects')->group(function () {
-        Route::get('/{project}/users', [\App\Http\Controllers\ProjectController::class, 'users'])->name('project.users');
-        // Dashboard
-        Route::get('/', [\App\Http\Controllers\ProjectController::class, 'dashboard'])->name('dashboard');
+        // Dashboard (module overview)
+        Route::get('/dashboard', [\App\Http\Controllers\ProjectController::class, 'dashboard'])->name('dashboard');
+        Route::redirect('/list', '/', 301);
+
         Route::get('/analytics', [\App\Http\Controllers\ProjectController::class, 'analytics'])->name('analytics');
 
         // My Tasks (global route for current user's tasks)
@@ -346,10 +391,11 @@ Route::middleware([
         });
 
         // Projects CRUD
-        Route::get('/list', [\App\Http\Controllers\ProjectController::class, 'index'])->name('index');
+        Route::get('/', [\App\Http\Controllers\ProjectController::class, 'index'])->name('index');
         Route::get('/create', [\App\Http\Controllers\ProjectController::class, 'create'])->name('create');
         Route::post('/', [\App\Http\Controllers\ProjectController::class, 'store'])->name('store');
         Route::get('/{project}', [\App\Http\Controllers\ProjectController::class, 'show'])->name('show');
+        Route::get('/{project}/users', [\App\Http\Controllers\ProjectController::class, 'users'])->name('project.users');
         Route::get('/{project}/edit', [\App\Http\Controllers\ProjectController::class, 'edit'])->name('edit');
         Route::put('/{project}', [\App\Http\Controllers\ProjectController::class, 'update'])->name('update');
         Route::delete('/{project}', [\App\Http\Controllers\ProjectController::class, 'destroy'])->name('destroy');
@@ -743,6 +789,8 @@ Route::middleware([
     // Inventory routes
     Route::prefix('inventory')->name('inventory.')->middleware('permission:view inventory')->group(function () {
         Route::get('/', [\App\Http\Controllers\Inventory\DashboardController::class, 'index'])->name('dashboard');
+        Route::post('categories', [\App\Http\Controllers\Inventory\ProductCategoryController::class, 'store'])->name('categories.store');
+        Route::get('products/barcode/suggest', [\App\Http\Controllers\Inventory\ProductController::class, 'suggestBarcode'])->name('products.barcode.suggest');
         Route::resource('products', \App\Http\Controllers\Inventory\ProductController::class);
         Route::get('warehouses', [\App\Http\Controllers\Inventory\WarehouseController::class, 'index'])->name('warehouses.index');
         Route::post('warehouses', [\App\Http\Controllers\Inventory\WarehouseController::class, 'store'])->name('warehouses.store');
@@ -791,6 +839,22 @@ Route::middleware([
     // Ecommerce admin routes
     Route::prefix('ecommerce')->name('ecommerce.')->middleware('permission:view ecommerce')->group(function () {
         Route::get('/', [\App\Http\Controllers\Ecommerce\AdminController::class, 'index'])->name('dashboard');
+        Route::get('/orders', [\App\Http\Controllers\Ecommerce\OrderController::class, 'index'])->name('orders.index');
+        Route::get('/orders/{order}', [\App\Http\Controllers\Ecommerce\OrderController::class, 'show'])->name('orders.show');
+        Route::post('/orders/{order}/ship', [\App\Http\Controllers\Ecommerce\OrderController::class, 'ship'])->name('orders.ship');
+        Route::post('/orders/{order}/deliver', [\App\Http\Controllers\Ecommerce\OrderController::class, 'deliver'])->name('orders.deliver');
+        Route::get('/shipping', [\App\Http\Controllers\Ecommerce\ShippingController::class, 'index'])->name('shipping.index');
+        Route::post('/shipping', [\App\Http\Controllers\Ecommerce\ShippingController::class, 'store'])->name('shipping.store');
+        Route::put('/shipping/{method}', [\App\Http\Controllers\Ecommerce\ShippingController::class, 'update'])->name('shipping.update');
+        Route::get('/coupons', [\App\Http\Controllers\Ecommerce\CouponController::class, 'index'])->name('coupons.index');
+        Route::post('/coupons', [\App\Http\Controllers\Ecommerce\CouponController::class, 'store'])->name('coupons.store');
+        Route::delete('/coupons/{coupon}', [\App\Http\Controllers\Ecommerce\CouponController::class, 'destroy'])->name('coupons.destroy');
+        Route::get('/reviews', [\App\Http\Controllers\Ecommerce\ReviewController::class, 'index'])->name('reviews.index');
+        Route::post('/reviews/{review}/approve', [\App\Http\Controllers\Ecommerce\ReviewController::class, 'approve'])->name('reviews.approve');
+        Route::delete('/reviews/{review}', [\App\Http\Controllers\Ecommerce\ReviewController::class, 'destroy'])->name('reviews.destroy');
+        Route::get('/settings', [\App\Http\Controllers\Ecommerce\ShopSettingsController::class, 'edit'])->name('settings.edit');
+        Route::post('/settings/hero-background', [\App\Http\Controllers\Ecommerce\ShopSettingsController::class, 'updateHeroBackground'])->name('settings.hero-background');
+        Route::delete('/settings/hero-background', [\App\Http\Controllers\Ecommerce\ShopSettingsController::class, 'destroyHeroBackground'])->name('settings.hero-background.destroy');
     });
 
     // HR routes
@@ -882,6 +946,7 @@ Route::middleware([
         Route::get('payroll', [\App\Http\Controllers\HR\PayrollController::class, 'index'])->name('payroll.index');
         Route::get('payroll/create', [\App\Http\Controllers\HR\PayrollController::class, 'create'])->name('payroll.create');
         Route::post('payroll', [\App\Http\Controllers\HR\PayrollController::class, 'store'])->name('payroll.store');
+        Route::post('payroll/generate', [\App\Http\Controllers\HR\PayrollController::class, 'generateAll'])->name('payroll.generate');
         Route::get('payroll/{payroll}', [\App\Http\Controllers\HR\PayrollController::class, 'show'])->name('payroll.show');
         Route::get('payroll/{payroll}/edit', [\App\Http\Controllers\HR\PayrollController::class, 'edit'])->name('payroll.edit');
         Route::put('payroll/{payroll}', [\App\Http\Controllers\HR\PayrollController::class, 'update'])->name('payroll.update');
@@ -1170,6 +1235,10 @@ Route::middleware([
     });
 
     // Settings routes - Admin only
+    Route::middleware(['role:admin|super_user'])->prefix('analytics')->name('analytics.')->group(function () {
+        Route::get('/site', [\App\Http\Controllers\Analytics\SiteAnalyticsController::class, 'index'])->name('site.index');
+    });
+
     Route::middleware(['role:admin|super_user'])->prefix('settings')->name('settings.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Settings\SettingsController::class, 'index'])->name('index');
         Route::get('/general', [\App\Http\Controllers\Settings\SettingsController::class, 'general'])->name('general');

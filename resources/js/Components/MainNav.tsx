@@ -12,6 +12,7 @@ import {
 import { cn } from '@/lib/utils';
 import useRoute from '@/Hooks/useRoute';
 import useActiveRoute from '@/Hooks/useActiveRoute';
+import { getAllServices } from '@/Data/servicesData';
 
 interface MainNavProps {
   settings: Record<string, unknown>;
@@ -20,13 +21,14 @@ interface MainNavProps {
 export default function MainNav({ settings: _settings }: MainNavProps) {
   const route = useRoute();
   const { isActive } = useActiveRoute();
+  const services = getAllServices();
 
   const linkClass = (active: boolean) =>
     cn(
       navigationMenuTriggerStyle(),
       active
         ? 'bg-primary font-medium text-primary-foreground hover:bg-primary'
-        : 'bg-transparent hover:bg-primary/10 hover:text-primary'
+        : 'bg-transparent text-inherit hover:bg-primary/10 hover:text-primary'
     );
 
   return (
@@ -53,7 +55,7 @@ export default function MainNav({ settings: _settings }: MainNavProps) {
             Services
           </NavigationMenuTrigger>
           <NavigationMenuContent>
-            <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+            <ul className="grid w-[400px] gap-3 p-4 md:w-[560px] md:grid-cols-2 lg:w-[640px]">
               <li className="row-span-3">
                 <NavigationMenuLink asChild>
                   <Link
@@ -61,22 +63,19 @@ export default function MainNav({ settings: _settings }: MainNavProps) {
                     href={route('services')}
                   >
                     <div className="mb-2 text-lg font-medium text-white">Our Services</div>
-                    <p className="text-sm text-white/90">Web, mobile, AI, and cloud for African businesses</p>
+                    <p className="text-sm text-white/90">Full ICT catalogue — web, software, marketing, and support</p>
                   </Link>
                 </NavigationMenuLink>
               </li>
-              <ListItem href={route('services.web-development')} title="Web Development">
-                Websites and web applications
-              </ListItem>
-              <ListItem href={route('services.mobile-apps')} title="Mobile Apps">
-                iOS and Android solutions
-              </ListItem>
-              <ListItem href={route('services.ai-solutions')} title="AI Solutions">
-                Automation and intelligent tools
-              </ListItem>
-              <ListItem href={route('services.cloud-services')} title="Cloud Services">
-                Migration and managed cloud
-              </ListItem>
+              {services.slice(0, 7).map((service) => (
+                <ListItem
+                  key={service.id}
+                  href={route('services.show', { slug: service.id })}
+                  title={service.title}
+                >
+                  {service.shortDescription}
+                </ListItem>
+              ))}
             </ul>
           </NavigationMenuContent>
         </NavigationMenuItem>

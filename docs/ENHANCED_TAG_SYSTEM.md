@@ -1,6 +1,6 @@
-# Enhanced Tag System for TekRem ERP Projects
+# Enhanced Tag System for Tekrem ERP Projects
 
-The TekRem ERP system now features an enhanced tag management system for projects that provides a seamless user experience for selecting existing tags or creating new ones on-the-fly.
+The Tekrem ERP system now features an enhanced tag management system for projects that provides a seamless user experience for selecting existing tags or creating new ones on-the-fly.
 
 ## Features
 

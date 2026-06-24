@@ -6,7 +6,7 @@ Customers may request a refund within 30 days of purchase if the product is unus
 
 ## 2. Process
 
-To request a refund, contact our support team at support@tekrem.com with your order details. We will review the request and process the refund within 7–10 business days.
+To request a refund, contact our support team at support@Tekrem.com with your order details. We will review the request and process the refund within 7–10 business days.
 
 ## 3. Exceptions
 

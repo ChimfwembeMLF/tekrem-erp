@@ -1,6 +1,5 @@
 import React from 'react';
-import { Head, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  useForm } from '@inertiajs/react';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
@@ -8,6 +7,7 @@ import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { InertiaSharedProps } from '@/types';
+import { CrmFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface ClientCreateProps extends InertiaSharedProps {}
 
@@ -33,21 +33,18 @@ export default function ClientCreate({ auth }: ClientCreateProps) {
   };
 
   return (
-    <AppLayout
-      title="Add Client"
-      renderHeader={() => (
-        <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-          Add Client
-        </h2>
-      )}
+    <CrmFormShell
+      title={"Add Client"}
+      backHref={route('crm.clients.index')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
     >
-      <Head title="Add Client" />
 
-      <div className="py-12">
-        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-          <Card>
-            <form onSubmit={handleSubmit}>
-              <CardHeader>
+<Card>
+            <CardHeader>
                 <CardTitle>Add New Client</CardTitle>
                 <CardDescription>
                   Create a new client in the CRM system
@@ -188,22 +185,8 @@ export default function ClientCreate({ auth }: ClientCreateProps) {
                   {errors.notes && <p className="text-red-500 text-sm">{errors.notes}</p>}
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => window.history.back()}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={processing}>
-                  {processing ? 'Saving...' : 'Save Client'}
-                </Button>
-              </CardFooter>
-            </form>
+              </form>
           </Card>
-        </div>
-      </div>
-    </AppLayout>
+</CrmFormShell>
   );
 }

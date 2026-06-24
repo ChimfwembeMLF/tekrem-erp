@@ -6,18 +6,28 @@ use App\Http\Controllers\Controller;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Services\Inventory\ProductMediaService;
+use App\Services\Inventory\BarcodeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class ProductController extends Controller
 {
-    public function __construct(private ProductMediaService $mediaService) {}
+    public function __construct(
+        private ProductMediaService $mediaService,
+        private BarcodeService $barcodeService,
+    ) {}
 
     public function index(Request $request)
     {
         $products = Product::with('category')
-            ->when($request->search, fn ($q, $s) => $q->where('name', 'like', "%{$s}%")->orWhere('sku', 'like', "%{$s}%"))
+            ->when($request->search, function ($q, $search) {
+                $q->where(function ($query) use ($search) {
+                    $query->where('name', 'like', "%{$search}%")
+                        ->orWhere('sku', 'like', "%{$search}%")
+                        ->orWhere('barcode', 'like', "%{$search}%");
+                });
+            })
             ->latest()
             ->paginate(15)
             ->withQueryString();
@@ -28,10 +38,18 @@ class ProductController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(Request $request)
     {
         return Inertia::render('Inventory/Products/Create', [
-            'categories' => ProductCategory::where('is_active', true)->get(['id', 'name']),
+            'categories' => ProductCategory::where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            'selectedCategoryId' => session('new_category_id') ?? $request->integer('category_id') ?: null,
+        ]);
+    }
+
+    public function suggestBarcode()
+    {
+        return response()->json([
+            'barcode' => $this->barcodeService->generateUnique(),
         ]);
     }
 
@@ -40,6 +58,10 @@ class ProductController extends Controller
         $data = $this->productData($request);
         $data['slug'] = Str::slug($data['name']) . '-' . Str::random(4);
         $data['category_id'] = $data['category_id'] ?: null;
+
+        if (empty($data['barcode'])) {
+            $data['barcode'] = $this->barcodeService->generateUnique();
+        }
 
         $product = Product::create($data);
 
@@ -61,13 +83,18 @@ class ProductController extends Controller
     {
         return Inertia::render('Inventory/Products/Edit', [
             'product' => $product,
-            'categories' => ProductCategory::where('is_active', true)->get(['id', 'name']),
+            'categories' => ProductCategory::where('is_active', true)->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
     public function update(Request $request, Product $product)
     {
         $data = $this->productData($request, $product);
+
+        if (empty($data['barcode'])) {
+            $data['barcode'] = $this->barcodeService->generateUnique();
+        }
+
         $product->update(array_merge($data, ['category_id' => $data['category_id'] ?: null]));
 
         $product->update([
@@ -116,6 +143,7 @@ class ProductController extends Controller
             'track_inventory' => 'boolean',
             'is_active' => 'boolean',
             'is_published' => 'boolean',
+            'is_featured' => 'boolean',
         ]);
     }
 

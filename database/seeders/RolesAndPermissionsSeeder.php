@@ -961,7 +961,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $this->command->info('Creating super user account...');
 
         $superUser = \App\Models\User::firstOrCreate(
-            ['email' => 'superuser@tekrem.com'],
+            ['email' => 'superuser@Tekrem.com'],
             [
                 'name' => 'Super User',
                 'password' => \Illuminate\Support\Facades\Hash::make('superuser123'),
@@ -977,6 +977,6 @@ class RolesAndPermissionsSeeder extends Seeder
         $this->command->info('📊 Created ' . Permission::count() . ' permissions');
         $this->command->info('👥 Created 5 roles: super_user, admin, manager, staff, customer');
         $this->command->info('🔐 All permissions properly assigned to roles');
-        $this->command->info('👤 Super User created: superuser@tekrem.com');
+        $this->command->info('👤 Super User created: superuser@Tekrem.com');
     }
 }

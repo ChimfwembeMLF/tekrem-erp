@@ -161,10 +161,10 @@ class SettingsController extends Controller
     private function getSystemSettings(): array
     {
         return [
-            'site_name' => Setting::get('site_name', config('app.name', 'TekRem ERP')),
+            'site_name' => Setting::get('site_name', config('app.name', 'Tekrem ERP')),
             'site_description' => Setting::get('site_description', 'Comprehensive ERP solution for modern businesses'),
             'site_url' => config('app.url'),
-            'admin_email' => Setting::get('admin_email', 'admin@tekrem.com'),
+            'admin_email' => Setting::get('admin_email', 'admin@Tekrem.com'),
             'timezone' => Setting::get('timezone', config('app.timezone', 'UTC')),
             'date_format' => Setting::get('date_format', 'Y-m-d'),
             'time_format' => Setting::get('time_format', 'H:i:s'),
@@ -231,8 +231,8 @@ class SettingsController extends Controller
             'sms_notifications' => false,
             'push_notifications' => true,
             'notification_frequency' => 'immediate',
-            'email_from_name' => config('app.name', 'TekRem ERP'),
-            'email_from_address' => 'noreply@tekrem.com',
+            'email_from_name' => config('app.name', 'Tekrem ERP'),
+            'email_from_address' => 'noreply@Tekrem.com',
             'smtp_host' => config('mail.mailers.smtp.host'),
             'smtp_port' => config('mail.mailers.smtp.port'),
             'smtp_username' => config('mail.mailers.smtp.username'),

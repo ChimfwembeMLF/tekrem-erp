@@ -1,6 +1,5 @@
 import React from 'react';
-import { Head, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  useForm } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -8,6 +7,7 @@ import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import useRoute from '@/Hooks/useRoute';
+import { ProjectsFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface Board {
   id: number;
@@ -42,25 +42,22 @@ export default function BoardEdit({ auth, board, project }: BoardEditProps) {
   };
 
   return (
-    <AppLayout
-      title="Edit Board"
-      renderHeader={() => (
-        <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-          Edit Board - {project.name}
-        </h2>
-      )}
+    <ProjectsFormShell
+      title={"Edit Board"}
+      backHref={route('agile.board.update')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
     >
-      <Head title={`Edit Board - ${project.name}`} />
 
-      <div className="py-12">
-        <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
-          <Card>
+<Card>
             <CardHeader>
               <CardTitle>Board Details</CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-2">
+              <div className="space-y-2">
                   <Label htmlFor="name">Board Name *</Label>
                   <Input
                     id="name"
@@ -123,8 +120,6 @@ export default function BoardEdit({ auth, board, project }: BoardEditProps) {
               </form>
             </CardContent>
           </Card>
-        </div>
-      </div>
-    </AppLayout>
+</ProjectsFormShell>
   );
 }

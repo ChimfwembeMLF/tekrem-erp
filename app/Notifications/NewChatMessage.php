@@ -59,7 +59,7 @@ class NewChatMessage extends Notification implements ShouldQueue
                     ->line("{$senderName} sent you a new message:")
                     ->line($this->message->message)
                     ->action('View Conversation', url("/crm/livechat/conversations/{$this->message->conversation_id}"))
-                    ->line('Thank you for using TekRem LiveChat!');
+                    ->line('Thank you for using Tekrem LiveChat!');
     }
 
     /**

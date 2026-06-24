@@ -166,12 +166,7 @@ class DashboardController extends Controller
             ],
         ];
 
-        $action_queue = [
-            'pending_leaves' => $pendingLeaves,
-            'overdue_reviews' => $overdueReviews,
-            'pending_payroll' => Payroll::where('status', 'pending')->count(),
-            'onboarding_due' => Onboarding::where('status', 'in_progress')->count(),
-        ];
+        $action_queue = app(\App\Services\HR\HrActionQueueService::class)->hrQueue();
 
         return Inertia::render('HR/Dashboard', [
             'stats' => [

@@ -9,6 +9,7 @@ use App\Models\Finance\Expense;
 use App\Models\Finance\Invoice;
 use App\Models\Finance\Payment;
 use App\Models\Finance\Transaction;
+use App\Models\HR\Payroll;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -106,6 +107,10 @@ class DashboardController extends Controller
                 'overdueInvoices' => $overdueInvoices,
                 'totalInvoiceAmount' => (float) $totalInvoiceAmount,
             ],
+            'payrollAlert' => $user->can('view hr') ? [
+                'pending' => Payroll::where('status', 'pending')->count(),
+                'url' => route('hr.payroll.index', ['status' => 'pending']),
+            ] : null,
             'recentTransactions' => $recentTransactions,
             'recentInvoices' => $recentInvoices,
             'budgetAlerts' => $budgetAlerts,

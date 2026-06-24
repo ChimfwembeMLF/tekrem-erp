@@ -27,6 +27,7 @@ class ReleaseController extends Controller
         return Inertia::render('Projects/Releases', [
             'project' => $project,
             'board' => $board,
+            'boardId' => \App\Support\ProjectNav::boardId($project),
             'releases' => $releases,
             'upcomingReleases' => $upcomingReleases,
             'releasedVersions' => $releasedVersions,

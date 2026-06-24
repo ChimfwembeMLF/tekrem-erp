@@ -1,6 +1,5 @@
 import React from 'react';
-import { Head, useForm, Link } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  useForm, Link } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -8,6 +7,7 @@ import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import useRoute from '@/Hooks/useRoute';
+import { ProjectsFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface BoardColumn {
   id: number;
@@ -80,31 +80,25 @@ export default function CardCreate({ auth, board, project, defaultColumn, sprint
   };
 
   return (
-    <AppLayout
-      title={`Create Card - ${board.name}`} 
-      renderHeader={() => (
-        <div>
-          <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            Create New Card
-          </h2>
-          <p className="text-sm text-gray-600">
-            <Link href={route('agile.board.show', board.id)} className="hover:underline">
-              {board.name}
-            </Link> - {project.name}
-          </p>
-        </div>
-      )}
+    <ProjectsFormShell
+      title={"Form"}
+      backHref={route('agile.board.show')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
     >
 
+
+
       <div className="">
-        <div className="max-w-full mx-auto sm:px-6">
-          <Card>
+<Card>
             <CardHeader>
               <CardTitle>Card Details</CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="type">Card Type *</Label>
                     <Select
@@ -266,8 +260,6 @@ export default function CardCreate({ auth, board, project, defaultColumn, sprint
               </form>
             </CardContent>
           </Card>
-        </div>
-      </div>
-    </AppLayout>
+</ProjectsFormShell>
   );
 }

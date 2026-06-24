@@ -361,7 +361,7 @@
         @foreach($footerLines ?? [] as $line)
             {{ $line }}@if(!$loop->last) &mdash; @endif
         @endforeach
-        <br>{{ $company['name'] ?? 'TekRem' }} &copy; {{ date('Y') }}
+        <br>{{ $company['name'] ?? 'Tekrem' }} &copy; {{ date('Y') }}
     </div>
 
     <script type="text/php">

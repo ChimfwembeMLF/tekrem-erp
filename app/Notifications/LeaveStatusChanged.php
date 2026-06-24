@@ -36,12 +36,18 @@ class LeaveStatusChanged extends Notification implements ShouldQueue
         $mail = (new MailMessage)->subject($subject);
 
         if ($this->action === 'submitted') {
+            $reviewUrl = url('/hr/leave/'.$this->leave->id);
+            $managerEmployee = $notifiable->employee ?? null;
+            if ($managerEmployee && (int) $this->leave->employee?->manager_id === (int) $managerEmployee->id) {
+                $reviewUrl = url('/staff/team');
+            }
+
             return $mail
                 ->greeting("Hello {$notifiable->name}")
                 ->line("{$employeeName} submitted a leave request ({$type}).")
                 ->line("Dates: {$this->leave->start_date->format('M j, Y')} – {$this->leave->end_date->format('M j, Y')}")
                 ->line("Days: {$this->leave->days_requested}")
-                ->action('Review request', url("/hr/leave/{$this->leave->id}"));
+                ->action('Review request', $reviewUrl);
         }
 
         return $mail

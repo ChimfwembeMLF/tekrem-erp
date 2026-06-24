@@ -2,7 +2,7 @@
 
 ## Overview
 
-The AI Conversation Export feature allows administrators to export AI-powered guest chat conversations for analysis, machine learning training, and backup purposes. This feature is designed to help improve AI model training and enhance the quality of automated responses in the TekRem LiveChat system.
+The AI Conversation Export feature allows administrators to export AI-powered guest chat conversations for analysis, machine learning training, and backup purposes. This feature is designed to help improve AI model training and enhance the quality of automated responses in the Tekrem LiveChat system.
 
 ## Features
 
@@ -233,4 +233,4 @@ POST /crm/ai-conversations/preview
 
 ### Support
 
-For technical support or questions about the AI Conversation Export feature, contact the system administrator or refer to the main TekRem documentation.
+For technical support or questions about the AI Conversation Export feature, contact the system administrator or refer to the main Tekrem documentation.

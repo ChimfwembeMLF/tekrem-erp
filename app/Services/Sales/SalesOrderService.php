@@ -30,7 +30,8 @@ class SalesOrderService
                 'source' => $source,
                 'subtotal' => $subtotal,
                 'tax_amount' => $taxAmount,
-                'total' => $subtotal + $taxAmount - (float) ($data['discount_amount'] ?? 0),
+                'discount_amount' => (float) ($data['discount_amount'] ?? 0),
+                'total' => $subtotal + $taxAmount - (float) ($data['discount_amount'] ?? 0) + (float) ($data['shipping_cost'] ?? 0),
                 'user_id' => $data['user_id'] ?? auth()->id(),
             ]));
 

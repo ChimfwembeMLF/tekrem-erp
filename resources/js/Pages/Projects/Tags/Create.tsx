@@ -1,6 +1,5 @@
 import React from 'react';
-import { Head, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  useForm } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -9,6 +8,7 @@ import { Textarea } from '@/Components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { Checkbox } from '@/Components/ui/checkbox';
 import useRoute from '@/Hooks/useRoute';
+import { ProjectsFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface TagCreateProps {
   auth: {
@@ -45,20 +45,17 @@ export default function TagCreate({ auth }: TagCreateProps) {
   ];
 
   return (
-    <AppLayout
-      title="Create Tag"
-      renderHeader={() => (
-        <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-          Create New Tag
-        </h2>
-      )}
+    <ProjectsFormShell
+      title={"Create Tag"}
+      backHref={route('projects.tags.index')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
     >
-      <Head title="Create Tag" />
 
-      <div className="py-12">
-        <div className="max-w-2xl mx-auto sm:px-6 lg:px-8">
-          <form onSubmit={handleSubmit}>
-            <Card>
+<Card>
               <CardHeader>
                 <CardTitle>Tag Information</CardTitle>
                 <CardDescription>
@@ -186,9 +183,7 @@ export default function TagCreate({ auth }: TagCreateProps) {
                 </div>
               </CardContent>
             </Card>
-          </form>
-        </div>
-      </div>
-    </AppLayout>
+          
+</ProjectsFormShell>
   );
 }

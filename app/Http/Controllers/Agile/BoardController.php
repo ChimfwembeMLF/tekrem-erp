@@ -49,6 +49,7 @@ class BoardController extends Controller
         return Inertia::render('Projects/Board', [
             'board' => $board,
             'project' => $board->project,
+            'boardId' => $board->id,
             'columns' => $board->columns,
             'cards' => $board->columns->flatMap->cards,
             'sprints' => $sprints,

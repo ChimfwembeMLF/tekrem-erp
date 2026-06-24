@@ -219,7 +219,7 @@ export default function CustomerDashboard({
           </CardHeader>
           <CardContent>
             <div className="flex flex-col gap-2">
-              <a href="mailto:tekremsolutions@gmail.com" className="text-blue-600 underline">tekremsolutions@gmail.com</a>
+              <a href="mailto:Tekremsolutions@gmail.com" className="text-blue-600 underline">Tekremsolutions@gmail.com</a>
               <span className="text-muted-foreground">Phone: +260 976607840</span>
             </div>
           </CardContent>

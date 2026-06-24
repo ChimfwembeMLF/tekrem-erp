@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  useForm } from '@inertiajs/react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
@@ -8,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { ArrowLeft, Save, Filter } from 'lucide-react';
 import { useTranslate } from '@/Hooks/useTranslate';
 import useRoute from '@/Hooks/useRoute';
+import { FinanceFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface Account {
   id: number;
@@ -57,26 +57,17 @@ export default function CreateBankReconciliation({ accounts, selectedAccount = n
   };
 
   return (
-    <AppLayout
-      title={t('finance.create_bank_reconciliation', 'Create Bank Reconciliation')}
-      renderHeader={() => (
-        <div className="flex items-center gap-4">
-          <Button variant="outline" asChild>
-            <a href={route('finance.bank-reconciliation.index')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              {t('finance.back_to_reconciliations', 'Back to Reconciliations')}
-            </a>
-          </Button>
-          <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {t('finance.create_bank_reconciliation', 'Create Bank Reconciliation')}
-          </h2>
-        </div>
-      )}
+    <FinanceFormShell
+      title={"Create Bank Reconciliation"}
+      backHref={route('')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
     >
-      <Head title={t('finance.create_bank_reconciliation', 'Create Bank Reconciliation')} />
-      <div className="py-12">
-        <div className="max-w-5xl mx-auto sm:px-6 lg:px-8">
-          <Card>
+
+<Card>
             <CardHeader>
               <CardTitle>{t('finance.bank_reconciliation_details', 'Bank Reconciliation Details')}</CardTitle>
               {/* Optional: Add a filter/search bar for transactions */}
@@ -94,8 +85,7 @@ export default function CreateBankReconciliation({ accounts, selectedAccount = n
               </div>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Bank Statement Select */}
+              {/* Bank Statement Select */}
                 <div>
                   <label htmlFor="bank_statement_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     {t('finance.bank_statement', 'Bank Statement')}
@@ -259,8 +249,6 @@ export default function CreateBankReconciliation({ accounts, selectedAccount = n
               </form>
             </CardContent>
           </Card>
-        </div>
-      </div>
-    </AppLayout>
+</FinanceFormShell>
   );
 }

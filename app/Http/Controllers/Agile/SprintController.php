@@ -44,6 +44,7 @@ class SprintController extends Controller
         return Inertia::render('Projects/Sprints', [
             'project' => $project,
             'board' => $board,
+            'boardId' => \App\Support\ProjectNav::boardId($project),
             'sprints' => $sprints,
             'activeSprint' => $activeSprint,
             'completedSprints' => $completedSprints,

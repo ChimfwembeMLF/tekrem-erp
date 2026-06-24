@@ -15,7 +15,7 @@ class UserSeeder extends Seeder
     {
         // Create admin user
         $admin = User::firstOrCreate(
-            ['email' => 'admin@tekrem.com'],
+            ['email' => 'admin@Tekrem.com'],
             [
                 'name' => 'Admin User',
                 'password' => Hash::make('password'),
@@ -27,7 +27,7 @@ class UserSeeder extends Seeder
 
         // Create staff user
         $staff = User::firstOrCreate(
-            ['email' => 'staff@tekrem.com'],
+            ['email' => 'staff@Tekrem.com'],
             [
                 'name' => 'Staff User',
                 'password' => Hash::make('password'),
@@ -39,7 +39,7 @@ class UserSeeder extends Seeder
 
         // Create customer user
         $customer = User::firstOrCreate(
-            ['email' => 'customer@tekrem.com'],
+            ['email' => 'customer@Tekrem.com'],
             [
                 'name' => 'Customer User',
                 'password' => Hash::make('password'),

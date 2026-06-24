@@ -1,6 +1,5 @@
 import React from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  Link, useForm } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -8,6 +7,7 @@ import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import { ChromePicker } from 'react-color';
 import useRoute from '@/Hooks/useRoute';
+import { ProjectsFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface Project {
   id: number | string;
@@ -43,17 +43,23 @@ export default function CreateEpic({ auth, project, boards = [] }: Props) {
   };
 
   return (
-    <AppLayout auth={auth} title="Create Epic">
-      <Head title="Create Epic" />
-      <div className="max-w-2xl mx-auto py-8">
-        <Card>
+    <ProjectsFormShell
+      title={"Create Epic"}
+      backHref={route('agile.epics.index')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
+    >
+
+<Card>
           <CardHeader>
             <CardTitle>Create Epic</CardTitle>
             <CardDescription>Define a new epic for this project.</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
+            <div>
                 <Label htmlFor="name">Name *</Label>
                 <Input
                   id="name"
@@ -135,7 +141,6 @@ export default function CreateEpic({ auth, project, boards = [] }: Props) {
             </form>
           </CardContent>
         </Card>
-      </div>
-    </AppLayout>
+</ProjectsFormShell>
   );
 }

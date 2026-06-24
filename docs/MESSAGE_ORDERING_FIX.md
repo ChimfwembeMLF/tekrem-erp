@@ -1,8 +1,8 @@
-# TekRem LiveChat Message Ordering Fix
+# Tekrem LiveChat Message Ordering Fix
 
 ## Overview
 
-This document describes the fix implemented for the message ordering issue in the TekRem LiveChat guest chat widget. The issue was that newest messages were appearing at the top of the chat interface instead of at the bottom, which is contrary to standard chat UX patterns.
+This document describes the fix implemented for the message ordering issue in the Tekrem LiveChat guest chat widget. The issue was that newest messages were appearing at the top of the chat interface instead of at the bottom, which is contrary to standard chat UX patterns.
 
 ## Problem Description
 
@@ -218,4 +218,4 @@ The message ordering fix successfully resolves the UX issue where newest message
 - ✅ Preserves real-time message updates
 - ✅ Maintains AI conversation functionality
 
-The fix ensures that the TekRem LiveChat system now provides a familiar and intuitive chat experience for all users.
+The fix ensures that the Tekrem LiveChat system now provides a familiar and intuitive chat experience for all users.

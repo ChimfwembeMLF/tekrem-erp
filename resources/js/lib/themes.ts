@@ -27,13 +27,30 @@ export const themes = [
 export function getTheme(): Theme {
   if (typeof window === "undefined") return "system";
 
-  const storedTheme = localStorage.getItem("tekrem-ui-theme") as Theme | null;
+  const storedTheme = localStorage.getItem("Tekrem-ui-theme") as Theme | null;
 
   if (storedTheme && ["light", "dark", "system"].includes(storedTheme)) {
     return storedTheme;
   }
 
   return "system";
+}
+
+export function getSystemTheme(): "light" | "dark" {
+  if (typeof window === "undefined") return "light";
+
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+export function getResolvedTheme(): "light" | "dark" {
+  if (typeof window === "undefined") return "light";
+
+  const theme = getTheme();
+  if (theme === "light" || theme === "dark") {
+    return theme;
+  }
+
+  return getSystemTheme();
 }
 
 export function setTheme(theme: Theme) {
@@ -49,13 +66,13 @@ export function setTheme(theme: Theme) {
       : "light";
 
     root.classList.add(systemTheme);
-    localStorage.setItem("tekrem-ui-theme", "system");
+    localStorage.setItem("Tekrem-ui-theme", "system");
     return;
   }
 
   // Otherwise add the specified theme class
   root.classList.add(theme);
-  localStorage.setItem("tekrem-ui-theme", theme);
+  localStorage.setItem("Tekrem-ui-theme", theme);
 }
 
 // Initialize theme on page load

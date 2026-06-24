@@ -61,7 +61,7 @@ class MoMoTransactionStatusChanged extends Notification implements ShouldQueue
         }
 
         $mailMessage->action('View Transaction', route('finance.momo.show', $this->transaction->id))
-                   ->line('Thank you for using TekRem ERP!');
+                   ->line('Thank you for using Tekrem ERP!');
 
         return $mailMessage;
     }

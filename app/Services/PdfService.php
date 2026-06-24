@@ -132,14 +132,14 @@ class PdfService
     private function getCompanyInfo()
     {
         return [
-            'name' => config('app.name', 'TekRem ERP'),
+            'name' => config('app.name', 'Tekrem ERP'),
             'address' => config('company.address', '123 Business Street'),
             'city' => config('company.city', 'Business City'),
             'postal_code' => config('company.postal_code', '12345'),
             'country' => config('company.country', 'Country'),
             'phone' => config('company.phone', '+1 (555) 123-4567'),
-            'email' => config('company.email', 'info@tekrem.com'),
-            'website' => config('company.website', 'www.tekrem.com'),
+            'email' => config('company.email', 'info@Tekrem.com'),
+            'website' => config('company.website', 'www.Tekrem.com'),
             'tax_number' => config('company.tax_number', 'TAX123456789'),
             'logo' => config('company.logo', null),
             'bank_name' => config('company.bank.name', ''),

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  Link, useForm } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -26,6 +25,7 @@ import {
 } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
 import ReceiptProcessor from '@/Components/Finance/ReceiptProcessor';
+import { FinanceFormShell } from '@/Components/Module/moduleFormWrappers';
 import { toast } from 'sonner';
 
 interface Account {
@@ -129,13 +129,17 @@ export default function Create({ accounts = [], categories = [], statuses = {} }
   };
 
   return (
-    <AppLayout
-      title={t('finance.add_expense', 'Add Expense')}
-      >
-      <Head title={t('finance.add_expense', 'Add Expense')} />
+    <FinanceFormShell
+      title={"Add Expense"}
+      backHref={route('finance.expenses.index')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
+    >
 
-      <div className="space-y-6">
-        {/* Header */}
+{/* Header */}
         <div className="flex items-center gap-4">
           <Button variant="outline" size="sm" asChild>
             <Link href={route('finance.expenses.index')}>
@@ -153,8 +157,7 @@ export default function Create({ accounts = [], categories = [], statuses = {} }
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* AI Receipt Processor */}
+        {/* AI Receipt Processor */}
           {showReceiptProcessor && (
             <ReceiptProcessor
               onExpenseDataExtracted={handleExpenseDataExtracted}
@@ -422,8 +425,7 @@ export default function Create({ accounts = [], categories = [], statuses = {} }
               {processing ? t('common.saving', 'Saving...') : t('finance.add_expense', 'Add Expense')}
             </Button>
           </div>
-        </form>
-      </div>
-    </AppLayout>
+        
+</FinanceFormShell>
   );
 }

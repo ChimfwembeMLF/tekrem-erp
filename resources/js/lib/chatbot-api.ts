@@ -1,5 +1,6 @@
 import { fetchWithSession } from '@/lib/http';
 import { getBroadcastHeaders } from '@/echo';
+import type { ConversationDetail, ConversationSummary } from '@/types/chatbot';
 
 export interface ChatRequest {
   message: string;
@@ -89,8 +90,12 @@ class ChatbotAPI {
     });
   }
 
-  async getConversation(conversationId: string) {
-    return this.request(`/conversation?conversation_id=${conversationId}`);
+  async getConversation(conversationId: string): Promise<ConversationDetail> {
+    return this.request<ConversationDetail>(`/conversation?conversation_id=${conversationId}`);
+  }
+
+  async listConversations(): Promise<{ conversations: ConversationSummary[] }> {
+    return this.request('/conversations');
   }
 
   async getSuggestions(): Promise<{ suggestions: Suggestion[] }> {
@@ -101,8 +106,8 @@ class ChatbotAPI {
     return this.request<{ title: string }>(`/suggest-ticket-title?conversation_id=${encodeURIComponent(conversationId)}`);
   }
 
-  async rateResponse(data: RateRequest): Promise<{ success: boolean; message: string }> {
-    return this.request<{ success: boolean; message: string }>('/rate', {
+  async rateResponse(data: RateRequest): Promise<{ success: boolean; message: string; conversation_id?: string }> {
+    return this.request<{ success: boolean; message: string; conversation_id?: string }>('/rate', {
       method: 'POST',
       body: JSON.stringify(data),
     });

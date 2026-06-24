@@ -30,7 +30,7 @@ const faqs: FAQItem[] = [
   {
     question: "What are your pricing models?",
     answer:
-      "We publish transparent ZMW packages on our pricing page — from K 75,000 for starter web projects to managed cloud from K 25,000/month. Custom quotes are provided after discovery.",
+      "We publish transparent ZMW price ranges on our pricing page — from K 500 for graphic design to K 100,000+ for custom software. See the full Tekrem service catalogue for details.",
   },
   {
     question: "Do you work with international clients?",

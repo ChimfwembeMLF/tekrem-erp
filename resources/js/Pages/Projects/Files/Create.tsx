@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  Link, useForm } from '@inertiajs/react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
@@ -10,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Com
 import { ArrowLeft, Upload, X } from 'lucide-react';
 import { Project } from '@/types';
 import useRoute from '@/Hooks/useRoute';
+import { ProjectsFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface Props {
   project: Project;
@@ -61,10 +61,17 @@ export default function Create({ project, milestones }: Props) {
   };
 
   return (
-    <AppLayout title={`Upload File - ${project.name}`} >
+    <ProjectsFormShell
+      title={"Form"}
+      backHref={route('projects.files.index')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
+    >
 
-      <div className="py-12">
-        <div className="mx-auto w-full sm:px-6 lg:px-8">
+<div className="mx-auto w-full sm:px-6 lg:px-8">
           <div className="mb-6">
             <Link href={route('projects.files.index', project.id)}>
               <Button variant="ghost" size="sm">
@@ -82,8 +89,7 @@ export default function Create({ project, milestones }: Props) {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* File Upload */}
+              {/* File Upload */}
                 <div className="space-y-2">
                   <Label htmlFor="file">
                     File <span className="text-red-500">*</span>
@@ -280,8 +286,6 @@ export default function Create({ project, milestones }: Props) {
               </form>
             </CardContent>
           </Card>
-        </div>
-      </div>
-    </AppLayout>
+</ProjectsFormShell>
   );
 }

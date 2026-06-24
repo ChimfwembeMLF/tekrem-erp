@@ -1,8 +1,8 @@
-# TekRem ERP - Complete Setup Guide
+# Tekrem ERP - Complete Setup Guide
 
 ## Overview
 
-This guide provides step-by-step instructions for setting up the TekRem ERP system with all integrations, permissions, and social media features.
+This guide provides step-by-step instructions for setting up the Tekrem ERP system with all integrations, permissions, and social media features.
 
 ## Prerequisites
 
@@ -28,8 +28,8 @@ This guide provides step-by-step instructions for setting up the TekRem ERP syst
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-repo/tekrem-erp.git
-cd tekrem-erp
+git clone https://github.com/your-repo/Tekrem-erp.git
+cd Tekrem-erp
 
 # Install PHP dependencies
 composer install
@@ -52,7 +52,7 @@ Edit your `.env` file with database credentials:
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=tekrem_erp
+DB_DATABASE=Tekrem_erp
 DB_USERNAME=your_username
 DB_PASSWORD=your_password
 ```
@@ -138,7 +138,7 @@ MAIL_USERNAME=your_email_username
 MAIL_PASSWORD=your_email_password
 MAIL_ENCRYPTION=tls
 MAIL_FROM_ADDRESS=noreply@yourdomain.com
-MAIL_FROM_NAME="TekRem ERP"
+MAIL_FROM_NAME="Tekrem ERP"
 ```
 
 ### 5. File Storage Configuration
@@ -206,15 +206,15 @@ Create a virtual host configuration:
 ```apache
 <VirtualHost *:80>
     ServerName yourdomain.com
-    DocumentRoot /path/to/tekrem-erp/public
+    DocumentRoot /path/to/Tekrem-erp/public
     
-    <Directory /path/to/tekrem-erp/public>
+    <Directory /path/to/Tekrem-erp/public>
         AllowOverride All
         Require all granted
     </Directory>
     
-    ErrorLog ${APACHE_LOG_DIR}/tekrem-erp_error.log
-    CustomLog ${APACHE_LOG_DIR}/tekrem-erp_access.log combined
+    ErrorLog ${APACHE_LOG_DIR}/Tekrem-erp_error.log
+    CustomLog ${APACHE_LOG_DIR}/Tekrem-erp_access.log combined
 </VirtualHost>
 ```
 
@@ -224,7 +224,7 @@ Create a virtual host configuration:
 server {
     listen 80;
     server_name yourdomain.com;
-    root /path/to/tekrem-erp/public;
+    root /path/to/Tekrem-erp/public;
     
     index index.php;
     
@@ -254,7 +254,7 @@ Add to your crontab:
 crontab -e
 
 # Add this line
-* * * * * cd /path/to/tekrem-erp && php artisan schedule:run >> /dev/null 2>&1
+* * * * * cd /path/to/Tekrem-erp && php artisan schedule:run >> /dev/null 2>&1
 ```
 
 ### 11. Start Queue Workers
@@ -266,14 +266,14 @@ For production, use a process manager like Supervisor:
 sudo apt-get install supervisor
 
 # Create configuration file
-sudo nano /etc/supervisor/conf.d/tekrem-erp-worker.conf
+sudo nano /etc/supervisor/conf.d/Tekrem-erp-worker.conf
 ```
 
 Supervisor configuration:
 ```ini
-[program:tekrem-erp-worker]
+[program:Tekrem-erp-worker]
 process_name=%(program_name)s_%(process_num)02d
-command=php /path/to/tekrem-erp/artisan queue:work --sleep=3 --tries=3 --max-time=3600
+command=php /path/to/Tekrem-erp/artisan queue:work --sleep=3 --tries=3 --max-time=3600
 autostart=true
 autorestart=true
 stopasgroup=true
@@ -281,7 +281,7 @@ killasgroup=true
 user=www-data
 numprocs=8
 redirect_stderr=true
-stdout_logfile=/path/to/tekrem-erp/storage/logs/worker.log
+stdout_logfile=/path/to/Tekrem-erp/storage/logs/worker.log
 stopwaitsecs=3600
 ```
 
@@ -289,7 +289,7 @@ Start Supervisor:
 ```bash
 sudo supervisorctl reread
 sudo supervisorctl update
-sudo supervisorctl start tekrem-erp-worker:*
+sudo supervisorctl start Tekrem-erp-worker:*
 ```
 
 ## Initial Configuration
@@ -399,10 +399,10 @@ SESSION_SECURE_COOKIE=true
 
 ```bash
 # Set proper permissions
-sudo chown -R www-data:www-data /path/to/tekrem-erp
-sudo chmod -R 755 /path/to/tekrem-erp
-sudo chmod -R 775 /path/to/tekrem-erp/storage
-sudo chmod -R 775 /path/to/tekrem-erp/bootstrap/cache
+sudo chown -R www-data:www-data /path/to/Tekrem-erp
+sudo chmod -R 755 /path/to/Tekrem-erp
+sudo chmod -R 775 /path/to/Tekrem-erp/storage
+sudo chmod -R 775 /path/to/Tekrem-erp/bootstrap/cache
 ```
 
 ## Performance Optimization
@@ -536,8 +536,8 @@ php artisan health:check
 
 5. **Restart Services**
    ```bash
-   sudo supervisorctl restart tekrem-erp-worker:*
+   sudo supervisorctl restart Tekrem-erp-worker:*
    sudo systemctl reload nginx
    ```
 
-This setup guide provides a comprehensive foundation for deploying and maintaining the TekRem ERP system with all its features and integrations.
+This setup guide provides a comprehensive foundation for deploying and maintaining the Tekrem ERP system with all its features and integrations.

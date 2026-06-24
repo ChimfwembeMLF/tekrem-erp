@@ -20,6 +20,7 @@ class JobApplication extends Model
         'status',
         'notes',
         'applied_at',
+        'employee_id',
     ];
 
     protected $casts = [
@@ -29,6 +30,11 @@ class JobApplication extends Model
     public function jobPosting(): BelongsTo
     {
         return $this->belongsTo(JobPosting::class);
+    }
+
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class);
     }
 
     public function getFullNameAttribute(): string

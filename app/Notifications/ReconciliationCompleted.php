@@ -61,7 +61,7 @@ class ReconciliationCompleted extends Notification implements ShouldQueue
         }
 
         $mailMessage->action('View Reconciliation', route('finance.momo.reconciliation.show', $this->reconciliation->id))
-                   ->line('Thank you for using TekRem ERP!');
+                   ->line('Thank you for using Tekrem ERP!');
 
         return $mailMessage;
     }

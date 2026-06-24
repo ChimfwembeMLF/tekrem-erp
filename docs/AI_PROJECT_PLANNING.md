@@ -1,6 +1,6 @@
 # AI Project Planning
 
-The TekRem ERP system includes comprehensive AI-powered project planning capabilities that help users create intelligent project plans, generate milestones, estimate timelines, and recommend resources.
+The Tekrem ERP system includes comprehensive AI-powered project planning capabilities that help users create intelligent project plans, generate milestones, estimate timelines, and recommend resources.
 
 ## Features
 

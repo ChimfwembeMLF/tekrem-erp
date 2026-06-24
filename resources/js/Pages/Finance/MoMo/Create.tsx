@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  Link, useForm } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -25,6 +24,7 @@ import {
 } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
 import useRoute from '@/Hooks/useRoute';
+import { FinanceFormShell } from '@/Components/Module/moduleFormWrappers';
 import { toast } from 'sonner';
 
 interface Network {
@@ -120,11 +120,17 @@ export default function Create({ networks, pawapay, refundableDeposits, invoice 
   }[data.type] ?? data.type;
 
   return (
-    <AppLayout title={t('finance.momo.new_transaction', 'New PawaPay Transaction')}>
-      <Head title={t('finance.momo.new_transaction', 'New PawaPay Transaction')} />
+    <FinanceFormShell
+      title={"New PawaPay Transaction"}
+      backHref={route('finance.momo.index')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
+    >
 
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
+<div className="flex items-center gap-4">
           <Button variant="outline" size="icon" asChild>
             <Link href={route('finance.momo.index')}>
               <ArrowLeft className="h-4 w-4" />
@@ -162,8 +168,7 @@ export default function Create({ networks, pawapay, refundableDeposits, invoice 
           </Alert>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -353,8 +358,7 @@ export default function Create({ networks, pawapay, refundableDeposits, invoice 
               {processing ? t('finance.momo.processing', 'Processing...') : typeLabel}
             </Button>
           </div>
-        </form>
-      </div>
-    </AppLayout>
+        
+</FinanceFormShell>
   );
 }

@@ -95,7 +95,7 @@ function ReceiptForm({ receipt, copyLabel }: { receipt: ReceiptPayload; copyLabe
             </div>
           )}
           <div>
-            <div className="text-lg font-black tracking-wide">{receipt.company.name.split(' ')[0] || 'TEKREM'}</div>
+            <div className="text-lg font-black tracking-wide">{receipt.company.name.split(' ')[0] || 'Tekrem'}</div>
             <div className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-600">
               {receipt.company.tagline}
             </div>

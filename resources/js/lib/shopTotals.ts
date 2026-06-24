@@ -16,7 +16,19 @@ export interface ShopCartItem {
 export interface ShopTotals {
   subtotal: number;
   tax_amount: number;
+  discount_amount?: number;
+  shipping_cost?: number;
   total: number;
+}
+
+export interface ShopShippingMethod {
+  id: number;
+  name: string;
+  code: string;
+  description?: string | null;
+  base_cost: string;
+  estimated_days_min: number;
+  estimated_days_max: number;
 }
 
 export function calcLineTotals(quantity: number, unitPrice: number, taxRate = 0) {

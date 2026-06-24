@@ -9,6 +9,8 @@ use App\Models\Conversation;
 use App\Models\GuestSession;
 use App\Models\User;
 use App\Services\AIService;
+use App\Services\CRM\LeadCaptureService;
+use App\Services\Guest\GuestSessionResolver;
 use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,41 +23,40 @@ use Google\Auth\Credentials\ServiceAccountCredentials;
 // 
 class GuestChatController extends Controller
 {
+    public function __construct(
+        private GuestSessionResolver $guestSessions,
+    ) {}
+
     /**
-    
      * Initialize or get existing guest chat session.
      */
     public function initializeSession(Request $request): JsonResponse
     {
-        $sessionId = $request->session()->getId();
+        $guestSession = $this->guestSessions->resolve($request);
 
-        $guestSession = GuestSession::getOrCreateBySessionId($sessionId);
+        if ($request->filled('embed_source')) {
+            $metadata = $guestSession->metadata ?? [];
+            $metadata['embed_source'] = $request->input('embed_source');
+            $guestSession->update(['metadata' => $metadata]);
+        }
 
-        // Get or create conversation for this guest session
         $conversation = $guestSession->conversation;
 
         if (!$conversation) {
             $conversation = $this->createGuestConversation($guestSession);
         }
 
-        // Get messages in chronological order (oldest first) for proper chat display
-        $messages = $conversation->messages()
-            ->orderBy('created_at', 'asc')
-            ->take(50)
-            ->get()
-            ->map(function ($message) {
-                // Only load user if message has user_id
-                if ($message->user_id) {
-                    $message->load('user');
-                }
-                return $message;
-            });
+        $messages = $this->loadConversationMessages($conversation);
 
-        return response()->json([
-            'session' => $guestSession,
-            'conversation' => $conversation->load('assignee'),
-            'messages' => $messages,
-        ]);
+        return $this->guestSessions->attachCookie(
+            response()->json([
+                'session' => $guestSession->fresh(),
+                'conversation' => $conversation->load('assignee'),
+                'messages' => $messages,
+            ]),
+            $guestSession,
+            $request,
+        );
     }
 
     /**
@@ -74,13 +75,21 @@ class GuestChatController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $sessionId = $request->session()->getId();
-        $guestSession = GuestSession::getOrCreateBySessionId($sessionId);
+        $guestSession = $this->guestSessions->resolve($request, false);
+        if (!$guestSession) {
+            return response()->json(['errors' => ['session' => ['Guest session not found.']]], 404);
+        }
 
         $guestSession->update($validator->validated());
         $guestSession->updateActivity();
 
-        return response()->json(['session' => $guestSession]);
+        app(LeadCaptureService::class)->fromGuestSession($guestSession->fresh());
+
+        return $this->guestSessions->attachCookie(
+            response()->json(['session' => $guestSession->fresh()]),
+            $guestSession,
+            $request,
+        );
     }
 
     /**
@@ -99,8 +108,10 @@ class GuestChatController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $sessionId = $request->session()->getId();
-        $guestSession = GuestSession::getOrCreateBySessionId($sessionId);
+        $guestSession = $this->guestSessions->resolve($request, false);
+        if (!$guestSession) {
+            return response()->json(['errors' => ['session' => ['Guest session not found.']]], 404);
+        }
         $guestSession->updateActivity();
 
         $conversation = $guestSession->conversation;
@@ -166,7 +177,7 @@ class GuestChatController extends Controller
             $response['ai_response'] = $aiResponse;
         }
 
-        return response()->json($response);
+        return $this->guestSessions->attachCookie(response()->json($response), $guestSession, $request);
     }
 
     /**
@@ -174,32 +185,28 @@ class GuestChatController extends Controller
      */
     public function getMessages(Request $request): JsonResponse
     {
-        $sessionId = $request->session()->getId();
-        $guestSession = GuestSession::where('session_id', $sessionId)->first();
+        $guestSession = $this->guestSessions->resolve($request, false);
 
         if (!$guestSession || !$guestSession->conversation) {
             return response()->json(['messages' => []]);
         }
 
         $conversation = $guestSession->conversation;
-        $messages = $conversation->messages()
-            ->orderBy('created_at', 'asc')
-            ->take(50)
-            ->get()
-            ->map(function ($message) {
-                // Only load user if message has user_id
-                if ($message->user_id) {
-                    $message->load('user');
-                }
-                return $message;
-            });
-
-        $guestSession->updateActivity();
+        $messages = $this->loadConversationMessages($conversation);
 
         return response()->json([
             'messages' => $messages,
             'conversation' => $conversation->load('assignee'),
         ]);
+    }
+
+    private function loadConversationMessages(Conversation $conversation)
+    {
+        return $conversation->messages()
+            ->with('user:id,name')
+            ->orderBy('created_at', 'asc')
+            ->limit(200)
+            ->get();
     }
 
     /**
@@ -393,8 +400,7 @@ class GuestChatController extends Controller
 
      public function typingEvent(Request $request): JsonResponse
         {
-            $sessionId = $request->session()->getId();
-            $guestSession = GuestSession::where('session_id', $sessionId)->first();
+            $guestSession = $this->guestSessions->resolve($request, false);
 
             if (!$guestSession?->conversation) {
                 return response()->json(['status' => 'ok']);
@@ -409,19 +415,57 @@ class GuestChatController extends Controller
             return response()->json(['status' => 'ok']);
         }
 
-        public function markMessagesRead(Request $request)
+        public function markMessagesRead(Request $request): JsonResponse
         {
-            // Mark messages as read for the session/user
-            // ...implementation...
+            $guestSession = $this->guestSessions->resolve($request, false);
+            $conversation = $guestSession?->conversation;
+
+            if (!$conversation) {
+                return response()->json(['status' => 'ok']);
+            }
+
+            $messageIds = collect($request->input('message_ids', []))
+                ->filter(fn ($id) => is_numeric($id))
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            $query = Chat::query()
+                ->where('conversation_id', $conversation->id)
+                ->whereNull('read_at')
+                ->where(function ($builder) {
+                    $builder->whereNotNull('user_id')
+                        ->orWhere('metadata->is_ai_response', true);
+                });
+
+            if (!empty($messageIds)) {
+                $query->whereIn('id', $messageIds);
+            }
+
+            $query->update([
+                'read_at' => now(),
+                'status' => 'read',
+            ]);
+
+            $conversation->update(['unread_count' => 0]);
+
             return response()->json(['status' => 'ok']);
         }
 
-        public function rateConversation(Request $request)
+        public function rateConversation(Request $request): JsonResponse
         {
-            // Store CSAT rating for the conversation
-            $rating = $request->input('rating');
-            $sessionId = $request->input('session_id');
-            // ...store rating logic...
+            $guestSession = $this->guestSessions->resolve($request, false);
+            if (!$guestSession?->conversation) {
+                return response()->json(['status' => 'ok']);
+            }
+
+            $conversation = $guestSession->conversation;
+            $metadata = $conversation->metadata ?? [];
+            $metadata['guest_rating'] = [
+                'rating' => $request->input('rating'),
+                'recorded_at' => now()->toISOString(),
+            ];
+            $conversation->update(['metadata' => $metadata]);
+
             return response()->json(['status' => 'ok']);
         }
 
@@ -446,7 +490,7 @@ class GuestChatController extends Controller
 
             protected function sendPushNotification($token, $title, $body)
             {
-                $projectId = 'tekrem-alerts'; // TODO: Replace with your actual Firebase project ID
+                $projectId = 'Tekrem-alerts'; // TODO: Replace with your actual Firebase project ID
 
                 $credentials = new ServiceAccountCredentials(
                     ['https://www.googleapis.com/auth/firebase.messaging'],

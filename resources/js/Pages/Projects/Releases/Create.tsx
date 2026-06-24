@@ -1,6 +1,5 @@
 import React from 'react';
-import { Head, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  useForm } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Label } from '@/Components/ui/label';
 import { Input } from '@/Components/ui/input';
@@ -8,6 +7,7 @@ import { Textarea } from '@/Components/ui/textarea';
 import { Button } from '@/Components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import useRoute from '@/Hooks/useRoute';
+import { ProjectsFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface ReleaseCreateProps {
   auth: { user: any };
@@ -47,25 +47,22 @@ export default function ReleaseCreate({ auth, project, sprints = [], epics = [] 
   };
 
   return (
-    <AppLayout
-      title="Create Release"
-      renderHeader={() => (
-        <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-          Create Release - {project.name}
-        </h2>
-      )}
+    <ProjectsFormShell
+      title={"Create Release"}
+      backHref={route('agile.releases.index')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
     >
-      <Head title="Create Release" />
 
-      <div className="py-12">
-        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-          <Card>
+<Card>
             <CardHeader>
               <CardTitle>Release Information</CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="name">Release Name *</Label>
                     <Input
@@ -185,8 +182,6 @@ export default function ReleaseCreate({ auth, project, sprints = [], epics = [] 
               </form>
             </CardContent>
           </Card>
-        </div>
-      </div>
-    </AppLayout>
+</ProjectsFormShell>
   );
 }

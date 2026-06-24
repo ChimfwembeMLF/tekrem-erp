@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Guest;
 
 use App\Http\Controllers\Controller;
 use App\Models\Guest\GuestQuoteRequest;
+use App\Services\CRM\LeadCaptureService;
 use App\Services\NotificationService;
+use App\Support\ServicesCatalogue;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -16,36 +19,29 @@ class QuoteController extends Controller
     /**
      * Show the quote request form.
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
+        $selectedService = $request->query('service');
+        if ($selectedService && ! ServicesCatalogue::find($selectedService)) {
+            $selectedService = null;
+        }
+
         return Inertia::render('Guest/Quote/Create', [
-            'serviceTypes' => [
-                'web_development' => 'Web Development',
-                'mobile_app' => 'Mobile App Development',
-                'ai_solution' => 'AI Solutions',
-                'consulting' => 'IT Consulting',
-                'custom' => 'Custom Solution'
-            ],
-            'budgetRanges' => [
-                'under_150k' => 'Under K 150,000',
-                '150k_400k' => 'K 150,000 – K 400,000',
-                '400k_1m' => 'K 400,000 – K 1,000,000',
-                '1m_2_5m' => 'K 1,000,000 – K 2,500,000',
-                '2_5m_plus' => 'K 2,500,000+',
-            ],
+            'services' => ServicesCatalogue::forFrontend(),
+            'selectedService' => $selectedService,
             'timelines' => [
                 'asap' => 'ASAP',
                 '1_month' => '1 Month',
                 '3_months' => '3 Months',
                 '6_months' => '6 Months',
-                'flexible' => 'Flexible'
+                'flexible' => 'Flexible',
             ],
             'priorities' => [
                 'low' => 'Low',
                 'normal' => 'Normal',
                 'high' => 'High',
-                'urgent' => 'Urgent'
-            ]
+                'urgent' => 'Urgent',
+            ],
         ]);
     }
 
@@ -60,9 +56,8 @@ class QuoteController extends Controller
             'phone' => 'nullable|string|max:20',
             'company' => 'nullable|string|max:255',
             'position' => 'nullable|string|max:255',
-            'service_type' => 'required|string|in:web_development,mobile_app,ai_solution,consulting,custom',
+            'service_type' => ['required', 'string', Rule::in(ServicesCatalogue::ids())],
             'project_description' => 'required|string|max:5000',
-            'budget_range' => 'nullable|string|in:under_150k,150k_400k,400k_1m,1m_2_5m,2_5m_plus',
             'timeline' => 'nullable|string|in:asap,1_month,3_months,6_months,flexible',
             'requirements' => 'nullable|array',
             'requirements.*' => 'string|max:500',
@@ -78,14 +73,19 @@ class QuoteController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $data = $validator->validated();
-        
-        // Prepare metadata
-        $metadata = [];
+        $service = ServicesCatalogue::find($data['service_type']);
+
+        $metadata = [
+            'service_title' => $service['title'] ?? null,
+            'catalogue_price' => $service['price'] ?? null,
+            'catalogue_price_note' => $service['price_note'] ?? null,
+        ];
+
         if ($request->filled('utm_source')) {
             $metadata['utm_source'] = $request->utm_source;
         }
@@ -98,26 +98,27 @@ class QuoteController extends Controller
         if ($request->filled('referrer')) {
             $metadata['referrer'] = $request->referrer;
         }
-        
+
         $data['metadata'] = $metadata;
         $data['source'] = $data['source'] ?? 'website';
+        $data['budget_range'] = null;
 
         try {
             $quoteRequest = GuestQuoteRequest::create($data);
 
-            // Send notification to staff
+            app(LeadCaptureService::class)->fromQuoteRequest($quoteRequest);
+
             $this->notifyStaff($quoteRequest);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Your quote request has been submitted successfully. We will prepare a detailed quote and get back to you soon.',
-                'reference_number' => $quoteRequest->reference_number
+                'reference_number' => $quoteRequest->reference_number,
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'An error occurred while submitting your quote request. Please try again.'
+                'message' => 'An error occurred while submitting your quote request. Please try again.',
             ], 500);
         }
     }
@@ -128,19 +129,19 @@ class QuoteController extends Controller
     public function status(Request $request): Response|JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'reference_number' => 'required|string|exists:guest_quote_requests,reference_number'
+            'reference_number' => 'required|string|exists:guest_quote_requests,reference_number',
         ]);
 
         if ($validator->fails()) {
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'errors' => $validator->errors()
+                    'errors' => $validator->errors(),
                 ], 422);
             }
-            
+
             return Inertia::render('Guest/Quote/Status', [
-                'error' => 'Invalid reference number.'
+                'error' => 'Invalid reference number.',
             ]);
         }
 
@@ -148,9 +149,14 @@ class QuoteController extends Controller
             ->with('assignedTo:id,name')
             ->first();
 
+        $service = ServicesCatalogue::find($quoteRequest->service_type);
+        $metadata = $quoteRequest->metadata ?? [];
+
         $quoteData = [
             'reference_number' => $quoteRequest->reference_number,
             'service_type' => $quoteRequest->service_type,
+            'service_title' => $metadata['service_title'] ?? $service['title'] ?? $quoteRequest->service_type,
+            'catalogue_price' => $metadata['catalogue_price'] ?? $service['price'] ?? null,
             'status' => $quoteRequest->status,
             'priority' => $quoteRequest->priority,
             'created_at' => $quoteRequest->created_at,
@@ -166,12 +172,12 @@ class QuoteController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'quote_request' => $quoteData
+                'quote_request' => $quoteData,
             ]);
         }
 
         return Inertia::render('Guest/Quote/Status', [
-            'quoteRequest' => $quoteData
+            'quoteRequest' => $quoteData,
         ]);
     }
 
@@ -189,13 +195,13 @@ class QuoteController extends Controller
     public function accept(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'reference_number' => 'required|string|exists:guest_quote_requests,reference_number'
+            'reference_number' => 'required|string|exists:guest_quote_requests,reference_number',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -203,35 +209,33 @@ class QuoteController extends Controller
             ->where('status', 'quoted')
             ->first();
 
-        if (!$quoteRequest) {
+        if (! $quoteRequest) {
             return response()->json([
                 'success' => false,
-                'message' => 'Quote not found or not available for acceptance.'
+                'message' => 'Quote not found or not available for acceptance.',
             ], 404);
         }
 
         if ($quoteRequest->isQuoteExpired()) {
             return response()->json([
                 'success' => false,
-                'message' => 'This quote has expired. Please request a new quote.'
+                'message' => 'This quote has expired. Please request a new quote.',
             ], 400);
         }
 
         try {
             $quoteRequest->update(['status' => 'accepted']);
 
-            // Notify staff about quote acceptance
             $this->notifyQuoteAcceptance($quoteRequest);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Quote accepted successfully. Our team will contact you to proceed with the project.'
+                'message' => 'Quote accepted successfully. Our team will contact you to proceed with the project.',
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'An error occurred while accepting the quote. Please try again.'
+                'message' => 'An error occurred while accepting the quote. Please try again.',
             ], 500);
         }
     }
@@ -248,15 +252,17 @@ class QuoteController extends Controller
                 $q->whereIn('name', ['manage quotes', 'manage sales']);
             })->get();
 
+            $serviceTitle = ($quoteRequest->metadata['service_title'] ?? null) ?: $quoteRequest->service_type;
+
             NotificationService::notifyUsers(
                 $users,
                 'guest_quote_request',
-                "New {$quoteRequest->service_type} quote request from {$quoteRequest->name}",
+                "New {$serviceTitle} quote request from {$quoteRequest->name}",
                 null,
                 $quoteRequest
             );
         } catch (\Exception $e) {
-            \Log::error('Failed to send quote request notification: ' . $e->getMessage());
+            \Log::error('Failed to send quote request notification: '.$e->getMessage());
         }
     }
 
@@ -285,7 +291,7 @@ class QuoteController extends Controller
                 $quoteRequest
             );
         } catch (\Exception $e) {
-            \Log::error('Failed to send quote acceptance notification: ' . $e->getMessage());
+            \Log::error('Failed to send quote acceptance notification: '.$e->getMessage());
         }
     }
 }

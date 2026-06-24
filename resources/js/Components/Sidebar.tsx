@@ -160,6 +160,18 @@ export default function Sidebar({ settings }: SidebarProps) {
       icon: <LayoutDashboard className="h-5 w-5" />, 
       active: route().current('dashboard')
     },
+    // ...(hasHrAccess() ? [{
+    //   href: route('hr.dashboard'),
+    //   label: t('hr.people_ops', 'People'),
+    //   icon: <Users className="h-5 w-5" />,
+    //   active: route().current('hr.*'),
+    // }] : []),
+    // ...((page.props as { staffPortal?: unknown }).staffPortal ? [{
+    //   href: route('staff.dashboard'),
+    //   label: t('staff.my_hr', 'My HR'),
+    //   icon: <User className="h-5 w-5" />,
+    //   active: route().current('staff.*'),
+    // }] : []),
   ];
 
   // CRM navigation — grouped by workflow
@@ -210,6 +222,23 @@ export default function Sidebar({ settings }: SidebarProps) {
       icon: <BarChart3 className="h-5 w-5" />,
       active: route().current('crm.analytics.*'),
     },
+    ...(hasHrAccess() ? [
+      { type: 'section' as const, label: t('hr.talent', 'Talent') },
+      {
+        type: 'link' as const,
+        href: route('hr.recruitment.index'),
+        label: t('hr.recruitment', 'Recruitment'),
+        icon: <Briefcase className="h-5 w-5" />,
+        active: route().current('hr.recruitment.*'),
+      },
+      {
+        type: 'link' as const,
+        href: route('hr.onboarding.index'),
+        label: t('hr.onboarding', 'Onboarding'),
+        icon: <UserPlus className="h-5 w-5" />,
+        active: route().current('hr.onboarding.*'),
+      },
+    ] : []),
   ] : [];
 
   // Finance navigation — grouped by function
@@ -311,6 +340,23 @@ export default function Sidebar({ settings }: SidebarProps) {
       icon: <BarChart3 className="h-5 w-5" />,
       active: route().current('finance.reports.*'),
     },
+    ...(hasHrAccess() ? [
+      { type: 'section' as const, label: t('hr.time_pay', 'People & Pay') },
+      {
+        type: 'link' as const,
+        href: route('hr.payroll.index'),
+        label: t('hr.payroll', 'Payroll'),
+        icon: <DollarSign className="h-5 w-5" />,
+        active: route().current('hr.payroll.*'),
+      },
+      {
+        type: 'link' as const,
+        href: route('hr.leave.index'),
+        label: t('hr.leave', 'Leave'),
+        icon: <Calendar className="h-5 w-5" />,
+        active: route().current('hr.leave.*'),
+      },
+    ] : []),
   ] : [];
 
   const inventoryNav: NavEntry[] = hasInventoryAccess() ? [
@@ -342,7 +388,10 @@ export default function Sidebar({ settings }: SidebarProps) {
   ] : [];
 
   const ecommerceNav: NavEntry[] = hasEcommerceAccess() ? [
-    { type: 'link', href: route('ecommerce.dashboard'), label: t('ecommerce.dashboard', 'Store Admin'), icon: <Store className="h-5 w-5" />, active: route().current('ecommerce.*') },
+    { type: 'link', href: route('ecommerce.dashboard'), label: t('ecommerce.dashboard', 'Store Admin'), icon: <Store className="h-5 w-5" />, active: route().current('ecommerce.dashboard') },
+    { type: 'link', href: route('ecommerce.orders.index'), label: t('ecommerce.orders', 'Orders'), icon: <Package className="h-5 w-5" />, active: route().current('ecommerce.orders.*') },
+    { type: 'link', href: route('ecommerce.shipping.index'), label: t('ecommerce.shipping', 'Shipping'), icon: <Truck className="h-5 w-5" />, active: route().current('ecommerce.shipping.*') },
+    { type: 'link', href: route('ecommerce.coupons.index'), label: t('ecommerce.coupons', 'Coupons'), icon: <Tag className="h-5 w-5" />, active: route().current('ecommerce.coupons.*') },
     { type: 'link', href: route('shop.index'), label: t('ecommerce.storefront', 'View Storefront'), icon: <Link2 className="h-5 w-5" />, active: false },
   ] : [];
 
@@ -411,7 +460,7 @@ export default function Sidebar({ settings }: SidebarProps) {
     },
   ] : [];
 
-  // Projects navigation — grouped by work area
+  // Projects navigation — grouped by workflow (project work uses in-project tabs)
   const projectsNav: NavEntry[] = hasProjectsAccess() ? [
     { type: 'section', label: t('projects.overview', 'Overview') },
     {
@@ -427,7 +476,7 @@ export default function Sidebar({ settings }: SidebarProps) {
       href: route('projects.index'),
       label: t('projects.projects', 'All Projects'),
       icon: <FolderOpen className="h-5 w-5" />,
-      active: route().current('projects.index') || route().current('projects.show') || route().current('projects.edit') || route().current('projects.create'),
+      active: route().current('projects.index') || route().current('projects.create'),
     },
     {
       type: 'link',
@@ -436,14 +485,7 @@ export default function Sidebar({ settings }: SidebarProps) {
       icon: <CheckSquare className="h-5 w-5" />,
       active: route().current('projects.my-tasks'),
     },
-    { type: 'section', label: t('projects.organization', 'Organization') },
-    {
-      type: 'link',
-      href: route('projects.tags.index'),
-      label: t('projects.tags', 'Tags'),
-      icon: <Tag className="h-5 w-5" />,
-      active: route().current('projects.tags.*'),
-    },
+    { type: 'section', label: t('projects.library', 'Library') },
     {
       type: 'link',
       href: route('projects.templates.index'),
@@ -451,15 +493,22 @@ export default function Sidebar({ settings }: SidebarProps) {
       icon: <Layout className="h-5 w-5" />,
       active: route().current('projects.templates.*'),
     },
+    {
+      type: 'link',
+      href: route('projects.tags.index'),
+      label: t('projects.tags', 'Tags'),
+      icon: <Tag className="h-5 w-5" />,
+      active: route().current('projects.tags.*'),
+    },
     { type: 'section', label: t('projects.insights', 'Insights') },
     {
       type: 'link',
       href: route('projects.analytics'),
       label: t('projects.analytics', 'Analytics'),
       icon: <BarChart3 className="h-5 w-5" />,
-      active: route().current('projects.analytics.*'),
+      active: route().current('projects.analytics'),
     },
-    { type: 'section', label: t('projects.settings_section', 'Settings') },
+    { type: 'section', label: t('projects.configuration', 'Configuration') },
     {
       type: 'link',
       href: route('projects.setup.index'),
@@ -468,6 +517,23 @@ export default function Sidebar({ settings }: SidebarProps) {
       active: route().current('projects.setup.*'),
       requirePermission: 'manage-project-settings',
     },
+    ...(hasHrAccess() ? [
+      { type: 'section' as const, label: t('hr.people', 'People') },
+      {
+        type: 'link' as const,
+        href: route('hr.teams.index'),
+        label: t('hr.teams', 'Teams'),
+        icon: <Users className="h-5 w-5" />,
+        active: route().current('hr.teams.*'),
+      },
+      {
+        type: 'link' as const,
+        href: route('hr.performance.index'),
+        label: t('hr.performance', 'Performance'),
+        icon: <TrendingUp className="h-5 w-5" />,
+        active: route().current('hr.performance.*'),
+      },
+    ] : []),
   ] : [];
 
   // HR navigation — grouped by lifecycle
@@ -674,6 +740,23 @@ export default function Sidebar({ settings }: SidebarProps) {
       icon: <Package className="h-5 w-5" />,
       active: route().current('admin.modules.*'),
     },
+    ...(hasHrAccess() ? [
+      { type: 'section' as const, label: t('hr.people', 'People') },
+      {
+        type: 'link' as const,
+        href: route('hr.employees.index'),
+        label: t('hr.employees', 'Employees'),
+        icon: <Users className="h-5 w-5" />,
+        active: route().current('hr.employees.*'),
+      },
+      {
+        type: 'link' as const,
+        href: route('hr.departments.index'),
+        label: t('hr.departments', 'Departments'),
+        icon: <Building className="h-5 w-5" />,
+        active: route().current('hr.departments.*'),
+      },
+    ] : []),
   ] : [];
 
   // Customer navigation — grouped by portal area
@@ -749,6 +832,23 @@ export default function Sidebar({ settings }: SidebarProps) {
       icon: <Shield className="h-5 w-5" />,
       active: route().current('settings.advanced'),
     },
+    ...(hasHrAccess() ? [
+      { type: 'section' as const, label: t('hr.settings', 'People') },
+      {
+        type: 'link' as const,
+        href: route('hr.setup.index'),
+        label: t('hr.setup', 'HR Setup'),
+        icon: <Settings className="h-5 w-5" />,
+        active: route().current('hr.setup.*'),
+      },
+      {
+        type: 'link' as const,
+        href: route('hr.analytics.reports'),
+        label: t('hr.reports', 'HR Reports'),
+        icon: <BarChart3 className="h-5 w-5" />,
+        active: route().current('hr.analytics.*'),
+      },
+    ] : []),
   ] : [];
 
 
@@ -757,7 +857,7 @@ export default function Sidebar({ settings }: SidebarProps) {
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-2 px-4 py-3">
         <ApplicationMark />
-        {/* <span className="font-bold text-xl">{settings.site_name || 'TekRem ERP'}</span> */}
+        {/* <span className="font-bold text-xl">{settings.site_name || 'Tekrem ERP'}</span> */}
       </div>
 
       <div className="mt-6 flex flex-col gap-1 px-2 overflow-y-auto flex-1">
@@ -783,7 +883,7 @@ export default function Sidebar({ settings }: SidebarProps) {
           <Collapsible className="mt-2">
             <CollapsibleTrigger className={cn(
               "w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors",
-              route().current('crm.*')
+              route().current('crm.*') || route().current('hr.recruitment.*') || route().current('hr.onboarding.*')
                 ? "bg-primary/10 text-primary font-semibold"
                 : "text-foreground/70 hover:text-foreground hover:bg-accent"
             )}>
@@ -804,7 +904,7 @@ export default function Sidebar({ settings }: SidebarProps) {
           <Collapsible className="mt-2">
             <CollapsibleTrigger className={cn(
               "w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors",
-              route().current('finance.*')
+              route().current('finance.*') || route().current('hr.payroll.*') || route().current('hr.leave.*')
                 ? "bg-primary/10 text-primary font-semibold"
                 : "text-foreground/70 hover:text-foreground hover:bg-accent"
             )}>
@@ -875,7 +975,7 @@ export default function Sidebar({ settings }: SidebarProps) {
           <Collapsible className="mt-2">
             <CollapsibleTrigger className={cn(
               "w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors",
-              route().current('projects.*')
+              route().current('projects.*') || route().current('agile.*') || route().current('hr.teams.*') || route().current('hr.performance.*')
                 ? "bg-primary/10 text-primary font-semibold"
                 : "text-foreground/70 hover:text-foreground hover:bg-accent"
             )}>
@@ -1018,6 +1118,7 @@ export default function Sidebar({ settings }: SidebarProps) {
         )}
 
       </div>
+      <div className="h-4"></div>
     </div>
   );
 
@@ -1030,16 +1131,16 @@ export default function Sidebar({ settings }: SidebarProps) {
         </div>
       </div>
 
-      {/* Mobile Sidebar (Drawer) */}
-      <div className="md:hidden">
+      {/* Mobile Sidebar (Drawer) — fixed in header row */}
+      <div className="fixed left-0 top-0 z-50 flex h-16 items-center px-3 sm:px-4 md:hidden">
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="ml-1">
-              <Menu className="h-6 w-6" />
+            <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0">
+              <Menu className="h-5 w-5" />
               <span className="sr-only">Toggle menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-[280px] sm:w-[350px] p-0">
+          <SheetContent side="left" className="w-[280px] p-0 sm:w-[350px]">
             <SidebarContent />
           </SheetContent>
         </Sheet>

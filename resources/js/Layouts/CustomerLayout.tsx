@@ -33,6 +33,7 @@ import ApplicationMark from '@/Components/ApplicationMark';
 import { ThemeToggle } from '@/Components/ThemeProvider';
 import useTypedPage from '@/Hooks/useTypedPage';
 import SupportChatWidget from '@/Components/Support/SupportChatWidget';
+import AppProvider from '@/Providers/AppProvider';
 
 interface User {
     id: number;
@@ -146,14 +147,8 @@ export default function CustomerLayout({ children }: Props) {
     );
 
     return (
+        <AppProvider>
         <div className="min-h-screen bg-background">
-            {/* Mobile sidebar */}
-            <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-                <SheetContent side="left" className="p-0 w-64">
-                    <SidebarContent />
-                </SheetContent>
-            </Sheet>
-
             {/* Desktop sidebar */}
             <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-64 lg:flex-col">
                 <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-card">
@@ -161,48 +156,41 @@ export default function CustomerLayout({ children }: Props) {
                 </div>
             </div>
 
-            {/* Main content */}
-            <div className="lg:pl-64">
-                {/* Top navigation */}
-                <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 bg-background px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
-                    {/* Mobile menu button */}
-                    <Sheet>
+            <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+                <div className="lg:pl-64">
+                    {/* Top navigation */}
+                    <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4 sm:px-6 lg:px-8">
                         <SheetTrigger asChild>
                             <Button
                                 variant="ghost"
-                                size="sm"
-                                className="lg:hidden"
-                                onClick={() => setSidebarOpen(true)}
+                                size="icon"
+                                className="h-9 w-9 shrink-0 lg:hidden"
                             >
                                 <Menu className="h-5 w-5" />
                                 <span className="sr-only">Open sidebar</span>
                             </Button>
                         </SheetTrigger>
-                    </Sheet>
 
-                    {/* Separator */}
-                    {/* <div className="h-6 w-px bg-border lg:hidden" /> */}
-
-                    <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-                        {/* Spacer for right-aligned items */}
-                        <div className="flex-1"></div>
-
-                        <div className="flex items-center gap-x-4 lg:gap-x-6">
-                            {/* Notifications */}
+                        <div className="flex min-w-0 flex-1 items-center justify-end gap-1 sm:gap-2">
                             <NotificationComponent />
-                            {/* Theme Toggle */}
                             <ThemeToggle />
-                            {/* Separator */}
-                            {/* <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-border" /> */}
-
-                            {/* Profile dropdown */}
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                                        <Avatar className="h-8 w-8">
+                                    <Button
+                                        variant="ghost"
+                                        className="relative h-9 w-9 shrink-0 rounded-full p-0"
+                                        title={user.name}
+                                    >
+                                        <Avatar className="h-9 w-9">
                                             <AvatarImage src={user.profile_photo_url} alt={user.name} />
-                                            <AvatarFallback>
-                                                {user.name.split(' ').map(n => n[0]).join('')}
+                                            <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
+                                                {user.name
+                                                    .split(' ')
+                                                    .filter(Boolean)
+                                                    .map((n) => n[0])
+                                                    .join('')
+                                                    .slice(0, 2)
+                                                    .toUpperCase()}
                                             </AvatarFallback>
                                         </Avatar>
                                     </Button>
@@ -246,16 +234,22 @@ export default function CustomerLayout({ children }: Props) {
                             </DropdownMenu>
                         </div>
                     </div>
+
+                    {/* Page content */}
+                    <main className="py-6">
+                        <div className="px-4 sm:px-6 lg:px-8">
+                            {children}
+                        </div>
+                    </main>
                 </div>
 
-                {/* Page content */}
-                <main className="py-6">
-                    <div className="px-4 sm:px-6 lg:px-8">
-                        {children}
-                    </div>
-                </main>
-            </div>
+                <SheetContent side="left" className="w-64 p-0">
+                    <SidebarContent />
+                </SheetContent>
+            </Sheet>
+
             <SupportChatWidget />
         </div>
+        </AppProvider>
     );
 }

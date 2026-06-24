@@ -17,6 +17,15 @@
     @viteReactRefresh
     @vite('resources/js/app.tsx')
     @inertiaHead
+    <script>
+      (function () {
+        var stored = localStorage.getItem('Tekrem-ui-theme') || 'system';
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var isDark = stored === 'dark' || (stored === 'system' && prefersDark);
+        document.documentElement.classList.toggle('dark', isDark);
+        document.documentElement.classList.toggle('light', !isDark);
+      })();
+    </script>
   </head>
   <body class="font-sans antialiased">
     @inertia

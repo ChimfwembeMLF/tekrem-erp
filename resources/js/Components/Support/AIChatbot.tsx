@@ -21,6 +21,7 @@ import {
 import useTranslate from '@/Hooks/useTranslate';
 
 interface Message {
+  id?: string;
   role: 'user' | 'assistant';
   message: string;
   timestamp: string;
@@ -116,6 +117,7 @@ export default function AIChatbot({ isOpen, onClose, onMinimize, isMinimized, cl
       }
 
       const assistantMessage: Message = {
+        id: data.message_id,
         role: 'assistant',
         message: data.response,
         timestamp: new Date().toISOString(),
@@ -188,11 +190,11 @@ export default function AIChatbot({ isOpen, onClose, onMinimize, isMinimized, cl
     }
   };
 
-  const rateMessage = async (messageIndex: number, rating: 'helpful' | 'not_helpful') => {
-    if (!conversationId) return;
+  const rateMessage = async (messageId: string | undefined, rating: 'helpful' | 'not_helpful') => {
+    if (!conversationId || !messageId) return;
 
     try {
-      await fetch('/support/chatbot/rate', {
+      const response = await fetch('/support/chatbot/rate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -200,13 +202,22 @@ export default function AIChatbot({ isOpen, onClose, onMinimize, isMinimized, cl
         },
         body: JSON.stringify({
           conversation_id: conversationId,
-          message_index: messageIndex,
-          rating: rating,
+          message_id: messageId,
+          rating,
         }),
       });
 
-      setMessages(prev => prev.map((msg, index) => 
-        index === messageIndex ? { ...msg, rating } : msg
+      if (!response.ok) {
+        throw new Error('Failed to rate message');
+      }
+
+      const data = await response.json();
+      if (data.conversation_id && data.conversation_id !== conversationId) {
+        setConversationId(data.conversation_id);
+      }
+
+      setMessages(prev => prev.map((msg) => 
+        msg.id === messageId ? { ...msg, rating } : msg
       ));
     } catch (err) {
       console.error('Failed to rate message:', err);
@@ -292,13 +303,13 @@ export default function AIChatbot({ isOpen, onClose, onMinimize, isMinimized, cl
                       )}
 
                       {/* Rating */}
-                      {message.role === 'assistant' && !message.rating && index > 0 && (
+                      {message.role === 'assistant' && !message.rating && message.id && index > 0 && (
                         <div className="mt-2 flex gap-1">
                           <Button
                             variant="ghost"
                             size="sm"
                             className="h-6 w-6 p-0"
-                            onClick={() => rateMessage(index, 'helpful')}
+                            onClick={() => rateMessage(message.id, 'helpful')}
                           >
                             <ThumbsUp className="h-3 w-3" />
                           </Button>
@@ -306,7 +317,7 @@ export default function AIChatbot({ isOpen, onClose, onMinimize, isMinimized, cl
                             variant="ghost"
                             size="sm"
                             className="h-6 w-6 p-0"
-                            onClick={() => rateMessage(index, 'not_helpful')}
+                            onClick={() => rateMessage(message.id, 'not_helpful')}
                           >
                             <ThumbsDown className="h-3 w-3" />
                           </Button>

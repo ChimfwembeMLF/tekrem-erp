@@ -12,7 +12,6 @@ import {
   Target, 
   Clock,
   Users,
-  DollarSign,
   CheckCircle,
   AlertTriangle,
   Loader2,

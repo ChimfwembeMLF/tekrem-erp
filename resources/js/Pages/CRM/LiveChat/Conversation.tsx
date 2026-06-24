@@ -453,7 +453,7 @@ export default function ConversationView({
 
   const getMessageSender = (message: ChatMessage) => {
     if (isAIMessage(message)) {
-      return 'TekRem AI Assistant';
+      return 'Tekrem AI Assistant';
     }
     if (isHumanAgentMessage(message)) {
       return message.user?.name || 'Agent';
@@ -762,7 +762,7 @@ export default function ConversationView({
                               {isAIMessage(msg) ? (
                                 <>
                                   <Sparkles className="w-3 h-3 text-purple-600" />
-                                  <span className="text-xs font-medium text-purple-600">TekRem AI Assistant</span>
+                                  <span className="text-xs font-medium text-purple-600">Tekrem AI Assistant</span>
                                 </>
                               ) : isGuestMessage(msg) ? (
                                 <>

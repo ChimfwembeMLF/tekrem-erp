@@ -1,12 +1,10 @@
 import React, { PropsWithChildren } from 'react';
 import { Head } from '@inertiajs/react';
 import useTypedPage from '@/Hooks/useTypedPage';
-import Banner from '@/Components/Banner';
 import Sidebar from '@/Components/Sidebar';
 import TopNav from '@/Components/TopNav';
 import BreadcrumbNavigation from '@/Components/BreadcrumbNavigation';
 import AppProvider from '@/Providers/AppProvider';
-import { Toaster } from '@/Components/ui/sonner';
 import SupportChatWidget from '@/Components/Support/SupportChatWidget';
 import SupportStaffAlertsListener from '@/Components/Support/SupportStaffAlertsListener';
 
@@ -29,7 +27,6 @@ export default function AppLayout({
     <AppProvider>
       <div className="min-h-screen bg-background">
         <Head title={title} />
-        {/* <Banner /> */}
 
         {/* Sidebar Navigation */}
         <Sidebar settings={settings} />
@@ -57,7 +54,6 @@ export default function AppLayout({
           </main>
         </div>
       </div>
-      <Toaster />
       {page.props.auth?.user && <SupportStaffAlertsListener />}
       {page.props.auth?.user && <SupportChatWidget />}
     </AppProvider>

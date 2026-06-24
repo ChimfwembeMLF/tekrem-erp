@@ -50,4 +50,19 @@ class HrSettings
     {
         return (int) self::attendance('work_days_per_week', 5) * 4;
     }
+
+    public static function autoGeneratePayroll(): bool
+    {
+        return filter_var(self::payroll('auto_generate_payroll', true), FILTER_VALIDATE_BOOLEAN);
+    }
+
+    public static function payrollStartDay(): int
+    {
+        return (int) self::payroll('payroll_start_day', 1);
+    }
+
+    public static function payrollFrequency(): string
+    {
+        return (string) self::payroll('payroll_frequency', 'monthly');
+    }
 }

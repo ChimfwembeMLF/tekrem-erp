@@ -1,6 +1,5 @@
 import React from 'react';
-import { Head, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  useForm } from '@inertiajs/react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
@@ -9,6 +8,7 @@ import { Checkbox } from '@/Components/ui/checkbox';
 import { ArrowLeft, Save, User, Shield, Key } from 'lucide-react';
 import { useTranslate } from '@/Hooks/useTranslate';
 import useRoute from '@/Hooks/useRoute';
+import { AdminFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface Role {
   id: number;
@@ -71,28 +71,17 @@ export default function UserEdit({ user, roles, permissions }: Props) {
   };
 
   return (
-    <AppLayout
-      title="Edit User"
-      renderHeader={() => (
-        <div className="flex items-center gap-4">
-          <Button variant="outline" asChild>
-            <a href={route('admin.users.index')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Users
-            </a>
-          </Button>
-          <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            Edit User: {user.name}
-          </h2>
-        </div>
-      )}
+    <AdminFormShell
+      title={"Edit User"}
+      backHref={route('admin.users.index')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
     >
-      <Head title={`Edit User: ${user.name}`} />
 
-      <div className="py-12">
-        <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Basic Information */}
+{/* Basic Information */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -247,9 +236,7 @@ export default function UserEdit({ user, roles, permissions }: Props) {
                 {processing ? 'Updating...' : 'Update User'}
               </Button>
             </div>
-          </form>
-        </div>
-      </div>
-    </AppLayout>
+          
+</AdminFormShell>
   );
 }

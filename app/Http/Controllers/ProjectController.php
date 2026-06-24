@@ -363,12 +363,39 @@ class ProjectController extends Controller
             'milestones.assignee',
             'files.uploader',
             'timeLogs.user',
-            'conversations'
+            'tasks:id,project_id,status',
         ]);
 
-        // Load team members from JSON array
+        // Load team members from JSON array with HR context
         if ($project->team_members) {
-            $project->team = User::whereIn('id', $project->team_members)->get();
+            $teamUsers = \App\Models\User::whereIn('id', $project->team_members)
+                ->with(['employee.department', 'employee.teams'])
+                ->get();
+
+            $employeeIds = $teamUsers->map(fn ($user) => $user->employee?->id)->filter()->values();
+
+            $onLeaveEmployeeIds = \App\Models\HR\Leave::query()
+                ->approved()
+                ->whereDate('start_date', '<=', today())
+                ->whereDate('end_date', '>=', today())
+                ->whereIn('employee_id', $employeeIds)
+                ->pluck('employee_id');
+
+            $project->team = $teamUsers->map(function ($user) use ($onLeaveEmployeeIds) {
+                $employee = $user->employee;
+
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'employee_id' => $employee?->employee_id,
+                    'job_title' => $employee?->job_title,
+                    'department' => $employee?->department?->name,
+                    'teams' => $employee?->teams?->pluck('name')->all() ?? [],
+                    'on_leave' => $employee ? $onLeaveEmployeeIds->contains($employee->id) : false,
+                    'hr_url' => $employee ? route('hr.employees.show', $employee) : null,
+                ];
+            });
         } else {
             $project->team = collect();
         }
@@ -381,49 +408,9 @@ class ProjectController extends Controller
                 return $log->hours * ($log->hourly_rate ?? 0);
             });
 
-        // Load board data for Agile/Hybrid projects
-        $board = null;
-        $columns = [];
-        $cards = [];
-
-        if ($project->enable_boards) {
-            $board = $project->boards()->first();
-            if ($board) {
-                $columns = $board->columns()
-                    ->orderBy('order')
-                    ->get();
-                
-                foreach ($columns as $column) {
-                    $column->cards = $column->cards()
-                        ->with(['assignee', 'reporter'])
-                        ->orderBy('order')
-                        ->get();
-                }
-                
-                $cards = $columns->flatMap->cards;
-            }
-        }
-
-
-        // Load product backlog items (type = 'product', status != 'removed')
-        $priorityMap = [1 => 'low', 2 => 'medium', 3 => 'high', 4 => 'critical'];
-        $productBacklog = $project->productBacklog()
-            ->with(['card', 'epic', 'sprint', 'assignedUser'])
-            ->where('status', '!=', 'removed')
-            ->orderBy('priority', 'desc')
-            ->orderBy('order', 'asc')
-            ->get()
-            ->map(function ($item) use ($priorityMap) {
-                $item->priority = $priorityMap[$item->priority] ?? $item->priority;
-                return $item;
-            });
-
         return Inertia::render('Projects/Show', [
             'project' => $project,
-            'board' => $board,
-            'columns' => $columns,
-            'cards' => $cards,
-            'productBacklog' => $productBacklog,
+            'boardId' => \App\Support\ProjectNav::boardId($project),
             'settings' => [
                 'enable_project_budgets' => Setting::get('projects.general.enable_project_budgets', true),
                 'enable_client_access' => Setting::get('projects.general.enable_client_access', true),
@@ -552,6 +539,7 @@ class ProjectController extends Controller
         return Inertia::render('Projects/Kanban', [
             'project' => $project,
             'milestones' => $project->milestones,
+            'boardId' => \App\Support\ProjectNav::boardId($project),
         ]);
     }
 

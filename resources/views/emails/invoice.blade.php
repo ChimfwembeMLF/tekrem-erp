@@ -187,7 +187,7 @@
     <div class="email-container">
         <!-- Header -->
         <div class="header">
-            <div class="company-name">{{ config('app.name', 'TekRem ERP') }}</div>
+            <div class="company-name">{{ config('app.name', 'Tekrem ERP') }}</div>
             <div class="company-tagline">Professional Business Solutions</div>
         </div>
 
@@ -281,7 +281,7 @@
             <h4>📞 Questions About This Invoice?</h4>
             <p>If you have any questions about this invoice or need assistance with payment, please contact us:</p>
             <p>
-                <strong>Email:</strong> {{ config('company.email', 'billing@tekrem.com') }}<br>
+                <strong>Email:</strong> {{ config('company.email', 'billing@Tekrem.com') }}<br>
                 <strong>Phone:</strong> {{ config('company.phone', '+1 (555) 123-4567') }}<br>
                 <strong>Business Hours:</strong> Monday - Friday, 9:00 AM - 5:00 PM
             </p>
@@ -304,7 +304,7 @@
             @endif
             <p>
                 <a href="{{ config('company.website', '#') }}" style="color: #dc3545;">Visit our website</a> | 
-                <a href="mailto:{{ config('company.email', 'info@tekrem.com') }}" style="color: #dc3545;">Contact us</a>
+                <a href="mailto:{{ config('company.email', 'info@Tekrem.com') }}" style="color: #dc3545;">Contact us</a>
             </p>
             
             @if($content['generated_by'] === 'ai')

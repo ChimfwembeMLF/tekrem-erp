@@ -8,16 +8,20 @@ import { cn } from '@/lib/utils';
 
 function SupportLauncher({ onOpen }: { onOpen: () => void }) {
   return (
-    <div className="group fixed bottom-5 left-5 z-[998] sm:bottom-6 sm:left-6">
+    <div className="group fixed bottom-5 right-5 z-[998] sm:bottom-6 sm:right-6">
       <button
         type="button"
         onClick={onOpen}
         aria-label="Open support chat"
-        className="relative flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/25 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-primary/30 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
-        <Headphones className="h-6 w-6" strokeWidth={2.25} />
+        <span
+          aria-hidden
+          className="absolute inset-0 rounded-full bg-primary/40 animate-launcher-pulse"
+        />
+        <Headphones className="relative z-10 h-6 w-6" strokeWidth={2.25} />
       </button>
-      <span className="pointer-events-none absolute -top-9 left-0 hidden whitespace-nowrap rounded-md bg-foreground px-2.5 py-1 text-xs font-medium text-background opacity-0 shadow-md transition-opacity group-hover:opacity-100 sm:block">
+      <span className="pointer-events-none absolute -top-9 right-0 hidden whitespace-nowrap rounded-md bg-foreground px-2.5 py-1 text-xs font-medium text-background opacity-0 shadow-md transition-opacity group-hover:opacity-100 sm:block">
         Support
       </span>
     </div>
@@ -58,14 +62,14 @@ export default function SupportChatWidget() {
 
       <div
         className={cn(
-          'fixed z-[998] flex flex-col pointer-events-none',
-          'inset-0 sm:inset-auto sm:bottom-6 sm:left-6',
+          'fixed z-[998] flex flex-col',
+          'inset-0 sm:inset-auto sm:bottom-6 sm:right-6 sm:left-auto',
           'sm:h-[min(640px,calc(100dvh-48px))] sm:w-[400px]',
         )}
       >
         <div
           className={cn(
-            'pointer-events-auto flex h-full w-full flex-col overflow-hidden border border-border bg-background shadow-2xl',
+            'flex h-full w-full flex-col overflow-hidden border border-border bg-background shadow-2xl',
             'sm:rounded-2xl',
             'transition-all duration-300 ease-out',
             animateOpen ? 'opacity-100' : 'opacity-0 translate-y-4 sm:translate-y-6 sm:scale-[0.98]',

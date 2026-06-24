@@ -3,9 +3,9 @@ import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDpkgBg4e8WZtG_2MjES3DW36QrGoYA6C0",
-  authDomain: "tekrem-alerts.firebaseapp.com",
-  projectId: "tekrem-alerts",
-  storageBucket: "tekrem-alerts.firebasestorage.app",
+  authDomain: "Tekrem-alerts.firebaseapp.com",
+  projectId: "Tekrem-alerts",
+  storageBucket: "Tekrem-alerts.firebasestorage.app",
   messagingSenderId: "95817534149",
   appId: "1:95817534149:web:c536cb4d6a92586c8d7eac",
   measurementId: "G-LCYPZBEVED"

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  Link, useForm } from '@inertiajs/react';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
@@ -14,6 +13,7 @@ import useCRMAI from '@/Hooks/useCRMAI';
 import { ArrowLeft, Save, Bot, Heart } from 'lucide-react';
 import { Client, Lead, InertiaSharedProps } from '@/types/index';
 import useRoute from '@/Hooks/useRoute';
+import { CrmFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface CommunicationCreateProps extends InertiaSharedProps {
   clients: Client[];
@@ -73,31 +73,18 @@ export default function CommunicationCreate({ auth, clients, leads, communicable
   };
 
   return (
-    <AppLayout
-      title="Add Communication"
-      renderHeader={() => (
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Link href={route('crm.communications.index')}>
-              <Button variant="outline" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Communications
-              </Button>
-            </Link>
-            <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-              Add Communication
-            </h2>
-          </div>
-        </div>
-      )}
+    <CrmFormShell
+      title={"Add Communication"}
+      backHref={route('crm.communications.index')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
     >
-      <Head title="Add Communication" />
 
-      <div className="py-12">
-        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-          <Card>
-            <form onSubmit={handleSubmit}>
-              <CardHeader>
+<Card>
+            <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle>Add New Communication</CardTitle>
@@ -295,21 +282,8 @@ export default function CommunicationCreate({ auth, clients, leads, communicable
                   {errors.content && <p className="text-red-500 text-sm">{errors.content}</p>}
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-end gap-3">
-                <Link href={route('crm.communications.index')}>
-                  <Button type="button" variant="outline">
-                    Cancel
-                  </Button>
-                </Link>
-                <Button type="submit" disabled={processing}>
-                  <Save className="h-4 w-4 mr-2" />
-                  {processing ? 'Saving...' : 'Save Communication'}
-                </Button>
-              </CardFooter>
-            </form>
+              </form>
           </Card>
-        </div>
-      </div>
-    </AppLayout>
+</CrmFormShell>
   );
 }

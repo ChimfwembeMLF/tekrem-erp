@@ -38,6 +38,7 @@ class ProjectMilestoneController extends Controller
 
         return Inertia::render('Projects/Milestones/Index', [
             'project' => $project,
+            'boardId' => \App\Support\ProjectNav::boardId($project),
             'milestones' => $milestones,
             'filters' => $request->only(['search', 'status', 'priority']),
             'settings' => [

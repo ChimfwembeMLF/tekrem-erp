@@ -99,7 +99,7 @@
     <div class="email-container">
         <!-- Header -->
         <div class="header">
-            <div class="company-name">{{ config('app.name', 'TekRem ERP') }}</div>
+            <div class="company-name">{{ config('app.name', 'Tekrem ERP') }}</div>
             <div class="reminder-badge">⏰ Quotation Reminder</div>
         </div>
 
@@ -130,7 +130,7 @@
 
         <!-- Footer -->
         <div class="footer">
-            <p>We're here to help! Contact us at {{ config('company.email', 'info@tekrem.com') }} or {{ config('company.phone', '+1 (555) 123-4567') }}</p>
+            <p>We're here to help! Contact us at {{ config('company.email', 'info@Tekrem.com') }} or {{ config('company.phone', '+1 (555) 123-4567') }}</p>
             <p>{{ config('app.name') }} • {{ now()->format('M d, Y') }}</p>
         </div>
     </div>

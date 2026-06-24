@@ -1,6 +1,5 @@
 import React from 'react';
-import { Head, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  useForm } from '@inertiajs/react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
@@ -8,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { ArrowLeft, Save } from 'lucide-react';
 import useTranslate from '@/Hooks/useTranslate';
 import useRoute from '@/Hooks/useRoute';
+import { AdminFormShell } from '@/Components/Module/moduleFormWrappers';
 
 export default function Create() {
   const { t } = useTranslate();
@@ -23,27 +23,17 @@ export default function Create() {
   };
 
   return (
-    <AppLayout
-      title={t('admin.create_module', 'Create Module')}
-      renderHeader={() => (
-        <div className="flex items-center gap-4">
-          <Button variant="outline" asChild>
-            <a href={route('admin.modules.index')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              {t('admin.back_to_modules', 'Back to Modules')}
-            </a>
-          </Button>
-          <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {t('admin.create_module', 'Create Module')}
-          </h2>
-        </div>
-      )}
+    <AdminFormShell
+      title={"Create Module"}
+      backHref={route('admin.modules.index')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
     >
-      <Head title={t('admin.create_module', 'Create Module')} />
-      <div className="py-6">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <Card>
+
+<Card>
               <CardHeader>
                 <CardTitle>{t('admin.module_details', 'Module Details')}</CardTitle>
               </CardHeader>
@@ -73,9 +63,7 @@ export default function Create() {
                 </Button>
               </CardContent>
             </Card>
-          </form>
-        </div>
-      </div>
-    </AppLayout>
+          
+</AdminFormShell>
   );
 }

@@ -81,7 +81,7 @@ class AiEmailService
      */
     private function buildQuotationPrompt(Quotation $quotation, $type)
     {
-        $companyName = config('app.name', 'TekRem ERP');
+        $companyName = config('app.name', 'Tekrem ERP');
         $leadName = $quotation->lead->name;
         $company = $quotation->lead->company;
         $amount = number_format($quotation->total_amount, 2) . ' ' . $quotation->currency;
@@ -142,7 +142,7 @@ class AiEmailService
      */
     private function buildInvoicePrompt(Invoice $invoice, $type)
     {
-        $companyName = config('app.name', 'TekRem ERP');
+        $companyName = config('app.name', 'Tekrem ERP');
         $clientName = $invoice->billable->name ?? 'Valued Client';
         $amount = number_format($invoice->total_amount, 2) . ' ' . $invoice->currency;
         $dueDate = $invoice->due_date->format('M d, Y');
@@ -180,7 +180,7 @@ class AiEmailService
      */
     private function buildFollowUpPrompt(Invoice $invoice, $followUpNumber)
     {
-        $companyName = config('app.name', 'TekRem ERP');
+        $companyName = config('app.name', 'Tekrem ERP');
         $clientName = $invoice->billable->name ?? 'Valued Client';
         $amount = number_format($invoice->total_amount, 2) . ' ' . $invoice->currency;
         $dueDate = $invoice->due_date->format('M d, Y');
@@ -218,7 +218,7 @@ class AiEmailService
      */
     private function buildPaymentThankYouPrompt(Invoice $invoice)
     {
-        $companyName = config('app.name', 'TekRem ERP');
+        $companyName = config('app.name', 'Tekrem ERP');
         $clientName = $invoice->billable->name ?? 'Valued Client';
         $amount = number_format($invoice->total_amount, 2) . ' ' . $invoice->currency;
         

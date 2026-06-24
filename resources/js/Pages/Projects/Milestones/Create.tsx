@@ -1,6 +1,5 @@
 import React from 'react';
-import { Head, useForm, Link } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  useForm, Link } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -10,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/Components/ui/checkbox';
 import useRoute from '@/Hooks/useRoute';
 import { Project, User, ProjectMilestone } from '@/types';
+import { ProjectsFormShell } from '@/Components/Module/moduleFormWrappers';
 import { ArrowLeft } from 'lucide-react';
 
 interface MilestoneCreateProps {
@@ -56,31 +56,21 @@ export default function MilestoneCreate({ auth, project, users, availableDepende
   };
 
   return (
-    <AppLayout
-      title={`Create Milestone - ${project.name}`}   
-      renderHeader={() => (
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-              Create Milestone for {project.name}
-            </h2>
-            <Link href={route('projects.time-logs.index', project.id)}>
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Milestones
-              </Button>
-            </Link>
-          </div>
-
-        </div>
-      )}
+    <ProjectsFormShell
+      title={"Form"}
+      backHref={route('projects.milestones.index')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
     >
+
+
 
       <div className="">
         <div className="w-full mx-auto sm:px-6">
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-6">
-              {/* Basic Information */}
+          {/* Basic Information */}
               <Card>
                 <CardHeader>
                   <CardTitle>Milestone Information</CardTitle>
@@ -202,9 +192,7 @@ export default function MilestoneCreate({ auth, project, users, availableDepende
                 </Button>
               </div>
             </div>
-          </form>
-        </div>
-      </div>
-    </AppLayout>
+          
+</ProjectsFormShell>
   );
 }

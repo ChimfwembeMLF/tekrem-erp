@@ -26,14 +26,14 @@ export default function MobileNav({ settings: _settings }: MobileNavProps) {
     { href: route('faq'), label: 'FAQ' },
     { href: route('guest.inquiry.create'), label: 'Inquiry' },
     { href: route('guest.quote.create'), label: 'Get a Quote' },
-    { href: route('guest.support.index'), label: 'Support' },
+    { href: route('shop.index'), label: 'Shop' },
     { href: route('contact'), label: 'Contact' },
   ];
 
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="md:hidden">
+        <Button variant="ghost" size="icon" className="md:hidden text-inherit">
           <Menu className="h-6 w-6" />
           <span className="sr-only">Toggle menu</span>
         </Button>

@@ -143,7 +143,7 @@
     <div class="email-container">
         <!-- Header -->
         <div class="header">
-            <div class="company-name">{{ config('app.name', 'TekRem ERP') }}</div>
+            <div class="company-name">{{ config('app.name', 'Tekrem ERP') }}</div>
             <div class="company-tagline">Professional Business Solutions</div>
         </div>
 
@@ -191,9 +191,9 @@
             <h4>📞 Need Assistance?</h4>
             <p>If you have any questions about this quotation or need clarification on any items, please don't hesitate to contact us:</p>
             <p>
-                <strong>Email:</strong> {{ config('company.email', 'info@tekrem.com') }}<br>
+                <strong>Email:</strong> {{ config('company.email', 'info@Tekrem.com') }}<br>
                 <strong>Phone:</strong> {{ config('company.phone', '+1 (555) 123-4567') }}<br>
-                <strong>Website:</strong> {{ config('company.website', 'www.tekrem.com') }}
+                <strong>Website:</strong> {{ config('company.website', 'www.Tekrem.com') }}
             </p>
         </div>
 
@@ -221,7 +221,7 @@
             <p>{{ config('company.address', '123 Business Street, Business City, 12345') }}</p>
             <p>
                 <a href="{{ config('company.website', '#') }}" style="color: #007bff;">Visit our website</a> | 
-                <a href="mailto:{{ config('company.email', 'info@tekrem.com') }}" style="color: #007bff;">Contact us</a>
+                <a href="mailto:{{ config('company.email', 'info@Tekrem.com') }}" style="color: #007bff;">Contact us</a>
             </p>
             
             @if($content['generated_by'] === 'ai')

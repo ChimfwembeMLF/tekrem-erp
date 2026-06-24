@@ -1,10 +1,10 @@
-# TekRem ERP System
+# Tekrem ERP System
 
 **Technology Remedies Innovations** | 🇿🇲 Zambia | 2025
 
 ## Overview
 
-TekRem ERP is a comprehensive enterprise resource planning system built with Laravel 12, Jetstream, and React. It features a modular frontend architecture organized by business domains.
+Tekrem ERP is a comprehensive enterprise resource planning system built with Laravel 12, Jetstream, and React. It features a modular frontend architecture organized by business domains.
 
 ## Technology Stack
 
@@ -51,8 +51,8 @@ TekRem ERP is a comprehensive enterprise resource planning system built with Lar
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/tekrem-erp.git
-cd tekrem-erp
+git clone https://github.com/yourusername/Tekrem-erp.git
+cd Tekrem-erp
 
 # Install PHP dependencies
 composer install
@@ -81,14 +81,14 @@ npm run dev
 
 | Role     | Email               | Password | Permissions                 |
 | -------- | ------------------- | -------- | --------------------------- |
-| Admin    | admin@tekrem.com    | password | All access                  |
-| Staff    | staff@tekrem.com    | password | Access to CRM, HR, Projects |
-| Customer | customer@tekrem.com | password | Service request portal      |
+| Admin    | admin@Tekrem.com    | password | All access                  |
+| Staff    | staff@Tekrem.com    | password | Access to CRM, HR, Projects |
+| Customer | customer@Tekrem.com | password | Service request portal      |
 
 ## Contact
 
-- **Email:** tekremsolutions@gmail.com
-- **Website:** www.tekrem.site
+- **Email:** Tekremsolutions@gmail.com
+- **Website:** www.Tekrem.site
 - **Phone:** +260 976607840
 - **Location:** Lusaka, Zambia
 
@@ -304,7 +304,7 @@ The system uses n8n for workflow automation, including:
   - **Offline Support**: Offline capability with sync when connection is restored
   - **Performance Optimization**: Handles large projects (1000+ tasks) with virtual scrolling
 
-- **Integration with TekRem ERP**:
+- **Integration with Tekrem ERP**:
   - **CRM Integration**: Client project tracking and billing
   - **Finance Integration**: Project budgeting, expense tracking, and invoicing
   - **User Management**: Existing role and permission system integration

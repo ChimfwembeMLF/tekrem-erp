@@ -17,6 +17,7 @@ class PosRegisterController extends Controller
         return Inertia::render('POS/Registers', [
             'registers' => PosRegister::with('warehouse')->orderBy('name')->get(),
             'warehouses' => Warehouse::where('is_active', true)->orderBy('name')->get(['id', 'name', 'code']),
+            'selectedWarehouseId' => session('new_warehouse_id'),
         ]);
     }
 

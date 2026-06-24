@@ -1,6 +1,5 @@
 import React from 'react';
-import { Head, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  useForm } from '@inertiajs/react';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
@@ -8,6 +7,7 @@ import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { InertiaSharedProps } from '@/types';
+import { CrmFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface Lead {
   id: number;
@@ -53,21 +53,18 @@ export default function LeadEdit({ auth, lead }: LeadEditProps) {
   };
 
   return (
-    <AppLayout
-      title={`Edit Lead: ${lead.name}`}
-      renderHeader={() => (
-        <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-          Edit Lead: {lead.name}
-        </h2>
-      )}
+    <CrmFormShell
+      title={"Form"}
+      backHref={route('crm.leads.update')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
     >
-      <Head title={`Edit Lead: ${lead.name}`} />
 
-      <div className="py-12">
-        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-          <Card>
-            <form onSubmit={handleSubmit}>
-              <CardHeader>
+<Card>
+            <CardHeader>
                 <CardTitle>Edit Lead</CardTitle>
                 <CardDescription>
                   Update lead information
@@ -230,22 +227,8 @@ export default function LeadEdit({ auth, lead }: LeadEditProps) {
                   {errors.notes && <p className="text-red-500 text-sm">{errors.notes}</p>}
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => window.history.back()}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={processing}>
-                  {processing ? 'Saving...' : 'Update Lead'}
-                </Button>
-              </CardFooter>
-            </form>
+              </form>
           </Card>
-        </div>
-      </div>
-    </AppLayout>
+</CrmFormShell>
   );
 }

@@ -11,7 +11,7 @@ interface RatingFormProps {
   messageId: string | null;
   initialRating?: 'helpful' | 'not_helpful' | null;
   onCancel: () => void;
-  onSubmitted?: (rating: 'helpful' | 'not_helpful') => void;
+  onSubmitted?: (rating: 'helpful' | 'not_helpful', conversationId?: string) => void;
 }
 
 export function RatingForm({
@@ -36,7 +36,7 @@ export function RatingForm({
 
     setIsSubmitting(true);
     try {
-      await chatbotApi.rateResponse({
+      const result = await chatbotApi.rateResponse({
         conversation_id: conversationId,
         message_id: messageId,
         rating,
@@ -44,7 +44,7 @@ export function RatingForm({
       });
 
       toast.success('Thank you for your feedback!');
-      onSubmitted?.(rating);
+      onSubmitted?.(rating, result.conversation_id);
       onCancel();
       setRating(null);
       setFeedback('');

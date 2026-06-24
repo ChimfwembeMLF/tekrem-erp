@@ -71,7 +71,7 @@ class ZraSubmissionStatusChanged extends Notification implements ShouldQueue
         }
 
         $mailMessage->action('View Invoice', route('finance.invoices.show', $invoice->id))
-                   ->line('Thank you for using TekRem ERP!');
+                   ->line('Thank you for using Tekrem ERP!');
 
         return $mailMessage;
     }

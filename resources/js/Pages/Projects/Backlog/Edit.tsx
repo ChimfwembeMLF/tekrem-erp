@@ -1,6 +1,5 @@
 import React from 'react';
-import { Head, useForm, Link } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import {  useForm, Link } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -14,6 +13,7 @@ import {
   SelectValue,
 } from '@/Components/ui/select';
 import useRoute from '@/Hooks/useRoute';
+import { ProjectsFormShell } from '@/Components/Module/moduleFormWrappers';
 
 interface Sprint {
   id: number;
@@ -83,33 +83,23 @@ export default function EditBacklog({
   };
 
   return (
-    <AppLayout
-      title={`Edit Backlog Item - ${project.name}`}
-      renderHeader={() => (
-        <div>
-          <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            Edit Backlog Item
-          </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            <Link href={route('projects.show', project.id)} className="hover:underline">
-              {project.name}
-            </Link>{' '}
-            - Backlog
-          </p>
-        </div>
-      )}
+    <ProjectsFormShell
+      title={"Form"}
+      backHref={route('projects.show')}
+      backLabel="Back"
+      onSubmit={handleSubmit}
+      processing={processing}
+      submitLabel="Save"
+      maxWidth="4xl"
     >
-      <Head title={`Edit Backlog Item - ${project.name}`} />
 
-      <div className="max-w-full mx-auto sm:px-6">
-        <Card>
+<Card>
           <CardHeader>
             <CardTitle>Backlog Item Details</CardTitle>
           </CardHeader>
 
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Title */}
+            {/* Title */}
               <div className="space-y-2">
                 <Label htmlFor="title">Title *</Label>
                 <Input
@@ -293,7 +283,6 @@ export default function EditBacklog({
             </form>
           </CardContent>
         </Card>
-      </div>
-    </AppLayout>
+</ProjectsFormShell>
   );
 }   

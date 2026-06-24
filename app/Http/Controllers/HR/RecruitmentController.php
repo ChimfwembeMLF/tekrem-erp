@@ -5,6 +5,7 @@ namespace App\Http\Controllers\HR;
 use App\Http\Controllers\Controller;
 use App\Models\HR\Department;
 use App\Models\HR\JobApplication;
+use App\Services\HR\StaffAccessService;
 use App\Models\HR\JobPosting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -151,7 +152,7 @@ class RecruitmentController extends Controller
 
     public function showApplication(JobApplication $application)
     {
-        $application->load(['jobPosting.department']);
+        $application->load(['jobPosting.department', 'employee.user']);
 
         return Inertia::render('HR/Recruitment/ApplicationShow', [
             'application' => [
@@ -168,6 +169,17 @@ class RecruitmentController extends Controller
                 'resume_url' => $application->resume_path
                     ? route('hr.recruitment.applications.resume', $application)
                     : null,
+                'employee' => $application->employee ? [
+                    'id' => $application->employee->id,
+                    'name' => $application->employee->full_name,
+                    'employee_id' => $application->employee->employee_id,
+                    'url' => route('hr.employees.show', $application->employee),
+                ] : null,
+                'create_employee_url' => route('hr.employees.create', [
+                    'application_id' => $application->id,
+                    'email' => $application->email,
+                    'name' => $application->full_name,
+                ]),
                 'job_posting' => [
                     'id' => $application->jobPosting->id,
                     'title' => $application->jobPosting->title,
@@ -202,6 +214,10 @@ class RecruitmentController extends Controller
         ]);
 
         $application->update($data);
+
+        if ($data['status'] === 'hired') {
+            app(StaffAccessService::class)->linkApplicationToEmployee($application->fresh());
+        }
 
         return back()->with('success', 'Application updated.');
     }

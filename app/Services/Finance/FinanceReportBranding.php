@@ -25,7 +25,7 @@ class FinanceReportBranding
     {
         foreach ([
             public_path('logo-blue.png'),
-            public_path('tekrem-logo.png'),
+            public_path('Tekrem-logo.png'),
             public_path('images/logo-blue.png'),
         ] as $path) {
             if (is_file($path)) {

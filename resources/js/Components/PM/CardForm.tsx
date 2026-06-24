@@ -1,8 +1,17 @@
 import React, { useState } from 'react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
+import { Label } from '@/Components/ui/label';
+import { Textarea } from '@/Components/ui/textarea';
 import { Badge } from '@/Components/ui/badge';
-import { Modal } from '@/Components/ui/modal';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/Components/ui/sheet';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { Save, X, Plus, Calendar, User, Flag, Target, Bug, Zap, BookOpen } from 'lucide-react';
 
@@ -111,33 +120,33 @@ export function CardForm({
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={mode === 'create' ? 'Create New Card' : 'Edit Card'}
-      size="lg"
-    >
-      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-lg">
+        <SheetHeader className="border-b px-4 py-4 text-left">
+          <SheetTitle>{mode === 'create' ? 'Create New Card' : 'Edit Card'}</SheetTitle>
+          <SheetDescription>
+            {mode === 'create' ? 'Add a new card to the board.' : 'Update card details.'}
+          </SheetDescription>
+        </SheetHeader>
+
+      <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+        <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
         {/* Title */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Title *
-          </label>
+          <Label className="mb-2 block">Title *</Label>
           <Input
             value={formData.title}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, title: e.target.value }))}
             placeholder="Enter card title..."
             required
-            className="w-full h-11 sm:h-10 text-base sm:text-sm"
+            className="w-full"
           />
         </div>
 
         {/* Type and Priority Row - Stack on mobile */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Issue Type *
-            </label>
+            <Label className="mb-2 block">Issue Type *</Label>
             <Select value={formData.type} onValueChange={(value: string) => setFormData(prev => ({ ...prev, type: value }))}>
               <SelectTrigger className="w-full h-11 sm:h-10 text-base sm:text-sm">
                 <SelectValue placeholder="Select type" />
@@ -156,10 +165,10 @@ export function CardForm({
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <Label className="mb-2 block">
               <Flag className="h-4 w-4 inline mr-1" />
               Priority
-            </label>
+            </Label>
             <Select value={formData.priority} onValueChange={(value: string) => setFormData(prev => ({ ...prev, priority: value }))}>
               <SelectTrigger className="w-full h-11 sm:h-10 text-base sm:text-sm">
                 <SelectValue placeholder="Select priority" />
@@ -177,25 +186,22 @@ export function CardForm({
 
         {/* Description */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Description
-          </label>
-          <textarea
+          <Label className="mb-2 block">Description</Label>
+          <Textarea
             value={formData.description}
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData(prev => ({ ...prev, description: e.target.value }))}
             placeholder="Enter card description..."
             rows={4}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base sm:text-sm resize-none"
           />
         </div>
 
         {/* Story Points and Due Date Row - Stack on mobile */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <Label className="mb-2 block">
               <Target className="h-4 w-4 inline mr-1" />
               Story Points
-            </label>
+            </Label>
             <Select 
               value={formData.story_points?.toString() || ""} 
               onValueChange={(value: string) => setFormData(prev => ({ 
@@ -218,10 +224,10 @@ export function CardForm({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <Label className="mb-2 block">
               <Calendar className="h-4 w-4 inline mr-1" />
               Due Date
-            </label>
+            </Label>
             <Input
               type="date"
               value={formData.due_date}
@@ -233,9 +239,7 @@ export function CardForm({
 
         {/* Tags */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Tags
-          </label>
+          <Label className="mb-2 block">Tags</Label>
           <div className="flex gap-2 mb-2">
             <Input
               value={newTag}
@@ -267,10 +271,10 @@ export function CardForm({
 
         {/* Assignees */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <Label className="mb-2 block">
             <User className="h-4 w-4 inline mr-1" />
             Assignees
-          </label>
+          </Label>
           <div className="flex gap-2 mb-2">
             <Input
               value={newAssignee}
@@ -299,18 +303,19 @@ export function CardForm({
             ))}
           </div>
         </div>
+        </div>
 
-        {/* Form Actions - Stack on mobile */}
-        <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-2 pt-4 border-t">
-          <Button type="button" variant="outline" onClick={onClose} className="w-full sm:w-auto h-11 sm:h-10 order-2 sm:order-1">
+        <SheetFooter className="border-t px-4 py-4 sm:flex-row sm:justify-end">
+          <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" className="w-full sm:w-auto h-11 sm:h-10 order-1 sm:order-2">
+          <Button type="submit">
             <Save className="h-4 w-4 mr-1" />
             {mode === 'create' ? 'Create Card' : 'Save Changes'}
           </Button>
-        </div>
+        </SheetFooter>
       </form>
-    </Modal>
+      </SheetContent>
+    </Sheet>
   );
 }

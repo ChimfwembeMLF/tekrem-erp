@@ -31,8 +31,11 @@ class WarehouseController extends Controller
             Warehouse::query()->update(['is_default' => false]);
         }
 
-        Warehouse::create($data);
-        return back()->with('success', 'Warehouse created.');
+        $warehouse = Warehouse::create(array_merge(['is_active' => true], $data));
+
+        return back()
+            ->with('success', 'Warehouse created.')
+            ->with('new_warehouse_id', $warehouse->id);
     }
 
     public function update(Request $request, Warehouse $warehouse)
