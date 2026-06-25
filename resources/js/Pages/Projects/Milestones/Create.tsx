@@ -192,7 +192,7 @@ export default function MilestoneCreate({ auth, project, users, availableDepende
                 </Button>
               </div>
             </div>
-          
+          </div>
 </ProjectsFormShell>
   );
 }

@@ -129,7 +129,6 @@ export default function EditEpic({ auth, epic, project }: Props) {
                   {processing ? 'Saving...' : 'Save Changes'}
                 </Button>
               </div>
-            </form>
           </CardContent>
         </Card>
 </ProjectsFormShell>

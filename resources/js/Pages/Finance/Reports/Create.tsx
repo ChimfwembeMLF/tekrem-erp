@@ -233,7 +233,6 @@ export default function Create({ types }: Props) {
                     )}
                   </Button>
                 </div>
-              </form>
             </div>
           </Card>
 </FinanceFormShell>

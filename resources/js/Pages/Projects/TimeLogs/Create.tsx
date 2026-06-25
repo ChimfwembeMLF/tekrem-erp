@@ -238,9 +238,9 @@ export default function CreateTimeLog({ project, milestones, users }: CreateTime
                   </Button>
                 </Link>
               </div>
-            </form>
           </CardContent>
         </Card>
+        </div>
 </ProjectsFormShell>
   );
 }

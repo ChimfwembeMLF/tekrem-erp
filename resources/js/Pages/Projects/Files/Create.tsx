@@ -283,9 +283,9 @@ export default function Create({ project, milestones }: Props) {
                     {processing ? 'Uploading...' : 'Upload File'}
                   </Button>
                 </div>
-              </form>
             </CardContent>
           </Card>
+          </div>
 </ProjectsFormShell>
   );
 }

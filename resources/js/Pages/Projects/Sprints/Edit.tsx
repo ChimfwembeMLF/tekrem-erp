@@ -169,9 +169,9 @@ export default function EditSprint({ auth, sprint, project }: Props) {
                   {processing ? 'Updating...' : 'Update Sprint'}
                 </Button>
               </div>
-            </form>
           </CardContent>
         </Card>
+        </div>
 </ProjectsFormShell>
   );
 }

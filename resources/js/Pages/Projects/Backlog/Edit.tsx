@@ -280,7 +280,6 @@ export default function EditBacklog({
                   {processing ? 'Updating...' : 'Update Item'}
                 </Button>
               </div>
-            </form>
           </CardContent>
         </Card>
 </ProjectsFormShell>

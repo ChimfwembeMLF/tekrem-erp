@@ -7,6 +7,7 @@ import { ShoppingBag, Truck } from 'lucide-react';
 import { formatZmw } from '@/lib/formatCurrency';
 import { ShopCartItem, ShopTotals } from '@/lib/shopTotals';
 import { useShopSheets } from '@/Components/Shop/ShopSheetProvider';
+import useRoute from '@/Hooks/useRoute';
 
 interface OrderSummaryProps {
   items: ShopCartItem[];
@@ -75,7 +76,8 @@ interface ShopHeaderProps {
 
 export function ShopHeader({ title, subtitle }: ShopHeaderProps) {
   const { cartCount, openCart } = useShopSheets();
-
+  const route = useRoute();
+  
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>

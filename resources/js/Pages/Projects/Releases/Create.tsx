@@ -179,7 +179,6 @@ export default function ReleaseCreate({ auth, project, sprints = [], epics = [] 
                     {processing ? 'Creating...' : 'Create Release'}
                   </Button>
                 </div>
-              </form>
             </CardContent>
           </Card>
 </ProjectsFormShell>

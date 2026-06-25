@@ -202,7 +202,6 @@ export default function Edit({ report, types }: Props) {
                     )}
                   </Button>
                 </div>
-              </form>
             </div>
           </Card>
 </FinanceFormShell>

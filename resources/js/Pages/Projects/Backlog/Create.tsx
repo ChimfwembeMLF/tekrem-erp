@@ -316,7 +316,6 @@ export default function CreateBacklog({
                   {processing ? 'Creating...' : 'Create Item'}
                 </Button>
               </div>
-            </form>
           </CardContent>
         </Card>
 </ProjectsFormShell>

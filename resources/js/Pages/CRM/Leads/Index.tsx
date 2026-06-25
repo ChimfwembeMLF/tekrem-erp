@@ -7,6 +7,7 @@ import { Input } from '@/Components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { InertiaSharedProps } from '@/types';
 import { Badge } from '@/Components/ui/badge';
+import useRoute from '@/Hooks/useRoute';
 
 interface Lead {
   id: number;
@@ -46,6 +47,7 @@ export default function LeadsIndex({ auth, leads, filters }: LeadsIndexProps) {
   const [search, setSearch] = useState(filters.search || '');
   const [status, setStatus] = useState(filters.status || 'all');
   const [source, setSource] = useState(filters.source || 'all');
+  const route = useRoute();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

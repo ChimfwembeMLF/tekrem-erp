@@ -117,7 +117,6 @@ export default function BoardEdit({ auth, board, project }: BoardEditProps) {
                     {processing ? 'Saving...' : 'Save Changes'}
                   </Button>
                 </div>
-              </form>
             </CardContent>
           </Card>
 </ProjectsFormShell>

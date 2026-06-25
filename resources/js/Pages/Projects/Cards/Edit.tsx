@@ -162,9 +162,10 @@ export default function CardEdit({ auth, card, board, project, sprints, epics }:
                     {processing ? 'Saving...' : 'Save Changes'}
                   </Button>
                 </div>
-              </form>
+              
             </CardContent>
           </Card>
+          </div>
 </ProjectsFormShell>
   );
 }

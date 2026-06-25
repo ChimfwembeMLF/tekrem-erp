@@ -138,7 +138,6 @@ export default function CreateEpic({ auth, project, boards = [] }: Props) {
                   {processing ? 'Creating...' : 'Create Epic'}
                 </Button>
               </div>
-            </form>
           </CardContent>
         </Card>
 </ProjectsFormShell>

@@ -1,7 +1,7 @@
 import React from 'react';
-import {  useForm } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import { Button } from '@/Components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/Components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
@@ -30,7 +30,7 @@ interface LeadEditProps extends InertiaSharedProps {
   lead: Lead;
 }
 
-export default function LeadEdit({ auth, lead }: LeadEditProps) {
+export default function LeadEdit({ lead }: LeadEditProps) {
   const { data, setData, put, processing, errors } = useForm({
     name: lead.name,
     email: lead.email || '',
@@ -44,7 +44,7 @@ export default function LeadEdit({ auth, lead }: LeadEditProps) {
     country: lead.country || '',
     notes: lead.notes || '',
     source: lead.source || '',
-    status: lead.status,
+    status: lead.status || '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -54,181 +54,140 @@ export default function LeadEdit({ auth, lead }: LeadEditProps) {
 
   return (
     <CrmFormShell
-      title={"Form"}
-      backHref={route('crm.leads.update')}
+      title="Edit Lead"
+      backHref={route('crm.leads.index')}
       backLabel="Back"
       onSubmit={handleSubmit}
       processing={processing}
       submitLabel="Save"
       maxWidth="4xl"
     >
+      <Card>
+        <CardHeader>
+          <CardTitle>Edit Lead</CardTitle>
+          <CardDescription>Update lead information</CardDescription>
+        </CardHeader>
 
-<Card>
-            <CardHeader>
-                <CardTitle>Edit Lead</CardTitle>
-                <CardDescription>
-                  Update lead information
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Name <span className="text-red-500">*</span></Label>
-                    <Input
-                      id="name"
-                      value={data.name}
-                      onChange={(e) => setData('name', e.target.value)}
-                    />
-                    {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
-                  </div>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={data.email}
-                      onChange={(e) => setData('email', e.target.value)}
-                    />
-                    {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
-                  </div>
+            <div className="space-y-2">
+              <Label>Name *</Label>
+              <Input value={data.name} onChange={(e) => setData('name', e.target.value)} />
+              {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+            </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone</Label>
-                    <Input
-                      id="phone"
-                      value={data.phone}
-                      onChange={(e) => setData('phone', e.target.value)}
-                    />
-                    {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
-                  </div>
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <Input value={data.email} onChange={(e) => setData('email', e.target.value)} />
+              {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+            </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="company">Company</Label>
-                    <Input
-                      id="company"
-                      value={data.company}
-                      onChange={(e) => setData('company', e.target.value)}
-                    />
-                    {errors.company && <p className="text-red-500 text-sm">{errors.company}</p>}
-                  </div>
+            <div className="space-y-2">
+              <Label>Phone</Label>
+              <Input value={data.phone} onChange={(e) => setData('phone', e.target.value)} />
+              {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
+            </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="position">Position</Label>
-                    <Input
-                      id="position"
-                      value={data.position}
-                      onChange={(e) => setData('position', e.target.value)}
-                    />
-                    {errors.position && <p className="text-red-500 text-sm">{errors.position}</p>}
-                  </div>
+            <div className="space-y-2">
+              <Label>Company</Label>
+              <Input value={data.company} onChange={(e) => setData('company', e.target.value)} />
+              {errors.company && <p className="text-red-500 text-sm">{errors.company}</p>}
+            </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="source">Source</Label>
-                    <Select 
-                      value={data.source} 
-                      onValueChange={(value) => setData('source', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select source" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Website">Website</SelectItem>
-                        <SelectItem value="Referral">Referral</SelectItem>
-                        <SelectItem value="Trade Show">Trade Show</SelectItem>
-                        <SelectItem value="Social Media">Social Media</SelectItem>
-                        <SelectItem value="Email Campaign">Email Campaign</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {errors.source && <p className="text-red-500 text-sm">{errors.source}</p>}
-                  </div>
+            <div className="space-y-2">
+              <Label>Position</Label>
+              <Input value={data.position} onChange={(e) => setData('position', e.target.value)} />
+              {errors.position && <p className="text-red-500 text-sm">{errors.position}</p>}
+            </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="status">Status <span className="text-red-500">*</span></Label>
-                    <Select 
-                      value={data.status} 
-                      onValueChange={(value) => setData('status', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="new">New</SelectItem>
-                        <SelectItem value="contacted">Contacted</SelectItem>
-                        <SelectItem value="qualified">Qualified</SelectItem>
-                        <SelectItem value="unqualified">Unqualified</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {errors.status && <p className="text-red-500 text-sm">{errors.status}</p>}
-                  </div>
-                </div>
+            <div className="space-y-2">
+              <Label>Source</Label>
+              <Select
+                value={data.source || ''}
+                onValueChange={(value) => setData('source', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select source" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Website">Website</SelectItem>
+                  <SelectItem value="Referral">Referral</SelectItem>
+                  <SelectItem value="Trade Show">Trade Show</SelectItem>
+                  <SelectItem value="Social Media">Social Media</SelectItem>
+                  <SelectItem value="Email Campaign">Email Campaign</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.source && <p className="text-red-500 text-sm">{errors.source}</p>}
+            </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="address">Address</Label>
-                  <Textarea
-                    id="address"
-                    value={data.address}
-                    onChange={(e) => setData('address', e.target.value)}
-                  />
-                  {errors.address && <p className="text-red-500 text-sm">{errors.address}</p>}
-                </div>
+            <div className="space-y-2">
+              <Label>Status *</Label>
+              <Select
+                value={data.status || ''}
+                onValueChange={(value) => setData('status', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="new">New</SelectItem>
+                  <SelectItem value="contacted">Contacted</SelectItem>
+                  <SelectItem value="qualified">Qualified</SelectItem>
+                  <SelectItem value="unqualified">Unqualified</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.status && <p className="text-red-500 text-sm">{errors.status}</p>}
+            </div>
+          </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="city">City</Label>
-                    <Input
-                      id="city"
-                      value={data.city}
-                      onChange={(e) => setData('city', e.target.value)}
-                    />
-                    {errors.city && <p className="text-red-500 text-sm">{errors.city}</p>}
-                  </div>
+          <div className="space-y-2">
+            <Label>Address</Label>
+            <Textarea
+              value={data.address}
+              onChange={(e) => setData('address', e.target.value)}
+            />
+            {errors.address && <p className="text-red-500 text-sm">{errors.address}</p>}
+          </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="state">State/Province</Label>
-                    <Input
-                      id="state"
-                      value={data.state}
-                      onChange={(e) => setData('state', e.target.value)}
-                    />
-                    {errors.state && <p className="text-red-500 text-sm">{errors.state}</p>}
-                  </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label>City</Label>
+              <Input value={data.city} onChange={(e) => setData('city', e.target.value)} />
+              {errors.city && <p className="text-red-500 text-sm">{errors.city}</p>}
+            </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="postal_code">Postal Code</Label>
-                    <Input
-                      id="postal_code"
-                      value={data.postal_code}
-                      onChange={(e) => setData('postal_code', e.target.value)}
-                    />
-                    {errors.postal_code && <p className="text-red-500 text-sm">{errors.postal_code}</p>}
-                  </div>
+            <div className="space-y-2">
+              <Label>State/Province</Label>
+              <Input value={data.state} onChange={(e) => setData('state', e.target.value)} />
+              {errors.state && <p className="text-red-500 text-sm">{errors.state}</p>}
+            </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="country">Country</Label>
-                    <Input
-                      id="country"
-                      value={data.country}
-                      onChange={(e) => setData('country', e.target.value)}
-                    />
-                    {errors.country && <p className="text-red-500 text-sm">{errors.country}</p>}
-                  </div>
-                </div>
+            <div className="space-y-2">
+              <Label>Postal Code</Label>
+              <Input value={data.postal_code} onChange={(e) => setData('postal_code', e.target.value)} />
+              {errors.postal_code && <p className="text-red-500 text-sm">{errors.postal_code}</p>}
+            </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Notes</Label>
-                  <Textarea
-                    id="notes"
-                    value={data.notes}
-                    onChange={(e) => setData('notes', e.target.value)}
-                    rows={4}
-                  />
-                  {errors.notes && <p className="text-red-500 text-sm">{errors.notes}</p>}
-                </div>
-              </CardContent>
-              </form>
-          </Card>
-</CrmFormShell>
+            <div className="space-y-2">
+              <Label>Country</Label>
+              <Input value={data.country} onChange={(e) => setData('country', e.target.value)} />
+              {errors.country && <p className="text-red-500 text-sm">{errors.country}</p>}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Notes</Label>
+            <Textarea
+              rows={4}
+              value={data.notes}
+              onChange={(e) => setData('notes', e.target.value)}
+            />
+            {errors.notes && <p className="text-red-500 text-sm">{errors.notes}</p>}
+          </div>
+        </CardContent>
+      </Card>
+    </CrmFormShell>
   );
 }

@@ -207,9 +207,9 @@ export default function CreateSprint({ auth, project, boards = [] }: Props) {
                   {processing ? 'Creating...' : 'Create Sprint'}
                 </Button>
               </div>
-            </form>
           </CardContent>
         </Card>
+        </div>
 </ProjectsFormShell>
   );
 }

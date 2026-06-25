@@ -181,7 +181,6 @@ export default function ReleaseEdit({ auth, project, release, sprints = [], epic
                     {processing ? 'Updating...' : 'Update Release'}
                   </Button>
                 </div>
-              </form>
             </CardContent>
           </Card>
 </ProjectsFormShell>
