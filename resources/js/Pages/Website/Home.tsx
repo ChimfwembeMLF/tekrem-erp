@@ -338,7 +338,7 @@ export default function Home({ canLogin, canRegister }: Props) {
         <div
           className="absolute inset-0 bg-cover bg-center animate-zoom"
           style={{
-            backgroundImage: "url('/assets/illustrations/Tekrem-hero-section-image.jpeg')",
+            backgroundImage: "url('/assets/illustrations/tekrem-hero-section-image.jpeg')",
             backgroundRepeat: 'no-repeat',
           }}
         />
