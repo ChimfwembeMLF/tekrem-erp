@@ -369,7 +369,7 @@ export default function Dashboard({
 
         {/* Overdue Tickets Alert */}
         {overdueTickets.length > 0 && (
-          <Card className="border-red-200 bg-red-50">
+          <Card className="border-red-200 bg-red-50 dark:bg-black">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-red-800">
                 <AlertTriangle className="h-5 w-5" />
@@ -379,7 +379,7 @@ export default function Dashboard({
             <CardContent>
               <div className="space-y-3">
                 {overdueTickets.map((ticket) => (
-                  <div key={ticket.id} className="flex items-center justify-between p-3 bg-white border border-red-200 rounded-lg">
+                  <div key={ticket.id} className="flex items-center justify-between p-3 bg-white dark:bg-black border border-red-200 rounded-lg">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-sm font-medium">#{ticket.ticket_number}</span>
