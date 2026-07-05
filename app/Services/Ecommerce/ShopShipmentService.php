@@ -6,9 +6,30 @@ use App\Models\Ecommerce\ShopShipment;
 use App\Models\Ecommerce\ShopShipmentEvent;
 use App\Models\Sales\SalesOrder;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class ShopShipmentService
 {
+    public function __construct(
+        private ShopOrderNotificationService $notifications,
+    ) {}
+
+    /** @return list<string> */
+    public function allowedStatuses(): array
+    {
+        return array_keys(config('shop.shipment_statuses', []));
+    }
+
+    public function labelForStatus(string $status): string
+    {
+        return config("shop.shipment_statuses.{$status}", ucfirst(str_replace('_', ' ', $status)));
+    }
+
+    public function defaultDescriptionForStatus(string $status): string
+    {
+        return config("shop.shipment_default_descriptions.{$status}", $this->labelForStatus($status));
+    }
+
     public function createForOrder(SalesOrder $order, array $data): ShopShipment
     {
         $trackingNumber = $data['tracking_number'] ?? $this->generateTrackingNumber();
@@ -23,35 +44,68 @@ class ShopShipmentService
             'shipping_cost' => $order->shipping_cost,
         ]);
 
-        $this->addEvent($shipment, 'pending', 'Order received and awaiting dispatch', null);
+        $this->recordCheckpoint($shipment, 'pending', null, null, notify: false);
 
-        return $shipment;
+        return $shipment->fresh(['events', 'shippingMethod', 'salesOrder']);
     }
 
     public function markShipped(ShopShipment $shipment, ?string $trackingNumber = null, ?string $carrier = null): ShopShipment
     {
-        $shipment->update([
-            'tracking_number' => $trackingNumber ?? $shipment->tracking_number ?? $this->generateTrackingNumber(),
-            'carrier' => $carrier ?? $shipment->carrier,
-            'status' => 'in_transit',
-            'shipped_at' => now(),
-        ]);
+        if ($trackingNumber || $carrier) {
+            $shipment->update([
+                'tracking_number' => $trackingNumber ?? $shipment->tracking_number,
+                'carrier' => $carrier ?? $shipment->carrier,
+            ]);
+        }
 
-        $this->addEvent($shipment, 'in_transit', 'Package dispatched', null);
-
-        return $shipment->fresh(['events', 'shippingMethod']);
+        return $this->recordCheckpoint($shipment, 'in_transit', 'Package dispatched', null);
     }
 
     public function markDelivered(ShopShipment $shipment): ShopShipment
     {
-        $shipment->update([
-            'status' => 'delivered',
-            'delivered_at' => now(),
-        ]);
+        return $this->recordCheckpoint($shipment, 'delivered', null, null);
+    }
 
-        $this->addEvent($shipment, 'delivered', 'Package delivered', null);
+    public function recordCheckpoint(
+        ShopShipment $shipment,
+        string $status,
+        ?string $description = null,
+        ?string $location = null,
+        bool $notify = true,
+    ): ShopShipment {
+        if (! in_array($status, $this->allowedStatuses(), true)) {
+            throw ValidationException::withMessages([
+                'status' => 'Invalid shipment status.',
+            ]);
+        }
 
-        return $shipment->fresh(['events', 'shippingMethod']);
+        $description = $description ?: $this->defaultDescriptionForStatus($status);
+
+        $updates = ['status' => $status];
+
+        if ($status === 'in_transit' && ! $shipment->shipped_at) {
+            $updates['shipped_at'] = now();
+        }
+
+        if ($status === 'delivered') {
+            $updates['delivered_at'] = now();
+        }
+
+        if ($status === 'cancelled') {
+            $updates['delivered_at'] = null;
+        }
+
+        $shipment->update($updates);
+
+        $event = $this->addEvent($shipment, $status, $description, $location);
+
+        $shipment = $shipment->fresh(['events', 'shippingMethod', 'salesOrder']);
+
+        if ($notify && config('shop.order.notify_on_checkpoint', true)) {
+            $this->notifications->notifyShipmentCheckpoint($shipment, $event);
+        }
+
+        return $shipment;
     }
 
     public function addEvent(ShopShipment $shipment, string $status, ?string $description = null, ?string $location = null): ShopShipmentEvent

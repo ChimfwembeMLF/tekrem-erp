@@ -29,6 +29,7 @@ import {
     ShoppingBag,
     Heart,
     Truck,
+    MapPin,
 } from 'lucide-react';
 import NotificationComponent from '@/Components/NotificationComponent';
 import useRoute from '@/Hooks/useRoute';
@@ -36,6 +37,7 @@ import ApplicationMark from '@/Components/ApplicationMark';
 import { ThemeToggle } from '@/Components/ThemeProvider';
 import useTypedPage from '@/Hooks/useTypedPage';
 import SupportChatWidget from '@/Components/Support/SupportChatWidget';
+import ShopGuestMerge from '@/Components/Shop/ShopGuestMerge';
 import AppProvider from '@/Providers/AppProvider';
 
 interface User {
@@ -98,6 +100,11 @@ const navigation = [
     name: 'Profile',
     href: 'customer.profile.show',
     icon: Settings,
+  },
+  {
+    name: 'Delivery addresses',
+    href: 'customer.profile.addresses.index',
+    icon: MapPin,
   },
 ];
 export default function CustomerLayout({ children }: Props) {
@@ -267,6 +274,7 @@ export default function CustomerLayout({ children }: Props) {
             </Sheet>
 
             <SupportChatWidget />
+            <ShopGuestMerge />
         </div>
         </AppProvider>
     );

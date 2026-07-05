@@ -213,7 +213,15 @@ export default function ShippingIndex({ methods }: { methods: Method[] }) {
                     <TableRow key={method.id}>
                       <TableCell>
                         {editingId === method.id ? (
-                          <Input value={editForm.name ?? ''} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
+                          <div className="space-y-2">
+                            <Input value={editForm.name ?? ''} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
+                            <Textarea
+                              rows={2}
+                              value={editForm.description ?? ''}
+                              onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                              placeholder="Description"
+                            />
+                          </div>
                         ) : (
                           <>
                             <p className="font-medium">{method.name}</p>
@@ -234,10 +242,31 @@ export default function ShippingIndex({ methods }: { methods: Method[] }) {
                         )}
                       </TableCell>
                       <TableCell>
-                        <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
-                          <Clock className="h-3.5 w-3.5" />
-                          {method.estimated_days_min}–{method.estimated_days_max} days
-                        </span>
+                        {editingId === method.id ? (
+                          <div className="flex items-center gap-1">
+                            <Input
+                              type="number"
+                              min="0"
+                              className="w-16"
+                              value={editForm.estimated_days_min ?? ''}
+                              onChange={(e) => setEditForm({ ...editForm, estimated_days_min: Number(e.target.value) })}
+                            />
+                            <span className="text-muted-foreground">–</span>
+                            <Input
+                              type="number"
+                              min="0"
+                              className="w-16"
+                              value={editForm.estimated_days_max ?? ''}
+                              onChange={(e) => setEditForm({ ...editForm, estimated_days_max: Number(e.target.value) })}
+                            />
+                            <span className="text-xs text-muted-foreground">days</span>
+                          </div>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+                            <Clock className="h-3.5 w-3.5" />
+                            {method.estimated_days_min}–{method.estimated_days_max} days
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">

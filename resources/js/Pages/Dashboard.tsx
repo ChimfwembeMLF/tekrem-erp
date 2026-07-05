@@ -25,6 +25,7 @@ import ActivityFeed from '@/Components/Dashboard/ActivityFeed';
 import QuickActions from '@/Components/Dashboard/QuickActions';
 import AnalyticsWidget from '@/Components/Dashboard/AnalyticsWidget';
 import PeopleActionQueue, { PeopleActionQueueData } from '@/Components/Dashboard/PeopleActionQueue';
+import ManagerTeamQueue, { ManagerTeamQueueData } from '@/Components/Dashboard/ManagerTeamQueue';
 import ModuleCardGrid, { ModuleCard } from '@/Components/Dashboard/ModuleCardGrid';
 
 interface DashboardProps {
@@ -82,6 +83,7 @@ interface DashboardProps {
   }>;
   isAdmin: boolean;
   peopleActionQueue?: PeopleActionQueueData;
+  managerTeamQueue?: ManagerTeamQueueData;
 }
 
 export default function Dashboard({
@@ -95,6 +97,7 @@ export default function Dashboard({
   notifications,
   isAdmin,
   peopleActionQueue,
+  managerTeamQueue,
 }: DashboardProps) {
   const { hasAnyRole } = usePermissions();
   const { t } = useTranslate();
@@ -160,6 +163,7 @@ export default function Dashboard({
         </div>
 
         {peopleActionQueue && <PeopleActionQueue queue={peopleActionQueue} />}
+        {managerTeamQueue && <ManagerTeamQueue queue={managerTeamQueue} />}
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">

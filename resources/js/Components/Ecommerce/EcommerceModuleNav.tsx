@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
-import { ImageIcon, MessageSquare, Package, Settings, Store, Tag, Truck } from 'lucide-react';
+import { ImageIcon, BarChart3, MessageSquare, Package, Settings, Store, Tag, Truck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import useRoute from '@/Hooks/useRoute';
 
@@ -10,6 +10,7 @@ export default function EcommerceModuleNav() {
   const items = [
     { href: route('ecommerce.dashboard'), label: 'Dashboard', pattern: 'ecommerce.dashboard', icon: Store },
     { href: route('ecommerce.orders.index'), label: 'Orders', pattern: 'ecommerce.orders.*', icon: Package },
+    { href: route('ecommerce.analytics'), label: 'Analytics', pattern: 'ecommerce.analytics', icon: BarChart3 },
     { href: route('ecommerce.shipping.index'), label: 'Shipping', pattern: 'ecommerce.shipping.*', icon: Truck },
     { href: route('ecommerce.coupons.index'), label: 'Coupons', pattern: 'ecommerce.coupons.*', icon: Tag },
     { href: route('ecommerce.reviews.index'), label: 'Reviews', pattern: 'ecommerce.reviews.*', icon: MessageSquare },

@@ -52,6 +52,9 @@ export default function Orders({ orders, cartCount }: Props) {
                 )}
                 <div className="flex flex-wrap gap-2">
                   <Button size="sm" variant="outline" asChild>
+                    <Link href={route('shop.orders.show', order.id)}>View details</Link>
+                  </Button>
+                  <Button size="sm" variant="outline" asChild>
                     <Link href={route('shop.order.confirmation', { order: order.id, token: order.access_token })}>View order</Link>
                   </Button>
                   <Button size="sm" variant="outline" asChild>

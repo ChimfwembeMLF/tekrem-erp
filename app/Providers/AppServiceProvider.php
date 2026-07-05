@@ -7,6 +7,9 @@ use App\Models\Permission;
 use App\Models\User;
 use App\Models\HR\JobApplication;
 use App\Models\HR\JobPosting;
+use App\Services\Ecommerce\ShopAccountMergeService;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 
@@ -40,5 +43,9 @@ class AppServiceProvider extends ServiceProvider
             // Handle the case when the permissions table doesn't exist yet (during migrations)
             // This prevents errors when running migrations for the first time
         }
+
+        Event::listen(Login::class, function (Login $event) {
+            app(ShopAccountMergeService::class)->mergeOnLogin($event->user);
+        });
     }
 }

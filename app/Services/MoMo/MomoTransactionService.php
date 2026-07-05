@@ -5,6 +5,8 @@ namespace App\Services\MoMo;
 use App\Models\Finance\Invoice;
 use App\Models\Finance\MomoTransaction;
 use App\Models\POS\PosSale;
+use App\Models\Sales\SalesOrder;
+use App\Services\Ecommerce\ShopOrderNotificationService;
 use App\Services\Finance\LedgerService;
 use App\Services\Payments\PawaPayTransactionService;
 use Illuminate\Support\Facades\DB;
@@ -152,7 +154,18 @@ class MomoTransactionService
 
     protected function completeLinkedRecords(MomoTransaction $transaction): void
     {
-        if ($transaction->transactable_type !== PosSale::class || !$transaction->transactable_id) {
+        if ($transaction->transactable_type === SalesOrder::class && $transaction->transactable_id) {
+            $this->completeShopOrderPayment($transaction);
+
+            return;
+        }
+
+        if ($transaction->transactable_type !== PosSale::class || ! $transaction->transactable_id) {
+            $salesOrderId = $transaction->metadata['sales_order_id'] ?? null;
+            if ($salesOrderId) {
+                $this->updateShopOrderPayment((int) $salesOrderId, 'paid', $transaction);
+            }
+
             return;
         }
 
@@ -168,7 +181,23 @@ class MomoTransactionService
 
     protected function processFailedTransaction(MomoTransaction $transaction): void
     {
-        if ($transaction->transactable_type !== PosSale::class || !$transaction->transactable_id) {
+        if ($transaction->transactable_type === SalesOrder::class && $transaction->transactable_id) {
+            $this->failShopOrderPayment($transaction);
+
+            return;
+        }
+
+        $salesOrderId = $transaction->metadata['sales_order_id'] ?? null;
+        if ($salesOrderId) {
+            $this->updateShopOrderPayment((int) $salesOrderId, 'failed', $transaction);
+        }
+
+        if ($transaction->transactable_type !== PosSale::class || ! $transaction->transactable_id) {
+            Log::warning('MoMo transaction failed', [
+                'transaction_id' => $transaction->id,
+                'reason' => $transaction->failure_reason,
+            ]);
+
             return;
         }
 
@@ -185,6 +214,47 @@ class MomoTransactionService
             'transaction_id' => $transaction->id,
             'reason' => $transaction->failure_reason,
         ]);
+    }
+
+    protected function completeShopOrderPayment(MomoTransaction $transaction): void
+    {
+        $order = SalesOrder::find($transaction->transactable_id);
+        if (! $order || $order->payment_status === 'paid') {
+            return;
+        }
+
+        $this->updateShopOrderPayment($order->id, 'paid', $transaction);
+    }
+
+    protected function failShopOrderPayment(MomoTransaction $transaction): void
+    {
+        $order = SalesOrder::find($transaction->transactable_id);
+        if (! $order || $order->payment_status !== 'pending') {
+            return;
+        }
+
+        $this->updateShopOrderPayment($order->id, 'failed', $transaction);
+    }
+
+    protected function updateShopOrderPayment(int $orderId, string $paymentStatus, MomoTransaction $transaction): void
+    {
+        $order = SalesOrder::find($orderId);
+        if (! $order || $order->source !== 'ecommerce') {
+            return;
+        }
+
+        $order->update([
+            'payment_status' => $paymentStatus,
+            'metadata' => array_merge($order->metadata ?? [], [
+                'momo_transaction_id' => $transaction->id,
+                'momo_payment_status' => $paymentStatus,
+                'momo_updated_at' => now()->toIso8601String(),
+            ]),
+        ]);
+
+        if ($paymentStatus === 'paid') {
+            app(ShopOrderNotificationService::class)->notifyPaymentReceived($order->fresh());
+        }
     }
 
     protected function createLedgerEntries(MomoTransaction $transaction): void

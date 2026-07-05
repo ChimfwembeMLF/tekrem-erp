@@ -5,9 +5,11 @@ import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Badge } from '@/Components/ui/badge';
-import { Package, Search, Truck } from 'lucide-react';
+import { Search, Truck } from 'lucide-react';
 import useRoute from '@/Hooks/useRoute';
 import { formatZmw } from '@/lib/formatCurrency';
+import { shipmentStatusLabel } from '@/lib/shipmentStatuses';
+import ShipmentTrackingTimeline from '@/Components/Shop/ShipmentTrackingTimeline';
 
 interface ShipmentEvent {
   id: number;
@@ -58,7 +60,7 @@ export default function Tracking({ trackingNumber, shipment, cartCount }: Props)
         <div className="mb-8 text-center">
           <Truck className="mx-auto mb-3 h-10 w-10 text-primary" />
           <h1 className="text-2xl font-bold">Track your shipment</h1>
-          <p className="mt-2 text-muted-foreground">Enter your tracking number to see delivery status</p>
+          <p className="mt-2 text-muted-foreground">Enter your tracking number to see delivery progress</p>
         </div>
 
         <form onSubmit={submit} className="mb-8 flex gap-2">
@@ -79,8 +81,8 @@ export default function Tracking({ trackingNumber, shipment, cartCount }: Props)
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between gap-2">
-                  <span>{shipment.tracking_number}</span>
-                  <Badge variant="outline" className="capitalize">{shipment.status.replace('_', ' ')}</Badge>
+                  <span className="font-mono text-base">{shipment.tracking_number}</span>
+                  <Badge variant="outline">{shipmentStatusLabel(shipment.status)}</Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
@@ -92,27 +94,22 @@ export default function Tracking({ trackingNumber, shipment, cartCount }: Props)
                 )}
                 {shipment.carrier && <p><span className="text-muted-foreground">Carrier:</span> {shipment.carrier}</p>}
                 {shipment.shipping_method && <p><span className="text-muted-foreground">Method:</span> {shipment.shipping_method.name}</p>}
+                {shipment.shipped_at && (
+                  <p><span className="text-muted-foreground">Shipped:</span> {new Date(shipment.shipped_at).toLocaleString()}</p>
+                )}
+                {shipment.delivered_at && (
+                  <p><span className="text-muted-foreground">Delivered:</span> {new Date(shipment.delivered_at).toLocaleString()}</p>
+                )}
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader><CardTitle className="text-base">Tracking history</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
-                {shipment.events.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No tracking events yet.</p>
-                ) : (
-                  shipment.events.map((event) => (
-                    <div key={event.id} className="flex gap-3 border-l-2 border-primary/30 pl-4">
-                      <Package className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                      <div>
-                        <p className="font-medium capitalize">{event.status.replace('_', ' ')}</p>
-                        {event.description && <p className="text-sm text-muted-foreground">{event.description}</p>}
-                        {event.location && <p className="text-xs text-muted-foreground">{event.location}</p>}
-                        <p className="text-xs text-muted-foreground">{new Date(event.occurred_at).toLocaleString()}</p>
-                      </div>
-                    </div>
-                  ))
-                )}
+              <CardHeader><CardTitle className="text-base">Delivery progress</CardTitle></CardHeader>
+              <CardContent>
+                <ShipmentTrackingTimeline
+                  currentStatus={shipment.status}
+                  events={shipment.events}
+                />
               </CardContent>
             </Card>
 

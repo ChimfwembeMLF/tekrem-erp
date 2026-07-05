@@ -7,6 +7,7 @@ import BreadcrumbNavigation from '@/Components/BreadcrumbNavigation';
 import AppProvider from '@/Providers/AppProvider';
 import SupportChatWidget from '@/Components/Support/SupportChatWidget';
 import SupportStaffAlertsListener from '@/Components/Support/SupportStaffAlertsListener';
+import ShopGuestMerge from '@/Components/Shop/ShopGuestMerge';
 
 interface Props {
   title: string;
@@ -56,6 +57,7 @@ export default function AppLayout({
       </div>
       {page.props.auth?.user && <SupportStaffAlertsListener />}
       {page.props.auth?.user && <SupportChatWidget />}
+      {page.props.auth?.user && <ShopGuestMerge />}
     </AppProvider>
   );
 }

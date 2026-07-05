@@ -12,6 +12,16 @@ interface CheckoutDefaults {
   name: string;
   email: string;
   phone: string;
+  shipping_address?: string;
+}
+
+interface SavedAddress {
+  id: number;
+  label: string;
+  recipient_name: string;
+  phone?: string | null;
+  address_line: string;
+  is_default: boolean;
 }
 
 interface CartDataResponse {
@@ -21,6 +31,7 @@ interface CartDataResponse {
   stockIssues: string[];
   cartCount: number;
   defaults: CheckoutDefaults;
+  savedAddresses: SavedAddress[];
   momoAvailable: boolean;
 }
 
@@ -59,7 +70,8 @@ export default function ShopSheetProvider({ children, initialCartCount = 0 }: Pr
   const [totals, setTotals] = useState<ShopTotals>({ subtotal: 0, tax_amount: 0, total: 0 });
   const [shippingMethods, setShippingMethods] = useState<ShopShippingMethod[]>([]);
   const [stockIssues, setStockIssues] = useState<string[]>([]);
-  const [defaults, setDefaults] = useState<CheckoutDefaults>({ name: '', email: '', phone: '' });
+  const [defaults, setDefaults] = useState<CheckoutDefaults>({ name: '', email: '', phone: '', shipping_address: '' });
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [momoAvailable, setMomoAvailable] = useState(false);
 
   const [receiptOpen, setReceiptOpen] = useState(false);
@@ -73,6 +85,7 @@ export default function ShopSheetProvider({ children, initialCartCount = 0 }: Pr
     setStockIssues(data.stockIssues);
     setCartCount(data.cartCount);
     setDefaults(data.defaults);
+    setSavedAddresses(data.savedAddresses ?? []);
     setMomoAvailable(data.momoAvailable);
   }, []);
 
@@ -162,6 +175,7 @@ export default function ShopSheetProvider({ children, initialCartCount = 0 }: Pr
         shippingMethods={shippingMethods}
         stockIssues={stockIssues}
         defaults={defaults}
+        savedAddresses={savedAddresses}
         momoAvailable={momoAvailable}
         onCartChange={recalculateCart}
         onCartCountChange={setCartCount}

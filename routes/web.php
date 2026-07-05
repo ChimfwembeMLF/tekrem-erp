@@ -73,6 +73,10 @@ Route::prefix('shop')->name('shop.')->group(function () {
     Route::get('/checkout', [\App\Http\Controllers\Ecommerce\ShopController::class, 'checkout'])->name('checkout');
     Route::post('/checkout', [\App\Http\Controllers\Ecommerce\ShopController::class, 'placeOrder'])->name('checkout.store');
     Route::get('/orders', [\App\Http\Controllers\Ecommerce\ShopController::class, 'orders'])->middleware('auth')->name('orders');
+    Route::get('/orders/{order}', [\App\Http\Controllers\Ecommerce\ShopController::class, 'showOrder'])->middleware('auth')->name('orders.show');
+    Route::post('/orders/{order}/cancel', [\App\Http\Controllers\Ecommerce\ShopController::class, 'cancelOrder'])->middleware('auth')->name('orders.cancel');
+    Route::get('/order/{order}/payment-status', [\App\Http\Controllers\Ecommerce\ShopController::class, 'paymentStatus'])->name('order.payment-status');
+    Route::post('/wishlist/merge', [\App\Http\Controllers\Ecommerce\ShopController::class, 'mergeWishlist'])->middleware('auth')->name('wishlist.merge');
     Route::get('/wishlist', [\App\Http\Controllers\Ecommerce\ShopController::class, 'wishlist'])->middleware('auth')->name('wishlist');
     Route::post('/{product}/wishlist', [\App\Http\Controllers\Ecommerce\ShopController::class, 'toggleWishlist'])->middleware('auth')->name('wishlist.toggle');
     Route::post('/{product}/reviews', [\App\Http\Controllers\Ecommerce\ShopController::class, 'storeReview'])->name('reviews.store');
@@ -843,6 +847,10 @@ Route::middleware([
         Route::get('/orders/{order}', [\App\Http\Controllers\Ecommerce\OrderController::class, 'show'])->name('orders.show');
         Route::post('/orders/{order}/ship', [\App\Http\Controllers\Ecommerce\OrderController::class, 'ship'])->name('orders.ship');
         Route::post('/orders/{order}/deliver', [\App\Http\Controllers\Ecommerce\OrderController::class, 'deliver'])->name('orders.deliver');
+        Route::post('/orders/{order}/checkpoint', [\App\Http\Controllers\Ecommerce\OrderController::class, 'checkpoint'])->name('orders.checkpoint');
+        Route::post('/orders/{order}/cancel', [\App\Http\Controllers\Ecommerce\OrderController::class, 'cancel'])->name('orders.cancel');
+        Route::post('/orders/{order}/refund', [\App\Http\Controllers\Ecommerce\OrderController::class, 'refund'])->name('orders.refund');
+        Route::get('/analytics', [\App\Http\Controllers\Ecommerce\AnalyticsController::class, 'dashboard'])->name('analytics');
         Route::get('/shipping', [\App\Http\Controllers\Ecommerce\ShippingController::class, 'index'])->name('shipping.index');
         Route::post('/shipping', [\App\Http\Controllers\Ecommerce\ShippingController::class, 'store'])->name('shipping.store');
         Route::put('/shipping/{method}', [\App\Http\Controllers\Ecommerce\ShippingController::class, 'update'])->name('shipping.update');
@@ -1129,6 +1137,11 @@ Route::middleware([
             Route::put('/notifications', [\App\Http\Controllers\Customer\ProfileController::class, 'updateNotifications'])->name('notifications.update');
             Route::post('/photo', [\App\Http\Controllers\Customer\ProfileController::class, 'updatePhoto'])->name('photo.update');
             Route::delete('/photo', [\App\Http\Controllers\Customer\ProfileController::class, 'deletePhoto'])->name('photo.delete');
+            Route::get('/addresses', [\App\Http\Controllers\Customer\ShopAddressController::class, 'index'])->name('addresses.index');
+            Route::post('/addresses', [\App\Http\Controllers\Customer\ShopAddressController::class, 'store'])->name('addresses.store');
+            Route::put('/addresses/{address}', [\App\Http\Controllers\Customer\ShopAddressController::class, 'update'])->name('addresses.update');
+            Route::delete('/addresses/{address}', [\App\Http\Controllers\Customer\ShopAddressController::class, 'destroy'])->name('addresses.destroy');
+            Route::post('/addresses/{address}/default', [\App\Http\Controllers\Customer\ShopAddressController::class, 'setDefault'])->name('addresses.default');
             Route::get('/delete-account', [\App\Http\Controllers\Customer\ProfileController::class, 'deleteAccount'])->name('delete-account');
             Route::delete('/delete-account', [\App\Http\Controllers\Customer\ProfileController::class, 'destroyAccount'])->name('destroy-account');
         });

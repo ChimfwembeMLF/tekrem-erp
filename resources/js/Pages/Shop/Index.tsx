@@ -6,6 +6,9 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/Componen
 import { Input } from '@/Components/ui/input';
 import { Badge } from '@/Components/ui/badge';
 import { ShopHeader } from '@/Components/Shop/OrderSummary';
+import FeaturedProductsCarousel from '@/Components/Shop/FeaturedProductsCarousel';
+import ShopPagination from '@/Components/Shop/ShopPagination';
+import ShopStockBadge from '@/Components/Shop/ShopStockBadge';
 import { formatZmw } from '@/lib/formatCurrency';
 import useRoute from '@/Hooks/useRoute';
 import { cn } from '@/lib/utils';
@@ -18,6 +21,7 @@ interface Product {
   description?: string;
   category?: { name: string };
   image_urls?: string[];
+  available_stock?: number;
 }
 
 interface Category {
@@ -26,15 +30,32 @@ interface Category {
   slug: string;
 }
 
+interface ShopHero {
+  background_url?: string | null;
+}
+
 interface Props {
-  products: { data: Product[] };
+  products: {
+    data: Product[];
+    links: Array<{ url: string | null; label: string; active: boolean }>;
+  };
+  featuredProducts: Product[];
   categories: Category[];
   cartCount: number;
   filters: { search?: string; category?: string };
+  shopHero?: ShopHero;
 }
 
-export default function ShopIndex({ products, categories, cartCount, filters }: Props) {
+export default function ShopIndex({
+  products,
+  featuredProducts,
+  categories,
+  cartCount,
+  filters,
+  shopHero,
+}: Props) {
   const route = useRoute();
+  const showFeatured = featuredProducts.length > 0 && !filters.search && !filters.category;
 
   return (
     <ShopLayout title="Shop" cartCount={cartCount}>
@@ -42,6 +63,17 @@ export default function ShopIndex({ products, categories, cartCount, filters }: 
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 space-y-8">
         <ShopHeader title="Shop" subtitle="Browse our products" />
+
+        {showFeatured && (
+          <FeaturedProductsCarousel
+            products={featuredProducts}
+            backgroundImageUrl={shopHero?.background_url}
+            onAddToCart={(productId) => {
+              const product = featuredProducts.find((item) => item.id === productId);
+              router.post(route('shop.cart.add', product?.slug || productId));
+            }}
+          />
+        )}
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <form
@@ -100,48 +132,62 @@ export default function ShopIndex({ products, categories, cartCount, filters }: 
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {products.data.map((p) => (
-              <Card key={p.id} className={cn('overflow-hidden transition-shadow hover:shadow-md')}>
-                <Link href={route('shop.show', p.slug || p.id)} className="block">
-                  <div className="aspect-[4/3] bg-muted/30">
-                    {p.image_urls?.[0] ? (
-                      <img src={p.image_urls[0]} alt={p.name} className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                        No image
+          <>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {products.data.map((p) => {
+                const outOfStock = (p.available_stock ?? 1) <= 0;
+
+                return (
+                  <Card key={p.id} className={cn('overflow-hidden transition-shadow hover:shadow-md', outOfStock && 'opacity-90')}>
+                    <Link href={route('shop.show', p.slug || p.id)} className="block">
+                      <div className="relative aspect-[4/3] bg-muted/30">
+                        {p.image_urls?.[0] ? (
+                          <img src={p.image_urls[0]} alt={p.name} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                            No image
+                          </div>
+                        )}
+                        {p.available_stock !== undefined && (
+                          <div className="absolute left-3 top-3">
+                            <ShopStockBadge stock={p.available_stock} />
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                </Link>
-
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">
-                    <Link href={route('shop.show', p.slug || p.id)} className="hover:underline">
-                      {p.name}
                     </Link>
-                  </CardTitle>
-                  {p.category && <Badge variant="secondary">{p.category.name}</Badge>}
-                </CardHeader>
 
-                <CardContent className="pt-0">
-                  <p className="text-xl font-bold">{formatZmw(Number(p.sale_price))}</p>
-                </CardContent>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg">
+                        <Link href={route('shop.show', p.slug || p.id)} className="hover:underline">
+                          {p.name}
+                        </Link>
+                      </CardTitle>
+                      {p.category && <Badge variant="secondary">{p.category.name}</Badge>}
+                    </CardHeader>
 
-                <CardFooter className="gap-2">
-                  <Button asChild variant="outline" className="flex-1">
-                    <Link href={route('shop.show', p.slug || p.id)}>View</Link>
-                  </Button>
-                  <Button
-                    className="flex-1"
-                    onClick={() => router.post(route('shop.cart.add', p.slug || p.id))}
-                  >
-                    Add to cart
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
+                    <CardContent className="pt-0">
+                      <p className="text-xl font-bold">{formatZmw(Number(p.sale_price))}</p>
+                    </CardContent>
+
+                    <CardFooter className="gap-2">
+                      <Button asChild variant="outline" className="flex-1">
+                        <Link href={route('shop.show', p.slug || p.id)}>View</Link>
+                      </Button>
+                      <Button
+                        className="flex-1"
+                        disabled={outOfStock}
+                        onClick={() => router.post(route('shop.cart.add', p.slug || p.id))}
+                      >
+                        {outOfStock ? 'Unavailable' : 'Add to cart'}
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                );
+              })}
+            </div>
+
+            <ShopPagination links={products.links} />
+          </>
         )}
       </div>
     </ShopLayout>

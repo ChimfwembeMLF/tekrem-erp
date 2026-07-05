@@ -31,7 +31,6 @@ import {
   AlertDialogTrigger,
 } from '@/Components/ui/alert-dialog';
 import { Loader2, Pencil, Percent, Plus, Tag, Trash2 } from 'lucide-react';
-import { Switch } from '@/Components/ui/switch';
 import useRoute from '@/Hooks/useRoute';
 import { formatZmw } from '@/lib/formatCurrency';
 import ModuleDashboardShell from '@/Components/Dashboard/ModuleDashboardShell';
@@ -252,29 +251,61 @@ export default function CouponsIndex({ coupons }: { coupons: Coupon[] }) {
                   {coupons.map((coupon) => (
                     <TableRow key={coupon.id}>
                       <TableCell>
-                        <code className="rounded bg-muted px-2 py-1 text-sm font-semibold">{coupon.code}</code>
+                        {editingId === coupon.id ? (
+                          <Input value={editForm.code ?? ''} onChange={(e) => setEditForm({ ...editForm, code: e.target.value.toUpperCase() })} />
+                        ) : (
+                          <code className="rounded bg-muted px-2 py-1 text-sm font-semibold">{coupon.code}</code>
+                        )}
                       </TableCell>
                       <TableCell>
-                        <span className="inline-flex items-center gap-1.5 text-sm">
-                          {coupon.type === 'percent' ? (
-                            <Percent className="h-3.5 w-3.5 text-muted-foreground" />
-                          ) : (
-                            <Tag className="h-3.5 w-3.5 text-muted-foreground" />
-                          )}
-                          {formatDiscount(coupon)}
-                        </span>
-                        {coupon.min_order_amount && (
-                          <p className="mt-0.5 text-xs text-muted-foreground">
-                            Min order {formatZmw(Number(coupon.min_order_amount))}
-                          </p>
+                        {editingId === coupon.id ? (
+                          <div className="space-y-2">
+                            <Select value={editForm.type ?? 'percent'} onValueChange={(value) => setEditForm({ ...editForm, type: value })}>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="percent">Percent</SelectItem>
+                                <SelectItem value="fixed">Fixed</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Input type="number" step="0.01" value={editForm.value ?? ''} onChange={(e) => setEditForm({ ...editForm, value: e.target.value })} />
+                          </div>
+                        ) : (
+                          <>
+                            <span className="inline-flex items-center gap-1.5 text-sm">
+                              {coupon.type === 'percent' ? (
+                                <Percent className="h-3.5 w-3.5 text-muted-foreground" />
+                              ) : (
+                                <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                              )}
+                              {formatDiscount(coupon)}
+                            </span>
+                            {coupon.min_order_amount && (
+                              <p className="mt-0.5 text-xs text-muted-foreground">
+                                Min order {formatZmw(Number(coupon.min_order_amount))}
+                              </p>
+                            )}
+                          </>
                         )}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {coupon.used_count}
-                        {coupon.max_uses ? ` / ${coupon.max_uses}` : ' uses'}
+                        {editingId === coupon.id ? (
+                          <Input type="number" min="1" value={editForm.max_uses ?? ''} onChange={(e) => setEditForm({ ...editForm, max_uses: e.target.value ? Number(e.target.value) : null })} placeholder="Unlimited" />
+                        ) : (
+                          <>
+                            {coupon.used_count}
+                            {coupon.max_uses ? ` / ${coupon.max_uses}` : ' uses'}
+                          </>
+                        )}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        <p>{formatDate(coupon.starts_at)} → {formatDate(coupon.expires_at)}</p>
+                        {editingId === coupon.id ? (
+                          <div className="space-y-2">
+                            <Input type="date" value={editForm.starts_at?.slice(0, 10) ?? ''} onChange={(e) => setEditForm({ ...editForm, starts_at: e.target.value || null })} />
+                            <Input type="date" value={editForm.expires_at?.slice(0, 10) ?? ''} onChange={(e) => setEditForm({ ...editForm, expires_at: e.target.value || null })} />
+                          </div>
+                        ) : (
+                          <p>{formatDate(coupon.starts_at)} → {formatDate(coupon.expires_at)}</p>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">

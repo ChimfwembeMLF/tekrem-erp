@@ -6,21 +6,22 @@ import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
-import { Textarea } from '@/Components/ui/textarea';
 import OrderSummary, { ShopHeader } from '@/Components/Shop/OrderSummary';
+import ShopSavedAddressFields, { SavedAddress } from '@/Components/Shop/ShopSavedAddressFields';
 import { formatZmw } from '@/lib/formatCurrency';
 import { ShopCartItem, ShopShippingMethod, ShopTotals } from '@/lib/shopTotals';
 import { AlertCircle, Loader2, Smartphone, Tag, Truck } from 'lucide-react';
 import useRoute from '@/Hooks/useRoute';
 
 interface Cart { items: ShopCartItem[] }
-interface Defaults { name: string; email: string; phone: string }
+interface Defaults { name: string; email: string; phone: string; shipping_address?: string }
 interface Props {
   cart: Cart;
   totals: ShopTotals;
   cartCount: number;
   stockIssues?: string[];
   defaults: Defaults;
+  savedAddresses?: SavedAddress[];
   shippingMethods: ShopShippingMethod[];
   momoAvailable: boolean;
 }
@@ -38,6 +39,7 @@ export default function ShopCheckout({
   cartCount,
   stockIssues = [],
   defaults,
+  savedAddresses = [],
   shippingMethods,
   momoAvailable,
 }: Props) {
@@ -48,15 +50,22 @@ export default function ShopCheckout({
   const [totals, setTotals] = useState(initialTotals);
   const [recalculating, setRecalculating] = useState(false);
   const [couponMessage, setCouponMessage] = useState<string | null>(null);
+  const defaultAddress = savedAddresses.find((address) => address.is_default) ?? savedAddresses[0];
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(defaultAddress?.id ?? null);
+  const [saveAddress, setSaveAddress] = useState(false);
+  const [addressLabel, setAddressLabel] = useState('Home');
 
   const { data, setData, post, processing } = useForm({
     name: defaults.name,
     email: defaults.email,
     phone: defaults.phone,
-    shipping_address: '',
+    shipping_address: defaults.shipping_address ?? '',
     shipping_method_id: shippingMethods[0]?.id ?? '',
     payment_method: 'cod' as 'cod' | 'momo',
     coupon_code: '',
+    saved_address_id: defaultAddress?.id ?? '',
+    save_address: false,
+    address_label: 'Home',
   });
 
   const stockMessages = stockErrorList(errors, stockIssues);
@@ -208,35 +217,42 @@ export default function ShopCheckout({
               <CardHeader>
                 <CardTitle>Contact &amp; delivery</CardTitle>
               </CardHeader>
-              <CardContent className="grid gap-4 sm:grid-cols-2">
-                <div className="sm:col-span-2">
-                  <Label htmlFor="name">Full name *</Label>
-                  <Input id="name" value={data.name} onChange={e => setData('name', e.target.value)} required />
-                  {errors.name && <p className="mt-1 text-sm text-destructive">{errors.name}</p>}
-                </div>
+              <CardContent className="space-y-4">
+                <ShopSavedAddressFields
+                  savedAddresses={savedAddresses}
+                  selectedAddressId={selectedAddressId}
+                  onSelectAddress={(id) => {
+                    setSelectedAddressId(id);
+                    setData('saved_address_id', id ?? '');
+                  }}
+                  form={{
+                    name: data.name,
+                    email: data.email,
+                    phone: data.phone,
+                    shipping_address: data.shipping_address,
+                  }}
+                  onFormChange={(form) => {
+                    setData((current) => ({
+                      ...current,
+                      name: form.name,
+                      email: form.email,
+                      phone: form.phone,
+                      shipping_address: form.shipping_address,
+                    }));
+                  }}
+                  saveAddress={saveAddress}
+                  onSaveAddressChange={(value) => {
+                    setSaveAddress(value);
+                    setData('save_address', value);
+                  }}
+                  addressLabel={addressLabel}
+                  onAddressLabelChange={(value) => {
+                    setAddressLabel(value);
+                    setData('address_label', value);
+                  }}
+                  idPrefix="checkout"
+                />
                 <div>
-                  <Label htmlFor="email">Email *</Label>
-                  <Input id="email" type="email" value={data.email} onChange={e => setData('email', e.target.value)} required />
-                  {errors.email && <p className="mt-1 text-sm text-destructive">{errors.email}</p>}
-                </div>
-                <div>
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input id="phone" value={data.phone} onChange={e => setData('phone', e.target.value)} placeholder="+260..." />
-                  {errors.phone && <p className="mt-1 text-sm text-destructive">{errors.phone}</p>}
-                </div>
-                <div className="sm:col-span-2">
-                  <Label htmlFor="shipping_address">Shipping address *</Label>
-                  <Textarea
-                    id="shipping_address"
-                    rows={4}
-                    value={data.shipping_address}
-                    onChange={e => setData('shipping_address', e.target.value)}
-                    placeholder="Street, area, city, province"
-                    required
-                  />
-                  {errors.shipping_address && <p className="mt-1 text-sm text-destructive">{errors.shipping_address}</p>}
-                </div>
-                <div className="sm:col-span-2">
                   <Label htmlFor="coupon">Coupon code</Label>
                   <div className="flex gap-2">
                     <Input id="coupon" value={data.coupon_code} onChange={e => setData('coupon_code', e.target.value.toUpperCase())} placeholder="WELCOME10" />

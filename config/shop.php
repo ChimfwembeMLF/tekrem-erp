@@ -21,5 +21,32 @@ return [
     'order' => [
         'auto_approve_reviews_for_auth_users' => true,
         'guest_tracking_enabled' => true,
+        'notify_on_checkpoint' => true,
+    ],
+
+    /*
+    | Shipment checkpoint statuses (in journey order).
+    | Keys are stored on shop_shipments.status and shop_shipment_events.status.
+    */
+    'shipment_statuses' => [
+        'pending' => 'Order received',
+        'processing' => 'Processing at warehouse',
+        'picked_up' => 'Picked up by carrier',
+        'in_transit' => 'In transit',
+        'at_hub' => 'Arrived at regional hub',
+        'out_for_delivery' => 'Out for delivery',
+        'delivered' => 'Delivered',
+        'cancelled' => 'Shipment cancelled',
+    ],
+
+    'shipment_default_descriptions' => [
+        'pending' => 'Order received and awaiting dispatch',
+        'processing' => 'Items are being picked and packed',
+        'picked_up' => 'Package collected by carrier',
+        'in_transit' => 'Package is on the way',
+        'at_hub' => 'Package arrived at sorting hub',
+        'out_for_delivery' => 'Courier is delivering today',
+        'delivered' => 'Package delivered successfully',
+        'cancelled' => 'Shipment was cancelled',
     ],
 ];

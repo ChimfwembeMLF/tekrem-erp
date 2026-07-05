@@ -5,6 +5,7 @@ import { Button } from '@/Components/ui/button';
 import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
 import { formatZmw } from '@/lib/formatCurrency';
 import { cn } from '@/lib/utils';
+import useRoute from '@/Hooks/useRoute';
 
 interface Product {
   id: number;
@@ -25,6 +26,7 @@ interface Props {
 const AUTO_PLAY_MS = 6000;
 
 export default function FeaturedProductsCarousel({ products, onAddToCart, backgroundImageUrl }: Props) {
+  const route = useRoute();
   const [current, setCurrent] = useState(0);
   const [userPaused, setUserPaused] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -145,7 +147,7 @@ export default function FeaturedProductsCarousel({ products, onAddToCart, backgr
                   size="lg"
                   className="h-11 rounded-full bg-white px-7 text-sm font-semibold text-black hover:bg-white/90"
                 >
-                  <Link href={route('shop.show', product.id)}>View product</Link>
+                  <Link href={route('shop.show', product.slug || product.id)}>View product</Link>
                 </Button>
                 <Button
                   type="button"

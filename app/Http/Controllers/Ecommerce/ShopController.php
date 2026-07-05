@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Ecommerce;
 use App\Http\Controllers\Controller;
 use App\Models\Ecommerce\CartItem;
 use App\Models\Ecommerce\ShopProductReview;
+use App\Models\Ecommerce\ShopSavedAddress;
 use App\Models\Ecommerce\ShopShipment;
 use App\Models\Ecommerce\ShopWishlistItem;
 use App\Models\Inventory\Product;
@@ -13,9 +14,11 @@ use App\Models\Inventory\Warehouse;
 use App\Models\Sales\SalesOrder;
 use App\Services\Commerce\ReceiptService;
 use App\Services\Ecommerce\CartService;
+use App\Services\Ecommerce\ShopAccountMergeService;
 use App\Services\Ecommerce\ShopCouponService;
 use App\Services\Ecommerce\ShopHeroService;
 use App\Services\Ecommerce\ShopShippingService;
+use App\Services\Ecommerce\ShopOrderService;
 use App\Services\Ecommerce\ShopShipmentService;
 use App\Services\Payments\PawaPayService;
 use Illuminate\Http\Request;
@@ -31,6 +34,8 @@ class ShopController extends Controller
         private ShopShippingService $shippingService,
         private ShopCouponService $couponService,
         private ShopShipmentService $shipmentService,
+        private ShopAccountMergeService $accountMergeService,
+        private ShopOrderService $shopOrderService,
     ) {}
 
     public function index(Request $request)
@@ -51,6 +56,8 @@ class ShopController extends Controller
             ->paginate(12)
             ->withQueryString();
 
+        $this->attachStockToProducts($products->getCollection(), $warehouse);
+
         $featuredProducts = collect();
         if (Schema::hasColumn('products', 'is_featured')) {
             $featuredProducts = Product::where('is_active', true)
@@ -60,6 +67,8 @@ class ShopController extends Controller
                 ->latest()
                 ->limit(12)
                 ->get();
+
+            $this->attachStockToProducts($featuredProducts, $warehouse);
         }
 
         $categories = ProductCategory::where('is_active', true)->orderBy('name')->get();
@@ -163,11 +172,8 @@ class ShopController extends Controller
             'shippingMethods' => $this->shippingService->activeMethods(),
             'stockIssues' => $this->cartService->stockIssues($cart, $warehouse?->id),
             'cartCount' => $cart->items->sum('quantity'),
-            'defaults' => [
-                'name' => $user?->name ?? '',
-                'email' => $user?->email ?? '',
-                'phone' => '',
-            ],
+            'defaults' => $this->checkoutDefaults($user),
+            'savedAddresses' => $this->savedAddressesFor($user),
             'momoAvailable' => app(PawaPayService::class)->isConfigured(),
         ]);
     }
@@ -186,11 +192,8 @@ class ShopController extends Controller
             'shippingMethods' => $this->shippingService->activeMethods(),
             'stockIssues' => $this->cartService->stockIssues($cart, $warehouse?->id),
             'cartCount' => (float) $cart->items->sum('quantity'),
-            'defaults' => [
-                'name' => $user?->name ?? '',
-                'email' => $user?->email ?? '',
-                'phone' => '',
-            ],
+            'defaults' => $this->checkoutDefaults($user),
+            'savedAddresses' => $this->savedAddressesFor($user),
             'momoAvailable' => app(PawaPayService::class)->isConfigured(),
         ]);
     }
@@ -235,13 +238,28 @@ class ShopController extends Controller
     {
         $data = $request->validate([
             'email' => 'required|email',
-            'shipping_address' => 'required|string|max:500',
+            'shipping_address' => 'required_without:saved_address_id|string|max:500',
+            'saved_address_id' => 'nullable|integer|exists:shop_saved_addresses,id',
+            'save_address' => 'nullable|boolean',
+            'address_label' => 'nullable|string|max:50',
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:30',
             'payment_method' => 'nullable|in:cod,momo',
             'shipping_method_id' => 'required|integer|exists:shop_shipping_methods,id',
             'coupon_code' => 'nullable|string|max:50',
         ]);
+
+        if (! empty($data['saved_address_id']) && auth()->check()) {
+            $saved = ShopSavedAddress::query()
+                ->where('user_id', auth()->id())
+                ->findOrFail($data['saved_address_id']);
+
+            $data['shipping_address'] = $saved->address_line;
+            $data['name'] = $saved->recipient_name;
+            $data['phone'] = $data['phone'] ?? $saved->phone;
+        }
+
+        abort_unless(! empty($data['shipping_address']), 422, 'Shipping address is required.');
 
         $cart = $this->loadCart($request);
 
@@ -267,6 +285,16 @@ class ShopController extends Controller
             return back()->withErrors($e->errors())->withInput();
         }
 
+        if ($request->boolean('save_address') && auth()->check()) {
+            $this->storeSavedAddress(auth()->user(), [
+                'label' => $data['address_label'] ?? 'Home',
+                'recipient_name' => $data['name'],
+                'phone' => $data['phone'] ?? null,
+                'address_line' => $data['shipping_address'],
+                'is_default' => ShopSavedAddress::where('user_id', auth()->id())->count() === 0,
+            ]);
+        }
+
         return redirect()->route('shop.order.confirmation', [
             'order' => $order->id,
             'token' => $order->access_token,
@@ -287,6 +315,7 @@ class ShopController extends Controller
                 'shipping_cost' => (float) $order->shipping_cost,
                 'total' => (float) $order->total,
             ],
+            'awaitingMomoPayment' => $order->payment_method === 'momo' && $order->payment_status === 'pending',
         ]);
     }
 
@@ -310,6 +339,56 @@ class ShopController extends Controller
         return Inertia::render('Shop/Orders', [
             'orders' => $orders,
             'cartCount' => $this->getCartCount($request),
+        ]);
+    }
+
+    public function showOrder(Request $request, SalesOrder $order)
+    {
+        abort_unless($order->source === 'ecommerce', 404);
+        $this->authorizeOrderAccess($request, $order);
+
+        $order->load(['items.product', 'shipment.events', 'shippingMethod']);
+
+        return Inertia::render('Shop/OrderShow', [
+            'order' => $order,
+            'totals' => [
+                'subtotal' => (float) $order->subtotal,
+                'tax_amount' => (float) $order->tax_amount,
+                'discount_amount' => (float) $order->discount_amount,
+                'shipping_cost' => (float) $order->shipping_cost,
+                'total' => (float) $order->total,
+            ],
+            'canCancel' => $this->shopOrderService->canCustomerCancel($order),
+            'cartCount' => $this->getCartCount($request),
+        ]);
+    }
+
+    public function cancelOrder(Request $request, SalesOrder $order)
+    {
+        abort_unless($order->source === 'ecommerce', 404);
+        $this->authorizeOrderAccess($request, $order);
+
+        abort_unless($this->shopOrderService->canCustomerCancel($order), 422);
+
+        $data = $request->validate([
+            'reason' => 'nullable|string|max:500',
+        ]);
+
+        $this->shopOrderService->cancel($order, $data['reason'] ?? 'Cancelled by customer');
+
+        return redirect()->route('shop.orders.show', $order->id)
+            ->with('success', 'Order cancelled.');
+    }
+
+    public function paymentStatus(Request $request, SalesOrder $order)
+    {
+        abort_unless($order->source === 'ecommerce', 404);
+        $this->authorizeOrderAccess($request, $order);
+
+        return response()->json([
+            'payment_status' => $order->payment_status,
+            'payment_method' => $order->payment_method,
+            'status' => $order->status,
         ]);
     }
 
@@ -359,6 +438,20 @@ class ShopController extends Controller
         ShopWishlistItem::create(['user_id' => auth()->id(), 'product_id' => $productModel->id]);
 
         return back()->with('success', 'Added to wishlist.');
+    }
+
+    public function mergeWishlist(Request $request)
+    {
+        abort_unless(auth()->check(), 403);
+
+        $data = $request->validate([
+            'product_ids' => 'required|array',
+            'product_ids.*' => 'integer|exists:products,id',
+        ]);
+
+        $merged = $this->accountMergeService->mergeWishlist(auth()->user(), $data['product_ids']);
+
+        return response()->json(['merged' => $merged]);
     }
 
     public function storeReview(Request $request, string $product)
@@ -452,5 +545,73 @@ class ShopController extends Controller
                 }
             })
             ->firstOrFail();
+    }
+
+    private function attachStockToProducts($products, ?Warehouse $warehouse): void
+    {
+        foreach ($products as $product) {
+            $product->setAttribute(
+                'available_stock',
+                $this->cartService->availableStock($product, $warehouse?->id)
+            );
+        }
+    }
+
+    /** @return array{name: string, email: string, phone: string} */
+    private function checkoutDefaults(?\App\Models\User $user): array
+    {
+        $defaultAddress = $user
+            ? ShopSavedAddress::query()
+                ->where('user_id', $user->id)
+                ->orderByDesc('is_default')
+                ->orderByDesc('updated_at')
+                ->first()
+            : null;
+
+        return [
+            'name' => $defaultAddress?->recipient_name ?? $user?->name ?? '',
+            'email' => $user?->email ?? '',
+            'phone' => $defaultAddress?->phone ?? '',
+            'shipping_address' => $defaultAddress?->address_line ?? '',
+        ];
+    }
+
+    private function savedAddressesFor(?\App\Models\User $user): array
+    {
+        if (! $user) {
+            return [];
+        }
+
+        return ShopSavedAddress::query()
+            ->where('user_id', $user->id)
+            ->orderByDesc('is_default')
+            ->orderByDesc('updated_at')
+            ->get()
+            ->map(fn (ShopSavedAddress $address) => [
+                'id' => $address->id,
+                'label' => $address->label,
+                'recipient_name' => $address->recipient_name,
+                'phone' => $address->phone,
+                'address_line' => $address->address_line,
+                'is_default' => $address->is_default,
+            ])
+            ->all();
+    }
+
+    /** @param array<string, mixed> $data */
+    private function storeSavedAddress(\App\Models\User $user, array $data): ShopSavedAddress
+    {
+        if (! empty($data['is_default'])) {
+            ShopSavedAddress::where('user_id', $user->id)->update(['is_default' => false]);
+        }
+
+        return ShopSavedAddress::create([
+            'user_id' => $user->id,
+            'label' => $data['label'] ?? 'Home',
+            'recipient_name' => $data['recipient_name'],
+            'phone' => $data['phone'] ?? null,
+            'address_line' => $data['address_line'],
+            'is_default' => (bool) ($data['is_default'] ?? false),
+        ]);
     }
 }

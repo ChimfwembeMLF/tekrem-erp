@@ -261,11 +261,16 @@ class CartService
                     'currency' => 'ZMW',
                     'phone_number' => $customerData['phone'],
                     'description' => "Shop order {$order->order_number}",
+                    'customer_name' => $customerData['name'] ?? null,
+                    'customer_email' => $customerData['email'] ?? null,
+                    'transactable_id' => $order->id,
+                    'transactable_type' => \App\Models\Sales\SalesOrder::class,
                     'metadata' => ['sales_order_id' => $order->id],
                 ]);
 
                 if ($result['success'] ?? false) {
                     $order->update([
+                        'payment_status' => 'pending',
                         'metadata' => array_merge($order->metadata ?? [], [
                             'momo_transaction_id' => $result['transaction']->id ?? null,
                         ]),

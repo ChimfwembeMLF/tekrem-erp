@@ -203,12 +203,12 @@ class PawaPayTransactionService
                 'transactable_type' => $data['transactable_type'] ?? null,
                 'initiated_by' => $data['user_id'] ?? auth()->id(),
                 'initiated_at' => now(),
-                'metadata' => array_filter([
+                'metadata' => array_filter(array_merge([
                     'gateway' => 'pawapay',
                     'correspondent' => $providerCode,
                     'deposit_id' => $data['deposit_id'] ?? null,
                     'customer_message' => $data['customer_message'] ?? null,
-                ]),
+                ], is_array($data['metadata'] ?? null) ? $data['metadata'] : [])),
             ]);
 
             $data['client_reference'] = $this->pawaPayService->formatClientReference($transaction->transaction_number);

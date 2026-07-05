@@ -5,8 +5,7 @@ import { formatZmw } from '@/lib/formatCurrency';
 import { cn } from '@/lib/utils';
 import useRoute from '@/Hooks/useRoute';
 import useTypedPage from '@/Hooks/useTypedPage';
-
-const WISHLIST_KEY = 'shop_wishlist';
+import { SHOP_WISHLIST_KEY } from '@/Components/Shop/ShopGuestMerge';
 
 export interface ShopProduct {
   id: number;
@@ -27,7 +26,7 @@ interface Props {
 function readLocalWishlist(): number[] {
   if (typeof window === 'undefined') return [];
   try {
-    return JSON.parse(window.localStorage.getItem(WISHLIST_KEY) ?? '[]') as number[];
+    return JSON.parse(window.localStorage.getItem(SHOP_WISHLIST_KEY) ?? '[]') as number[];
   } catch {
     return [];
   }
@@ -66,7 +65,7 @@ export default function ShopProductCard({ product, className, inWishlist: initia
       ? current.filter((id) => id !== product.id)
       : [...current, product.id];
 
-    window.localStorage.setItem(WISHLIST_KEY, JSON.stringify(next));
+    window.localStorage.setItem(SHOP_WISHLIST_KEY, JSON.stringify(next));
     setWishlisted(next.includes(product.id));
   };
 

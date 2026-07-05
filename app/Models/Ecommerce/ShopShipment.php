@@ -32,6 +32,6 @@ class ShopShipment extends Model
 
     public function events(): HasMany
     {
-        return $this->hasMany(ShopShipmentEvent::class)->orderByDesc('occurred_at');
+        return $this->hasMany(ShopShipmentEvent::class)->orderBy('occurred_at');
     }
 }

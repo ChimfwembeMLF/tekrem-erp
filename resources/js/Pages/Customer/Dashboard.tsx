@@ -278,7 +278,7 @@ export default function CustomerDashboard({
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="text-right">
-                        <div className="font-medium">${invoice.total_amount}</div>
+                        <div className="font-medium">{formatZmw(Number(invoice.total_amount))}</div>
                         <Badge variant={getStatusBadge(invoice.status, 'invoice')}>
                           {invoice.status}
                         </Badge>

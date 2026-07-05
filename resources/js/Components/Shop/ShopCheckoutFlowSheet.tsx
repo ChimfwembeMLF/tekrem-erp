@@ -18,11 +18,13 @@ import { AlertCircle, ArrowLeft, Loader2, Minus, Plus, Tag, Trash2, Truck, Smart
 import { formatZmw } from '@/lib/formatCurrency';
 import { ShopCartItem, ShopShippingMethod, ShopTotals } from '@/lib/shopTotals';
 import type { ShopFlowStep } from '@/Components/Shop/ShopSheetProvider';
+import ShopSavedAddressFields, { SavedAddress } from '@/Components/Shop/ShopSavedAddressFields';
 
 interface CheckoutDefaults {
   name: string;
   email: string;
   phone: string;
+  shipping_address?: string;
 }
 
 interface Props {
@@ -37,6 +39,7 @@ interface Props {
   shippingMethods: ShopShippingMethod[];
   stockIssues: string[];
   defaults: CheckoutDefaults;
+  savedAddresses: SavedAddress[];
   momoAvailable: boolean;
   onCartChange: (params?: { shipping_method_id?: number; coupon_code?: string }) => Promise<unknown>;
   onCartCountChange: (count: number) => void;
@@ -54,6 +57,7 @@ export default function ShopCheckoutFlowSheet({
   shippingMethods,
   stockIssues,
   defaults,
+  savedAddresses,
   momoAvailable,
   onCartChange,
   onCartCountChange,
@@ -65,6 +69,9 @@ export default function ShopCheckoutFlowSheet({
     phone: '',
     shipping_address: '',
   });
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+  const [saveAddress, setSaveAddress] = useState(false);
+  const [addressLabel, setAddressLabel] = useState('Home');
   const [shippingMethodId, setShippingMethodId] = useState<number | null>(null);
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState('');
@@ -82,12 +89,16 @@ export default function ShopCheckoutFlowSheet({
   useEffect(() => {
     if (!open) return;
     setCheckoutForm((current) => ({
-      ...current,
       name: defaults.name || current.name,
       email: defaults.email || current.email,
       phone: defaults.phone || current.phone,
+      shipping_address: defaults.shipping_address || current.shipping_address,
     }));
-  }, [open, defaults]);
+    const defaultAddress = savedAddresses.find((address) => address.is_default) ?? savedAddresses[0];
+    if (defaultAddress) {
+      setSelectedAddressId(defaultAddress.id);
+    }
+  }, [open, defaults, savedAddresses]);
 
   useEffect(() => {
     if (shippingMethods.length === 0) return;
@@ -179,6 +190,9 @@ export default function ShopCheckoutFlowSheet({
         payment_method: paymentMethod,
         shipping_method_id: resolvedShippingMethodId,
         coupon_code: appliedCoupon || undefined,
+        saved_address_id: selectedAddressId ?? undefined,
+        save_address: saveAddress,
+        address_label: addressLabel,
       },
       {
         preserveState: true,
@@ -343,22 +357,18 @@ export default function ShopCheckoutFlowSheet({
                       {couponMessage && <p className="text-xs text-muted-foreground">{couponMessage}</p>}
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="shop-name">Full name *</Label>
-                      <Input id="shop-name" value={checkoutForm.name} onChange={(e) => setCheckoutForm((f) => ({ ...f, name: e.target.value }))} required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="shop-email">Email *</Label>
-                      <Input id="shop-email" type="email" value={checkoutForm.email} onChange={(e) => setCheckoutForm((f) => ({ ...f, email: e.target.value }))} required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="shop-phone">Phone</Label>
-                      <Input id="shop-phone" value={checkoutForm.phone} onChange={(e) => setCheckoutForm((f) => ({ ...f, phone: e.target.value }))} placeholder="+260..." />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="shop-address">Shipping address *</Label>
-                      <Textarea id="shop-address" rows={4} value={checkoutForm.shipping_address} onChange={(e) => setCheckoutForm((f) => ({ ...f, shipping_address: e.target.value }))} placeholder="Street, area, city, province" required />
-                    </div>
+                    <ShopSavedAddressFields
+                      savedAddresses={savedAddresses}
+                      selectedAddressId={selectedAddressId}
+                      onSelectAddress={setSelectedAddressId}
+                      form={checkoutForm}
+                      onFormChange={setCheckoutForm}
+                      saveAddress={saveAddress}
+                      onSaveAddressChange={setSaveAddress}
+                      addressLabel={addressLabel}
+                      onAddressLabelChange={setAddressLabel}
+                      idPrefix="sheet"
+                    />
                   </div>
                 )}
 

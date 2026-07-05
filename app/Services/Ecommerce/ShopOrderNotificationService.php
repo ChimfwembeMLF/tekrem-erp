@@ -52,4 +52,117 @@ class ShopOrderNotificationService
             Log::warning('Shop lead capture failed: '.$e->getMessage());
         }
     }
+
+    public function notifyShipmentCheckpoint(\App\Models\Ecommerce\ShopShipment $shipment, \App\Models\Ecommerce\ShopShipmentEvent $event): void
+    {
+        $shipment->loadMissing('salesOrder');
+        $order = $shipment->salesOrder;
+
+        if (! $order) {
+            return;
+        }
+
+        $email = $order->metadata['customer_email'] ?? null;
+        $name = $order->metadata['customer_name'] ?? 'Customer';
+
+        if (! $email) {
+            return;
+        }
+
+        $statusLabel = config("shop.shipment_statuses.{$event->status}", ucfirst(str_replace('_', ' ', $event->status)));
+        $trackingUrl = route('shop.tracking.show', $shipment->tracking_number);
+        $locationLine = $event->location ? "\nLocation: {$event->location}" : '';
+
+        try {
+            Mail::raw(
+                "Hi {$name},\n\n".
+                "Update on your order {$order->order_number}:\n".
+                "{$statusLabel}\n".
+                ($event->description ? "{$event->description}\n" : '').
+                $locationLine."\n\n".
+                "Track your shipment: {$trackingUrl}\n",
+                fn ($message) => $message->to($email)->subject("Shipment update — {$order->order_number}")
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Shop shipment checkpoint email failed: '.$e->getMessage());
+        }
+
+        try {
+            $customer = $order->user_id ? \App\Models\User::find($order->user_id) : null;
+            if ($customer) {
+                NotificationService::create(
+                    $customer,
+                    'shop_shipment',
+                    "{$statusLabel} — order {$order->order_number}",
+                    $trackingUrl,
+                    $order
+                );
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Shop shipment in-app notification failed: '.$e->getMessage());
+        }
+    }
+
+    public function notifyPaymentReceived(SalesOrder $order): void
+    {
+        $email = $order->metadata['customer_email'] ?? null;
+        $name = $order->metadata['customer_name'] ?? 'Customer';
+
+        if ($email) {
+            try {
+                Mail::raw(
+                    "Hi {$name},\n\n".
+                    "Payment received for order {$order->order_number}.\n".
+                    'Total: K '.number_format((float) $order->total, 2)."\n\n".
+                    'Thank you for your purchase!',
+                    fn ($message) => $message->to($email)->subject("Payment confirmed — {$order->order_number}")
+                );
+            } catch (\Throwable $e) {
+                Log::warning('Shop payment email failed: '.$e->getMessage());
+            }
+        }
+    }
+
+    public function notifyOrderCancelled(SalesOrder $order, bool $refunded = false): void
+    {
+        $email = $order->metadata['customer_email'] ?? null;
+        $name = $order->metadata['customer_name'] ?? 'Customer';
+
+        if (! $email) {
+            return;
+        }
+
+        $refundLine = $refunded
+            ? "\nA refund has been initiated for your mobile money payment.\n"
+            : '';
+
+        try {
+            Mail::raw(
+                "Hi {$name},\n\n".
+                "Your order {$order->order_number} has been cancelled.\n".
+                ($order->metadata['cancellation_reason'] ?? '').
+                $refundLine,
+                fn ($message) => $message->to($email)->subject("Order cancelled — {$order->order_number}")
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Shop cancellation email failed: '.$e->getMessage());
+        }
+
+        if ($order->user_id) {
+            try {
+                $user = User::find($order->user_id);
+                if ($user) {
+                    NotificationService::create(
+                        $user,
+                        'shop_order',
+                        "Order {$order->order_number} was cancelled",
+                        route('shop.orders.show', $order->id),
+                        $order
+                    );
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Shop cancellation notification failed: '.$e->getMessage());
+            }
+        }
+    }
 }
