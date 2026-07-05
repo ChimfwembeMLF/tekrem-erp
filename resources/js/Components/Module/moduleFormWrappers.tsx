@@ -78,6 +78,11 @@ export const StaffFormShell = createModuleFormShell(
   'people',
   'Your request will be submitted for review when you save.',
 );
+export const EcommerceFormShell = createModuleFormShell(
+  'Ecommerce workspace',
+  'commerce',
+  'Changes are saved to your storefront configuration when you submit.',
+);
 
 export {
   ModuleFormSection,

@@ -348,4 +348,19 @@ class User extends Authenticatable
         return $this->hasRole(['super_user', 'admin', 'manager']);
     }
 
+    /**
+     * Client id linked to this user for shop/B2B order matching.
+     */
+    public function shopClientId(): ?int
+    {
+        $owned = $this->client()->value('id');
+        if ($owned) {
+            return (int) $owned;
+        }
+
+        $linked = $this->clients()->value('id');
+
+        return $linked ? (int) $linked : null;
+    }
+
 }

@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { router } from '@inertiajs/react';
 import axios from 'axios';
+import useRoute from '@/Hooks/useRoute';
 import {
   Sheet,
   SheetContent,
@@ -13,7 +14,7 @@ import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import { Separator } from '@/Components/ui/separator';
-import { AlertCircle, ArrowLeft, Loader2, Minus, Plus, Tag, Trash2, Truck, Wallet, Smartphone } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Loader2, Minus, Plus, Tag, Trash2, Truck, Smartphone } from 'lucide-react';
 import { formatZmw } from '@/lib/formatCurrency';
 import { ShopCartItem, ShopShippingMethod, ShopTotals } from '@/lib/shopTotals';
 import type { ShopFlowStep } from '@/Components/Shop/ShopSheetProvider';
@@ -30,6 +31,7 @@ interface Props {
   step: ShopFlowStep;
   onStepChange: (step: ShopFlowStep) => void;
   loading: boolean;
+  recalculating?: boolean;
   items: ShopCartItem[];
   totals: ShopTotals;
   shippingMethods: ShopShippingMethod[];
@@ -46,6 +48,7 @@ export default function ShopCheckoutFlowSheet({
   step,
   onStepChange,
   loading,
+  recalculating = false,
   items,
   totals,
   shippingMethods,
@@ -55,6 +58,7 @@ export default function ShopCheckoutFlowSheet({
   onCartChange,
   onCartCountChange,
 }: Props) {
+  const route = useRoute();
   const [checkoutForm, setCheckoutForm] = useState({
     name: '',
     email: '',
@@ -63,31 +67,40 @@ export default function ShopCheckoutFlowSheet({
   });
   const [shippingMethodId, setShippingMethodId] = useState<number | null>(null);
   const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState('');
   const [couponMessage, setCouponMessage] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'momo'>('cod');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [itemBusy, setItemBusy] = useState<number | null>(null);
 
-  useEffect(() => {
-    if (open) {
-      setCheckoutForm((current) => ({
-        ...current,
-        name: defaults.name || current.name,
-        email: defaults.email || current.email,
-        phone: defaults.phone || current.phone,
-      }));
-      if (!shippingMethodId && shippingMethods.length > 0) {
-        setShippingMethodId(shippingMethods[0].id);
-      }
-    }
-  }, [open, defaults, shippingMethods, shippingMethodId]);
+  const resolvedShippingMethodId = useMemo(
+    () => shippingMethodId ?? shippingMethods[0]?.id ?? null,
+    [shippingMethodId, shippingMethods],
+  );
 
   useEffect(() => {
-    if (open && shippingMethodId) {
-      onCartChange({ shipping_method_id: shippingMethodId, coupon_code: couponCode || undefined });
-    }
-  }, [shippingMethodId, couponCode, open]);
+    if (!open) return;
+    setCheckoutForm((current) => ({
+      ...current,
+      name: defaults.name || current.name,
+      email: defaults.email || current.email,
+      phone: defaults.phone || current.phone,
+    }));
+  }, [open, defaults]);
+
+  useEffect(() => {
+    if (shippingMethods.length === 0) return;
+    setShippingMethodId((current) => current ?? shippingMethods[0].id);
+  }, [shippingMethods]);
+
+  useEffect(() => {
+    if (!open || !resolvedShippingMethodId) return;
+    onCartChange({
+      shipping_method_id: resolvedShippingMethodId,
+      coupon_code: appliedCoupon || undefined,
+    });
+  }, [open, resolvedShippingMethodId, appliedCoupon]);
 
   const updateQuantity = async (item: ShopCartItem, quantity: number) => {
     setItemBusy(item.id);
@@ -97,7 +110,10 @@ export default function ShopCheckoutFlowSheet({
       } else {
         await axios.patch(route('shop.cart.update', item.id), { quantity });
       }
-      const data = await onCartChange({ shipping_method_id: shippingMethodId ?? undefined, coupon_code: couponCode || undefined });
+      const data = await onCartChange({
+        shipping_method_id: resolvedShippingMethodId ?? undefined,
+        coupon_code: appliedCoupon || undefined,
+      });
       onCartCountChange((data as { cartCount: number }).cartCount);
     } finally {
       setItemBusy(null);
@@ -109,11 +125,16 @@ export default function ShopCheckoutFlowSheet({
     try {
       await axios.post(route('shop.api.coupon'), {
         coupon_code: couponCode,
-        shipping_method_id: shippingMethodId,
+        shipping_method_id: resolvedShippingMethodId,
       });
+      setAppliedCoupon(couponCode.trim());
       setCouponMessage('Coupon applied');
-      await onCartChange({ shipping_method_id: shippingMethodId ?? undefined, coupon_code: couponCode });
+      await onCartChange({
+        shipping_method_id: resolvedShippingMethodId ?? undefined,
+        coupon_code: couponCode.trim(),
+      });
     } catch (error) {
+      setAppliedCoupon('');
       if (axios.isAxiosError(error) && error.response?.data?.message) {
         setCouponMessage(error.response.data.message);
       } else {
@@ -124,6 +145,7 @@ export default function ShopCheckoutFlowSheet({
 
   const proceedToCheckout = () => {
     if (items.length === 0) return;
+    setSubmitError(null);
     onStepChange('checkout');
   };
 
@@ -132,8 +154,8 @@ export default function ShopCheckoutFlowSheet({
       setSubmitError('Please complete all required delivery fields.');
       return;
     }
-    if (!shippingMethodId) {
-      setSubmitError('Please select a shipping method.');
+    if (!resolvedShippingMethodId) {
+      setSubmitError('Please select a shipping method. If none are listed, contact the store admin.');
       return;
     }
     setSubmitError(null);
@@ -141,6 +163,12 @@ export default function ShopCheckoutFlowSheet({
   };
 
   const placeOrder = () => {
+    if (!resolvedShippingMethodId) {
+      setSubmitError('Please select a shipping method.');
+      onStepChange('checkout');
+      return;
+    }
+
     setSubmitting(true);
     setSubmitError(null);
 
@@ -149,8 +177,8 @@ export default function ShopCheckoutFlowSheet({
       {
         ...checkoutForm,
         payment_method: paymentMethod,
-        shipping_method_id: shippingMethodId,
-        coupon_code: couponCode || undefined,
+        shipping_method_id: resolvedShippingMethodId,
+        coupon_code: appliedCoupon || undefined,
       },
       {
         preserveState: true,
@@ -168,6 +196,12 @@ export default function ShopCheckoutFlowSheet({
       },
     );
   };
+
+  const canContinueToPayment =
+    checkoutForm.name.trim() !== '' &&
+    checkoutForm.email.trim() !== '' &&
+    checkoutForm.shipping_address.trim() !== '' &&
+    resolvedShippingMethodId !== null;
 
   const titles: Record<ShopFlowStep, string> = {
     cart: 'Your cart',
@@ -269,34 +303,40 @@ export default function ShopCheckoutFlowSheet({
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label>Shipping method</Label>
-                      <div className="space-y-2">
-                        {shippingMethods.map((method) => (
-                          <button
-                            key={method.id}
-                            type="button"
-                            onClick={() => setShippingMethodId(method.id)}
-                            className={`flex w-full items-start justify-between rounded-lg border p-3 text-left ${
-                              shippingMethodId === method.id ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
-                            }`}
-                          >
-                            <div>
-                              <p className="font-medium">{method.name}</p>
-                              <p className="text-xs text-muted-foreground">{method.description}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {method.estimated_days_min}-{method.estimated_days_max} days
-                              </p>
-                            </div>
-                            <span className="text-sm font-semibold">{formatZmw(Number(method.base_cost))}</span>
-                          </button>
-                        ))}
-                      </div>
+                      {shippingMethods.length === 0 ? (
+                        <p className="rounded-lg border border-dashed border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
+                          No shipping methods are configured. Checkout cannot continue until an admin adds methods under Ecommerce → Shipping.
+                        </p>
+                      ) : (
+                        <div className="space-y-2">
+                          {shippingMethods.map((method) => (
+                            <button
+                              key={method.id}
+                              type="button"
+                              onClick={() => setShippingMethodId(method.id)}
+                              className={`flex w-full items-start justify-between rounded-lg border p-3 text-left transition-colors ${
+                                resolvedShippingMethodId === method.id ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
+                              }`}
+                            >
+                              <div>
+                                <p className="font-medium">{method.name}</p>
+                                <p className="text-xs text-muted-foreground">{method.description}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {method.estimated_days_min}-{method.estimated_days_max} days
+                                </p>
+                              </div>
+                              <span className="text-sm font-semibold">{formatZmw(Number(method.base_cost))}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="shop-coupon">Coupon code</Label>
                       <div className="flex gap-2">
                         <Input id="shop-coupon" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} placeholder="WELCOME10" />
-                        <Button type="button" variant="outline" onClick={applyCoupon}>
+                        <Button type="button" variant="outline" onClick={applyCoupon} disabled={recalculating}>
                           <Tag className="h-4 w-4" />
                         </Button>
                       </div>
@@ -304,11 +344,11 @@ export default function ShopCheckoutFlowSheet({
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="shop-name">Full name</Label>
+                      <Label htmlFor="shop-name">Full name *</Label>
                       <Input id="shop-name" value={checkoutForm.name} onChange={(e) => setCheckoutForm((f) => ({ ...f, name: e.target.value }))} required />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="shop-email">Email</Label>
+                      <Label htmlFor="shop-email">Email *</Label>
                       <Input id="shop-email" type="email" value={checkoutForm.email} onChange={(e) => setCheckoutForm((f) => ({ ...f, email: e.target.value }))} required />
                     </div>
                     <div className="space-y-2">
@@ -316,7 +356,7 @@ export default function ShopCheckoutFlowSheet({
                       <Input id="shop-phone" value={checkoutForm.phone} onChange={(e) => setCheckoutForm((f) => ({ ...f, phone: e.target.value }))} placeholder="+260..." />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="shop-address">Shipping address</Label>
+                      <Label htmlFor="shop-address">Shipping address *</Label>
                       <Textarea id="shop-address" rows={4} value={checkoutForm.shipping_address} onChange={(e) => setCheckoutForm((f) => ({ ...f, shipping_address: e.target.value }))} placeholder="Street, area, city, province" required />
                     </div>
                   </div>
@@ -363,7 +403,13 @@ export default function ShopCheckoutFlowSheet({
                       <div className="flex justify-between"><span className="text-muted-foreground">Shipping</span><span>{formatZmw(totals.shipping_cost ?? 0)}</span></div>
                     )}
                     <Separator className="my-2" />
-                    <div className="flex justify-between font-semibold"><span>Total</span><span>{formatZmw(totals.total)}</span></div>
+                    <div className="flex justify-between font-semibold">
+                      <span className="inline-flex items-center gap-2">
+                        Total
+                        {recalculating && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+                      </span>
+                      <span>{formatZmw(totals.total)}</span>
+                    </div>
                   </div>
 
                   {step === 'cart' && (
@@ -372,7 +418,18 @@ export default function ShopCheckoutFlowSheet({
                     </Button>
                   )}
                   {step === 'checkout' && (
-                    <Button className="w-full" size="lg" onClick={proceedToPayment}>Continue to payment</Button>
+                    <>
+                      {!canContinueToPayment && (
+                        <p className="mb-2 text-center text-xs text-muted-foreground">
+                          {resolvedShippingMethodId === null
+                            ? 'Select a shipping method to continue'
+                            : 'Fill in name, email, and shipping address to continue'}
+                        </p>
+                      )}
+                      <Button className="w-full" size="lg" onClick={proceedToPayment} disabled={!canContinueToPayment || recalculating}>
+                        Continue to payment
+                      </Button>
+                    </>
                   )}
                   {step === 'payment' && (
                     <Button className="w-full" size="lg" onClick={placeOrder} disabled={submitting}>

@@ -24,6 +24,7 @@ import SystemHealthWidget from '@/Components/Dashboard/SystemHealthWidget';
 import ActivityFeed from '@/Components/Dashboard/ActivityFeed';
 import QuickActions from '@/Components/Dashboard/QuickActions';
 import AnalyticsWidget from '@/Components/Dashboard/AnalyticsWidget';
+import PeopleActionQueue, { PeopleActionQueueData } from '@/Components/Dashboard/PeopleActionQueue';
 import ModuleCardGrid, { ModuleCard } from '@/Components/Dashboard/ModuleCardGrid';
 
 interface DashboardProps {
@@ -80,6 +81,7 @@ interface DashboardProps {
     route: string;
   }>;
   isAdmin: boolean;
+  peopleActionQueue?: PeopleActionQueueData;
 }
 
 export default function Dashboard({
@@ -92,6 +94,7 @@ export default function Dashboard({
   analytics,
   notifications,
   isAdmin,
+  peopleActionQueue,
 }: DashboardProps) {
   const { hasAnyRole } = usePermissions();
   const { t } = useTranslate();
@@ -155,6 +158,8 @@ export default function Dashboard({
           <StatsCard title="Active projects" value={stats.activeProjects} subtitle={`${formatNumber(stats.totalProjects)} total`} icon={Building} />
           <StatsCard title="Open tickets" value={stats.pendingTickets} subtitle={`${formatNumber(stats.totalTickets)} total`} icon={Ticket} />
         </div>
+
+        {peopleActionQueue && <PeopleActionQueue queue={peopleActionQueue} />}
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
 import useRoute from '@/Hooks/useRoute';
 import { formatZmw } from '@/lib/formatCurrency';
+import { Receipt } from 'lucide-react';
 
 interface Props {
   orders: {
@@ -49,9 +50,15 @@ export default function Orders({ orders, cartCount }: Props) {
                 {order.shipment?.tracking_number && (
                   <p>Tracking: <Link href={route('shop.tracking.show', order.shipment.tracking_number)} className="text-primary hover:underline">{order.shipment.tracking_number}</Link></p>
                 )}
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button size="sm" variant="outline" asChild>
                     <Link href={route('shop.order.confirmation', { order: order.id, token: order.access_token })}>View order</Link>
+                  </Button>
+                  <Button size="sm" variant="outline" asChild>
+                    <a href={route('shop.order.receipt', order.id)} target="_blank" rel="noopener noreferrer">
+                      <Receipt className="mr-2 h-4 w-4" />
+                      Receipt
+                    </a>
                   </Button>
                   {order.shipment?.tracking_number && (
                     <Button size="sm" asChild>

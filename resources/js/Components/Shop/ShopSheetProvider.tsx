@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import axios from 'axios';
+import useRoute from '@/Hooks/useRoute';
 import { ShopCartItem, ShopShippingMethod, ShopTotals } from '@/lib/shopTotals';
 import ShopCheckoutFlowSheet from '@/Components/Shop/ShopCheckoutFlowSheet';
 import ReceiptPreviewSheet from '@/Components/Shop/ReceiptPreviewSheet';
@@ -48,10 +49,12 @@ interface Props {
 }
 
 export default function ShopSheetProvider({ children, initialCartCount = 0 }: Props) {
+  const route = useRoute();
   const [cartCount, setCartCount] = useState(initialCartCount);
   const [flowOpen, setFlowOpen] = useState(false);
   const [flowStep, setFlowStep] = useState<ShopFlowStep>('cart');
   const [loading, setLoading] = useState(false);
+  const [recalculating, setRecalculating] = useState(false);
   const [items, setItems] = useState<ShopCartItem[]>([]);
   const [totals, setTotals] = useState<ShopTotals>({ subtotal: 0, tax_amount: 0, total: 0 });
   const [shippingMethods, setShippingMethods] = useState<ShopShippingMethod[]>([]);
@@ -63,27 +66,44 @@ export default function ShopSheetProvider({ children, initialCartCount = 0 }: Pr
   const [receiptLoading, setReceiptLoading] = useState(false);
   const [receipt, setReceipt] = useState<ReceiptPayload | null>(null);
 
-  const loadCartData = useCallback(async (params?: { shipping_method_id?: number; coupon_code?: string }): Promise<CartDataResponse> => {
-    setLoading(true);
+  const applyCartResponse = useCallback((data: CartDataResponse) => {
+    setItems(data.cart.items);
+    setTotals(data.totals);
+    setShippingMethods(data.shippingMethods ?? []);
+    setStockIssues(data.stockIssues);
+    setCartCount(data.cartCount);
+    setDefaults(data.defaults);
+    setMomoAvailable(data.momoAvailable);
+  }, []);
+
+  const loadCartData = useCallback(async (
+    params?: { shipping_method_id?: number; coupon_code?: string },
+    options?: { silent?: boolean },
+  ): Promise<CartDataResponse> => {
+    const silent = options?.silent ?? false;
+    if (silent) {
+      setRecalculating(true);
+    } else {
+      setLoading(true);
+    }
+
     try {
       const { data } = await axios.get<CartDataResponse>(route('shop.api.cart'), { params });
-      setItems(data.cart.items);
-      setTotals(data.totals);
-      setShippingMethods(data.shippingMethods ?? []);
-      setStockIssues(data.stockIssues);
-      setCartCount(data.cartCount);
-      setDefaults(data.defaults);
-      setMomoAvailable(data.momoAvailable);
+      applyCartResponse(data);
       return data;
     } finally {
-      setLoading(false);
+      if (silent) {
+        setRecalculating(false);
+      } else {
+        setLoading(false);
+      }
     }
-  }, []);
+  }, [applyCartResponse, route]);
 
   const refreshCartCount = useCallback(async () => {
     const { data } = await axios.get<CartDataResponse>(route('shop.api.cart'));
     setCartCount(data.cartCount);
-  }, []);
+  }, [route]);
 
   const openFlow = useCallback(async (step: ShopFlowStep) => {
     setFlowStep(step);
@@ -93,6 +113,12 @@ export default function ShopSheetProvider({ children, initialCartCount = 0 }: Pr
 
   const openCart = useCallback(() => openFlow('cart'), [openFlow]);
   const openCheckout = useCallback(() => openFlow('checkout'), [openFlow]);
+
+  const recalculateCart = useCallback(
+    (params?: { shipping_method_id?: number; coupon_code?: string }) =>
+      loadCartData(params, { silent: true }),
+    [loadCartData],
+  );
 
   const openReceipt = useCallback(async (orderId: number, token?: string) => {
     setReceiptOpen(true);
@@ -106,7 +132,7 @@ export default function ShopSheetProvider({ children, initialCartCount = 0 }: Pr
     } finally {
       setReceiptLoading(false);
     }
-  }, []);
+  }, [route]);
 
   const value = useMemo(
     () => ({
@@ -130,13 +156,14 @@ export default function ShopSheetProvider({ children, initialCartCount = 0 }: Pr
         step={flowStep}
         onStepChange={setFlowStep}
         loading={loading}
+        recalculating={recalculating}
         items={items}
         totals={totals}
         shippingMethods={shippingMethods}
         stockIssues={stockIssues}
         defaults={defaults}
         momoAvailable={momoAvailable}
-        onCartChange={loadCartData}
+        onCartChange={recalculateCart}
         onCartCountChange={setCartCount}
       />
 

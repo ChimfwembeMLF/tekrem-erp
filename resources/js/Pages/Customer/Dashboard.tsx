@@ -4,8 +4,9 @@ import CustomerLayout from '@/Layouts/CustomerLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
-import { Ticket, FolderOpen, FileText, Plus, Eye } from 'lucide-react';
+import { Ticket, FolderOpen, FileText, Plus, Eye, ShoppingBag, Truck, Receipt } from 'lucide-react';
 import useRoute from '@/Hooks/useRoute';
+import { formatZmw } from '@/lib/formatCurrency';
 
 interface TicketData {
   id: number;
@@ -46,10 +47,21 @@ interface InvoiceData {
 // Stats removed for simplification
 
 
+interface ShopOrderData {
+  id: number;
+  order_number: string;
+  status: string;
+  total: string;
+  created_at: string;
+  access_token?: string;
+  shipment?: { tracking_number: string; status: string } | null;
+}
+
 interface Props {
   tickets: TicketData[];
   projects: ProjectData[];
   invoices: InvoiceData[];
+  shopOrders?: ShopOrderData[];
 }
 
 
@@ -57,6 +69,7 @@ export default function CustomerDashboard({
   tickets = [],
   projects = [],
   invoices = [],
+  shopOrders = [],
 }: Props) {
   const getStatusBadge = (status: string, type: 'ticket' | 'project' | 'invoice') => {
     const variants: Record<string, 'destructive' | 'default' | 'secondary' | 'outline'> = {
@@ -172,6 +185,80 @@ export default function CustomerDashboard({
             </CardContent>
           </Card>
         </div>
+
+        {/* Recent shop orders */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Recent shop orders</CardTitle>
+                <CardDescription>Online purchases from the storefront</CardDescription>
+              </div>
+              <Button size="sm" variant="outline" asChild>
+                <Link href={route('shop.index')}>
+                  <ShoppingBag className="mr-2 h-4 w-4" />
+                  Browse shop
+                </Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {shopOrders.length > 0 ? (
+                shopOrders.map((order) => (
+                  <div key={order.id} className="flex flex-col gap-3 border rounded-lg p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex-1">
+                      <div className="font-medium">{order.order_number}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {new Date(order.created_at).toLocaleString()} · {formatZmw(Number(order.total))}
+                      </div>
+                      {order.shipment?.tracking_number && (
+                        <div className="mt-1 text-xs text-muted-foreground">
+                          Tracking: {order.shipment.tracking_number}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="outline" className="capitalize">{order.status}</Badge>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={route('shop.order.confirmation', { order: order.id, token: order.access_token })}>
+                          <Eye className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                      {order.shipment?.tracking_number && (
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href={route('shop.tracking.show', order.shipment.tracking_number)}>
+                            <Truck className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                      )}
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={route('shop.order.receipt', order.id)} target="_blank" rel="noopener noreferrer">
+                          <Receipt className="h-4 w-4" />
+                        </a>
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-6 text-muted-foreground">
+                  <ShoppingBag className="mx-auto h-8 w-8 mb-2" />
+                  <p>No shop orders yet</p>
+                  <Link href={route('shop.index')}>
+                    <Button className="mt-2" size="sm">Start shopping</Button>
+                  </Link>
+                </div>
+              )}
+              {shopOrders.length > 0 && (
+                <div className="pt-2">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={route('shop.orders')}>View all shop orders</Link>
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Recent Invoices */}
         <Card>

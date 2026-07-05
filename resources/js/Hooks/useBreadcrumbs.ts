@@ -624,6 +624,22 @@ export default function useBreadcrumbs(): BreadcrumbItem[] {
           href: route('ecommerce.dashboard'),
           isActive: currentRoute === 'ecommerce.dashboard',
         });
+
+        if (currentRoute.startsWith('ecommerce.orders.')) {
+          breadcrumbs.push({ label: t('ecommerce.orders', 'Orders'), href: route('ecommerce.orders.index') });
+          pushCrud('ecommerce.orders');
+        } else if (currentRoute.startsWith('ecommerce.shipping.')) {
+          breadcrumbs.push({ label: t('ecommerce.shipping', 'Shipping'), href: route('ecommerce.shipping.index') });
+          pushCrud('ecommerce.shipping');
+        } else if (currentRoute.startsWith('ecommerce.coupons.')) {
+          breadcrumbs.push({ label: t('ecommerce.coupons', 'Coupons'), href: route('ecommerce.coupons.index') });
+          pushCrud('ecommerce.coupons');
+        } else if (currentRoute.startsWith('ecommerce.reviews.')) {
+          breadcrumbs.push({ label: t('ecommerce.reviews', 'Reviews'), href: route('ecommerce.reviews.index') });
+          pushCrud('ecommerce.reviews');
+        } else if (currentRoute.startsWith('ecommerce.settings.')) {
+          breadcrumbs.push({ label: t('ecommerce.settings', 'Settings'), href: route('ecommerce.settings.edit') });
+        }
       }
 
       // AI Module

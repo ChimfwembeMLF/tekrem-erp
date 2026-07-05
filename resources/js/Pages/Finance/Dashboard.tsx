@@ -1,6 +1,6 @@
 import React from 'react';
-import { Head } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import { Link } from '@inertiajs/react';
+import ModuleDashboardShell from '@/Components/Dashboard/ModuleDashboardShell';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
@@ -132,40 +132,34 @@ export default function Dashboard({
   };
 
   return (
-    <AppLayout title={t('finance.title', 'Finance')}>
-
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">{t('finance.title', 'Finance')}</h1>
-            <p className="text-muted-foreground">
-              {t('finance.dashboard_description', 'Manage your financial data and track performance')}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button asChild>
-              <Link href="/finance/quotations/create">
-                <Plus className="h-4 w-4 mr-2" />
-                {t('finance.create_quotation', 'Create Quotation')}
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link href="/finance/invoices/create">
-                <FileText className="h-4 w-4 mr-2" />
-                {t('finance.create_invoice', 'Create Invoice')}
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link href="/finance/analytics/dashboard">
-                <TrendingUp className="h-4 w-4 mr-2" />
-                {t('finance.analytics', 'Analytics')}
-              </Link>
-            </Button>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
+    <ModuleDashboardShell
+      title={t('finance.title', 'Finance')}
+      description={t('finance.dashboard_description', 'Manage your financial data and track performance')}
+      workspaceLabel="Finance workspace"
+      heroAccent="from-emerald-500/15 via-emerald-500/5 to-secondary/10"
+      actions={
+        <>
+          <Button asChild>
+            <Link href="/finance/quotations/create">
+              <Plus className="h-4 w-4 mr-2" />
+              {t('finance.create_quotation', 'Create Quotation')}
+            </Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href="/finance/invoices/create">
+              <FileText className="h-4 w-4 mr-2" />
+              {t('finance.create_invoice', 'Create Invoice')}
+            </Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href="/finance/analytics/dashboard">
+              <TrendingUp className="h-4 w-4 mr-2" />
+              {t('finance.analytics', 'Analytics')}
+            </Link>
+          </Button>
+        </>
+      }
+    >
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -417,7 +411,6 @@ export default function Dashboard({
             </CardContent>
           </Card>
         )}
-      </div>
-    </AppLayout>
+    </ModuleDashboardShell>
   );
 }

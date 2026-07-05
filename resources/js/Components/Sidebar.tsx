@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Settings,
   Cog,
+  ImageIcon,
   BarChart3,
   DollarSign,
   CreditCard,
@@ -54,6 +55,8 @@ import {
   UserMinus,
   ExternalLink,
   MessageCircle,
+  Heart,
+  ShoppingBag,
 } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import useRoute from '@/Hooks/useRoute';
@@ -392,6 +395,8 @@ export default function Sidebar({ settings }: SidebarProps) {
     { type: 'link', href: route('ecommerce.orders.index'), label: t('ecommerce.orders', 'Orders'), icon: <Package className="h-5 w-5" />, active: route().current('ecommerce.orders.*') },
     { type: 'link', href: route('ecommerce.shipping.index'), label: t('ecommerce.shipping', 'Shipping'), icon: <Truck className="h-5 w-5" />, active: route().current('ecommerce.shipping.*') },
     { type: 'link', href: route('ecommerce.coupons.index'), label: t('ecommerce.coupons', 'Coupons'), icon: <Tag className="h-5 w-5" />, active: route().current('ecommerce.coupons.*') },
+    { type: 'link', href: route('ecommerce.reviews.index'), label: t('ecommerce.reviews', 'Reviews'), icon: <MessageSquare className="h-5 w-5" />, active: route().current('ecommerce.reviews.*') },
+    { type: 'link', href: route('ecommerce.settings.edit'), label: t('ecommerce.settings', 'Storefront'), icon: <ImageIcon className="h-5 w-5" />, active: route().current('ecommerce.settings.*') },
     { type: 'link', href: route('shop.index'), label: t('ecommerce.storefront', 'View Storefront'), icon: <Link2 className="h-5 w-5" />, active: false },
   ] : [];
 
@@ -797,6 +802,35 @@ export default function Sidebar({ settings }: SidebarProps) {
       label: t('customer.faq', 'FAQ'),
       icon: <HelpCircle className="h-5 w-5" />,
       active: route().current('customer.support.faq'),
+    },
+    { type: 'section', label: t('customer.shop_section', 'Shop') },
+    {
+      type: 'link',
+      href: route('shop.orders'),
+      label: t('customer.shop_orders', 'Shop orders'),
+      icon: <ShoppingBag className="h-5 w-5" />,
+      active: route().current('shop.orders'),
+    },
+    {
+      type: 'link',
+      href: route('shop.wishlist'),
+      label: t('customer.wishlist', 'Wishlist'),
+      icon: <Heart className="h-5 w-5" />,
+      active: route().current('shop.wishlist'),
+    },
+    {
+      type: 'link',
+      href: route('shop.tracking'),
+      label: t('customer.track_shipment', 'Track shipment'),
+      icon: <Truck className="h-5 w-5" />,
+      active: route().current('shop.tracking*'),
+    },
+    {
+      type: 'link',
+      href: route('shop.index'),
+      label: t('customer.browse_shop', 'Browse shop'),
+      icon: <Package className="h-5 w-5" />,
+      active: route().current('shop.index') || route().current('shop.show'),
     },
   ] : [];
 

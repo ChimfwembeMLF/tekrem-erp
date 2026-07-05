@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Ecommerce;
 
 use App\Http\Controllers\Controller;
-use App\Models\Ecommerce\ShopCoupon;
 use App\Models\Ecommerce\ShopShippingMethod;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -29,7 +28,10 @@ class ShippingController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        ShopShippingMethod::create($data);
+        ShopShippingMethod::create([
+            ...$data,
+            'is_active' => $data['is_active'] ?? true,
+        ]);
 
         return back()->with('success', 'Shipping method created.');
     }

@@ -257,7 +257,7 @@ class ShopController extends Controller
                 'shipping_address' => $data['shipping_address'],
                 'name' => $data['name'],
                 'phone' => $data['phone'] ?? null,
-                'client_id' => auth()->user()?->client_id ?? null,
+                'client_id' => auth()->user()?->shopClientId(),
                 'user_id' => auth()->id(),
                 'payment_method' => $data['payment_method'] ?? 'cod',
                 'shipping_method_id' => $data['shipping_method_id'],
@@ -298,8 +298,8 @@ class ShopController extends Controller
             ->where('source', 'ecommerce')
             ->where(function ($q) {
                 $q->where('user_id', auth()->id());
-                if (auth()->user()?->client_id) {
-                    $q->orWhere('client_id', auth()->user()->client_id);
+                if ($clientId = auth()->user()?->shopClientId()) {
+                    $q->orWhere('client_id', $clientId);
                 }
                 $q->orWhere('metadata->customer_email', auth()->user()->email);
             })
@@ -421,8 +421,10 @@ class ShopController extends Controller
             if ($order->user_id === $user->id) {
                 return;
             }
-            if ($user->client_id && $order->client_id === $user->client_id) {
-                return;
+            if ($clientId = $user->shopClientId()) {
+                if ($order->client_id === $clientId) {
+                    return;
+                }
             }
             if (($order->metadata['customer_email'] ?? null) === $user->email) {
                 return;

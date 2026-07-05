@@ -12,6 +12,7 @@ use App\Models\Finance\Invoice;
 use App\Models\Client;
 
 use App\Models\Finance\Payment;
+use App\Models\Sales\SalesOrder;
 
 class DashboardController extends Controller
 {
@@ -89,12 +90,27 @@ class DashboardController extends Controller
             ],
         ];
 
+        $shopOrders = SalesOrder::query()
+            ->where('source', 'ecommerce')
+            ->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+                if ($clientId = $user->shopClientId()) {
+                    $q->orWhere('client_id', $clientId);
+                }
+                $q->orWhere('metadata->customer_email', $user->email);
+            })
+            ->with('shipment')
+            ->latest()
+            ->limit(5)
+            ->get();
+
         return Inertia::render('Customer/Dashboard', [
             'tickets' => $tickets,
             'projects' => $projects,
             'invoices' => $invoices,
             'payments' => $payments,
             'stats' => $stats,
+            'shopOrders' => $shopOrders,
         ]);
     }
 }

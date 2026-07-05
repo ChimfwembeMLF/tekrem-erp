@@ -26,6 +26,9 @@ import {
     FileText,
     Megaphone,
     Mail,
+    ShoppingBag,
+    Heart,
+    Truck,
 } from 'lucide-react';
 import NotificationComponent from '@/Components/NotificationComponent';
 import useRoute from '@/Hooks/useRoute';
@@ -75,6 +78,21 @@ const navigation = [
     name: 'Support',
     href: 'customer.support.index',
     icon: HelpCircle,
+  },
+  {
+    name: 'Shop orders',
+    href: 'shop.orders',
+    icon: ShoppingBag,
+  },
+  {
+    name: 'Wishlist',
+    href: 'shop.wishlist',
+    icon: Heart,
+  },
+  {
+    name: 'Track shipment',
+    href: 'shop.tracking',
+    icon: Truck,
   },
   {
     name: 'Profile',

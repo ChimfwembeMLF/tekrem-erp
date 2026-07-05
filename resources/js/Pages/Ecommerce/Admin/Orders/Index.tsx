@@ -6,6 +6,7 @@ import { Input } from '@/Components/ui/input';
 import useRoute from '@/Hooks/useRoute';
 import { formatZmw } from '@/lib/formatCurrency';
 import ModuleDashboardShell, { RecentRows } from '@/Components/Dashboard/ModuleDashboardShell';
+import EcommerceModuleNav from '@/Components/Ecommerce/EcommerceModuleNav';
 
 interface Props {
   orders: {
@@ -19,7 +20,13 @@ export default function OrdersIndex({ orders, filters }: Props) {
   const route = useRoute();
 
   return (
-    <ModuleDashboardShell title="Shop orders" description="Manage ecommerce orders and shipments">
+    <ModuleDashboardShell
+      title="Shop orders"
+      description="Manage ecommerce orders and shipments"
+      workspaceLabel="Ecommerce workspace"
+      heroAccent="from-emerald-500/15 via-emerald-500/5 to-secondary/10"
+      moduleNav={<EcommerceModuleNav />}
+    >
         <form
           className="mb-6 flex gap-2"
           onSubmit={(e) => {

@@ -848,6 +848,7 @@ Route::middleware([
         Route::put('/shipping/{method}', [\App\Http\Controllers\Ecommerce\ShippingController::class, 'update'])->name('shipping.update');
         Route::get('/coupons', [\App\Http\Controllers\Ecommerce\CouponController::class, 'index'])->name('coupons.index');
         Route::post('/coupons', [\App\Http\Controllers\Ecommerce\CouponController::class, 'store'])->name('coupons.store');
+        Route::put('/coupons/{coupon}', [\App\Http\Controllers\Ecommerce\CouponController::class, 'update'])->name('coupons.update');
         Route::delete('/coupons/{coupon}', [\App\Http\Controllers\Ecommerce\CouponController::class, 'destroy'])->name('coupons.destroy');
         Route::get('/reviews', [\App\Http\Controllers\Ecommerce\ReviewController::class, 'index'])->name('reviews.index');
         Route::post('/reviews/{review}/approve', [\App\Http\Controllers\Ecommerce\ReviewController::class, 'approve'])->name('reviews.approve');

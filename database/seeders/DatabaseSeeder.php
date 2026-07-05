@@ -95,6 +95,9 @@ class DatabaseSeeder extends Seeder
         $this->command->info('🛒 Seeding commerce module...');
         $this->call(CommerceSeeder::class);
 
+        $this->command->info('🚚 Seeding shop shipping & coupons...');
+        $this->call(ShopShippingSeeder::class);
+
         $this->command->info('✅ Tekrem ERP Database Seeding Completed Successfully!');
         $this->command->info('');
         $this->command->info('🎉 All modules have been seeded with sample data.');

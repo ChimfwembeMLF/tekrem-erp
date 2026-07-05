@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { Heart } from 'lucide-react';
 import { formatZmw } from '@/lib/formatCurrency';
 import { cn } from '@/lib/utils';
+import useRoute from '@/Hooks/useRoute';
+import useTypedPage from '@/Hooks/useTypedPage';
 
 const WISHLIST_KEY = 'shop_wishlist';
 
@@ -19,9 +21,10 @@ export interface ShopProduct {
 interface Props {
   product: ShopProduct;
   className?: string;
+  inWishlist?: boolean;
 }
 
-function readWishlist(): number[] {
+function readLocalWishlist(): number[] {
   if (typeof window === 'undefined') return [];
   try {
     return JSON.parse(window.localStorage.getItem(WISHLIST_KEY) ?? '[]') as number[];
@@ -30,18 +33,35 @@ function readWishlist(): number[] {
   }
 }
 
-export default function ShopProductCard({ product, className }: Props) {
-  const [wishlisted, setWishlisted] = useState(false);
+export default function ShopProductCard({ product, className, inWishlist: initialInWishlist }: Props) {
+  const route = useRoute();
+  const page = useTypedPage();
+  const user = page.props.auth?.user;
+  const [wishlisted, setWishlisted] = useState(initialInWishlist ?? false);
 
   useEffect(() => {
-    setWishlisted(readWishlist().includes(product.id));
-  }, [product.id]);
+    if (initialInWishlist !== undefined) {
+      setWishlisted(initialInWishlist);
+      return;
+    }
+    if (!user) {
+      setWishlisted(readLocalWishlist().includes(product.id));
+    }
+  }, [product.id, initialInWishlist, user]);
 
   const toggleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const current = readWishlist();
+    if (user) {
+      router.post(route('shop.wishlist.toggle', product.slug || product.id), {}, {
+        preserveScroll: true,
+        onSuccess: () => setWishlisted((current) => !current),
+      });
+      return;
+    }
+
+    const current = readLocalWishlist();
     const next = current.includes(product.id)
       ? current.filter((id) => id !== product.id)
       : [...current, product.id];
@@ -50,9 +70,11 @@ export default function ShopProductCard({ product, className }: Props) {
     setWishlisted(next.includes(product.id));
   };
 
+  const productHref = route('shop.show', product.slug || product.id);
+
   return (
     <article className={cn('group w-[168px] shrink-0 snap-start sm:w-[190px] lg:w-[210px]', className)}>
-      <Link href={route('shop.show', product.id)} className="block">
+      <Link href={productHref} className="block">
         <div className="relative overflow-hidden rounded-2xl bg-muted/80 p-4 sm:rounded-[1.25rem] sm:p-5">
           <button
             type="button"

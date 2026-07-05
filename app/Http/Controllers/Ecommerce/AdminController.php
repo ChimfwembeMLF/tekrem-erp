@@ -15,6 +15,7 @@ class AdminController extends Controller
             'stats' => [
                 'published_products' => \App\Models\Inventory\Product::where('is_published', true)->count(),
                 'ecommerce_orders' => SalesOrder::where('source', 'ecommerce')->count(),
+                'pending_orders' => SalesOrder::where('source', 'ecommerce')->where('status', 'confirmed')->count(),
                 'pending_shipments' => ShopShipment::whereIn('status', ['pending', 'processing'])->count(),
                 'in_transit' => ShopShipment::where('status', 'in_transit')->count(),
             ],

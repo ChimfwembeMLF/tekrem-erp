@@ -1,18 +1,23 @@
 import React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import GuestLayout from '@/Layouts/GuestLayout';
+import ShopLayout from '@/Layouts/ShopLayout';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import OrderSummary, { ShopHeader } from '@/Components/Shop/OrderSummary';
+import { useShopSheets } from '@/Components/Shop/ShopSheetProvider';
 import { formatZmw } from '@/lib/formatCurrency';
-import { ShopCartItem, ShopTotals } from '@/lib/shopTotals';
+import { ShopCartItem, ShopShippingMethod, ShopTotals } from '@/lib/shopTotals';
 import { Minus, Plus, Trash2 } from 'lucide-react';
+import useRoute from '@/Hooks/useRoute';
 
 interface Cart { items: ShopCartItem[] }
 interface Props { cart: Cart; totals: ShopTotals; cartCount: number }
 
 export default function ShopCart({ cart, totals, cartCount }: Props) {
+  const route = useRoute();
+  const { openCheckout } = useShopSheets();
+
   const updateQuantity = (item: ShopCartItem, quantity: number) => {
     router.patch(route('shop.cart.update', item.id), { quantity }, { preserveScroll: true });
   };
@@ -22,10 +27,10 @@ export default function ShopCart({ cart, totals, cartCount }: Props) {
   };
 
   return (
-    <GuestLayout title="Cart">
+    <ShopLayout title="Cart" cartCount={cartCount}>
       <Head title="Cart" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 space-y-8">
-        <ShopHeader title="Your cart" subtitle="Review items before checkout" cartCount={cartCount} />
+        <ShopHeader title="Your cart" subtitle="Review items before checkout" />
 
         {cart.items.length === 0 ? (
           <Card>
@@ -106,8 +111,8 @@ export default function ShopCart({ cart, totals, cartCount }: Props) {
                 showItems={false}
                 action={
                   <div className="space-y-3 pt-2">
-                    <Button asChild className="w-full" size="lg">
-                      <Link href={route('shop.checkout')}>Proceed to checkout</Link>
+                    <Button type="button" className="w-full" size="lg" onClick={openCheckout}>
+                      Proceed to checkout
                     </Button>
                     <Button asChild variant="outline" className="w-full">
                       <Link href={route('shop.index')}>Continue shopping</Link>
@@ -119,6 +124,6 @@ export default function ShopCart({ cart, totals, cartCount }: Props) {
           </div>
         )}
       </div>
-    </GuestLayout>
+    </ShopLayout>
   );
 }

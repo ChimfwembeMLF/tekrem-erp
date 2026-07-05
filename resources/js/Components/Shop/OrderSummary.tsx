@@ -3,11 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Separator } from '@/Components/ui/separator';
 import { Link } from '@inertiajs/react';
-import { ShoppingBag, Truck } from 'lucide-react';
+import { Heart, LayoutDashboard, Package, ShoppingBag, Truck, User } from 'lucide-react';
 import { formatZmw } from '@/lib/formatCurrency';
 import { ShopCartItem, ShopTotals } from '@/lib/shopTotals';
 import { useShopSheets } from '@/Components/Shop/ShopSheetProvider';
 import useRoute from '@/Hooks/useRoute';
+import useTypedPage from '@/Hooks/useTypedPage';
+import usePermissions from '@/Hooks/usePermissions';
 
 interface OrderSummaryProps {
   items: ShopCartItem[];
@@ -57,6 +59,19 @@ export default function OrderSummary({ items, totals, action, showItems = true }
             <span className="text-muted-foreground">Tax</span>
             <span>{formatZmw(totals.tax_amount)}</span>
           </div>
+          {(totals.discount_amount ?? 0) > 0 && (
+            <div className="flex justify-between text-green-600">
+              <span>Discount</span>
+              <span>-{formatZmw(totals.discount_amount ?? 0)}</span>
+            </div>
+          )}
+          {(totals.shipping_cost ?? 0) > 0 && (
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Shipping</span>
+              <span>{formatZmw(totals.shipping_cost ?? 0)}</span>
+            </div>
+          )}
+          <Separator />
           <div className="flex justify-between text-base font-semibold">
             <span>Total</span>
             <span>{formatZmw(totals.total)}</span>
@@ -77,7 +92,16 @@ interface ShopHeaderProps {
 export function ShopHeader({ title, subtitle }: ShopHeaderProps) {
   const { cartCount, openCart } = useShopSheets();
   const route = useRoute();
-  
+  const page = useTypedPage();
+  const { hasAnyRole } = usePermissions();
+  const user = page.props.auth?.user as { id: number } | null | undefined;
+  const accountHref = user && hasAnyRole(['customer'])
+    ? route('customer.dashboard')
+    : user
+      ? route('dashboard')
+      : route('login');
+  const accountLabel = user && hasAnyRole(['customer']) ? 'Account' : user ? 'Dashboard' : 'Sign in';
+
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
@@ -88,6 +112,24 @@ export function ShopHeader({ title, subtitle }: ShopHeaderProps) {
         <Button type="button" variant="ghost" size="sm" asChild>
           <Link href={route('shop.tracking')}><Truck className="mr-2 h-4 w-4" />Track</Link>
         </Button>
+        {user && (
+          <>
+            <Button type="button" variant="ghost" size="sm" asChild>
+              <Link href={route('shop.orders')}><Package className="mr-2 h-4 w-4" />Orders</Link>
+            </Button>
+            <Button type="button" variant="ghost" size="sm" asChild>
+              <Link href={route('shop.wishlist')}><Heart className="mr-2 h-4 w-4" />Wishlist</Link>
+            </Button>
+            <Button type="button" variant="ghost" size="sm" asChild>
+              <Link href={accountHref}><LayoutDashboard className="mr-2 h-4 w-4" />{accountLabel}</Link>
+            </Button>
+          </>
+        )}
+        {!user && (
+          <Button type="button" variant="ghost" size="sm" asChild>
+            <Link href={route('login')}><User className="mr-2 h-4 w-4" />Sign in</Link>
+          </Button>
+        )}
         <Button type="button" variant="outline" onClick={openCart}>
           <ShoppingBag className="mr-2 h-4 w-4" />
           Cart ({Number(cartCount).toFixed(0)})

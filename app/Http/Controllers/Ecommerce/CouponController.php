@@ -29,9 +29,33 @@ class CouponController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        ShopCoupon::create($data);
+        ShopCoupon::create([
+            ...$data,
+            'is_active' => $data['is_active'] ?? true,
+        ]);
 
         return back()->with('success', 'Coupon created.');
+    }
+
+    public function update(Request $request, ShopCoupon $coupon)
+    {
+        $data = $request->validate([
+            'code' => 'required|string|max:50|unique:shop_coupons,code,'.$coupon->id,
+            'type' => 'required|in:percent,fixed',
+            'value' => 'required|numeric|min:0',
+            'min_order_amount' => 'nullable|numeric|min:0',
+            'max_uses' => 'nullable|integer|min:1',
+            'starts_at' => 'nullable|date',
+            'expires_at' => 'nullable|date|after:starts_at',
+            'is_active' => 'boolean',
+        ]);
+
+        $coupon->update([
+            ...$data,
+            'is_active' => $data['is_active'] ?? $coupon->is_active,
+        ]);
+
+        return back()->with('success', 'Coupon updated.');
     }
 
     public function destroy(ShopCoupon $coupon)
