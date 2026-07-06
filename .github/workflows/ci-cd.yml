@@ -2,10 +2,10 @@ name: Build, Test and Deploy Laravel App
 
 on:
   push:
-    branches: [ demo ]
+    branches: [demo]
   pull_request:
-    branches: [ main ]
-    types: [ closed ]
+    branches: [main]
+    types: [closed]
   workflow_dispatch:
 
 jobs:
@@ -42,7 +42,7 @@ jobs:
         run: php artisan migrate --env=testing --force
         env:
           DB_CONNECTION: sqlite
-          DB_DATABASE: ":memory:"
+          DB_DATABASE: ':memory:'
 
       - name: Cache node modules
         uses: actions/cache@v4
@@ -68,7 +68,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
