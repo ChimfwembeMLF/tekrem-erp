@@ -36,11 +36,36 @@ return new class extends Migration
             }
         }
 
-        Schema::table('quotations', function (Blueprint $table) {
-            $table->dropIndex('quotations_lead_id_status_index');
-            $table->dropForeign(['lead_id']);
-            $table->dropColumn('lead_id');
-        });
+        if (Schema::hasColumn('quotations', 'lead_id')) {
+            $connection = DB::connection();
+            $driver = $connection->getDriverName();
+
+            if ($driver === 'mysql') {
+                $connection->statement('SET foreign_key_checks=0');
+            }
+
+            try {
+                Schema::table('quotations', function (Blueprint $table) {
+                    try {
+                        $table->dropForeign(['lead_id']);
+                    } catch (\Throwable $e) {
+                        // Ignore if the foreign key is already absent.
+                    }
+
+                    try {
+                        $table->dropIndex('quotations_lead_id_status_index');
+                    } catch (\Throwable $e) {
+                        // Ignore if the index is already absent or named differently.
+                    }
+
+                    $table->dropColumn('lead_id');
+                });
+            } finally {
+                if ($driver === 'mysql') {
+                    $connection->statement('SET foreign_key_checks=1');
+                }
+            }
+        }
     }
 
     /**
