@@ -27,7 +27,7 @@ return new class extends Migration
         }
 
         Schema::table('quotations', function (Blueprint $table) {
-            $table->dropIndex(['lead_id', 'status']);
+            $table->dropIndex('quotations_lead_id_status_index');
             $table->dropForeign(['lead_id']);
             $table->dropColumn('lead_id');
         });
@@ -40,7 +40,7 @@ return new class extends Migration
     {
         Schema::table('quotations', function (Blueprint $table) {
             $table->unsignedBigInteger('lead_id')->nullable();
-            $table->index(['lead_id', 'status']);
+            $table->index(['lead_id', 'status'], 'quotations_lead_id_status_index');
         });
 
         // Restore lead_id from billable if type is Lead
