@@ -73,7 +73,7 @@ class ProjectManagementSeeder extends Seeder
                 'status' => 'active',
                 'start_date' => now()->subMonths(3),
                 'end_date' => now()->addMonths(6),
-                'owner_id' => $users->first()->id,
+                'manager_id' => $users->first()->id,
             ],
             [
                 'name' => 'Mobile Banking App',
@@ -81,7 +81,7 @@ class ProjectManagementSeeder extends Seeder
                 'status' => 'active',
                 'start_date' => now()->subMonths(2),
                 'end_date' => now()->addMonths(8),
-                'owner_id' => $users->skip(1)->first()->id,
+                'manager_id' => $users->skip(1)->first()->id,
             ],
             [
                 'name' => 'Internal CRM System',
@@ -89,7 +89,7 @@ class ProjectManagementSeeder extends Seeder
                 'status' => 'planning',
                 'start_date' => now()->addWeeks(2),
                 'end_date' => now()->addMonths(5),
-                'owner_id' => $users->first()->id,
+                'manager_id' => $users->first()->id,
             ],
         ];
 
