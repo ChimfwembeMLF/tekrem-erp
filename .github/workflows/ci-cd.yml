@@ -3,6 +3,9 @@ name: Build, Test and Deploy Laravel App
 on:
   push:
     branches: [ demo ]
+  pull_request:
+    branches: [ main ]
+    types: [ closed ]
   workflow_dispatch:
 
 jobs:
@@ -105,10 +108,10 @@ jobs:
       - name: Optimize Composer for deployment
         run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
-  deploy:
+  deploy-demo:
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/demo'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/demo'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -117,7 +120,6 @@ jobs:
         run: |
           echo "Listing files in workspace before deployment:"
           ls -lR
-
 
       - name: SSH run post-deployment hooks and update code
         uses: appleboy/ssh-action@v1.0.0
@@ -131,6 +133,34 @@ jobs:
             git fetch origin demo
             git checkout -f demo
             git reset --hard origin/demo
+            composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+            npm install
+            npm run build
+            php artisan migrate --force
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+
+  deploy-prod:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.base_ref == 'main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: SSH run post-deployment hooks and update code
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            cd ${{ secrets.SERVER_PATH_PROD }}
+            git fetch origin main
+            git checkout -f main
+            git reset --hard origin/main
             composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
             npm install
             npm run build
