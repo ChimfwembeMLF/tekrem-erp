@@ -26,6 +26,7 @@ return new class extends Migration
         if (Schema::hasTable('leads')) {
             Schema::table('leads', function (Blueprint $table) {
                 if (Schema::hasColumn('leads', 'facebook_lead_id')) {
+                    $table->dropUnique(['facebook_lead_id']);
                     $table->dropIndex(['facebook_lead_id']);
                 }
                 if (Schema::hasColumn('leads', 'facebook_campaign_id')) {
