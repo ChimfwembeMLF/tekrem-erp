@@ -36,13 +36,11 @@ return new class extends Migration
             }
         }
 
-        if (Schema::hasColumn('quotations', 'lead_id')) {
-            Schema::table('quotations', function (Blueprint $table) {
-                $table->dropForeign(['lead_id']);
-                $table->dropIndex(['lead_id', 'status']);
-                $table->dropColumn('lead_id');
-            });
-        }
+        Schema::table('quotations', function (Blueprint $table) {
+            $table->dropIndex('quotations_lead_id_status_index');
+            $table->dropForeign(['lead_id']);
+            $table->dropColumn('lead_id');
+        });
     }
 
     /**
@@ -50,12 +48,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (!Schema::hasColumn('quotations', 'lead_id')) {
-            Schema::table('quotations', function (Blueprint $table) {
-                $table->unsignedBigInteger('lead_id')->nullable();
-                $table->index(['lead_id', 'status'], 'quotations_lead_id_status_index');
-            });
-        }
+        Schema::table('quotations', function (Blueprint $table) {
+            $table->unsignedBigInteger('lead_id')->nullable();
+            $table->index(['lead_id', 'status'], 'quotations_lead_id_status_index');
+        });
 
         // Restore lead_id from billable if type is Lead
         $quotationRows = DB::table('quotations')->where('billable_type', Lead::class)->get();
