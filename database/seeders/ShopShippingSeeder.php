@@ -4,14 +4,18 @@ namespace Database\Seeders;
 
 use App\Models\Ecommerce\ShopCoupon;
 use App\Models\Ecommerce\ShopShippingMethod;
+use App\Models\Organization;
 use Illuminate\Database\Seeder;
 
 class ShopShippingSeeder extends Seeder
 {
     public function run(): void
     {
+        $organizationId = Organization::query()->orderBy('id')->value('id');
+
         ShopShippingMethod::query()->upsert([
             [
+                'organization_id' => $organizationId,
                 'name' => 'Standard delivery',
                 'code' => 'standard',
                 'description' => 'Delivery within Lusaka and surrounding areas',
@@ -25,6 +29,7 @@ class ShopShippingSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
+                'organization_id' => $organizationId,
                 'name' => 'Express delivery',
                 'code' => 'express',
                 'description' => 'Next-day delivery in major cities',
@@ -38,6 +43,7 @@ class ShopShippingSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
+                'organization_id' => $organizationId,
                 'name' => 'Pickup',
                 'code' => 'pickup',
                 'description' => 'Collect from our office — free',
@@ -50,10 +56,13 @@ class ShopShippingSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
-        ], ['code'], ['name', 'description', 'base_cost', 'cost_per_kg', 'estimated_days_min', 'estimated_days_max', 'is_active', 'sort_order', 'updated_at']);
+        ], ['organization_id', 'code'], ['name', 'description', 'base_cost', 'cost_per_kg', 'estimated_days_min', 'estimated_days_max', 'is_active', 'sort_order', 'updated_at']);
 
         ShopCoupon::query()->firstOrCreate(
-            ['code' => 'WELCOME10'],
+            [
+                'organization_id' => $organizationId,
+                'code' => 'WELCOME10',
+            ],
             [
                 'type' => 'percent',
                 'value' => 10,

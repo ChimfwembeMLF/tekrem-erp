@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToOrganization;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +12,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class ProjectMilestone extends Model
 {
-    use HasFactory;
+    use BelongsToOrganization, HasFactory;
 
     /**
      * The attributes that are mass assignable.
@@ -18,6 +20,7 @@ class ProjectMilestone extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'organization_id',
         'project_id',
         'name',
         'description',

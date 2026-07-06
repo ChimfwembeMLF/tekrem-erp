@@ -2,6 +2,8 @@
 
 namespace App\Models\Procurement;
 
+use App\Models\Concerns\BelongsToOrganization;
+
 use App\Models\Inventory\Warehouse;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +12,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PurchaseOrder extends Model
 {
+    use BelongsToOrganization;
     protected $fillable = [
+        'organization_id',
         'po_number', 'supplier_id', 'warehouse_id', 'status', 'order_date',
         'expected_date', 'subtotal', 'tax_amount', 'total', 'notes',
         'created_by', 'approved_by', 'approved_at',

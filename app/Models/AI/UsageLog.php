@@ -2,6 +2,7 @@
 
 namespace App\Models\AI;
 
+use App\Models\Concerns\BelongsToOrganization;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,11 +11,12 @@ use Illuminate\Support\Facades\DB;
 
 class UsageLog extends Model
 {
-    use HasFactory;
+    use BelongsToOrganization, HasFactory;
 
     protected $table = 'ai_usage_logs';
 
     protected $fillable = [
+        'organization_id',
         'user_id',
         'ai_model_id',
         'ai_conversation_id',

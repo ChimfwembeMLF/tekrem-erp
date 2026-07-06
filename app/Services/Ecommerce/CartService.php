@@ -6,9 +6,11 @@ use App\Exceptions\InsufficientStockException;
 use App\Models\Ecommerce\Cart;
 use App\Models\Ecommerce\CartItem;
 use App\Models\Ecommerce\ShopCoupon;
+use App\Models\Ecommerce\ShopSavedAddress;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\StockLevel;
 use App\Models\Inventory\Warehouse;
+use App\Support\Organizations\OrganizationContext;
 use App\Services\MoMo\MomoTransactionService;
 use App\Services\Sales\SalesOrderService;
 use Illuminate\Support\Facades\DB;
@@ -28,9 +30,23 @@ class CartService
 
     public function resolveCart(?string $sessionId, ?int $userId = null): Cart
     {
+        $organizationId = app(OrganizationContext::class)->check()
+            ? app(OrganizationContext::class)->id()
+            : null;
+
         if ($userId) {
-            $userCart = Cart::firstOrCreate(['user_id' => $userId], ['session_id' => $sessionId]);
-            $sessionCart = Cart::where('session_id', $sessionId)->whereNull('user_id')->first();
+            $userCart = Cart::firstOrCreate(
+                array_filter([
+                    'user_id' => $userId,
+                    'organization_id' => $organizationId,
+                ]),
+                ['session_id' => $sessionId]
+            );
+            $sessionCart = Cart::query()
+                ->where('session_id', $sessionId)
+                ->whereNull('user_id')
+                ->when($organizationId, fn ($query) => $query->where('organization_id', $organizationId))
+                ->first();
 
             if ($sessionCart && $sessionCart->id !== $userCart->id) {
                 $this->mergeCarts($sessionCart, $userCart);
@@ -40,7 +56,12 @@ class CartService
             return $userCart->fresh();
         }
 
-        return Cart::firstOrCreate(['session_id' => $sessionId]);
+        return Cart::firstOrCreate(
+            array_filter([
+                'session_id' => $sessionId,
+                'organization_id' => $organizationId,
+            ])
+        );
     }
 
     public function mergeCarts(Cart $from, Cart $to): void
@@ -265,7 +286,10 @@ class CartService
                     'customer_email' => $customerData['email'] ?? null,
                     'transactable_id' => $order->id,
                     'transactable_type' => \App\Models\Sales\SalesOrder::class,
-                    'metadata' => ['sales_order_id' => $order->id],
+                    'metadata' => [
+                        'sales_order_id' => $order->id,
+                        'organization_id' => $order->organization_id,
+                    ],
                 ]);
 
                 if ($result['success'] ?? false) {

@@ -37,11 +37,18 @@ class PawaPayService
     public function getPublicConfiguration(): array
     {
         $config = $this->getConfiguration();
+        $usesOwn = $this->usesOwnCredentials();
+        $platformConfigured = $this->platformIsConfigured();
 
         return [
             'env' => $config['env'],
             'configured' => $config['api_token_set'],
-            'stored_in_database' => Setting::has('pawapay.api_token'),
+            'platform_configured' => $platformConfigured,
+            'use_own_credentials' => $usesOwn,
+            'credentials_source' => $usesOwn ? 'own' : 'platform',
+            'stored_in_database' => $usesOwn
+                ? Setting::has('pawapay.api_token')
+                : Setting::hasGlobal('pawapay.api_token'),
             'provider_label' => 'PawaPay',
             'base_url' => $this->getBaseUrl($config),
             'base_url_sandbox' => $config['base_url_sandbox'],
@@ -55,6 +62,43 @@ class PawaPayService
             'api_token_masked' => $this->maskSecret($config['api_token']),
             'transaction_id_prefix' => $config['transaction_id_prefix'],
         ];
+    }
+
+    public function usesOwnCredentials(): bool
+    {
+        if (! $this->hasOrganizationContext()) {
+            return false;
+        }
+
+        return $this->toBool(Setting::get('pawapay.use_own_credentials', false));
+    }
+
+    public function platformIsConfigured(): bool
+    {
+        $token = Setting::getGlobal('pawapay.api_token');
+
+        if (is_string($token) && $token !== '') {
+            return true;
+        }
+
+        $envToken = config('services.pawapay.api_token');
+
+        return is_string($envToken) && $envToken !== '';
+    }
+
+    public function setCredentialsSource(bool $useOwnCredentials): void
+    {
+        Setting::set('pawapay.use_own_credentials', $useOwnCredentials ? '1' : '0', [
+            'group' => 'payments',
+            'label' => 'Use own PawaPay credentials',
+            'type' => 'boolean',
+            'is_public' => false,
+        ]);
+    }
+
+    public function savePlatformConfiguration(array $data): void
+    {
+        $this->saveConfiguration($data, platformScope: true);
     }
 
     public function getTransactionIdPrefix(): string
@@ -102,35 +146,40 @@ class PawaPayService
         return rtrim($url, '/');
     }
 
-    public function saveConfiguration(array $data): void
+    public function saveConfiguration(array $data, bool $platformScope = false): void
     {
         $meta = ['group' => 'payments', 'is_public' => false];
 
-        $this->persist('pawapay.env', $data['env'], 'PawaPay Environment', 'select', $meta);
-        $this->persist('pawapay.base_url_sandbox', $data['base_url_sandbox'] ?? '', 'PawaPay Sandbox URL', 'url', $meta);
-        $this->persist('pawapay.base_url_prod', $data['base_url_prod'] ?? '', 'PawaPay Production URL', 'url', $meta);
-        $this->persist('pawapay.callback_url', $data['callback_url'] ?? $this->defaultCallbackUrl(), 'PawaPay Callback URL', 'url', $meta);
-        $this->persist('pawapay.timeout', $data['timeout'] ?? 30, 'PawaPay Timeout', 'integer', $meta);
-        $this->persist('pawapay.enable_logging', $data['enable_logging'] ?? true, 'PawaPay Logging', 'boolean', $meta);
-        $this->persist('pawapay.public_key_id', $data['public_key_id'] ?? '', 'PawaPay Public Key ID', 'string', $meta);
+        if ($platformScope) {
+            $meta['organization_id'] = null;
+        }
+
+        $this->persist('pawapay.env', $data['env'], 'PawaPay Environment', 'select', $meta, $platformScope);
+        $this->persist('pawapay.base_url_sandbox', $data['base_url_sandbox'] ?? '', 'PawaPay Sandbox URL', 'url', $meta, $platformScope);
+        $this->persist('pawapay.base_url_prod', $data['base_url_prod'] ?? '', 'PawaPay Production URL', 'url', $meta, $platformScope);
+        $this->persist('pawapay.callback_url', $data['callback_url'] ?? $this->defaultCallbackUrl(), 'PawaPay Callback URL', 'url', $meta, $platformScope);
+        $this->persist('pawapay.timeout', $data['timeout'] ?? 30, 'PawaPay Timeout', 'integer', $meta, $platformScope);
+        $this->persist('pawapay.enable_logging', $data['enable_logging'] ?? true, 'PawaPay Logging', 'boolean', $meta, $platformScope);
+        $this->persist('pawapay.public_key_id', $data['public_key_id'] ?? '', 'PawaPay Public Key ID', 'string', $meta, $platformScope);
         $this->persist(
             'pawapay.transaction_id_prefix',
             $this->sanitizeTransactionIdPrefix($data['transaction_id_prefix'] ?? 'MOMO'),
             'PawaPay Transaction ID Prefix',
             'string',
-            $meta
+            $meta,
+            $platformScope
         );
 
         if (!empty($data['api_token'])) {
-            $this->persist('pawapay.api_token', $data['api_token'], 'PawaPay API Token', 'password', $meta);
+            $this->persist('pawapay.api_token', $data['api_token'], 'PawaPay API Token', 'password', $meta, $platformScope);
         }
 
         if (!empty($data['private_key'])) {
-            $this->persist('pawapay.private_key', $data['private_key'], 'PawaPay Private Key', 'password', $meta);
+            $this->persist('pawapay.private_key', $data['private_key'], 'PawaPay Private Key', 'password', $meta, $platformScope);
         }
 
         if (!empty($data['public_key'])) {
-            $this->persist('pawapay.public_key', $data['public_key'], 'PawaPay Public Key', 'password', $meta);
+            $this->persist('pawapay.public_key', $data['public_key'], 'PawaPay Public Key', 'password', $meta, $platformScope);
         }
     }
 
@@ -191,10 +240,18 @@ class PawaPayService
 
     protected function resolveApiToken(): ?string
     {
-        if (Setting::has('pawapay.api_token')) {
-            $token = Setting::get('pawapay.api_token');
+        if ($this->usesOwnCredentials()) {
+            if (Setting::has('pawapay.api_token')) {
+                $token = Setting::get('pawapay.api_token');
 
-            return is_string($token) && $token !== '' ? $token : null;
+                return is_string($token) && $token !== '' ? $token : null;
+            }
+        } else {
+            if (Setting::hasGlobal('pawapay.api_token')) {
+                $token = Setting::getGlobal('pawapay.api_token');
+
+                return is_string($token) && $token !== '' ? $token : null;
+            }
         }
 
         $envToken = config('services.pawapay.api_token');
@@ -209,28 +266,61 @@ class PawaPayService
 
     protected function hasSecret(string $key): bool
     {
-        if (!Setting::has($key)) {
-            return false;
-        }
+        if ($this->usesOwnCredentials()) {
+            if (! Setting::has($key)) {
+                return false;
+            }
 
-        $value = Setting::get($key);
+            $value = Setting::get($key);
+        } else {
+            if (! Setting::hasGlobal($key)) {
+                return false;
+            }
+
+            $value = Setting::getGlobal($key);
+        }
 
         return is_string($value) && $value !== '';
     }
 
     protected function value(string $key, mixed $default = null): mixed
     {
-        if (!Setting::has($key)) {
-            return $default;
+        if ($this->usesOwnCredentials()) {
+            if (Setting::has($key)) {
+                $value = Setting::get($key);
+
+                if ($value !== null && $value !== '') {
+                    return $value;
+                }
+            }
+
+            if (Setting::hasGlobal($key)) {
+                $value = Setting::getGlobal($key);
+
+                if ($value !== null && $value !== '') {
+                    return $value;
+                }
+            }
+        } else {
+            if (Setting::hasGlobal($key)) {
+                $value = Setting::getGlobal($key);
+
+                if ($value !== null && $value !== '') {
+                    return $value;
+                }
+            }
         }
 
-        $value = Setting::get($key);
+        return $default;
+    }
 
-        if ($value === null || $value === '') {
-            return $default;
+    protected function hasOrganizationContext(): bool
+    {
+        if (! app()->bound(\App\Support\Organizations\OrganizationContext::class)) {
+            return false;
         }
 
-        return $value;
+        return app(\App\Support\Organizations\OrganizationContext::class)->check();
     }
 
     protected function defaultCallbackUrl(): string
@@ -238,8 +328,17 @@ class PawaPayService
         return rtrim((string) config('app.url'), '/') . '/api/pawapay/callback';
     }
 
-    protected function persist(string $key, mixed $value, string $label, string $type, array $meta): void
+    protected function persist(string $key, mixed $value, string $label, string $type, array $meta, bool $platformScope = false): void
     {
+        if ($platformScope) {
+            Setting::setGlobal($key, $value, array_merge($meta, [
+                'label' => $label,
+                'type' => $type,
+            ]));
+
+            return;
+        }
+
         Setting::set($key, $value, array_merge($meta, [
             'label' => $label,
             'type' => $type,

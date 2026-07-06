@@ -66,6 +66,7 @@ class ReceiptService
                 'total' => (float) $sale->total,
             ],
             'company' => $this->company(),
+            'verifyUrl' => route('pos.sales.receipt', $sale),
         ];
     }
 
@@ -103,10 +104,11 @@ class ReceiptService
                 'total' => (float) $order->total,
             ],
             'company' => $this->company(),
+            'verifyUrl' => route('shop.order.receipt', [
+                'order' => $order->id,
+                'token' => $order->access_token,
+            ]),
         ];
-    }
-
-    public function amountInWords(float $amount): string
     {
         $whole = (int) floor($amount);
         $ngwee = (int) round(($amount - $whole) * 100);

@@ -16,9 +16,14 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'staff.employee' => \App\Http\Middleware\EnsureStaffEmployee::class,
+            'platform.admin' => \App\Http\Middleware\EnsurePlatformAdmin::class,
+            'organization.member' => \App\Http\Middleware\EnsureOrganizationMember::class,
+            'organization.module' => \App\Http\Middleware\EnsureOrganizationModule::class,
+            'organization.onboarded' => \App\Http\Middleware\EnsureOrganizationOnboardingComplete::class,
         ]);
 
         $middleware->web(append: [
+            \App\Http\Middleware\SetOrganizationContext::class,
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
             \App\Http\Middleware\TrackSiteVisitor::class,

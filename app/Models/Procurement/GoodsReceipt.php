@@ -2,6 +2,8 @@
 
 namespace App\Models\Procurement;
 
+use App\Models\Concerns\BelongsToOrganization;
+
 use App\Models\Inventory\Warehouse;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +12,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class GoodsReceipt extends Model
 {
+    use BelongsToOrganization;
     protected $fillable = [
+        'organization_id',
         'gr_number', 'purchase_order_id', 'warehouse_id', 'received_date',
         'status', 'notes', 'received_by',
     ];

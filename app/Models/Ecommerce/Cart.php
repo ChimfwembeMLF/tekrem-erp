@@ -3,6 +3,7 @@
 namespace App\Models\Ecommerce;
 
 use App\Models\Client;
+use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Inventory\Product;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -11,9 +12,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Cart extends Model
 {
+    use BelongsToOrganization;
+
     protected $table = 'ecommerce_carts';
 
-    protected $fillable = ['session_id', 'user_id', 'client_id'];
+    protected $fillable = ['organization_id', 'session_id', 'user_id', 'client_id'];
 
     public function user(): BelongsTo
     {

@@ -31,7 +31,16 @@ class ShopOrderNotificationService
         }
 
         try {
-            $users = User::role(['admin', 'super_user', 'manager', 'staff'])->get();
+            $users = User::role(['admin', 'super_user', 'manager', 'staff'])
+                ->when($order->organization_id, function ($query) use ($order) {
+                    $query->where(function ($inner) use ($order) {
+                        $inner->whereHas(
+                            'organizations',
+                            fn ($org) => $org->where('organizations.id', $order->organization_id)
+                        )->orWhereHas('roles', fn ($role) => $role->where('name', 'super_user'));
+                    });
+                })
+                ->get();
             NotificationService::notifyUsers(
                 $users,
                 'shop_order',

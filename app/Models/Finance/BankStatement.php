@@ -2,6 +2,8 @@
 
 namespace App\Models\Finance;
 
+use App\Models\Concerns\BelongsToOrganization;
+
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class BankStatement extends Model
 {
-    use HasFactory;
+    use BelongsToOrganization, HasFactory;
 
     /**
      * The attributes that are mass assignable.
@@ -18,6 +20,7 @@ class BankStatement extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'organization_id',
         'account_id',
         'statement_number',
         'statement_date',

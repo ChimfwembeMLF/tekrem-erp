@@ -2,6 +2,7 @@
 
 namespace App\Models\Ecommerce;
 
+use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Inventory\Product;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -9,8 +10,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ShopProductReview extends Model
 {
+    use BelongsToOrganization;
+
     protected $fillable = [
-        'product_id', 'user_id', 'reviewer_name', 'reviewer_email',
+        'organization_id', 'product_id', 'user_id', 'reviewer_name', 'reviewer_email',
         'rating', 'title', 'body', 'is_approved',
     ];
 

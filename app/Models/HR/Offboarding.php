@@ -2,14 +2,18 @@
 
 namespace App\Models\HR;
 
+use App\Models\Concerns\BelongsToOrganization;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Offboarding extends Model
 {
+    use BelongsToOrganization;
     protected $table = 'hr_offboardings';
 
     protected $fillable = [
+        'organization_id',
         'employee_id',
         'last_working_date',
         'reason',

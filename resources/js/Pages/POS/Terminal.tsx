@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 import axios from 'axios';
 import { Loader2, Minus, Plus, Trash2 } from 'lucide-react';
 import useRoute from '@/Hooks/useRoute';
+import BarcodeDisplay from '@/Components/Inventory/BarcodeDisplay';
 
 interface Product { id: number; name: string; sku: string; sale_price: string; tax_rate: string; barcode?: string }
 interface CartItem extends Product { quantity: number }
@@ -51,7 +52,9 @@ export default function PosTerminal({ register, session, products }: Props) {
   const [awaitingPayment, setAwaitingPayment] = useState(false);
 
   const filtered = products.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase())
+    p.name.toLowerCase().includes(search.toLowerCase())
+    || p.sku.toLowerCase().includes(search.toLowerCase())
+    || (p.barcode ?? '').includes(search)
   );
 
   const addToCart = (product: Product) => {
@@ -75,6 +78,20 @@ export default function PosTerminal({ register, session, products }: Props) {
   };
 
   const clearCart = () => setCart([]);
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter' || !search.trim()) {
+      return;
+    }
+
+    const term = search.trim();
+    const exact = products.find(p => p.barcode === term || p.sku === term);
+    if (exact) {
+      addToCart(exact);
+      setSearch('');
+      e.preventDefault();
+    }
+  };
 
   const total = cart.reduce((sum, i) => sum + Number(i.sale_price) * i.quantity, 0);
 

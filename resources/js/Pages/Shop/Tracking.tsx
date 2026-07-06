@@ -10,6 +10,7 @@ import useRoute from '@/Hooks/useRoute';
 import { formatZmw } from '@/lib/formatCurrency';
 import { shipmentStatusLabel } from '@/lib/shipmentStatuses';
 import ShipmentTrackingTimeline from '@/Components/Shop/ShipmentTrackingTimeline';
+import DocumentCodeStrip from '@/Components/Codes/DocumentCodeStrip';
 
 interface ShipmentEvent {
   id: number;
@@ -86,6 +87,15 @@ export default function Tracking({ trackingNumber, shipment, cartCount }: Props)
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
+                <DocumentCodeStrip
+                  label="Tracking number"
+                  value={shipment.tracking_number}
+                  qrValue={route('shop.tracking.show', shipment.tracking_number)}
+                  layout="row"
+                  className="mb-2"
+                  barcodeHeight={36}
+                  qrSize={72}
+                />
                 {shipment.sales_order && (
                   <>
                     <p><span className="text-muted-foreground">Order:</span> {shipment.sales_order.order_number}</p>

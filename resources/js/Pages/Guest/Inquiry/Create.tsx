@@ -1,17 +1,19 @@
-import React, { useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import React, { FormEvent, useState } from 'react';
+import { Head } from '@inertiajs/react';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
-import { Alert, AlertDescription } from '@/Components/ui/alert';
-import { CheckCircle, Send, MessageSquare } from 'lucide-react';
+import { MessageSquare, Send } from 'lucide-react';
 import GuestLayout from '@/Layouts/GuestLayout';
+import GuestPageHero from '@/Components/Website/GuestPageHero';
+import GuestFlowShell from '@/Components/Website/GuestFlowShell';
+import GuestSuccessScreen from '@/Components/Website/GuestSuccessScreen';
 import { toast } from 'sonner';
 import useRoute from '@/Hooks/useRoute';
-import WebsiteHero from '@/Components/Website/WebsiteHero';
+import axios from 'axios';
 
 interface Props {
   inquiryTypes: Record<string, string>;
@@ -19,18 +21,19 @@ interface Props {
   contactMethods: Record<string, string>;
 }
 
+const STEPS = ['Share your details', 'We review your message', 'Get a response by email'];
+
 export default function Create({ inquiryTypes, urgencyLevels, contactMethods }: Props) {
   const route = useRoute();
-
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [referenceNumber, setReferenceNumber] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const [reference, setReference] = useState('');
+  const [processing, setProcessing] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const getQuery = (key: string) =>
-    typeof window !== 'undefined'
-      ? new URLSearchParams(window.location.search).get(key) || ''
-      : '';
+    typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get(key) || '' : '';
 
-  const { data, setData, post, processing, errors, reset } = useForm({
+  const [form, setForm] = useState({
     type: 'general',
     name: '',
     email: '',
@@ -47,206 +50,194 @@ export default function Create({ inquiryTypes, urgencyLevels, contactMethods }: 
     utm_campaign: getQuery('utm_campaign'),
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setProcessing(true);
+    setErrors({});
 
-    post(route('guest.inquiry.store'), {
-      onSuccess: () => {
-        setIsSubmitted(true);
-        setReferenceNumber('');
-        reset();
-        toast.success('Inquiry submitted successfully!');
-      },
-      onError: () => {
-        toast.error('Failed to submit inquiry. Please try again.');
-      },
-    });
+    try {
+      const response = await axios.post(route('guest.inquiry.store'), form);
+      setReference(response.data.reference_number ?? '');
+      setSubmitted(true);
+      toast.success('Inquiry submitted successfully!');
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response?.data?.errors) {
+        const fieldErrors: Record<string, string> = {};
+        Object.entries(error.response.data.errors).forEach(([key, messages]) => {
+          fieldErrors[key] = Array.isArray(messages) ? messages[0] : String(messages);
+        });
+        setErrors(fieldErrors);
+      }
+      toast.error('Failed to submit inquiry. Please try again.');
+    } finally {
+      setProcessing(false);
+    }
   };
 
-  if (isSubmitted) {
-    return (
-      <GuestLayout title="Inquiry Submitted">
-        <Head title="Inquiry Submitted" />
-
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12">
-          <div className="container mx-auto px-4">
-            <div className="max-w-2xl mx-auto">
-              <Card className="shadow-lg">
-                <CardHeader className="text-center">
-                  <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                    <CheckCircle className="w-8 h-8 text-green-600" />
-                  </div>
-                  <CardTitle className="text-2xl text-green-600">
-                    Inquiry Submitted Successfully!
-                  </CardTitle>
-                  <CardDescription>
-                    Thank you for contacting us. We’ll respond shortly.
-                  </CardDescription>
-                </CardHeader>
-
-                <CardContent className="text-center space-y-4">
-                  {referenceNumber && (
-                    <Alert>
-                      <AlertDescription>
-                        <strong>Reference Number:</strong> {referenceNumber}
-                      </AlertDescription>
-                    </Alert>
-                  )}
-
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <Button onClick={() => setIsSubmitted(false)} variant="outline">
-                      Submit Another Inquiry
-                    </Button>
-
-                    <Button asChild>
-                      <a href="/guest/inquiry/status">Check Inquiry Status</a>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </div>
-      </GuestLayout>
-    );
-  }
+  const resetForm = () => {
+    setSubmitted(false);
+    setReference('');
+    setForm((prev) => ({
+      ...prev,
+      name: '',
+      email: '',
+      phone: '',
+      company: '',
+      position: '',
+      subject: '',
+      message: '',
+    }));
+  };
 
   return (
     <GuestLayout title="Contact Us">
-
-<WebsiteHero
-        badge="Contact"
-        badgeIcon="📩"
-        title="Get in Touch"
-        description="Tell us what you need. We’ll respond quickly and clearly."
-        primaryCta={{ label: 'Support Center', href: route('contact') }}
+      <Head title="Contact Us" />
+      <GuestPageHero
+        title="Get in touch"
+        description="Tell us what you need — we respond quickly and clearly."
+        icon={<MessageSquare className="h-6 w-6" />}
+        flowType="inquiry"
       />
 
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
+      <GuestFlowShell
+        flowType="inquiry"
+        steps={STEPS}
+        currentStep={submitted ? 2 : 0}
+        title="How inquiries work"
+        description="Submit once, track anytime with your reference number."
+      >
+        {submitted ? (
+          <GuestSuccessScreen
+            title="Inquiry submitted"
+            description="Thank you for reaching out. Our team will review your message shortly."
+            reference={reference || undefined}
+            referenceLabel="Reference number"
+            nextSteps={[
+              { title: 'Confirmation email', description: 'Check your inbox for a copy of your submission.' },
+              { title: 'Team review', description: 'We typically respond within one business day.' },
+              { title: 'Track progress', description: 'Use your reference number to check status anytime.' },
+            ]}
+            primaryAction={{ label: 'Check status', href: route('guest.inquiry.status-form') }}
+            secondaryAction={{ label: 'Back to home', href: route('home') }}
+            onReset={resetForm}
+            resetLabel="Submit another inquiry"
+          />
+        ) : (
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle>Contact form</CardTitle>
+              <CardDescription>Fill in the details below and we&apos;ll get back to you.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid gap-6 md:grid-cols-2">
+                  <Field label="Inquiry type" error={errors.type}>
+                    <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(inquiryTypes).map(([value, label]) => (
+                          <SelectItem key={value} value={value}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  <Field label="Urgency" error={errors.urgency}>
+                    <Select value={form.urgency} onValueChange={(v) => setForm({ ...form, urgency: v })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select urgency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(urgencyLevels).map(([value, label]) => (
+                          <SelectItem key={value} value={value}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                </div>
 
-            <div className="text-center mb-8">
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                Get in Touch
-              </h1>
-              <p className="text-xl text-gray-600">
-                Tell us what you need. We respond fast.
-              </p>
-            </div>
-
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5" />
-                  Contact Form
-                </CardTitle>
-                <CardDescription>
-                  Fill out the form and we’ll get back to you.
-                </CardDescription>
-              </CardHeader>
-
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-6">
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                    <div className="space-y-2">
-                      <Label>Inquiry Type</Label>
-                      <Select value={data.type} onValueChange={(v) => setData('type', v)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.entries(inquiryTypes).map(([value, label]) => (
-                            <SelectItem key={value} value={value}>
-                              {label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {errors.type && <p className="text-sm text-red-600">{errors.type}</p>}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Urgency</Label>
-                      <Select value={data.urgency} onValueChange={(v) => setData('urgency', v)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select urgency" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.entries(urgencyLevels).map(([value, label]) => (
-                            <SelectItem key={value} value={value}>
-                              {label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {errors.urgency && (
-                        <p className="text-sm text-red-600">{errors.urgency}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                    <div className="space-y-2">
-                      <Label>Full Name</Label>
-                      <Input
-                        value={data.name}
-                        onChange={(e) => setData('name', e.target.value)}
-                      />
-                      {errors.name && <p className="text-sm text-red-600">{errors.name}</p>}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Email</Label>
-                      <Input
-                        type="email"
-                        value={data.email}
-                        onChange={(e) => setData('email', e.target.value)}
-                      />
-                      {errors.email && <p className="text-sm text-red-600">{errors.email}</p>}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Subject</Label>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <Field label="Full name" error={errors.name}>
+                    <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+                  </Field>
+                  <Field label="Email" error={errors.email}>
                     <Input
-                      value={data.subject}
-                      onChange={(e) => setData('subject', e.target.value)}
+                      type="email"
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      required
                     />
-                    {errors.subject && <p className="text-sm text-red-600">{errors.subject}</p>}
-                  </div>
+                  </Field>
+                </div>
 
-                  <div className="space-y-2">
-                    <Label>Message</Label>
-                    <Textarea
-                      rows={6}
-                      value={data.message}
-                      onChange={(e) => setData('message', e.target.value)}
-                    />
-                    {errors.message && <p className="text-sm text-red-600">{errors.message}</p>}
-                  </div>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <Field label="Phone (optional)" error={errors.phone}>
+                    <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                  </Field>
+                  <Field label="Preferred contact" error={errors.preferred_contact_method}>
+                    <Select
+                      value={form.preferred_contact_method}
+                      onValueChange={(v) => setForm({ ...form, preferred_contact_method: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(contactMethods).map(([value, label]) => (
+                          <SelectItem key={value} value={value}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                </div>
 
-                  <div className="flex justify-end">
-                    <Button type="submit" disabled={processing}>
-                      {processing ? 'Sending...' : (
-                        <>
-                          <Send className="w-4 h-4 mr-2" />
-                          Send Inquiry
-                        </>
-                      )}
-                    </Button>
-                  </div>
+                <Field label="Subject" error={errors.subject}>
+                  <Input value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} required />
+                </Field>
 
-                </form>
-              </CardContent>
-            </Card>
+                <Field label="Message" error={errors.message}>
+                  <Textarea
+                    rows={6}
+                    value={form.message}
+                    onChange={(e) => setForm({ ...form, message: e.target.value })}
+                    required
+                  />
+                </Field>
 
-          </div>
-        </div>
-      </div>
+                <div className="flex justify-end">
+                  <Button type="submit" disabled={processing} className="bg-gradient-to-r from-secondary to-primary">
+                    {processing ? (
+                      'Sending…'
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        Send inquiry
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+      </GuestFlowShell>
     </GuestLayout>
+  );
+}
+
+function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      {children}
+      {error && <p className="text-sm text-destructive">{error}</p>}
+    </div>
   );
 }

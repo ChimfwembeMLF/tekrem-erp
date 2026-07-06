@@ -2,6 +2,8 @@
 
 namespace App\Models\HR;
 
+use App\Models\Concerns\BelongsToOrganization;
+
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,11 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Performance extends Model
 {
-    use HasFactory;
+    use BelongsToOrganization, HasFactory;
 
     protected $table = 'hr_performances';
 
     protected $fillable = [
+        'organization_id',
         'employee_id',
         'reviewer_id',
         'review_period',

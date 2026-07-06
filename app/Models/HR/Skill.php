@@ -2,17 +2,20 @@
 
 namespace App\Models\HR;
 
+use App\Models\Concerns\BelongsToOrganization;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Skill extends Model
 {
-    use HasFactory;
+    use BelongsToOrganization, HasFactory;
 
     protected $table = 'hr_skills';
 
     protected $fillable = [
+        'organization_id',
         'name',
         'description',
         'category',

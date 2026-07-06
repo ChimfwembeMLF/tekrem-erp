@@ -208,11 +208,15 @@ class MomoWebhookController extends Controller
         }
 
         // Try to find by provider transaction ID first
-        $transaction = MomoTransaction::where('provider_transaction_id', $transactionId)->first();
+        $transaction = MomoTransaction::withoutGlobalScope('organization')
+            ->where('provider_transaction_id', $transactionId)
+            ->first();
 
-        if (!$transaction) {
+        if (! $transaction) {
             // Try to find by transaction number (external_id)
-            $transaction = MomoTransaction::where('transaction_number', $transactionId)->first();
+            $transaction = MomoTransaction::withoutGlobalScope('organization')
+                ->where('transaction_number', $transactionId)
+                ->first();
         }
 
         if (!$transaction) {

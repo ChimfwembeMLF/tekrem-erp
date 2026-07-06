@@ -262,6 +262,28 @@ class SettingsSeeder extends Seeder
                 'is_public' => false,
                 'order' => 1,
             ],
+
+            // Mako Integration Settings
+            [
+                'key' => 'mako.api_url',
+                'value' => 'https://mako.tekreminnovations.com/',
+                'group' => 'mako',
+                'type' => 'url',
+                'label' => 'Mako API URL',
+                'description' => 'The API origin of the Mako ad platform',
+                'is_public' => true,
+                'order' => 1,
+            ],
+            [
+                'key' => 'mako.campaign_id',
+                'value' => 'widget_qpzp8iu5mr83h8cp',
+                'group' => 'mako',
+                'type' => 'string',
+                'label' => 'Mako Campaign ID',
+                'description' => 'The active campaign widget ID to embed',
+                'is_public' => true,
+                'order' => 2,
+            ],
         ];
 
         foreach ($settings as $setting) {

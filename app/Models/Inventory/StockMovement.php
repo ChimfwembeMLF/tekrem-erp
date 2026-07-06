@@ -2,6 +2,7 @@
 
 namespace App\Models\Inventory;
 
+use App\Models\Concerns\BelongsToOrganization;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,8 +10,10 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class StockMovement extends Model
 {
+    use BelongsToOrganization;
+
     protected $fillable = [
-        'product_id', 'warehouse_id', 'type', 'quantity', 'quantity_before',
+        'organization_id', 'product_id', 'warehouse_id', 'type', 'quantity', 'quantity_before',
         'quantity_after', 'reference_type', 'reference_id', 'notes', 'user_id',
     ];
 

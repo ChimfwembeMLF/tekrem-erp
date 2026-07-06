@@ -41,6 +41,7 @@ import useRoute from '@/Hooks/useRoute';
 import { formatZmw } from '@/lib/formatCurrency';
 import { shipmentStatusLabel } from '@/lib/shipmentStatuses';
 import ShipmentTrackingTimeline from '@/Components/Shop/ShipmentTrackingTimeline';
+import DocumentCodeStrip from '@/Components/Codes/DocumentCodeStrip';
 import ModuleDashboardShell from '@/Components/Dashboard/ModuleDashboardShell';
 import EcommerceModuleNav from '@/Components/Ecommerce/EcommerceModuleNav';
 import {
@@ -150,6 +151,13 @@ export default function OrderShow({ order, shipmentStatuses }: Props) {
           </Badge>
         )}
       </div>
+
+      <DocumentCodeStrip
+        label="Order number"
+        value={order.order_number}
+        qrValue={route('ecommerce.orders.show', order.id)}
+        layout="row"
+      />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <ModuleFormSection title="Customer" description="Delivery contact details." icon={<User className="h-5 w-5" />}>

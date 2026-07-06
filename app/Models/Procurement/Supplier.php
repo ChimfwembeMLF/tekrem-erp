@@ -2,12 +2,16 @@
 
 namespace App\Models\Procurement;
 
+use App\Models\Concerns\BelongsToOrganization;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Supplier extends Model
 {
+    use BelongsToOrganization;
     protected $fillable = [
+        'organization_id',
         'code', 'name', 'email', 'phone', 'address', 'payment_terms', 'is_active', 'metadata',
     ];
 

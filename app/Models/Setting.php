@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use App\Support\Organizations\OrganizationContext;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Schema;
 
 class Setting extends Model
 {
@@ -36,6 +39,7 @@ class Setting extends Model
         'description',
         'is_public',
         'order',
+        'organization_id',
     ];
 
     /**
@@ -56,9 +60,30 @@ class Setting extends Model
      * @param mixed $default
      * @return mixed
      */
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
     public static function get(string $key, $default = null)
     {
-        $setting = static::where('key', $key)->first();
+        $organizationId = static::resolveOrganizationId();
+
+        $setting = null;
+
+        if ($organizationId) {
+            $setting = static::query()
+                ->where('key', $key)
+                ->where('organization_id', $organizationId)
+                ->first();
+        }
+
+        if (! $setting) {
+            $setting = static::query()
+                ->where('key', $key)
+                ->whereNull('organization_id')
+                ->first();
+        }
 
         if (!$setting) {
             return $default;
@@ -77,7 +102,15 @@ class Setting extends Model
      */
     public static function set(string $key, $value, array $attributes = []): void
     {
-        $setting = static::firstOrNew(['key' => $key]);
+        $organizationId = $attributes['organization_id']
+            ?? static::resolveOrganizationId();
+
+        unset($attributes['organization_id']);
+
+        $setting = static::firstOrNew([
+            'key' => $key,
+            'organization_id' => $organizationId,
+        ]);
         $setting->value = static::prepareStoredValue($key, $value);
 
         foreach (['group', 'type', 'label', 'description', 'is_public', 'order'] as $attribute) {
@@ -95,7 +128,52 @@ class Setting extends Model
 
     public static function has(string $key): bool
     {
-        return static::where('key', $key)->exists();
+        $organizationId = static::resolveOrganizationId();
+
+        if ($organizationId && static::query()->where('key', $key)->where('organization_id', $organizationId)->exists()) {
+            return true;
+        }
+
+        return static::hasGlobal($key);
+    }
+
+    public static function getGlobal(string $key, mixed $default = null): mixed
+    {
+        $setting = static::query()
+            ->where('key', $key)
+            ->whereNull('organization_id')
+            ->first();
+
+        if (! $setting) {
+            return $default;
+        }
+
+        return static::castValue($key, $setting->value);
+    }
+
+    public static function hasGlobal(string $key): bool
+    {
+        return static::query()->where('key', $key)->whereNull('organization_id')->exists();
+    }
+
+    public static function setGlobal(string $key, mixed $value, array $attributes = []): void
+    {
+        static::set($key, $value, array_merge($attributes, ['organization_id' => null]));
+    }
+
+    protected static function resolveOrganizationId(): ?int
+    {
+        if (! Schema::hasTable('settings') || ! Schema::hasColumn('settings', 'organization_id')) {
+            return null;
+        }
+
+        if (! app()->bound(OrganizationContext::class)) {
+            return null;
+        }
+
+        $context = app(OrganizationContext::class);
+
+        return $context->check() ? $context->id() : null;
     }
 
     protected static function prepareStoredValue(string $key, mixed $value): string

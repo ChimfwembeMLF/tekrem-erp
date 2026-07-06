@@ -117,7 +117,9 @@ class PawaPayTransactionService
             return ['success' => false, 'error' => 'Invalid PawaPay callback payload'];
         }
 
-        $transaction = MomoTransaction::where('provider_transaction_id', $paymentId)->first();
+        $transaction = MomoTransaction::withoutGlobalScope('organization')
+            ->where('provider_transaction_id', $paymentId)
+            ->first();
 
         if (!$transaction) {
             return ['success' => false, 'error' => 'Transaction not found for callback'];

@@ -5,6 +5,10 @@ namespace App\Http\Middleware;
 use App\Models\HR\Attendance;
 use App\Models\HR\Employee;
 use App\Models\Setting;
+use App\Services\Organizations\OrganizationBillingService;
+use App\Services\Organizations\OrganizationOnboardingChecklistService;
+use App\Support\Organizations\OrganizationModuleAccess;
+use App\Support\Organizations\OrganizationContext;
 use App\Services\HR\HrSettings;
 use App\Services\HR\OfficeLocationService;
 use Illuminate\Http\Request;
@@ -66,6 +70,73 @@ class HandleInertiaRequests extends Middleware
             'staffClock' => fn () => $this->staffClockStatus($request),
             'staffPortal' => fn () => $this->staffPortalMeta($request),
             'flash' => fn () => $this->flashMessages($request),
+            'organization' => fn () => $this->organizationPayload($request),
+            'mako' => [
+                'apiUrl' => Setting::get('mako.api_url', config('services.mako.api_url')),
+                'campaignId' => Setting::get('mako.campaign_id', config('services.mako.campaign_id')),
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function organizationPayload(Request $request): ?array
+    {
+        if (! app()->bound(OrganizationContext::class)) {
+            return null;
+        }
+
+        $context = app(OrganizationContext::class);
+
+        if (! $context->check()) {
+            return null;
+        }
+
+        try {
+            $organization = $context->get()->loadMissing('activeSubscription.billingPlan');
+        } catch (\Throwable) {
+            return null;
+        }
+
+        $plan = $organization->currentPlan();
+        $user = $request->user();
+        $subscription = $organization->activeSubscription
+            ?? $organization->subscriptions()->latest('id')->first();
+        $needsPayment = app(OrganizationBillingService::class)->needsPayment($organization, $subscription);
+        $onboarding = app(OrganizationOnboardingChecklistService::class);
+        $enabledModules = OrganizationModuleAccess::enabledModules($organization, $user);
+
+        return [
+            'id' => $organization->id,
+            'name' => $organization->name,
+            'slug' => $organization->slug,
+            'display_name' => $organization->displayName(),
+            'logo_url' => $organization->logo_url,
+            'status' => $organization->status,
+            'is_on_trial' => $organization->isOnTrial(),
+            'trial_ends_at' => $organization->trial_ends_at?->toIso8601String(),
+            'needs_payment' => $needsPayment,
+            'billing_url' => route('organization.billing'),
+            'enabled_modules' => $enabledModules,
+            'onboarding' => [
+                'completed' => $onboarding->isComplete($organization),
+                'progress' => $onboarding->progress($organization),
+                'url' => route('organization.onboarding.checklist'),
+            ],
+            'plan' => $plan ? [
+                'name' => $plan->name,
+                'slug' => $plan->slug,
+                'enabled_modules' => $plan->enabled_modules ?? [],
+            ] : null,
+            'available' => $user
+                ? $user->organizations()->orderBy('name')->get(['organizations.id', 'organizations.name', 'organizations.slug'])->map(fn ($org) => [
+                    'id' => $org->id,
+                    'name' => $org->name,
+                    'slug' => $org->slug,
+                ])
+                : [],
+            'role' => $user?->organizationRole($organization),
         ];
     }
 

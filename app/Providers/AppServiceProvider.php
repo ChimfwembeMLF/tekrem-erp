@@ -12,6 +12,8 @@ use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
+use App\Support\Organizations\OrganizationContext;
+use App\Support\Organizations\OrganizationResolver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -20,7 +22,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(OrganizationContext::class);
+        $this->app->singleton(OrganizationResolver::class);
     }
 
     /**

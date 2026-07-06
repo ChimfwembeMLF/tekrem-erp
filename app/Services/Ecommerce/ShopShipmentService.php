@@ -35,6 +35,7 @@ class ShopShipmentService
         $trackingNumber = $data['tracking_number'] ?? $this->generateTrackingNumber();
 
         $shipment = ShopShipment::create([
+            'organization_id' => $order->organization_id,
             'sales_order_id' => $order->id,
             'shipping_method_id' => $order->shipping_method_id,
             'tracking_number' => $trackingNumber,

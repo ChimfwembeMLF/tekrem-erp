@@ -217,7 +217,7 @@ class FinanceController extends Controller
             abort(403, 'Access denied.');
         }
 
-        $invoice->load(['items', 'payments.account']);
+        $invoice->load(['items', 'payments.account', 'zraSmartInvoice']);
 
         $company = config('company');
 
@@ -411,6 +411,10 @@ class FinanceController extends Controller
                 'balanceDue' => $invoice->total_amount - $invoice->paid_amount,
                 'grandTotal' => $invoice->total_amount,
             ],
+            'verifyUrl' => route('customer.finance.invoices.show', $invoice),
+            'zraQrCode' => $invoice->zraSmartInvoice?->qr_code
+                ? 'data:image/png;base64,' . $invoice->zraSmartInvoice->qr_code
+                : null,
         ];
     }
 
@@ -490,6 +494,7 @@ class FinanceController extends Controller
                 'discountAmount' => $quotation->discount_amount ?? 0,
                 'grandTotal' => $quotation->total_amount,
             ],
+            'verifyUrl' => route('customer.finance.quotations.show', $quotation),
         ];
     }
 

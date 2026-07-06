@@ -2,12 +2,15 @@
 
 namespace App\Models\Ecommerce;
 
+use App\Models\Concerns\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
 
 class ShopCoupon extends Model
 {
+    use BelongsToOrganization;
+
     protected $fillable = [
-        'code', 'type', 'value', 'min_order_amount', 'max_uses',
+        'organization_id', 'code', 'type', 'value', 'min_order_amount', 'max_uses',
         'used_count', 'starts_at', 'expires_at', 'is_active',
     ];
 

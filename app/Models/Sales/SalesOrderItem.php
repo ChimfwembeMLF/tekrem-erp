@@ -2,13 +2,17 @@
 
 namespace App\Models\Sales;
 
+use App\Models\Concerns\BelongsToOrganization;
+
 use App\Models\Inventory\Product;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SalesOrderItem extends Model
 {
+    use BelongsToOrganization;
     protected $fillable = [
+        'organization_id',
         'sales_order_id', 'product_id', 'description', 'quantity',
         'unit_price', 'tax_rate', 'discount_rate', 'total',
     ];

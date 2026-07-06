@@ -3,6 +3,7 @@ import { Link } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { ArrowRight } from 'lucide-react';
 import useRoute from '@/Hooks/useRoute';
+import useOrganizationModules from '@/Hooks/useOrganizationModules';
 
 export interface ModuleCard {
   key: string;
@@ -18,12 +19,14 @@ interface ModuleCardGridProps {
 
 export default function ModuleCardGrid({ modules }: ModuleCardGridProps) {
   const route = useRoute();
+  const { hasUiKey } = useOrganizationModules();
+  const visibleModules = modules.filter((module) => hasUiKey(module.key));
 
-  if (!modules.length) return null;
+  if (!visibleModules.length) return null;
 
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      {modules.map((module) => (
+      {visibleModules.map((module) => (
         <Link key={module.key} href={route(module.route)}>
           <Card className="h-full transition-colors hover:bg-accent/30">
             <CardHeader className="pb-3">

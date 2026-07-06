@@ -7,7 +7,10 @@ use App\Models\Finance\ZraConfiguration;
 use App\Models\Finance\MomoTransaction;
 use App\Models\Finance\ZraSmartInvoice;
 use App\Models\Finance\BankReconciliation;
+use App\Models\Finance\Account;
+use App\Models\Client;
 use App\Models\Setting;
+use App\Support\Finance\CommerceFinanceSettings;
 use App\Services\Payments\PawaPayService;
 use App\Services\ZRA\ZraApiService;
 use Illuminate\Http\Request;
@@ -61,8 +64,11 @@ class FinanceSettingsController extends Controller
      */
     public function pawaPayConfiguration(): Response
     {
+        $user = auth()->user();
+
         return Inertia::render('Settings/Finance/Payments/PawaPay', [
             'configuration' => $this->pawaPayService->getPublicConfiguration(),
+            'canManagePlatform' => (bool) $user?->isSuperUser(),
         ]);
     }
 
@@ -71,6 +77,18 @@ class FinanceSettingsController extends Controller
      */
     public function updatePawaPayConfiguration(Request $request): RedirectResponse
     {
+        $platformScope = $request->boolean('platform_scope') && auth()->user()?->isSuperUser();
+
+        if ($request->has('use_own_credentials') && ! $platformScope) {
+            $this->pawaPayService->setCredentialsSource($request->boolean('use_own_credentials'));
+        }
+
+        $useOwn = $platformScope ? false : $this->pawaPayService->usesOwnCredentials();
+
+        if (! $useOwn && ! $platformScope) {
+            return redirect()->back()->with('success', 'PawaPay settings updated. This organization uses the platform PawaPay account.');
+        }
+
         $validator = Validator::make($request->all(), [
             'env' => 'required|string|in:sandbox,production',
             'api_token' => 'nullable|string|max:500',
@@ -85,7 +103,11 @@ class FinanceSettingsController extends Controller
             'transaction_id_prefix' => 'nullable|string|max:20|regex:/^[A-Za-z0-9_-]*$/',
         ]);
 
-        if (!$this->pawaPayService->isConfigured() && !$request->filled('api_token')) {
+        $configured = $platformScope
+            ? $this->pawaPayService->platformIsConfigured()
+            : $this->pawaPayService->isConfigured();
+
+        if (! $configured && ! $request->filled('api_token')) {
             $validator->after(function ($validator) {
                 $validator->errors()->add('api_token', 'API token is required for the initial setup.');
             });
@@ -97,9 +119,17 @@ class FinanceSettingsController extends Controller
                 ->withInput();
         }
 
-        $this->pawaPayService->saveConfiguration($validator->validated());
+        $validated = $validator->validated();
 
-        return redirect()->back()->with('success', 'PawaPay configuration saved to the database');
+        if ($platformScope) {
+            $this->pawaPayService->savePlatformConfiguration($validated);
+        } else {
+            $this->pawaPayService->saveConfiguration($validated);
+        }
+
+        return redirect()->back()->with('success', $platformScope
+            ? 'Platform PawaPay configuration saved.'
+            : 'Organization PawaPay credentials saved.');
     }
 
     /**
@@ -498,5 +528,49 @@ class FinanceSettingsController extends Controller
                 'message' => 'Failed to revoke API key: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Commerce → Finance bridge settings.
+     */
+    public function commerceConfiguration(): Response
+    {
+        return Inertia::render('Settings/Finance/Commerce', [
+            'settings' => CommerceFinanceSettings::toArray(),
+            'accounts' => Account::query()
+                ->where('is_active', true)
+                ->orderBy('account_code')
+                ->get(['id', 'name', 'account_code', 'type']),
+            'clients' => Client::query()
+                ->orderBy('name')
+                ->limit(200)
+                ->get(['id', 'name', 'email']),
+        ]);
+    }
+
+    /**
+     * Update commerce → Finance bridge settings.
+     */
+    public function updateCommerceConfiguration(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'auto_post_to_finance' => 'boolean',
+            'revenue_account_id' => 'nullable|integer|exists:accounts,id',
+            'vat_account_id' => 'nullable|integer|exists:accounts,id',
+            'cash_account_id' => 'nullable|integer|exists:accounts,id',
+            'walk_in_client_id' => 'nullable|integer|exists:clients,id',
+            'auto_zra' => 'boolean',
+            'zra_auto_approve' => 'boolean',
+        ]);
+
+        Setting::set('finance.commerce.auto_post_to_finance', $validated['auto_post_to_finance'] ?? false);
+        Setting::set('finance.commerce.revenue_account_id', $validated['revenue_account_id'] ?? null);
+        Setting::set('finance.commerce.vat_account_id', $validated['vat_account_id'] ?? null);
+        Setting::set('finance.commerce.cash_account_id', $validated['cash_account_id'] ?? null);
+        Setting::set('finance.commerce.walk_in_client_id', $validated['walk_in_client_id'] ?? null);
+        Setting::set('finance.commerce.auto_zra', $validated['auto_zra'] ?? false);
+        Setting::set('finance.commerce.zra_auto_approve', $validated['zra_auto_approve'] ?? false);
+
+        return redirect()->back()->with('success', 'Commerce finance settings saved.');
     }
 }

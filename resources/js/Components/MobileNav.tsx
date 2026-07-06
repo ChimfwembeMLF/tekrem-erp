@@ -22,6 +22,8 @@ export default function MobileNav({ settings: _settings }: MobileNavProps) {
     { href: route('home'), label: 'Home' },
     { href: route('about'), label: 'About' },
     { href: route('services'), label: 'Services' },
+    { href: route('erp.plans'), label: 'ERP Plans' },
+    { href: route('organization.signup'), label: 'Start ERP trial' },
     { href: route('pricing'), label: 'Pricing' },
     { href: route('faq'), label: 'FAQ' },
     { href: route('guest.inquiry.create'), label: 'Inquiry' },

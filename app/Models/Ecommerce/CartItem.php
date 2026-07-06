@@ -2,12 +2,15 @@
 
 namespace App\Models\Ecommerce;
 
+use App\Models\Concerns\BelongsToOrganization;
+
 use App\Models\Inventory\Product;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CartItem extends Model
 {
+    use BelongsToOrganization;
     protected $table = 'ecommerce_cart_items';
 
     protected $fillable = ['cart_id', 'product_id', 'quantity'];

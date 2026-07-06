@@ -4,10 +4,16 @@ namespace App\Services\MoMo;
 
 use App\Models\Finance\Invoice;
 use App\Models\Finance\MomoTransaction;
+use App\Models\Organization;
+use App\Models\OrganizationSubscription;
 use App\Models\POS\PosSale;
 use App\Models\Sales\SalesOrder;
+use App\Support\Organizations\OrganizationContext;
+use App\Support\Organizations\OrganizationResolver;
 use App\Services\Ecommerce\ShopOrderNotificationService;
 use App\Services\Finance\LedgerService;
+use App\Services\Finance\SalesOrderFinanceService;
+use App\Services\Organizations\OrganizationBillingService;
 use App\Services\Payments\PawaPayTransactionService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -62,7 +68,34 @@ class MomoTransactionService
             return;
         }
 
+        $this->bindOrganizationFromTransaction($transaction);
+
         $this->processStatusChange($transaction, $oldStatus, $transaction->status);
+    }
+
+    protected function bindOrganizationFromTransaction(MomoTransaction $transaction): void
+    {
+        if (! app()->bound(OrganizationContext::class)) {
+            return;
+        }
+
+        $organizationId = $transaction->metadata['organization_id'] ?? null;
+
+        if (! $organizationId && $transaction->transactable_type === SalesOrder::class && $transaction->transactable_id) {
+            $organizationId = SalesOrder::withoutGlobalScope('organization')
+                ->whereKey($transaction->transactable_id)
+                ->value('organization_id');
+        }
+
+        if (! $organizationId) {
+            return;
+        }
+
+        $organization = Organization::find($organizationId);
+
+        if ($organization) {
+            app(OrganizationResolver::class)->bind($organization);
+        }
     }
 
     protected function normalizeInput(array $data): array
@@ -121,7 +154,14 @@ class MomoTransactionService
 
     protected function processCompletedTransaction(MomoTransaction $transaction): void
     {
-        if ($transaction->is_posted_to_ledger) {
+        if ($transaction->transactable_type === OrganizationSubscription::class) {
+            app(OrganizationBillingService::class)->applySuccessfulPayment($transaction);
+            $this->completeLinkedRecords($transaction);
+
+            return;
+        }
+
+        if ($transaction->is_posted_to_ledger && ! $this->isCommerceTransaction($transaction)) {
             $this->completeLinkedRecords($transaction);
 
             return;
@@ -130,8 +170,12 @@ class MomoTransactionService
         try {
             DB::beginTransaction();
 
-            $this->createLedgerEntries($transaction);
+            if (! $this->isCommerceTransaction($transaction)) {
+                $this->createLedgerEntries($transaction);
+            }
+
             $this->completeLinkedRecords($transaction);
+            $this->postCommerceOrderToFinance($transaction);
 
             if ($transaction->provider?->auto_reconcile) {
                 $transaction->update(['is_reconciled' => true]);
@@ -154,6 +198,10 @@ class MomoTransactionService
 
     protected function completeLinkedRecords(MomoTransaction $transaction): void
     {
+        if ($transaction->transactable_type === OrganizationSubscription::class && $transaction->transactable_id) {
+            return;
+        }
+
         if ($transaction->transactable_type === SalesOrder::class && $transaction->transactable_id) {
             $this->completeShopOrderPayment($transaction);
 
@@ -176,11 +224,71 @@ class MomoTransactionService
                 'payment_status' => 'paid',
                 'status' => 'completed',
             ]);
+
+            $order = SalesOrder::find($sale->sales_order_id);
+
+            if ($order) {
+                $order->update([
+                    'payment_status' => 'paid',
+                    'payment_method' => 'momo',
+                ]);
+            }
+        }
+    }
+
+    protected function isCommerceTransaction(MomoTransaction $transaction): bool
+    {
+        if (in_array($transaction->transactable_type, [SalesOrder::class, PosSale::class], true)) {
+            return true;
+        }
+
+        return ! empty($transaction->metadata['sales_order_id']);
+    }
+
+    protected function postCommerceOrderToFinance(MomoTransaction $transaction): void
+    {
+        if ($transaction->transactable_type === PosSale::class && $transaction->transactable_id) {
+            $sale = PosSale::with(['salesOrder.items', 'salesOrder.client'])->find($transaction->transactable_id);
+
+            if ($sale?->salesOrder) {
+                app(SalesOrderFinanceService::class)->postPaidOrder($sale->salesOrder, [
+                    'payment_method' => 'momo',
+                    'momo_transaction_id' => $transaction->id,
+                    'pos_sale_id' => $sale->id,
+                    'reference_number' => $sale->sale_number,
+                ]);
+            }
+
+            return;
+        }
+
+        $orderId = $transaction->transactable_type === SalesOrder::class
+            ? $transaction->transactable_id
+            : ($transaction->metadata['sales_order_id'] ?? null);
+
+        if (! $orderId) {
+            return;
+        }
+
+        $order = SalesOrder::with(['items', 'client'])->find($orderId);
+
+        if ($order && $order->payment_status === 'paid') {
+            app(SalesOrderFinanceService::class)->postPaidOrder($order, [
+                'payment_method' => 'momo',
+                'momo_transaction_id' => $transaction->id,
+                'reference_number' => $order->order_number,
+            ]);
         }
     }
 
     protected function processFailedTransaction(MomoTransaction $transaction): void
     {
+        if ($transaction->transactable_type === OrganizationSubscription::class && $transaction->transactable_id) {
+            app(OrganizationBillingService::class)->applyFailedPayment($transaction);
+
+            return;
+        }
+
         if ($transaction->transactable_type === SalesOrder::class && $transaction->transactable_id) {
             $this->failShopOrderPayment($transaction);
 
@@ -259,6 +367,9 @@ class MomoTransactionService
 
     protected function createLedgerEntries(MomoTransaction $transaction): void
     {
+        if ($this->isCommerceTransaction($transaction)) {
+            return;
+        }
         $provider = $transaction->provider;
 
         if (!$provider?->cash_account_id) {

@@ -2,12 +2,15 @@
 
 namespace App\Models\Support;
 
+use App\Models\Concerns\BelongsToOrganization;
+
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SupportChatbotMessage extends Model
 {
+    use BelongsToOrganization;
     use HasUuids;
 
     public $incrementing = false;
@@ -15,6 +18,7 @@ class SupportChatbotMessage extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
+        'organization_id',
         'id',
         'conversation_id',
         'role',

@@ -210,7 +210,7 @@ class InvoiceController extends Controller
             abort(403);
         }
 
-        $invoice->load(['billable', 'items', 'payments.account']);
+        $invoice->load(['billable', 'items', 'payments.account', 'zraSmartInvoice']);
 
         return Inertia::render('Finance/Invoices/Show', [
             'invoice' => $invoice,
@@ -426,7 +426,7 @@ class InvoiceController extends Controller
             abort(403);
         }
 
-        $invoice->load(['billable', 'items', 'payments.account']);
+        $invoice->load(['billable', 'items', 'payments.account', 'zraSmartInvoice']);
 
         return Inertia::render('Finance/Invoices/Print', [
             'invoice' => $this->buildInvoicePrintPayload($invoice),
@@ -540,6 +540,10 @@ class InvoiceController extends Controller
                 'balanceDue' => $balanceDue,
                 'grandTotal' => $grandTotal,
             ],
+            'verifyUrl' => route('finance.invoices.show', $invoice),
+            'zraQrCode' => $invoice->zraSmartInvoice?->qr_code
+                ? 'data:image/png;base64,' . $invoice->zraSmartInvoice->qr_code
+                : null,
         ];
     }
 

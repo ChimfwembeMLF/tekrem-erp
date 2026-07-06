@@ -2,13 +2,16 @@
 
 namespace App\Models\Inventory;
 
+use App\Models\Concerns\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class StockLevel extends Model
 {
+    use BelongsToOrganization;
+
     protected $fillable = [
-        'product_id', 'warehouse_id', 'quantity', 'reserved_quantity', 'reorder_level',
+        'organization_id', 'product_id', 'warehouse_id', 'quantity', 'reserved_quantity', 'reorder_level',
     ];
 
     protected $casts = [

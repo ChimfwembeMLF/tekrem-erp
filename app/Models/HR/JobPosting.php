@@ -2,6 +2,8 @@
 
 namespace App\Models\HR;
 
+use App\Models\Concerns\BelongsToOrganization;
+
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,9 +11,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class JobPosting extends Model
 {
+    use BelongsToOrganization;
     protected $table = 'hr_job_postings';
 
     protected $fillable = [
+        'organization_id',
         'title',
         'slug',
         'department_id',

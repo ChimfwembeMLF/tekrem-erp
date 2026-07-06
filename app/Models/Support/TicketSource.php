@@ -2,14 +2,17 @@
 
 namespace App\Models\Support;
 
+use App\Models\Concerns\BelongsToOrganization;
+
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Sanctum\HasApiTokens;
 
 class TicketSource extends Model
 {
-    use HasApiTokens;
+    use BelongsToOrganization, HasApiTokens;
 
     protected $fillable = [
+        'organization_id',
         'name',
         'slug',
         'description',

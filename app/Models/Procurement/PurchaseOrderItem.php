@@ -2,13 +2,17 @@
 
 namespace App\Models\Procurement;
 
+use App\Models\Concerns\BelongsToOrganization;
+
 use App\Models\Inventory\Product;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PurchaseOrderItem extends Model
 {
+    use BelongsToOrganization;
     protected $fillable = [
+        'organization_id',
         'purchase_order_id', 'product_id', 'description', 'quantity',
         'quantity_received', 'unit_cost', 'tax_rate', 'total',
     ];

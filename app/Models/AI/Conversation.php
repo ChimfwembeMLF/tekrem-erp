@@ -2,6 +2,7 @@
 
 namespace App\Models\AI;
 
+use App\Models\Concerns\BelongsToOrganization;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,11 +11,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Conversation extends Model
 {
-    use HasFactory;
+    use BelongsToOrganization, HasFactory;
 
     protected $table = 'ai_conversations';
 
     protected $fillable = [
+        'organization_id',
         'user_id',
         'ai_model_id',
         'title',

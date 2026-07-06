@@ -30,6 +30,9 @@ import { toast } from 'sonner';
 interface PawaPayConfiguration {
   env: 'sandbox' | 'production';
   configured: boolean;
+  platform_configured: boolean;
+  use_own_credentials: boolean;
+  credentials_source: 'platform' | 'own';
   stored_in_database: boolean;
   provider_label: string;
   base_url: string;
@@ -47,16 +50,21 @@ interface PawaPayConfiguration {
 
 interface Props {
   configuration: PawaPayConfiguration;
+  canManagePlatform?: boolean;
 }
 
-export default function PawaPaySettings({ configuration }: Props) {
+export default function PawaPaySettings({ configuration, canManagePlatform = false }: Props) {
   const route = useRoute();
   const [showApiToken, setShowApiToken] = useState(false);
   const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [showPublicKey, setShowPublicKey] = useState(false);
   const [isTestingConnection, setIsTestingConnection] = useState(false);
+  const [useOwnCredentials, setUseOwnCredentials] = useState(configuration.use_own_credentials);
+  const [platformScope, setPlatformScope] = useState(false);
 
   const { data, setData, put, processing, errors } = useForm({
+    use_own_credentials: configuration.use_own_credentials,
+    platform_scope: false,
     env: configuration.env || 'sandbox',
     api_token: '',
     base_url_sandbox: configuration.base_url_sandbox || 'https://api.sandbox.pawapay.io/v2',
@@ -70,19 +78,30 @@ export default function PawaPaySettings({ configuration }: Props) {
     transaction_id_prefix: configuration.transaction_id_prefix || 'MOMO',
   });
 
-  const requiresToken = !configuration.configured;
+  const requiresToken = platformScope
+    ? !configuration.platform_configured
+    : useOwnCredentials && !configuration.configured;
+
+  const showCredentialForm = platformScope || useOwnCredentials;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (requiresToken && !data.api_token.trim()) {
+    setData('use_own_credentials', useOwnCredentials);
+    setData('platform_scope', platformScope);
+
+    if (showCredentialForm && requiresToken && !data.api_token.trim()) {
       toast.error('API token is required for the initial setup');
       return;
     }
 
     put(route('settings.finance.payments.pawapay.update'), {
       onSuccess: () => {
-        toast.success('PawaPay credentials saved to the database');
+        toast.success(platformScope
+          ? 'Platform PawaPay configuration saved'
+          : useOwnCredentials
+            ? 'Organization PawaPay credentials saved'
+            : 'Using platform PawaPay for this organization');
         setData('api_token', '');
         setData('private_key', '');
         setData('public_key', '');
@@ -173,20 +192,73 @@ export default function PawaPaySettings({ configuration }: Props) {
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              All PawaPay credentials are stored encrypted in the database.
-              Generate your API token from the{' '}
-              <a
-                href={data.env === 'production' ? 'https://dashboard.pawapay.io' : 'https://dashboard.sandbox.pawapay.io'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-              >
-                PawaPay dashboard
-              </a>
-              , then save it here. Secrets are never shown again after saving.
+              {platformScope
+                ? 'These credentials are saved globally and used by all organizations unless they configure their own PawaPay account.'
+                : useOwnCredentials
+                  ? 'Your organization will collect payments using your own PawaPay credentials.'
+                  : 'This organization uses the platform-integrated PawaPay account. Enable your own credentials below only if you have a separate PawaPay merchant account.'}
             </AlertDescription>
           </Alert>
 
+          {canManagePlatform && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Platform PawaPay</CardTitle>
+                <CardDescription>
+                  Default mobile money account for all tenants
+                  {configuration.platform_configured ? ' — configured' : ' — not configured yet'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Edit platform credentials</Label>
+                    <p className="text-sm text-muted-foreground">Super-user only — saves globally</p>
+                  </div>
+                  <Switch checked={platformScope} onCheckedChange={setPlatformScope} />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {!platformScope && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Organization payment account</CardTitle>
+                <CardDescription>
+                  {useOwnCredentials
+                    ? 'Using your own PawaPay credentials'
+                    : 'Using platform PawaPay (recommended)'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Use my own PawaPay credentials</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Leave off to use the system-integrated PawaPay account
+                    </p>
+                  </div>
+                  <Switch
+                    checked={useOwnCredentials}
+                    onCheckedChange={setUseOwnCredentials}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {!showCredentialForm && (
+            <Alert className="border-green-500/30">
+              <CheckCircle className="h-4 w-4" />
+              <AlertDescription>
+                Payments for shop checkout and subscription billing will route through the platform PawaPay integration
+                {configuration.platform_configured ? '.' : ' once the platform owner configures PawaPay.'}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {showCredentialForm && (
           <form onSubmit={handleSubmit} className="space-y-6">
             <Card>
               <CardHeader>
@@ -411,7 +483,7 @@ export default function PawaPaySettings({ configuration }: Props) {
                 ) : (
                   <Save className="h-4 w-4 mr-2" />
                 )}
-                Save to database
+                Save configuration
               </Button>
               <Button type="button" variant="outline" onClick={testConnection} disabled={isTestingConnection}>
                 {isTestingConnection ? (
@@ -423,6 +495,23 @@ export default function PawaPaySettings({ configuration }: Props) {
               </Button>
             </div>
           </form>
+          )}
+
+          {!showCredentialForm && (
+            <Button
+              type="button"
+              disabled={processing}
+              onClick={() => {
+                setData('use_own_credentials', useOwnCredentials);
+                setData('platform_scope', false);
+                put(route('settings.finance.payments.pawapay.update'), {
+                  onSuccess: () => toast.success('PawaPay settings updated'),
+                });
+              }}
+            >
+              {processing ? 'Saving…' : 'Save payment settings'}
+            </Button>
+          )}
         </div>
       </div>
     </AppLayout>

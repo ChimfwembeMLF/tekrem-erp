@@ -2,15 +2,19 @@
 
 namespace App\Models\Analytics;
 
+use App\Models\Concerns\BelongsToOrganization;
+
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SitePageView extends Model
 {
+    use BelongsToOrganization;
     public $timestamps = false;
 
     protected $fillable = [
+        'organization_id',
         'site_visitor_id',
         'user_id',
         'path',

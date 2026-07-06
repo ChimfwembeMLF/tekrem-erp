@@ -2,6 +2,8 @@
 
 namespace App\Models\Finance;
 
+use App\Models\Concerns\BelongsToOrganization;
+
 use App\Models\Lead;
 use App\Models\User;
 use App\Models\Client;
@@ -12,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Quotation extends Model
 {
-    use HasFactory;
+    use BelongsToOrganization, HasFactory;
 
     /**
      * The attributes that are mass assignable.
@@ -20,6 +22,7 @@ class Quotation extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'organization_id',
         'quotation_number',
         'status',
         'issue_date',

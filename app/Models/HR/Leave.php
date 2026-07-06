@@ -2,6 +2,8 @@
 
 namespace App\Models\HR;
 
+use App\Models\Concerns\BelongsToOrganization;
+
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,11 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Leave extends Model
 {
-    use HasFactory;
+    use BelongsToOrganization, HasFactory;
 
     protected $table = 'hr_leaves';
 
     protected $fillable = [
+        'organization_id',
         'employee_id',
         'leave_type_id',
         'start_date',

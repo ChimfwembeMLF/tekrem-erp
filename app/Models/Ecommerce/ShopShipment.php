@@ -2,6 +2,7 @@
 
 namespace App\Models\Ecommerce;
 
+use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Sales\SalesOrder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,8 +10,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ShopShipment extends Model
 {
+    use BelongsToOrganization;
+
     protected $fillable = [
-        'sales_order_id', 'shipping_method_id', 'tracking_number', 'carrier',
+        'organization_id', 'sales_order_id', 'shipping_method_id', 'tracking_number', 'carrier',
         'status', 'shipping_address', 'shipping_cost', 'shipped_at', 'delivered_at',
     ];
 

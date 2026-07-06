@@ -1,10 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 import JsBarcode from 'jsbarcode';
 import { cn } from '@/lib/utils';
+import { detectBarcodeFormat, type BarcodeFormat } from '@/lib/barcodeFormat';
 
 interface Props {
   value: string;
-  format?: 'EAN13' | 'CODE128';
+  format?: BarcodeFormat | 'auto';
   height?: number;
   displayValue?: boolean;
   className?: string;
@@ -12,7 +13,7 @@ interface Props {
 
 export default function BarcodeDisplay({
   value,
-  format = 'EAN13',
+  format = 'auto',
   height = 56,
   displayValue = true,
   className,
@@ -24,7 +25,7 @@ export default function BarcodeDisplay({
       return;
     }
 
-    const barcodeFormat = format === 'EAN13' && /^\d{13}$/.test(value) ? 'EAN13' : 'CODE128';
+    const barcodeFormat = format === 'auto' ? detectBarcodeFormat(value) : format;
 
     try {
       JsBarcode(svgRef.current, value, {

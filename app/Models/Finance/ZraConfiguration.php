@@ -2,13 +2,15 @@
 
 namespace App\Models\Finance;
 
+use App\Models\Concerns\BelongsToOrganization;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class ZraConfiguration extends Model
 {
-    use HasFactory;
+    use BelongsToOrganization, HasFactory;
 
     /**
      * The attributes that are mass assignable.
@@ -16,6 +18,7 @@ class ZraConfiguration extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'organization_id',
         'environment',
         'api_base_url',
         'api_version',

@@ -31,6 +31,7 @@ use App\Models\Sales\SalesOrder;
 use App\Models\POS\PosSession;
 use App\Models\Finance\MomoTransaction;
 use App\Services\DashboardRedirectService;
+use App\Support\Organizations\OrganizationModuleAccess;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -73,7 +74,7 @@ class DashboardController extends Controller
                 'isAdmin' => $user->hasAnyRole(['admin', 'super_user']),
             ];
 
-            if ($user->can('view hr')) {
+            if ($user->can('view hr') && OrganizationModuleAccess::hasModule('hr')) {
                 $hrQueue = app(\App\Services\HR\HrActionQueueService::class)->hrQueue();
                 $data['peopleActionQueue'] = [
                     ...$hrQueue,
@@ -288,7 +289,7 @@ class DashboardController extends Controller
         $openPosSessions = PosSession::where('status', 'open')->count();
         $pendingMomo = MomoTransaction::whereIn('status', ['pending', 'processing'])->count();
 
-        return [
+        return OrganizationModuleAccess::filterByModuleKey([
             [
                 'key' => 'crm',
                 'name' => 'CRM',
@@ -409,7 +410,7 @@ class DashboardController extends Controller
                     ['label' => 'Chats', 'value' => Conversation::count()],
                 ],
             ],
-        ];
+        ]);
     }
 
     private function formatZmw(float $amount): string
@@ -458,6 +459,7 @@ class DashboardController extends Controller
                 'route' => 'finance.invoices.create',
                 'icon' => 'bar-chart',
                 'permission' => 'view finance',
+                'module' => 'finance',
             ],
             [
                 'title' => 'Open Tickets',
@@ -465,6 +467,7 @@ class DashboardController extends Controller
                 'route' => 'support.tickets.index',
                 'icon' => 'grid',
                 'permission' => 'view support',
+                'module' => 'support',
             ],
             [
                 'title' => 'Low Stock',
@@ -472,6 +475,7 @@ class DashboardController extends Controller
                 'route' => 'inventory.dashboard',
                 'icon' => 'download',
                 'permission' => 'view inventory',
+                'module' => 'inventory',
             ],
             [
                 'title' => 'New Sales Order',
@@ -479,6 +483,7 @@ class DashboardController extends Controller
                 'route' => 'sales.orders.create',
                 'icon' => 'plus',
                 'permission' => 'view sales orders',
+                'module' => 'sales',
             ],
             [
                 'title' => 'System Settings',
@@ -489,6 +494,8 @@ class DashboardController extends Controller
                 'roles' => ['admin', 'super_user', 'manager'],
             ],
         ];
+
+        $actions = OrganizationModuleAccess::filterByModule($actions);
 
         return array_values(array_filter($actions, function (array $action) use ($user) {
             if (!empty($action['roles']) && !$user->hasAnyRole($action['roles'])) {

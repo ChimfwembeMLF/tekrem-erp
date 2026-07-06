@@ -2,6 +2,8 @@
 
 namespace App\Models\HR;
 
+use App\Models\Concerns\BelongsToOrganization;
+
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,11 +19,12 @@ class Department extends Model
     {
         return $this->belongsToMany(\App\Models\User::class, 'department_user', 'department_id', 'user_id');
     }
-    use HasFactory;
+    use BelongsToOrganization, HasFactory;
 
     protected $table = 'hr_departments';
 
     protected $fillable = [
+        'organization_id',
         'name',
         'code',
         'description',

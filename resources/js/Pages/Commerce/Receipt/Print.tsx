@@ -1,6 +1,7 @@
 import React from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, Printer } from 'lucide-react';
+import DocumentCodeStrip from '@/Components/Codes/DocumentCodeStrip';
 
 interface ReceiptItem {
   description: string;
@@ -49,6 +50,7 @@ interface ReceiptPayload {
     website: string;
     logoUrl?: string;
   };
+  verifyUrl?: string;
 }
 
 interface Props {
@@ -100,11 +102,21 @@ function ReceiptForm({ receipt, copyLabel }: { receipt: ReceiptPayload; copyLabe
 
         <div className="text-right">
           <div className="text-sm font-black uppercase tracking-wide">Receipt No.</div>
-          <div className="mt-1 min-w-[120px]  border-dashed border-slate-700 pb-1 font-mono text-sm font-bold">
+          <div className="mt-1 min-w-[120px] border-dashed border-slate-700 pb-1 font-mono text-sm font-bold">
             {receipt.receiptNumber}
           </div>
         </div>
       </header>
+
+      <DocumentCodeStrip
+        label="Receipt reference"
+        value={receipt.receiptNumber}
+        qrValue={receipt.verifyUrl}
+        layout="row"
+        className="mt-3 border-slate-300 bg-slate-50 print:border-solid"
+        barcodeHeight={40}
+        qrSize={80}
+      />
 
       <div className="mt-3 grid grid-cols-2 gap-4">
         <div>

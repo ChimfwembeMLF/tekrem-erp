@@ -2,6 +2,8 @@
 
 namespace App\Models\Support;
 
+use App\Models\Concerns\BelongsToOrganization;
+
 use App\Models\User;
 use App\Models\Client;
 use App\Models\Lead;
@@ -13,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Ticket extends Model
 {
-    use HasFactory;
+    use BelongsToOrganization, HasFactory;
 
     /**
      * The attributes that are mass assignable.
@@ -21,6 +23,7 @@ class Ticket extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'organization_id',
         'ticket_number',
         'title',
         'description',

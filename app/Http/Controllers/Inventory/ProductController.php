@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Inventory;
 use App\Http\Controllers\Controller;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
+use App\Support\Organizations\OrganizationContext;
 use App\Services\Inventory\ProductMediaService;
 use App\Services\Inventory\BarcodeService;
 use Illuminate\Http\Request;
@@ -127,8 +128,17 @@ class ProductController extends Controller
     {
         $this->validateMedia($request);
 
+        $organizationId = app(OrganizationContext::class)->check()
+            ? app(OrganizationContext::class)->id()
+            : null;
+
         $skuRule = 'required|string|max:50|unique:products,sku' . ($product ? ',' . $product->id : '');
         $barcodeRule = 'nullable|string|max:100|unique:products,barcode' . ($product ? ',' . $product->id : '');
+
+        if ($organizationId) {
+            $skuRule .= ',organization_id,' . $organizationId;
+            $barcodeRule .= ',organization_id,' . $organizationId;
+        }
 
         return $request->validate([
             'sku' => $skuRule,

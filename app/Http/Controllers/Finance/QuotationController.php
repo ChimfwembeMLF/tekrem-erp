@@ -579,6 +579,7 @@ class QuotationController extends Controller
                 'discountAmount' => $quotation->discount_amount ?? 0,
                 'grandTotal' => $quotation->total_amount,
             ],
+            'verifyUrl' => route('finance.quotations.show', $quotation),
         ];
     }
 

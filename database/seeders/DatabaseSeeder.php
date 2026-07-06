@@ -25,6 +25,19 @@ class DatabaseSeeder extends Seeder
         $this->command->info('👥 Seeding users...');
         $this->call(UserSeeder::class);
 
+        // 2b. Billing plans & default organization (multi-tenant foundation)
+        $this->command->info('🏢 Seeding billing plans...');
+        $this->call(BillingPlanSeeder::class);
+
+        $this->command->info('🏛️ Seeding default organization...');
+        $this->call(OrganizationSeeder::class);
+
+        $defaultOrganization = \App\Models\Organization::query()->orderBy('id')->first();
+        if ($defaultOrganization) {
+            app(\App\Support\Organizations\OrganizationContext::class)->set($defaultOrganization);
+            $this->command->info("🔒 Tenant context bound to: {$defaultOrganization->slug}");
+        }
+
         // 3. Independent seeders (no dependencies)
         $this->command->info('⚙️ Seeding settings...');
         $this->call(SettingsSeeder::class);

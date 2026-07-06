@@ -6,6 +6,8 @@ import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 import { Separator } from '@/Components/ui/separator';
 import ProductGallery from '@/Components/Inventory/ProductGallery';
+import BarcodeLabelPrint from '@/Components/Inventory/BarcodeLabelPrint';
+import DocumentCodeStrip from '@/Components/Codes/DocumentCodeStrip';
 import { formatZmw } from '@/lib/formatCurrency';
 import { ArrowLeft, Pencil } from 'lucide-react';
 
@@ -119,11 +121,28 @@ export default function ProductsShow({ product }: Props) {
 
           <Card>
             <CardHeader><CardTitle>Product details</CardTitle></CardHeader>
-            <CardContent className="grid gap-4 sm:grid-cols-2">
-              <div><p className="text-sm text-muted-foreground">Barcode</p><p className="font-medium">{product.barcode || '—'}</p></div>
-              <div><p className="text-sm text-muted-foreground">Unit</p><p className="font-medium">{product.unit ?? 'pcs'}</p></div>
-              <div><p className="text-sm text-muted-foreground">Category</p><p className="font-medium">{product.category?.name ?? '—'}</p></div>
-              <div><p className="text-sm text-muted-foreground">Online store</p><p className="font-medium">{product.is_published ? 'Visible on shop' : 'Hidden from shop'}</p></div>
+            <CardContent className="space-y-4">
+              {product.barcode ? (
+                <BarcodeLabelPrint
+                  productName={product.name}
+                  sku={product.sku}
+                  barcode={product.barcode}
+                  price={product.sale_price}
+                />
+              ) : (
+                <DocumentCodeStrip
+                  label="SKU"
+                  value={product.sku}
+                  showQr
+                  layout="stack"
+                  barcodeFormat="CODE128"
+                />
+              )}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div><p className="text-sm text-muted-foreground">Unit</p><p className="font-medium">{product.unit ?? 'pcs'}</p></div>
+                <div><p className="text-sm text-muted-foreground">Category</p><p className="font-medium">{product.category?.name ?? '—'}</p></div>
+                <div><p className="text-sm text-muted-foreground">Online store</p><p className="font-medium">{product.is_published ? 'Visible on shop' : 'Hidden from shop'}</p></div>
+              </div>
             </CardContent>
           </Card>
         </div>

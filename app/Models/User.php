@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Models\HR\Department;
+use App\Models\Organization;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -39,6 +40,7 @@ class User extends Authenticatable
         'email',
         'password',
         'firebase_uid',
+        'current_organization_id',
     ];
 
     /**
@@ -96,6 +98,38 @@ class User extends Authenticatable
     }
 
         /**
+     * Organizations this user belongs to (multi-tenant).
+     */
+    public function organizations(): BelongsToMany
+    {
+        return $this->belongsToMany(Organization::class, 'organization_user')
+            ->withPivot(['role', 'is_default', 'invited_at', 'accepted_at'])
+            ->withTimestamps();
+    }
+
+    public function currentOrganization(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Organization::class, 'current_organization_id');
+    }
+
+    public function organizationRole(?Organization $organization = null): ?string
+    {
+        $organization ??= $this->currentOrganization;
+
+        if (! $organization) {
+            return null;
+        }
+
+        if ($this->isSuperUser()) {
+            return 'owner';
+        }
+
+        return $organization->users()
+            ->where('users.id', $this->id)
+            ->value('organization_user.role');
+    }
+
+    /**
      * Get the client owned by the user (one-to-one).
      */
     public function client()

@@ -48,6 +48,10 @@ class AnalyticsController extends Controller
             ->where('sales_orders.source', 'ecommerce')
             ->where('sales_orders.status', '!=', 'cancelled')
             ->whereNotNull('sales_order_items.product_id')
+            ->when(
+                ($orgId = app(\App\Support\Organizations\OrganizationContext::class)->id()),
+                fn ($query) => $query->where('sales_orders.organization_id', $orgId),
+            )
             ->select(
                 'sales_order_items.product_id',
                 'sales_order_items.description',

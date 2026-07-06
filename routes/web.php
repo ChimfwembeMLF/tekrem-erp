@@ -35,6 +35,8 @@ Route::get('/refund-policy', function () {
 })->name('refund-policy.show');
 
 // Public Website Routes
+Route::get('/codes/qr.png', [\App\Http\Controllers\CodeImageController::class, 'qr'])->name('codes.qr');
+
 Route::get('/', [WebsiteController::class, 'index'])->name('home');
 
 Route::get('/about', [WebsiteController::class, 'about'])->name('about');
@@ -51,6 +53,14 @@ Route::get('/services/{slug}', [WebsiteController::class, 'serviceShow'])
     ->name('services.show');
 
 Route::get('/pricing', [WebsiteController::class, 'pricing'])->name('pricing');
+
+Route::middleware('guest')->group(function () {
+    Route::get('/erp/plans', [\App\Http\Controllers\OrganizationOnboardingController::class, 'plans'])->name('erp.plans');
+    Route::get('/start', [\App\Http\Controllers\OrganizationOnboardingController::class, 'create'])->name('organization.signup');
+    Route::post('/start', [\App\Http\Controllers\OrganizationOnboardingController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('organization.signup.store');
+});
 
 Route::get('/contact', [WebsiteController::class, 'contact'])->name('contact');
 
@@ -178,9 +188,24 @@ Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
+    'organization.member',
+    'organization.module',
+    'organization.onboarded',
 ])->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/onboarding/welcome', [\App\Http\Controllers\OrganizationOnboardingController::class, 'welcome'])->name('organization.onboarding.welcome');
+    Route::get('/onboarding', [\App\Http\Controllers\OrganizationOnboardingController::class, 'checklist'])->name('organization.onboarding.checklist');
+    Route::put('/onboarding/step', [\App\Http\Controllers\OrganizationOnboardingController::class, 'updateStep'])->name('organization.onboarding.step');
+    Route::post('/onboarding/step', [\App\Http\Controllers\OrganizationOnboardingController::class, 'updateStep'])->name('organization.onboarding.step.upload');
+    Route::post('/onboarding/submit', [\App\Http\Controllers\OrganizationOnboardingController::class, 'submit'])->name('organization.onboarding.submit');
     Route::get('/session/ping', fn () => response()->json(['ok' => true]))->name('session.ping');
+    Route::post('/organization/{organization}/switch', \App\Http\Controllers\OrganizationSwitchController::class)->name('organization.switch');
+
+    Route::prefix('organization/billing')->name('organization.billing')->group(function () {
+        Route::get('/', [\App\Http\Controllers\OrganizationBillingController::class, 'show'])->name('');
+        Route::post('/pay', [\App\Http\Controllers\OrganizationBillingController::class, 'pay'])->name('.pay');
+        Route::get('/subscriptions/{subscription}/payment-status', [\App\Http\Controllers\OrganizationBillingController::class, 'paymentStatus'])->name('.payment-status');
+    });
 
     // Staff self-service attendance (any authenticated user with a linked employee record)
     Route::prefix('staff/attendance')->name('staff.attendance.')->group(function () {
@@ -256,6 +281,19 @@ Route::middleware([
         Route::post('permissions/bulk-assign-roles', [\App\Http\Controllers\Admin\PermissionController::class, 'bulkAssignRoles'])->name('permissions.bulk-assign-roles');
         Route::delete('permissions/bulk-delete', [\App\Http\Controllers\Admin\PermissionController::class, 'bulkDelete'])->name('permissions.bulk-delete');
         Route::post('permissions/generate-module', [\App\Http\Controllers\Admin\PermissionController::class, 'generateModulePermissions'])->name('permissions.generate-module');
+
+        // Platform (multi-tenant) — super_user only
+        Route::prefix('platform')->name('platform.')->middleware('platform.admin')->group(function () {
+            Route::get('/plans', [\App\Http\Controllers\Admin\Platform\BillingPlanController::class, 'index'])->name('plans.index');
+            Route::post('/plans', [\App\Http\Controllers\Admin\Platform\BillingPlanController::class, 'store'])->name('plans.store');
+            Route::put('/plans/{plan}', [\App\Http\Controllers\Admin\Platform\BillingPlanController::class, 'update'])->name('plans.update');
+            Route::get('/organizations', [\App\Http\Controllers\Admin\Platform\OrganizationController::class, 'index'])->name('organizations.index');
+            Route::get('/organizations/create', [\App\Http\Controllers\Admin\Platform\OrganizationController::class, 'create'])->name('organizations.create');
+            Route::post('/organizations', [\App\Http\Controllers\Admin\Platform\OrganizationController::class, 'store'])->name('organizations.store');
+            Route::get('/organizations/{organization}', [\App\Http\Controllers\Admin\Platform\OrganizationController::class, 'show'])->name('organizations.show');
+            Route::patch('/organizations/{organization}/status', [\App\Http\Controllers\Admin\Platform\OrganizationController::class, 'updateStatus'])->name('organizations.status');
+            Route::post('/organizations/{organization}/plan', [\App\Http\Controllers\Admin\Platform\OrganizationController::class, 'changePlan'])->name('organizations.plan');
+        });
 
         // Integration Verification
         Route::prefix('integration-verification')->name('integration-verification.')->group(function () {
@@ -1272,6 +1310,9 @@ Route::middleware([
                 Route::put('/pawapay', [\App\Http\Controllers\Settings\FinanceSettingsController::class, 'updatePawaPayConfiguration'])->name('pawapay.update');
                 Route::post('/pawapay/test', [\App\Http\Controllers\Settings\FinanceSettingsController::class, 'testPawaPayConnection'])->name('pawapay.test');
             });
+
+            Route::get('/commerce', [\App\Http\Controllers\Settings\FinanceSettingsController::class, 'commerceConfiguration'])->name('commerce');
+            Route::put('/commerce', [\App\Http\Controllers\Settings\FinanceSettingsController::class, 'updateCommerceConfiguration'])->name('commerce.update');
 
             // ZRA Settings
             Route::prefix('zra')->name('zra.')->group(function () {

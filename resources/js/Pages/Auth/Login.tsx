@@ -119,6 +119,12 @@ export default function Login({ canResetPassword, status }: Props) {
               Need an account?
             </LinkButton>
           </div>
+
+          <div className="text-center pt-2 border-t border-border/60">
+            <LinkButton href={route('organization.signup')}>
+              Start your organization — free ERP trial
+            </LinkButton>
+          </div>
         </div>
       </form>
     </AuthCard>

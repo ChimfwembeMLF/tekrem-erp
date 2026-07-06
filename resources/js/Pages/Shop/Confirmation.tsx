@@ -17,6 +17,7 @@ import {
 import useRoute from '@/Hooks/useRoute';
 import { formatZmw } from '@/lib/formatCurrency';
 import { ShopTotals } from '@/lib/shopTotals';
+import DocumentCodeStrip from '@/Components/Codes/DocumentCodeStrip';
 
 interface Item {
   description: string;
@@ -107,6 +108,14 @@ export default function ShopConfirmation({ order, totals, awaitingMomoPayment = 
           </p>
           <div className="flex justify-center gap-2 pt-1">{paymentBadge()}</div>
         </div>
+
+        <DocumentCodeStrip
+          label="Order number"
+          value={order.order_number}
+          qrValue={typeof window !== 'undefined' ? route('shop.order.receipt', { order: order.id, token: new URLSearchParams(window.location.search).get('token') ?? '' }) : undefined}
+          layout="stack"
+          className="text-left"
+        />
 
         {awaitingMomoPayment && paymentStatus === 'pending' && (
           <Card className="border-primary/30 bg-primary/5 text-left">

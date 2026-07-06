@@ -2,14 +2,18 @@
 
 namespace App\Models\HR;
 
+use App\Models\Concerns\BelongsToOrganization;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class JobApplication extends Model
 {
+    use BelongsToOrganization;
     protected $table = 'hr_job_applications';
 
     protected $fillable = [
+        'organization_id',
         'job_posting_id',
         'first_name',
         'last_name',

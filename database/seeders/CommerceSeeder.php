@@ -6,6 +6,7 @@ use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\StockLevel;
 use App\Models\Inventory\Warehouse;
+use App\Models\Organization;
 use App\Models\POS\PosRegister;
 use App\Models\Procurement\Supplier;
 use Illuminate\Database\Seeder;
@@ -15,13 +16,15 @@ class CommerceSeeder extends Seeder
 {
     public function run(): void
     {
+        $organizationId = Organization::query()->orderBy('id')->value('id');
+
         $warehouse = Warehouse::firstOrCreate(
-            ['code' => 'MAIN'],
+            ['code' => 'MAIN', 'organization_id' => $organizationId],
             ['name' => 'Main Warehouse', 'address' => 'Lusaka', 'is_default' => true, 'is_active' => true]
         );
 
         $category = ProductCategory::firstOrCreate(
-            ['slug' => 'general'],
+            ['slug' => 'general', 'organization_id' => $organizationId],
             ['name' => 'General', 'description' => 'General products', 'is_active' => true]
         );
 
@@ -34,7 +37,7 @@ class CommerceSeeder extends Seeder
 
         foreach ($products as $p) {
             $product = Product::firstOrCreate(
-                ['sku' => $p['sku']],
+                ['sku' => $p['sku'], 'organization_id' => $organizationId],
                 [
                     'name' => $p['name'],
                     'slug' => Str::slug($p['name']),
@@ -50,7 +53,11 @@ class CommerceSeeder extends Seeder
             );
 
             StockLevel::updateOrCreate(
-                ['product_id' => $product->id, 'warehouse_id' => $warehouse->id],
+                [
+                    'organization_id' => $organizationId,
+                    'product_id' => $product->id,
+                    'warehouse_id' => $warehouse->id,
+                ],
                 ['quantity' => 50, 'reserved_quantity' => 0, 'reorder_level' => 10],
             );
         }

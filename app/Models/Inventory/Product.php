@@ -2,14 +2,17 @@
 
 namespace App\Models\Inventory;
 
+use App\Models\Concerns\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
+    use BelongsToOrganization;
+
     protected $fillable = [
-        'sku', 'name', 'slug', 'description', 'category_id', 'barcode', 'unit',
+        'organization_id', 'sku', 'name', 'slug', 'description', 'category_id', 'barcode', 'unit',
         'cost_price', 'sale_price', 'tax_rate', 'track_inventory', 'is_active',
         'is_published', 'is_featured', 'images', 'videos', 'metadata',
     ];

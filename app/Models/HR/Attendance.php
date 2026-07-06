@@ -2,6 +2,8 @@
 
 namespace App\Models\HR;
 
+use App\Models\Concerns\BelongsToOrganization;
+
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,11 +12,12 @@ use Carbon\Carbon;
 
 class Attendance extends Model
 {
-    use HasFactory;
+    use BelongsToOrganization, HasFactory;
 
     protected $table = 'hr_attendances';
 
     protected $fillable = [
+        'organization_id',
         'employee_id',
         'date',
         'clock_in',

@@ -37,6 +37,55 @@ export default function AppLayout({
           {/* Top Navigation */}
           <TopNav settings={settings} />
 
+          {(page.props as { organization?: { onboarding?: { completed?: boolean; progress?: number; url?: string }; needs_payment?: boolean; is_on_trial?: boolean; trial_ends_at?: string | null; billing_url?: string; plan?: { name: string } | null; role?: string } }).organization?.onboarding &&
+            !(page.props as { organization?: { onboarding?: { completed?: boolean } } }).organization?.onboarding?.completed &&
+            ['owner', 'admin'].includes((page.props as any).organization?.role ?? '') && (
+            <div className="border-b border-blue-500/30 bg-blue-500/10 px-4 py-2 text-center text-sm md:px-6">
+              <span className="text-blue-900 dark:text-blue-100">
+                Company onboarding {(page.props as any).organization.onboarding.progress ?? 0}% complete —{' '}
+                <a
+                  href={(page.props as any).organization.onboarding.url}
+                  className="font-semibold underline underline-offset-2"
+                >
+                  Submit required information
+                </a>
+              </span>
+            </div>
+          )}
+
+          {(page.props as { organization?: { needs_payment?: boolean; is_on_trial?: boolean; trial_ends_at?: string | null; billing_url?: string; plan?: { name: string } | null } }).organization?.needs_payment && (
+            <div className="border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-center text-sm md:px-6">
+              <span className="text-amber-900 dark:text-amber-100">
+                Subscription payment required —{' '}
+                <a
+                  href={(page.props as any).organization.billing_url}
+                  className="font-semibold underline underline-offset-2"
+                >
+                  Pay with PawaPay
+                </a>
+              </span>
+            </div>
+          )}
+
+          {(page.props as { organization?: { is_on_trial?: boolean; trial_ends_at?: string | null; billing_url?: string; plan?: { name: string } | null } }).organization?.is_on_trial &&
+            !(page.props as { organization?: { needs_payment?: boolean } }).organization?.needs_payment && (
+            <div className="border-b border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-center text-sm md:px-6">
+              <span className="text-emerald-900 dark:text-emerald-100">
+                {(page.props as any).organization.plan?.name ?? 'Trial'} plan — trial ends{' '}
+                {(page.props as any).organization.trial_ends_at
+                  ? new Date((page.props as any).organization.trial_ends_at).toLocaleDateString()
+                  : 'soon'}
+                .{' '}
+                <a
+                  href={(page.props as any).organization.billing_url}
+                  className="font-semibold underline underline-offset-2"
+                >
+                  View billing
+                </a>
+              </span>
+            </div>
+          )}
+
           {/* Page Heading */}
           {renderHeader && (
             <header className="bg-card shadow">

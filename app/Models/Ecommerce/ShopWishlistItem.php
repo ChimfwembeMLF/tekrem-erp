@@ -2,6 +2,7 @@
 
 namespace App\Models\Ecommerce;
 
+use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Inventory\Product;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -9,7 +10,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ShopWishlistItem extends Model
 {
-    protected $fillable = ['user_id', 'product_id'];
+    use BelongsToOrganization;
+
+    protected $fillable = ['organization_id', 'user_id', 'product_id'];
 
     public function user(): BelongsTo
     {

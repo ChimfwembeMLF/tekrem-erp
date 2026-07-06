@@ -2,17 +2,21 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToOrganization;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Backlog extends Model
 {
+    use BelongsToOrganization;
     use SoftDeletes;
 
     protected $table = 'backlogs';
 
     protected $fillable = [
+        'organization_id',
         'project_id',
         'card_id',
         'epic_id',

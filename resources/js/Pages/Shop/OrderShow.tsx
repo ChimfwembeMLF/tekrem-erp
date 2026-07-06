@@ -22,6 +22,7 @@ import useRoute from '@/Hooks/useRoute';
 import { formatZmw } from '@/lib/formatCurrency';
 import { ShopTotals } from '@/lib/shopTotals';
 import ShipmentTrackingTimeline from '@/Components/Shop/ShipmentTrackingTimeline';
+import DocumentCodeStrip from '@/Components/Codes/DocumentCodeStrip';
 import { shipmentStatusLabel } from '@/lib/shipmentStatuses';
 
 interface Props {
@@ -76,6 +77,13 @@ export default function OrderShow({ order, totals, canCancel, cartCount }: Props
           </div>
         </div>
 
+        <DocumentCodeStrip
+          label="Order number"
+          value={order.order_number}
+          qrValue={route('shop.order.receipt', order.id)}
+          layout="row"
+        />
+
         <Card>
           <CardHeader><CardTitle>Items</CardTitle></CardHeader>
           <CardContent className="space-y-4">
@@ -125,7 +133,14 @@ export default function OrderShow({ order, totals, canCancel, cartCount }: Props
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="font-mono text-sm">{order.shipment.tracking_number}</p>
+              <DocumentCodeStrip
+                label="Tracking number"
+                value={order.shipment.tracking_number}
+                qrValue={route('shop.tracking.show', order.shipment.tracking_number)}
+                layout="row"
+                barcodeHeight={36}
+                qrSize={72}
+              />
               <ShipmentTrackingTimeline currentStatus={order.shipment.status} events={order.shipment.events} />
             </CardContent>
           </Card>

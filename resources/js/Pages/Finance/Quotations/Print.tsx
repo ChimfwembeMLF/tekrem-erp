@@ -2,6 +2,7 @@ import React from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, Building, Mail, Phone, Printer, User } from 'lucide-react';
 import useRoute from '@/Hooks/useRoute';
+import DocumentCodeStrip from '@/Components/Codes/DocumentCodeStrip';
 
 interface QuotationPrintItem {
   id: number;
@@ -48,6 +49,7 @@ interface QuotationPrintPayload {
     discountAmount: number;
     grandTotal: number;
   };
+  verifyUrl?: string;
 }
 
 interface Props {
@@ -129,8 +131,19 @@ export default function Print({ quotation }: Props) {
               <div className="text-right">
                 <h2 className="text-lg font-black tracking-tight text-slate-900">Quotation Details</h2>
                 <p className="text-xs text-slate-500">Breakdown of charges and services</p>
+                <p className="mt-1 font-mono text-sm font-bold text-slate-800">{quotation.quotationNumber}</p>
               </div>
             </header>
+
+            <DocumentCodeStrip
+              label="Quotation number"
+              value={quotation.quotationNumber}
+              qrValue={quotation.verifyUrl}
+              layout="row"
+              className="mt-3 print:border-solid"
+              barcodeHeight={40}
+              qrSize={84}
+            />
 
             <section className="mt-3 grid grid-cols-1 gap-3 border-b border-slate-200 pb-3 md:grid-cols-2 print:grid-cols-2 print:gap-6">
               <div>

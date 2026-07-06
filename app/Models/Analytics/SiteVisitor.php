@@ -2,6 +2,8 @@
 
 namespace App\Models\Analytics;
 
+use App\Models\Concerns\BelongsToOrganization;
+
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,7 +11,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SiteVisitor extends Model
 {
+    use BelongsToOrganization;
     protected $fillable = [
+        'organization_id',
         'visitor_key',
         'user_id',
         'ip_address',

@@ -77,4 +77,10 @@ return [
         'enable_logging' => env('PAWAPAY_ENABLE_LOGGING', true),
     ],
 
+    'mako' => [
+        'api_url' => env('MAKO_API_URL', 'https://mako.tekreminnovations.com/'),
+        'campaign_id' => env('MAKO_CAMPAIGN_ID', 'widget_qpzp8iu5mr83h8cp'),
+    ],
+
 ];
+

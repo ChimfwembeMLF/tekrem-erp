@@ -2,6 +2,7 @@ import React from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, Building, Mail, Phone, Printer, User } from 'lucide-react';
 import useRoute from '@/Hooks/useRoute';
+import DocumentCodeStrip from '@/Components/Codes/DocumentCodeStrip';
 
 interface InvoicePrintItem {
   id: number;
@@ -67,6 +68,8 @@ interface InvoicePrintPayload {
     balanceDue: number;
     grandTotal: number;
   };
+  verifyUrl?: string;
+  zraQrCode?: string | null;
 }
 
 interface Props {
@@ -148,8 +151,29 @@ export default function Print({ invoice }: Props) {
               <div className="text-right">
                 <h2 className="text-lg font-black tracking-tight text-slate-900">Invoice Details</h2>
                 <p className="text-xs text-slate-500">Breakdown of charges and services</p>
+                <p className="mt-1 font-mono text-sm font-bold text-slate-800">{invoice.invoiceNumber}</p>
               </div>
             </header>
+
+            <DocumentCodeStrip
+              label="Invoice number"
+              value={invoice.invoiceNumber}
+              qrValue={invoice.verifyUrl}
+              layout="row"
+              className="mt-3 print:border-solid"
+              barcodeHeight={40}
+              qrSize={84}
+            />
+
+            {invoice.zraQrCode && (
+              <div className="mt-3 flex items-center gap-4 rounded-lg border border-emerald-200 bg-emerald-50/80 p-3 print:border-solid">
+                <img src={invoice.zraQrCode} alt="ZRA Smart Invoice QR" className="h-24 w-24" />
+                <div>
+                  <p className="text-xs font-bold uppercase text-emerald-800">ZRA Smart Invoice</p>
+                  <p className="text-[11px] text-emerald-900">Scan to verify with ZRA</p>
+                </div>
+              </div>
+            )}
 
             <section className="mt-3 grid grid-cols-1 gap-3 border-b border-slate-200 pb-3 md:grid-cols-2 print:grid-cols-2 print:gap-6">
               <div>

@@ -9,6 +9,7 @@ use App\Models\Inventory\StockLevel;
 use App\Models\Inventory\Warehouse;
 use App\Models\POS\PosSale;
 use App\Models\POS\PosSession;
+use App\Services\Finance\SalesOrderFinanceService;
 use App\Services\Payments\PawaPayService;
 use App\Services\Payments\PawaPayTransactionService;
 use App\Services\Sales\SalesOrderService;
@@ -39,7 +40,12 @@ class PosService
 
             $this->salesOrderService->fulfill($order);
 
-            return PosSale::create([
+            $order->update([
+                'payment_status' => 'paid',
+                'payment_method' => $paymentMethod,
+            ]);
+
+            $sale = PosSale::create([
                 'session_id' => $session->id,
                 'sales_order_id' => $order->id,
                 'client_id' => $clientId,
@@ -51,6 +57,17 @@ class PosService
                 'payment_status' => 'paid',
                 'status' => 'completed',
             ]);
+
+            app(SalesOrderFinanceService::class)->postPaidOrder(
+                $order->fresh(['items', 'client']),
+                [
+                    'payment_method' => $paymentMethod,
+                    'pos_sale_id' => $sale->id,
+                    'reference_number' => $sale->sale_number,
+                ]
+            );
+
+            return $sale;
         });
     }
 

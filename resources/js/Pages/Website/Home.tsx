@@ -5,7 +5,9 @@ import { Link } from '@inertiajs/react';
 import useRoute from '@/Hooks/useRoute';
 import useTypedPage from '@/Hooks/useTypedPage';
 import FAQ from '@/Components/FAQ';
+import ErpProductShowcase from '@/Components/Website/ErpProductShowcase';
 import { Check } from 'lucide-react';
+import MakoAd from '@/Components/Website/MakoAd';
 
 
 
@@ -386,10 +388,10 @@ export default function Home({ canLogin, canRegister }: Props) {
               {/* CTA Buttons */}
               <div className="mt-10 flex flex-col sm:flex-row gap-4">
                 <Link
-                  href={route('services')}
-                  className="inline-flex items-center justify-center px-8 py-4 border-2 border-gray-200 text-white font-semibold rounded-xl transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
+                  href={route('erp.plans')}
+                  className="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-secondary to-primary text-white font-semibold rounded-xl transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
                 >
-                  Get Started Today
+                  Start free ERP trial
                   <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
@@ -401,7 +403,7 @@ export default function Home({ canLogin, canRegister }: Props) {
                   <svg className="mr-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  Schedule Demo
+                  Talk to us
                 </Link>
               </div>
             </div>
@@ -453,9 +455,7 @@ export default function Home({ canLogin, canRegister }: Props) {
 
       </div>
 
-
-      {/* Statistics Section with Modern Design */}
-
+      <ErpProductShowcase />
 
       {/* Services Overview Section */}
       <div className="py-20 bg-white dark:bg-gray-900">
@@ -722,6 +722,9 @@ export default function Home({ canLogin, canRegister }: Props) {
       {/* Creative Technology Stack Section */}
       {/* <TechnologyStack /> */}
 
+
+      {/* Mako Embed Ad */}
+      <MakoAd />
 
       {/* FAQ Section */}
       <FAQ />

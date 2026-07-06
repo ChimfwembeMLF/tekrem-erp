@@ -82,6 +82,14 @@ export default function MainNav({ settings: _settings }: MainNavProps) {
 
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
+            <Link href={route('erp.plans')} className={linkClass(isActive(route('erp.plans')))}>
+              ERP Plans
+            </Link>
+          </NavigationMenuLink>
+        </NavigationMenuItem>
+
+        <NavigationMenuItem>
+          <NavigationMenuLink asChild>
             <Link href={route('pricing')} className={linkClass(isActive(route('pricing')))}>
               Pricing
             </Link>
@@ -100,6 +108,12 @@ export default function MainNav({ settings: _settings }: MainNavProps) {
           </NavigationMenuTrigger>
           <NavigationMenuContent>
             <ul className="grid w-[400px] gap-3 p-4 md:w-[420px]">
+              <ListItem href={route('organization.signup')} title="Start ERP trial">
+                Create your organization — free trial on every plan
+              </ListItem>
+              <ListItem href={route('erp.plans')} title="ERP Plans">
+                Compare Starter, Pro, and Enterprise
+              </ListItem>
               <ListItem href={route('guest.inquiry.create')} title="General Inquiry">
                 Ask a question or get more information
               </ListItem>

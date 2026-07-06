@@ -2,6 +2,8 @@
 
 namespace App\Models\POS;
 
+use App\Models\Concerns\BelongsToOrganization;
+
 use App\Models\Client;
 use App\Models\Sales\SalesOrder;
 use Illuminate\Database\Eloquent\Model;
@@ -9,9 +11,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PosSale extends Model
 {
+    use BelongsToOrganization;
     protected $table = 'pos_sales';
 
     protected $fillable = [
+        'organization_id',
         'sale_number', 'session_id', 'sales_order_id', 'client_id',
         'subtotal', 'tax_amount', 'discount_amount', 'total',
         'payment_method', 'payment_status', 'status', 'metadata',

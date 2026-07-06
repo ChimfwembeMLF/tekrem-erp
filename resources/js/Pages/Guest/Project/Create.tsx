@@ -1,7 +1,9 @@
 import React, { FormEvent, useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import GuestLayout from '@/Layouts/GuestLayout';
 import GuestPageHero from '@/Components/Website/GuestPageHero';
+import GuestFlowShell from '@/Components/Website/GuestFlowShell';
+import GuestSuccessScreen from '@/Components/Website/GuestSuccessScreen';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -10,6 +12,7 @@ import { Textarea } from '@/Components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { Briefcase } from 'lucide-react';
 import { toast } from 'sonner';
+import useRoute from '@/Hooks/useRoute';
 import axios from 'axios';
 
 interface Props {
@@ -20,11 +23,15 @@ interface Props {
   priorities: Record<string, string>;
 }
 
-export default function Create({ projectTypes, budgetRanges, timelines, priorities }: Props) {
+const STEPS = ['Share your brief', 'Consultant review', 'Receive a proposal'];
+
+export default function Create({ projectTypes, budgetRanges, timelines }: Props) {
+  const route = useRoute();
   const [submitted, setSubmitted] = useState(false);
   const [reference, setReference] = useState('');
+  const [processing, setProcessing] = useState(false);
 
-  const { data, setData, processing, errors, reset } = useForm({
+  const [form, setForm] = useState({
     name: '',
     email: '',
     phone: '',
@@ -40,15 +47,35 @@ export default function Create({ projectTypes, budgetRanges, timelines, prioriti
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setProcessing(true);
     try {
-      const response = await axios.post('/guest/project', data);
+      const response = await axios.post(route('guest.project.store'), form);
       setReference(response.data.reference_number ?? '');
       setSubmitted(true);
-      reset();
       toast.success('Project inquiry submitted.');
     } catch {
       toast.error('Failed to submit. Please check the form and try again.');
+    } finally {
+      setProcessing(false);
     }
+  };
+
+  const resetForm = () => {
+    setSubmitted(false);
+    setReference('');
+    setForm({
+      name: '',
+      email: '',
+      phone: '',
+      company: '',
+      project_type: '',
+      project_title: '',
+      project_description: '',
+      budget_range: '',
+      timeline: '',
+      priority: 'normal',
+      source: 'website',
+    });
   };
 
   return (
@@ -58,97 +85,134 @@ export default function Create({ projectTypes, budgetRanges, timelines, prioriti
         title="Project consultation"
         description="Tell us about your project and we'll follow up with a tailored proposal."
         icon={<Briefcase className="h-6 w-6" />}
+        flowType="project"
       />
 
-      <div className="mx-auto max-w-2xl px-4 py-12">
+      <GuestFlowShell
+        flowType="project"
+        steps={STEPS}
+        currentStep={submitted ? 2 : 0}
+        title="Consultation process"
+        description="From first brief to a scoped proposal — clear steps, no surprises."
+      >
         {submitted ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>Submitted successfully</CardTitle>
-              <CardDescription>
-                Reference: <strong>{reference}</strong>
-              </CardDescription>
-            </CardHeader>
-          </Card>
+          <GuestSuccessScreen
+            title="Consultation request submitted"
+            description="A consultant will review your brief and contact you shortly."
+            reference={reference || undefined}
+            nextSteps={[
+              { title: 'Brief review', description: 'We assess scope, timeline, and fit.' },
+              { title: 'Discovery call', description: 'We may reach out to clarify requirements.' },
+              { title: 'Proposal delivery', description: 'You will receive a tailored project proposal.' },
+            ]}
+            primaryAction={{ label: 'Check status', href: route('guest.project.status-form') }}
+            onReset={resetForm}
+          />
         ) : (
-          <Card>
+          <Card className="shadow-lg">
             <CardHeader>
               <CardTitle>Project details</CardTitle>
+              <CardDescription>The more detail you share, the better we can scope your project.</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Name" error={errors.name}>
-                    <Input value={data.name} onChange={(e) => setData('name', e.target.value)} required />
+                  <Field label="Name">
+                    <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
                   </Field>
-                  <Field label="Email" error={errors.email}>
-                    <Input type="email" value={data.email} onChange={(e) => setData('email', e.target.value)} required />
+                  <Field label="Email">
+                    <Input
+                      type="email"
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      required
+                    />
                   </Field>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Phone" error={errors.phone}>
-                    <Input value={data.phone} onChange={(e) => setData('phone', e.target.value)} />
+                  <Field label="Phone">
+                    <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
                   </Field>
-                  <Field label="Company" error={errors.company}>
-                    <Input value={data.company} onChange={(e) => setData('company', e.target.value)} />
+                  <Field label="Company">
+                    <Input value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} />
                   </Field>
                 </div>
-                <Field label="Project type" error={errors.project_type}>
-                  <Select value={data.project_type} onValueChange={(v) => setData('project_type', v)}>
-                    <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                <Field label="Project type">
+                  <Select value={form.project_type} onValueChange={(v) => setForm({ ...form, project_type: v })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
                     <SelectContent>
                       {Object.entries(projectTypes).map(([k, v]) => (
-                        <SelectItem key={k} value={k}>{v}</SelectItem>
+                        <SelectItem key={k} value={k}>
+                          {v}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </Field>
-                <Field label="Project title" error={errors.project_title}>
-                  <Input value={data.project_title} onChange={(e) => setData('project_title', e.target.value)} required />
+                <Field label="Project title">
+                  <Input
+                    value={form.project_title}
+                    onChange={(e) => setForm({ ...form, project_title: e.target.value })}
+                    required
+                  />
                 </Field>
-                <Field label="Description" error={errors.project_description}>
-                  <Textarea rows={5} value={data.project_description} onChange={(e) => setData('project_description', e.target.value)} required />
+                <Field label="Description">
+                  <Textarea
+                    rows={5}
+                    value={form.project_description}
+                    onChange={(e) => setForm({ ...form, project_description: e.target.value })}
+                    required
+                  />
                 </Field>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Budget (ZMW)" error={errors.budget_range}>
-                    <Select value={data.budget_range} onValueChange={(v) => setData('budget_range', v)}>
-                      <SelectTrigger><SelectValue placeholder="Select range" /></SelectTrigger>
+                  <Field label="Budget (ZMW)">
+                    <Select value={form.budget_range} onValueChange={(v) => setForm({ ...form, budget_range: v })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select range" />
+                      </SelectTrigger>
                       <SelectContent>
                         {Object.entries(budgetRanges).map(([k, v]) => (
-                          <SelectItem key={k} value={k}>{v}</SelectItem>
+                          <SelectItem key={k} value={k}>
+                            {v}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </Field>
-                  <Field label="Timeline" error={errors.timeline}>
-                    <Select value={data.timeline} onValueChange={(v) => setData('timeline', v)}>
-                      <SelectTrigger><SelectValue placeholder="Select timeline" /></SelectTrigger>
+                  <Field label="Timeline">
+                    <Select value={form.timeline} onValueChange={(v) => setForm({ ...form, timeline: v })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select timeline" />
+                      </SelectTrigger>
                       <SelectContent>
                         {Object.entries(timelines).map(([k, v]) => (
-                          <SelectItem key={k} value={k}>{v}</SelectItem>
+                          <SelectItem key={k} value={k}>
+                            {v}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </Field>
                 </div>
-                <Button type="submit" disabled={processing} className="w-full">
-                  {processing ? 'Submitting...' : 'Submit consultation request'}
+                <Button type="submit" disabled={processing} className="w-full bg-gradient-to-r from-secondary to-primary">
+                  {processing ? 'Submitting…' : 'Submit consultation request'}
                 </Button>
               </form>
             </CardContent>
           </Card>
         )}
-      </div>
+      </GuestFlowShell>
     </GuestLayout>
   );
 }
 
-function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
       {children}
-      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
 }

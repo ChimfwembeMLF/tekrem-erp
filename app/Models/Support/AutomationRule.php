@@ -2,6 +2,8 @@
 
 namespace App\Models\Support;
 
+use App\Models\Concerns\BelongsToOrganization;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,9 +11,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AutomationRule extends Model
 {
+    use BelongsToOrganization;
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'organization_id',
         'name',
         'description',
         'is_active',

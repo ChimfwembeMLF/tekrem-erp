@@ -154,6 +154,12 @@ export default function Register() {
               Already have an account? Sign in
             </LinkButton>
           </div>
+
+          <div className="text-center pt-2 border-t border-border/60">
+            <LinkButton href={route('organization.signup')}>
+              Starting a business? Create your organization
+            </LinkButton>
+          </div>
         </div>
       </form>
     </AuthCard>

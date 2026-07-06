@@ -18,6 +18,7 @@ import {
   Key,
   FileText,
   Eye,
+  Link2,
 } from 'lucide-react';
 import useRoute from '@/Hooks/useRoute';
 
@@ -313,6 +314,15 @@ export default function FinanceSettings({ pawapay, zraConfiguration, systemStats
                     >
                       <Eye className="h-6 w-6" />
                       <span>Transactions</span>
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      className="h-24 flex flex-col items-center justify-center gap-2"
+                      onClick={() => router.visit(route('settings.finance.commerce'))}
+                    >
+                      <Link2 className="h-6 w-6" />
+                      <span>Commerce → Finance</span>
                     </Button>
 
                     <Button

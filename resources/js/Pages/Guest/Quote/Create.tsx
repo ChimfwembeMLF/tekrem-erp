@@ -1,256 +1,278 @@
-import React, { useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import React, { FormEvent, useState } from 'react';
+import { Head } from '@inertiajs/react';
 import { Button } from '@/Components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from '@/Components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/Components/ui/select';
-import { Alert, AlertDescription } from '@/Components/ui/alert';
-import { CheckCircle, Send, DollarSign, Plus, X } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
+import { DollarSign, Plus, Send, X } from 'lucide-react';
 import GuestLayout from '@/Layouts/GuestLayout';
+import GuestPageHero from '@/Components/Website/GuestPageHero';
+import GuestFlowShell from '@/Components/Website/GuestFlowShell';
+import GuestSuccessScreen from '@/Components/Website/GuestSuccessScreen';
 import { toast } from 'sonner';
 import useRoute from '@/Hooks/useRoute';
-import WebsiteHero from '@/Components/Website/WebsiteHero';
+import axios from 'axios';
 
-interface Props {
-  serviceTypes?: Record<string, string>;
-  budgetRanges?: Record<string, string>;
-  timelines?: Record<string, string>;
-  priorities?: Record<string, string>;
+interface Service {
+  id: string;
+  title: string;
+  short_description: string;
+  icon: string;
+  price: string;
+  price_note: string | null;
 }
 
-export default function Create({
-  serviceTypes,
-  budgetRanges,
-  timelines,
-  priorities
-}: Props) {
+interface Props {
+  services: Service[];
+  selectedService?: string | null;
+  timelines: Record<string, string>;
+  priorities: Record<string, string>;
+}
+
+const STEPS = ['Describe your project', 'We scope & price it', 'Receive your quote'];
+
+export default function Create({ services, selectedService, timelines, priorities }: Props) {
   const route = useRoute();
-
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [referenceNumber, setReferenceNumber] = useState('');
-
+  const [submitted, setSubmitted] = useState(false);
+  const [reference, setReference] = useState('');
+  const [processing, setProcessing] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [requirements, setRequirements] = useState<string[]>(['']);
 
-  // 🧯 hard safety nets (backend is optional apparently)
-  const safeServiceTypes = serviceTypes ?? {};
-  const safeBudgetRanges = budgetRanges ?? {};
-  const safeTimelines = timelines ?? {};
-  const safePriorities = priorities ?? {};
-
-  const { data, setData, post, processing, errors, reset } = useForm({
+  const [form, setForm] = useState({
     name: '',
     email: '',
     phone: '',
     company: '',
     position: '',
-    service_type: '',
+    service_type: selectedService ?? '',
     project_description: '',
-    budget_range: '',
     timeline: '',
-    requirements: [] as string[],
     priority: 'normal',
     source: 'website',
-    utm_source: new URLSearchParams(window.location.search).get('utm_source') || '',
-    utm_medium: new URLSearchParams(window.location.search).get('utm_medium') || '',
-    utm_campaign: new URLSearchParams(window.location.search).get('utm_campaign') || ''
+    utm_source: typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('utm_source') || '' : '',
+    utm_medium: typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('utm_medium') || '' : '',
+    utm_campaign: typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('utm_campaign') || '' : '',
   });
 
   const addRequirement = () => setRequirements([...requirements, '']);
-
   const updateRequirement = (i: number, value: string) => {
     const updated = [...requirements];
     updated[i] = value;
     setRequirements(updated);
-    setData('requirements', updated.filter(x => x.trim() !== ''));
   };
-
   const removeRequirement = (i: number) => {
     const updated = requirements.filter((_, idx) => idx !== i);
     setRequirements(updated.length ? updated : ['']);
-    setData('requirements', updated.filter(x => x.trim() !== ''));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setProcessing(true);
+    setErrors({});
 
-    setData('requirements', requirements.filter(x => x.trim() !== ''));
-
-    post('/guest/quote', {
-      onSuccess: (res: any) => {
-        setIsSubmitted(true);
-        setReferenceNumber(res?.props?.flash?.reference_number || '');
-        reset();
-        setRequirements(['']);
-        toast.success('Quote request submitted');
-      },
-      onError: () => {
-        toast.error('Failed to submit quote request');
+    try {
+      const response = await axios.post(route('guest.quote.store'), {
+        ...form,
+        requirements: requirements.filter((r) => r.trim() !== ''),
+      });
+      setReference(response.data.reference_number ?? '');
+      setSubmitted(true);
+      toast.success('Quote request submitted');
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response?.data?.errors) {
+        const fieldErrors: Record<string, string> = {};
+        Object.entries(error.response.data.errors).forEach(([key, messages]) => {
+          fieldErrors[key] = Array.isArray(messages) ? messages[0] : String(messages);
+        });
+        setErrors(fieldErrors);
       }
-    });
+      toast.error('Failed to submit quote request');
+    } finally {
+      setProcessing(false);
+    }
   };
 
-  if (isSubmitted) {
-    return (
-      <GuestLayout title="Quote Submitted">
-        <Head title="Quote Submitted" />
-
-        <div className="min-h-screen flex items-center justify-center bg-green-50 p-6">
-          <Card className="max-w-lg w-full">
-            <CardHeader className="text-center">
-              <CheckCircle className="mx-auto h-10 w-10 text-green-600" />
-              <CardTitle>Request Submitted</CardTitle>
-              <CardDescription>We’ll respond shortly.</CardDescription>
-            </CardHeader>
-
-            <CardContent className="text-center space-y-4">
-              {referenceNumber && (
-                <Alert>
-                  <AlertDescription>
-                    Ref: {referenceNumber}
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              <Button onClick={() => setIsSubmitted(false)} variant="outline">
-                New Request
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </GuestLayout>
-    );
-  }
+  const resetForm = () => {
+    setSubmitted(false);
+    setReference('');
+    setRequirements(['']);
+    setForm((prev) => ({
+      ...prev,
+      name: '',
+      email: '',
+      phone: '',
+      company: '',
+      project_description: '',
+      service_type: selectedService ?? '',
+    }));
+  };
 
   return (
     <GuestLayout title="Request Quote">
-
-      <WebsiteHero
-        badge="Quote"
-        badgeIcon="💰"
-        title="Request a Quote"
-        description="Tell us what you need. We’ll price it properly."
-        primaryCta={{ label: 'Contact', href: route('contact') }}
+      <Head title="Request Quote" />
+      <GuestPageHero
+        title="Request a quote"
+        description="Tell us what you need — we'll price it properly and respond with a clear proposal."
+        icon={<DollarSign className="h-6 w-6" />}
+        flowType="quote"
       />
 
-      <div className="min-h-screen bg-gray-50 py-10">
-        <div className="max-w-4xl mx-auto px-4">
-
-          <Card>
+      <GuestFlowShell
+        flowType="quote"
+        steps={STEPS}
+        currentStep={submitted ? 2 : 0}
+        title="Quote process"
+        description="Accurate details help us prepare a better estimate."
+      >
+        {submitted ? (
+          <GuestSuccessScreen
+            title="Quote request received"
+            description="We're reviewing your requirements and will send a detailed quote soon."
+            reference={reference || undefined}
+            referenceLabel="Reference number"
+            nextSteps={[
+              { title: 'Scope review', description: 'Our team reviews your project description and requirements.' },
+              { title: 'Quote preparation', description: 'We prepare pricing tailored to your scope and timeline.' },
+              { title: 'Email delivery', description: 'You will receive the full proposal in your inbox.' },
+            ]}
+            primaryAction={{ label: 'Check quote status', href: route('guest.quote.status-form') }}
+            onReset={resetForm}
+            resetLabel="Submit another request"
+          />
+        ) : (
+          <Card className="shadow-lg">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="w-5 h-5" />
-                Quote Request
-              </CardTitle>
-              <CardDescription>
-                Fill details accurately for better pricing.
-              </CardDescription>
+              <CardTitle>Quote request</CardTitle>
+              <CardDescription>Fill in details accurately for a better estimate.</CardDescription>
             </CardHeader>
-
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
-
-                {/* CONTACT */}
-                <div className="grid md:grid-cols-2 gap-4">
-                  <Input placeholder="Name"
-                    value={data.name}
-                    onChange={e => setData('name', e.target.value)} />
-
-                  <Input placeholder="Email"
-                    value={data.email}
-                    onChange={e => setData('email', e.target.value)} />
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="Full name" error={errors.name}>
+                    <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+                  </Field>
+                  <Field label="Email" error={errors.email}>
+                    <Input
+                      type="email"
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      required
+                    />
+                  </Field>
                 </div>
 
-                {/* SELECTS */}
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="Phone (optional)" error={errors.phone}>
+                    <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                  </Field>
+                  <Field label="Company (optional)" error={errors.company}>
+                    <Input value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} />
+                  </Field>
+                </div>
 
-                  <Select value={data.service_type}
-                    onValueChange={v => setData('service_type', v)}>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="Service" error={errors.service_type}>
+                    <Select value={form.service_type} onValueChange={(v) => setForm({ ...form, service_type: v })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select service" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {services.map((service) => (
+                          <SelectItem key={service.id} value={service.id}>
+                            {service.icon} {service.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  <Field label="Priority" error={errors.priority}>
+                    <Select value={form.priority} onValueChange={(v) => setForm({ ...form, priority: v })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Priority" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(priorities).map(([k, v]) => (
+                          <SelectItem key={k} value={k}>
+                            {v}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                </div>
+
+                <Field label="Timeline" error={errors.timeline}>
+                  <Select value={form.timeline} onValueChange={(v) => setForm({ ...form, timeline: v })}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Service Type" />
+                      <SelectValue placeholder="When do you need this?" />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(safeServiceTypes).map(([k, v]) => (
-                        <SelectItem key={k} value={k}>{v}</SelectItem>
+                      {Object.entries(timelines).map(([k, v]) => (
+                        <SelectItem key={k} value={k}>
+                          {v}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                </Field>
 
-                  <Select value={data.priority}
-                    onValueChange={v => setData('priority', v)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(safePriorities).map(([k, v]) => (
-                        <SelectItem key={k} value={k}>{v}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <Field label="Project description" error={errors.project_description}>
+                  <Textarea
+                    rows={5}
+                    value={form.project_description}
+                    onChange={(e) => setForm({ ...form, project_description: e.target.value })}
+                    required
+                    placeholder="Describe goals, scope, and any constraints…"
+                  />
+                </Field>
 
-                </div>
-
-                {/* DESCRIPTION */}
-                <Textarea
-                  placeholder="Project description"
-                  value={data.project_description}
-                  onChange={e => setData('project_description', e.target.value)}
-                />
-
-                {/* REQUIREMENTS */}
                 <div>
-                  <div className="flex justify-between">
-                    <Label>Requirements</Label>
-                    <Button type="button" size="sm" onClick={addRequirement}>
-                      <Plus className="w-4 h-4" />
+                  <div className="mb-2 flex items-center justify-between">
+                    <Label>Requirements (optional)</Label>
+                    <Button type="button" size="sm" variant="outline" onClick={addRequirement}>
+                      <Plus className="h-4 w-4" />
                     </Button>
                   </div>
-
                   {requirements.map((r, i) => (
-                    <div key={i} className="flex gap-2 mt-2">
-                      <Input
-                        value={r}
-                        onChange={e => updateRequirement(i, e.target.value)}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => removeRequirement(i)}
-                      >
-                        <X className="w-4 h-4" />
+                    <div key={i} className="mb-2 flex gap-2">
+                      <Input value={r} onChange={(e) => updateRequirement(i, e.target.value)} placeholder="Requirement" />
+                      <Button type="button" variant="outline" size="icon" onClick={() => removeRequirement(i)}>
+                        <X className="h-4 w-4" />
                       </Button>
                     </div>
                   ))}
                 </div>
 
-                {/* SUBMIT */}
                 <div className="flex justify-end">
-                  <Button disabled={processing} type="submit">
-                    <Send className="w-4 h-4 mr-2" />
-                    Submit Quote
+                  <Button type="submit" disabled={processing} className="bg-gradient-to-r from-secondary to-primary">
+                    {processing ? (
+                      'Submitting…'
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        Submit quote request
+                      </>
+                    )}
                   </Button>
                 </div>
-
               </form>
             </CardContent>
           </Card>
-
-        </div>
-      </div>
-
+        )}
+      </GuestFlowShell>
     </GuestLayout>
+  );
+}
+
+function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      {children}
+      {error && <p className="text-sm text-destructive">{error}</p>}
+    </div>
   );
 }

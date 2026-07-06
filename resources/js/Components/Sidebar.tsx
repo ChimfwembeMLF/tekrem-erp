@@ -62,6 +62,7 @@ import { Button } from '@/Components/ui/button';
 import useRoute from '@/Hooks/useRoute';
 import useActiveRoute from '@/Hooks/useActiveRoute';
 import usePermissions from '@/Hooks/usePermissions';
+import useOrganizationModules from '@/Hooks/useOrganizationModules';
 import useTranslate from '@/Hooks/useTranslate';
 import useTypedPage from '@/Hooks/useTypedPage';
 import ApplicationMark from '@/Components/ApplicationMark';
@@ -89,37 +90,26 @@ export default function Sidebar({ settings }: SidebarProps) {
   const page = useTypedPage();
   const { t } = useTranslate();
   const { hasAnyRole, hasAnyPermission } = usePermissions();
+  const { hasModule } = useOrganizationModules();
 
-  // Permission-based access checks
-  const hasCrmAccess = (): boolean => {
-    return hasAnyPermission(['view crm']);
-  };
+  // Permission + plan module access
+  const hasCrmAccess = (): boolean => hasAnyPermission(['view crm']) && hasModule('crm');
 
-  const hasFinanceAccess = (): boolean => {
-    return hasAnyPermission(['view finance']);
-  };
+  const hasFinanceAccess = (): boolean => hasAnyPermission(['view finance']) && hasModule('finance');
 
-  const hasProjectsAccess = (): boolean => {
-    return hasAnyPermission(['view projects']);
-  };
+  const hasProjectsAccess = (): boolean => hasAnyPermission(['view projects']) && hasModule('projects');
 
-  const hasHrAccess = (): boolean => {
-    return hasAnyPermission(['view hr']);
-  };
+  const hasHrAccess = (): boolean => hasAnyPermission(['view hr']) && hasModule('hr');
 
-  const hasSupportAccess = (): boolean => {
-    return hasAnyPermission(['view support']);
-  };
+  const hasSupportAccess = (): boolean => hasAnyPermission(['view support']) && hasModule('support');
 
-  const hasAiAccess = (): boolean => {
-    return hasAnyPermission(['view ai']);
-  };
+  const hasAiAccess = (): boolean => hasAnyPermission(['view ai']) && hasModule('ai');
 
-  const hasInventoryAccess = (): boolean => hasAnyPermission(['view inventory']);
-  const hasProcurementAccess = (): boolean => hasAnyPermission(['view procurement']);
-  const hasSalesAccess = (): boolean => hasAnyPermission(['view sales orders']);
-  const hasPosAccess = (): boolean => hasAnyPermission(['access pos']);
-  const hasEcommerceAccess = (): boolean => hasAnyPermission(['view ecommerce']);
+  const hasInventoryAccess = (): boolean => hasAnyPermission(['view inventory']) && hasModule('inventory');
+  const hasProcurementAccess = (): boolean => hasAnyPermission(['view procurement']) && hasModule('inventory');
+  const hasSalesAccess = (): boolean => hasAnyPermission(['view sales orders']) && hasModule('sales');
+  const hasPosAccess = (): boolean => hasAnyPermission(['access pos']) && hasModule('pos');
+  const hasEcommerceAccess = (): boolean => hasAnyPermission(['view ecommerce']) && hasModule('commerce');
 
   const renderNavEntries = (entries: NavEntry[], keyPrefix: string) =>
     entries.map((entry, idx) => {
@@ -713,6 +703,25 @@ export default function Sidebar({ settings }: SidebarProps) {
     },
   ] : [];
 
+  // Platform navigation — super_user only
+  const platformNav: NavEntry[] = hasAnyRole(['super_user']) ? [
+    { type: 'section', label: t('platform.title', 'Platform') },
+    {
+      type: 'link',
+      href: route('admin.platform.organizations.index'),
+      label: t('platform.organizations', 'Organizations'),
+      icon: <Building2 className="h-5 w-5" />,
+      active: route().current('admin.platform.organizations.*'),
+    },
+    {
+      type: 'link',
+      href: route('admin.platform.plans.index'),
+      label: t('platform.plans', 'Billing plans'),
+      icon: <CreditCard className="h-5 w-5" />,
+      active: route().current('admin.platform.plans.*'),
+    },
+  ] : [];
+
   // Admin navigation — grouped by access area
   const adminNav: NavEntry[] = hasAnyRole(['admin', 'super_user']) ? [
     { type: 'section', label: t('admin.access', 'Access Control') },
@@ -774,64 +783,68 @@ export default function Sidebar({ settings }: SidebarProps) {
       icon: <LayoutDashboard className="h-5 w-5" />,
       active: route().current('customer.dashboard'),
     },
-    { type: 'section', label: t('customer.support_section', 'Support') },
-    {
-      type: 'link',
-      href: route('customer.support.index'),
-      label: t('customer.support', 'My Tickets'),
-      icon: <Ticket className="h-5 w-5" />,
-      active: route().current('customer.support.index') || route().current('customer.support.show'),
-    },
-    {
-      type: 'link',
-      href: route('customer.support.create'),
-      label: t('customer.support.create', 'Create Ticket'),
-      icon: <Plus className="h-5 w-5" />,
-      active: route().current('customer.support.create'),
-    },
-    {
-      type: 'link',
-      href: route('customer.support.knowledge-base.index'),
-      label: t('customer.knowledge_base', 'Knowledge Base'),
-      icon: <BookOpen className="h-5 w-5" />,
-      active: route().current('customer.support.knowledge-base.*'),
-    },
-    {
-      type: 'link',
-      href: route('customer.support.faq'),
-      label: t('customer.faq', 'FAQ'),
-      icon: <HelpCircle className="h-5 w-5" />,
-      active: route().current('customer.support.faq'),
-    },
+    ...(hasModule('support') ? [
+      { type: 'section' as const, label: t('customer.support_section', 'Support') },
+      {
+        type: 'link' as const,
+        href: route('customer.support.index'),
+        label: t('customer.support', 'My Tickets'),
+        icon: <Ticket className="h-5 w-5" />,
+        active: route().current('customer.support.index') || route().current('customer.support.show'),
+      },
+      {
+        type: 'link' as const,
+        href: route('customer.support.create'),
+        label: t('customer.support.create', 'Create Ticket'),
+        icon: <Plus className="h-5 w-5" />,
+        active: route().current('customer.support.create'),
+      },
+      {
+        type: 'link' as const,
+        href: route('customer.support.knowledge-base.index'),
+        label: t('customer.knowledge_base', 'Knowledge Base'),
+        icon: <BookOpen className="h-5 w-5" />,
+        active: route().current('customer.support.knowledge-base.*'),
+      },
+      {
+        type: 'link' as const,
+        href: route('customer.support.faq'),
+        label: t('customer.faq', 'FAQ'),
+        icon: <HelpCircle className="h-5 w-5" />,
+        active: route().current('customer.support.faq'),
+      },
+    ] : []),
     { type: 'section', label: t('customer.shop_section', 'Shop') },
-    {
-      type: 'link',
-      href: route('shop.orders'),
-      label: t('customer.shop_orders', 'Shop orders'),
-      icon: <ShoppingBag className="h-5 w-5" />,
-      active: route().current('shop.orders'),
-    },
-    {
-      type: 'link',
-      href: route('shop.wishlist'),
-      label: t('customer.wishlist', 'Wishlist'),
-      icon: <Heart className="h-5 w-5" />,
-      active: route().current('shop.wishlist'),
-    },
-    {
-      type: 'link',
-      href: route('shop.tracking'),
-      label: t('customer.track_shipment', 'Track shipment'),
-      icon: <Truck className="h-5 w-5" />,
-      active: route().current('shop.tracking*'),
-    },
-    {
-      type: 'link',
-      href: route('shop.index'),
-      label: t('customer.browse_shop', 'Browse shop'),
-      icon: <Package className="h-5 w-5" />,
-      active: route().current('shop.index') || route().current('shop.show'),
-    },
+    ...(hasModule('commerce') ? [
+      {
+        type: 'link' as const,
+        href: route('shop.orders'),
+        label: t('customer.shop_orders', 'Shop orders'),
+        icon: <ShoppingBag className="h-5 w-5" />,
+        active: route().current('shop.orders'),
+      },
+      {
+        type: 'link' as const,
+        href: route('shop.wishlist'),
+        label: t('customer.wishlist', 'Wishlist'),
+        icon: <Heart className="h-5 w-5" />,
+        active: route().current('shop.wishlist'),
+      },
+      {
+        type: 'link' as const,
+        href: route('shop.tracking'),
+        label: t('customer.track_shipment', 'Track shipment'),
+        icon: <Truck className="h-5 w-5" />,
+        active: route().current('shop.tracking*'),
+      },
+      {
+        type: 'link' as const,
+        href: route('shop.index'),
+        label: t('customer.browse_shop', 'Browse shop'),
+        icon: <Package className="h-5 w-5" />,
+        active: route().current('shop.index') || route().current('shop.show'),
+      },
+    ] : []),
   ] : [];
 
   // Settings navigation — grouped by area
@@ -844,13 +857,13 @@ export default function Sidebar({ settings }: SidebarProps) {
       icon: <Cog className="h-5 w-5" />,
       active: route().current('settings.index'),
     },
-    {
-      type: 'link',
+    ...(hasModule('finance') ? [{
+      type: 'link' as const,
       href: route('settings.finance.index'),
       label: t('settings.finance', 'Finance Settings'),
       icon: <DollarSign className="h-5 w-5" />,
       active: route().current('settings.finance.*'),
-    },
+    }] : []),
     { type: 'section', label: t('settings.system', 'System') },
     {
       type: 'link',
@@ -1088,6 +1101,27 @@ export default function Sidebar({ settings }: SidebarProps) {
           </Collapsible>
         )}
 
+        {/* Platform Navigation - super_user only */}
+        {hasAnyRole(['super_user']) && (
+          <Collapsible className="mt-4 pt-4 border-t border-border">
+            <CollapsibleTrigger className={cn(
+              "w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors",
+              route().current('admin.platform.*')
+                ? "bg-primary/10 text-primary font-semibold"
+                : "text-foreground/70 hover:text-foreground hover:bg-accent"
+            )}>
+              <div className="flex items-center gap-3">
+                <Building2 className="h-5 w-5" />
+                <span>{t('platform.title', 'Platform')}</span>
+              </div>
+              <ChevronRight className="h-4 w-4 transition-transform data-[state=open]:rotate-90" />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-4 mt-1 space-y-1">
+              {renderNavEntries(platformNav, 'platform')}
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+
         {/* Admin Navigation - Only visible to admin users */}
         {hasAnyRole(['admin', 'super_user']) && (
           <Collapsible className="mt-4 pt-4 border-t border-border">
@@ -1152,6 +1186,14 @@ export default function Sidebar({ settings }: SidebarProps) {
         )}
 
       </div>
+      {(page.props as { organization?: { plan?: { name?: string } } }).organization?.plan?.name && (
+        <div className="mx-2 mb-2 rounded-lg border border-border/60 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+          <span className="font-medium text-foreground">
+            {(page.props as { organization?: { plan?: { name?: string } } }).organization?.plan?.name}
+          </span>
+          {' '}plan
+        </div>
+      )}
       <div className="h-4"></div>
     </div>
   );
