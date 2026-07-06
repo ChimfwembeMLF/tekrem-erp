@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use App\Models\HR\Department;
 use App\Models\HR\Employee;
 use Spatie\Permission\Models\Role;
 
@@ -58,6 +59,18 @@ class EmployeeSeeder extends Seeder
             Role::firstOrCreate(['name' => $role]);
         }
 
+        $department = Department::query()->firstOrCreate(
+            ['code' => 'GEN'],
+            [
+                'name' => 'General Operations',
+                'code' => 'GEN',
+                'description' => 'Default department for seeded employees',
+                'location' => 'Main Office',
+                'budget' => 0,
+                'is_active' => true,
+            ]
+        );
+
         foreach ($team as $member) {
             $user = User::firstOrCreate(
                 ['email' => $member['email']],
@@ -72,7 +85,7 @@ class EmployeeSeeder extends Seeder
                 ['user_id' => $user->id],
                 [
                     'employee_id' => strtoupper(substr($member['name'], 0, 2)) . rand(100, 999),
-                    'department_id' => 1,
+                    'department_id' => $department->id,
                     'job_title' => $member['role'],
                     'employment_type' => 'full_time',
                     'employment_status' => 'active',
