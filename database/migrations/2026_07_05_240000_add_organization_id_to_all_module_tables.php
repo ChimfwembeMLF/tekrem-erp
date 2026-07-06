@@ -98,16 +98,22 @@ return new class extends Migration
         $connection = DB::connection();
         $driver = $connection->getDriverName();
 
-        if (in_array($driver, ['sqlite', 'sqlsrv'], true)) {
-            $schemaManager = $connection->getDoctrineSchemaManager();
+        if ($driver === 'sqlite') {
+            $result = DB::select(
+                "SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = ? AND name = ?",
+                [$table, $indexName]
+            );
 
-            if (! method_exists($schemaManager, 'listTableIndexes')) {
-                return false;
-            }
+            return count($result) > 0;
+        }
 
-            $indexes = $schemaManager->listTableIndexes($table);
+        if ($driver === 'pgsql') {
+            $result = DB::select(
+                'SELECT 1 FROM pg_indexes WHERE schemaname = current_schema() AND tablename = ? AND indexname = ? LIMIT 1',
+                [$table, $indexName]
+            );
 
-            return array_key_exists($indexName, $indexes);
+            return count($result) > 0;
         }
 
         $result = DB::select(

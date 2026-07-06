@@ -123,6 +123,8 @@ jobs:
 
       - name: SSH run post-deployment hooks and update code
         uses: appleboy/ssh-action@v1.0.0
+        env:
+          DEMO_ENV_FILE: ${{ secrets.DEMO_ENV_FILE }}
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
@@ -130,6 +132,8 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           script: |
             cd ${{ secrets.SERVER_PATH_DEMO }}
+            printf '%s\n' "$DEMO_ENV_FILE" > .env
+            chmod 600 .env
             git fetch origin demo
             git checkout -f demo
             git reset --hard origin/demo
@@ -151,6 +155,8 @@ jobs:
 
       - name: SSH run post-deployment hooks and update code
         uses: appleboy/ssh-action@v1.0.0
+        env:
+          PROD_ENV_FILE: ${{ secrets.PROD_ENV_FILE }}
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
@@ -158,6 +164,8 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           script: |
             cd ${{ secrets.SERVER_PATH_PROD }}
+            printf '%s\n' "$PROD_ENV_FILE" > .env
+            chmod 600 .env
             git fetch origin main
             git checkout -f main
             git reset --hard origin/main
