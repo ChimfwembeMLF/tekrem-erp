@@ -21,9 +21,12 @@ class DatabaseSeeder extends Seeder
         $this->command->info('📋 Seeding roles and permissions...');
         $this->call(RolesAndPermissionsSeeder::class);
 
-        // 2. Users (depends on roles)
+        // 2. Users and admin account (depends on roles)
         $this->command->info('👥 Seeding users...');
         $this->call(UserSeeder::class);
+
+        $this->command->info('🛡️ Seeding production admin account...');
+        $this->call(ProductionAdminSeeder::class);
 
         // 2b. Billing plans & default organization (multi-tenant foundation)
         $this->command->info('🏢 Seeding billing plans...');
@@ -39,6 +42,9 @@ class DatabaseSeeder extends Seeder
         }
 
         // 3. Independent seeders (no dependencies)
+        $this->command->info('👨‍💼 Seeding employee directory...');
+        $this->call(EmployeeSeeder::class);
+
         $this->command->info('⚙️ Seeding settings...');
         $this->call(SettingsSeeder::class);
 
@@ -66,6 +72,9 @@ class DatabaseSeeder extends Seeder
 
         $this->command->info('📊 Seeding projects...');
         $this->call(ProjectSeeder::class);
+
+        $this->command->info('🗂️ Seeding project management boards...');
+        $this->call(ProjectManagementSeeder::class);
 
         // 5b. System Modules
         $this->command->info('🧩 Seeding system modules...');
@@ -105,8 +114,14 @@ class DatabaseSeeder extends Seeder
         $this->command->info('🤖 Seeding AI system prompts...');
         $this->call(AISystemPromptSeeder::class);
 
+        $this->command->info('🛒 Seeding commerce foundation...');
+        $this->call(CommerceFoundationSeeder::class);
+
         $this->command->info('🛒 Seeding commerce module...');
         $this->call(CommerceSeeder::class);
+
+        $this->command->info('💳 Seeding mobile money providers...');
+        $this->call(MomoProviderSeeder::class);
 
         $this->command->info('🚚 Seeding shop shipping & coupons...');
         $this->call(ShopShippingSeeder::class);

@@ -95,6 +95,21 @@ return new class extends Migration
 
     private function indexExists(string $table, string $indexName): bool
     {
+        $connection = DB::connection();
+        $driver = $connection->getDriverName();
+
+        if (in_array($driver, ['sqlite', 'sqlsrv'], true)) {
+            $schemaManager = $connection->getDoctrineSchemaManager();
+
+            if (! method_exists($schemaManager, 'listTableIndexes')) {
+                return false;
+            }
+
+            $indexes = $schemaManager->listTableIndexes($table);
+
+            return array_key_exists($indexName, $indexes);
+        }
+
         $result = DB::select(
             'SELECT 1 FROM information_schema.statistics
              WHERE table_schema = ? AND table_name = ? AND index_name = ?
