@@ -86,7 +86,7 @@ class ProjectManagementSeeder extends Seeder
             [
                 'name' => 'Internal CRM System',
                 'description' => 'Customer relationship management system for internal use with advanced analytics, automation, and integration capabilities.',
-                'status' => 'planning',
+                'status' => 'draft',
                 'start_date' => now()->addWeeks(2),
                 'end_date' => now()->addMonths(5),
                 'manager_id' => $users->first()->id,
