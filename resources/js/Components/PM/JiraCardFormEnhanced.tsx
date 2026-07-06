@@ -130,7 +130,7 @@ export function JiraCardForm({
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent side="right" className="flex w-full max-w-4xl flex-col gap-0 overflow-hidden bg-card p-0 sm:max-w-4xl">
+      <SheetContent side="right" className="flex w-full max-w-7xl flex-col gap-0 overflow-hidden bg-card p-0 sm:max-w-7xl">
         <SheetHeader className="flex-none border-b border-border p-3 text-left sm:p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg sm:text-xl font-semibold text-foreground">

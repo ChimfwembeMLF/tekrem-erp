@@ -81,7 +81,7 @@ const maxWidthMap = {
   sm: 'max-w-lg',
   md: 'max-w-2xl',
   lg: 'max-w-3xl',
-  xl: 'max-w-4xl',
+  xl: 'max-w-7xl',
   '2xl': 'max-w-5xl',
   '4xl': 'max-w-6xl',
   full: 'max-w-7xl',

@@ -79,7 +79,7 @@ export default function OrganizationShow({ organization, plans, tenantRouting }:
     <AppLayout title={organization.name}>
       <Head title={organization.name} />
 
-      <div className="mx-auto max-w-4xl space-y-6 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-6 py-8 px-4 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <Button variant="ghost" size="sm" asChild className="mb-2 -ml-2">

@@ -150,7 +150,7 @@ export default function OrganizationOnboarding({ onboarding, options, plan }: Pr
     <AppLayout title="Company onboarding">
       <Head title="Company onboarding" />
 
-      <div className="mx-auto max-w-4xl space-y-6 py-4">
+      <div className="mx-auto max-w-7xl space-y-6 py-4">
         <div>
           <div className="flex items-center gap-2 text-primary">
             <ClipboardList className="h-5 w-5" />

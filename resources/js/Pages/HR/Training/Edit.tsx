@@ -150,7 +150,7 @@ export default function Edit({ training, instructors, categories }: Props) {
       <Head title={`Edit Training: ${training.title}`} />
 
       <div className="py-6">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information */}
             <Card>

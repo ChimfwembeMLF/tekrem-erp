@@ -250,7 +250,7 @@ export default function Show({ ticket, users, comments }: Props) {
         </Card>
         {lightbox && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setLightbox(null)}>
-            <div className="relative max-w-4xl w-full" onClick={e => e.stopPropagation()}>
+            <div className="relative max-w-7xl w-full" onClick={e => e.stopPropagation()}>
               <button onClick={() => setLightbox(null)} className="absolute -top-10 right-0 text-white/70 hover:text-white transition-colors flex items-center gap-1.5 text-sm">
                 <XCircle className="h-5 w-5" /> Close
               </button>

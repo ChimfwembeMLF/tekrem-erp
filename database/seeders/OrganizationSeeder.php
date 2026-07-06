@@ -6,6 +6,7 @@ use App\Models\BillingPlan;
 use App\Models\Organization;
 use App\Models\User;
 use App\Services\Organizations\OrganizationProvisioner;
+use App\Support\Organizations\OrganizationContext;
 use Illuminate\Database\Seeder;
 
 class OrganizationSeeder extends Seeder
@@ -43,6 +44,8 @@ class OrganizationSeeder extends Seeder
                 ],
             ]
         );
+
+        app(OrganizationContext::class)->set($organization);
 
         $owner = User::query()->role(['super_user', 'admin'])->orderBy('id')->first();
 

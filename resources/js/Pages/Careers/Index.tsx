@@ -40,7 +40,7 @@ export default function CareersIndex({ jobs }: Props) {
       />
 
       <div id="jobs" className="bg-background py-16">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
 
           <div className="mb-12 text-center">
             <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">

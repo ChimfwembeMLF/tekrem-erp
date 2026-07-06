@@ -77,7 +77,7 @@ export default function OrganizationSignup({ plans, selectedPlanId, billingCycle
       />
 
       <section className="border-b bg-muted/20 py-12">
-        <div className="mx-auto max-w-4xl px-4">
+        <div className="mx-auto max-w-7xl px-4">
           <ProcessTimeline
             title="Signup flow"
             subtitle="You will be the organization owner with full admin access."

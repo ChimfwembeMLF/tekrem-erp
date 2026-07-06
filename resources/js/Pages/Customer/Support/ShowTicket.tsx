@@ -175,7 +175,7 @@ function AttachmentsPreview({ attachments }: { attachments: TicketAttachment[] }
                     onClick={() => setLightbox(null)}
                 >
                     <div
-                        className="relative max-w-4xl w-full"
+                        className="relative max-w-7xl w-full"
                         onClick={e => e.stopPropagation()}
                     >
                         <button
@@ -534,7 +534,7 @@ export default function ShowTicket({ ticket }: Props) {
                                                                     onClick={() => setCommentLightbox(null)}
                                                                 >
                                                                     <div
-                                                                        className="relative max-w-4xl w-full"
+                                                                        className="relative max-w-7xl w-full"
                                                                         onClick={e => e.stopPropagation()}
                                                                     >
                                                                         <button

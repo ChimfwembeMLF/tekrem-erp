@@ -182,7 +182,7 @@ export default function ZraTaxpayerInformation({
       <Head title="ZRA Taxpayer Information" />
 
       <div className="py-12">
-        <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Taxpayer Information */}
             <Card>

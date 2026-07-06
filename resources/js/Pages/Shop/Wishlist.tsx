@@ -28,7 +28,7 @@ export default function Wishlist({ items, cartCount }: Props) {
     <ShopLayout title="Wishlist" cartCount={cartCount}>
       <Head title="Wishlist" />
 
-      <div className="mx-auto max-w-4xl px-4 py-12">
+      <div className="mx-auto max-w-7xl px-4 py-12">
         <h1 className="mb-6 flex items-center gap-2 text-2xl font-bold"><Heart className="h-6 w-6 text-primary" />Wishlist</h1>
 
         {items.length === 0 ? (

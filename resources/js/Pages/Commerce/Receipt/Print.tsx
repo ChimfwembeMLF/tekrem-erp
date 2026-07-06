@@ -278,7 +278,7 @@ export default function ReceiptPrint({ receipt, backUrl, backLabel = 'Back' }: P
       `}</style>
 
       <div className="min-h-screen bg-slate-100 px-4 py-6 print:bg-white print:p-0">
-        <div className="print-toolbar mx-auto mb-4 flex max-w-4xl items-center justify-between gap-3">
+        <div className="print-toolbar mx-auto mb-4 flex max-w-7xl items-center justify-between gap-3">
           <div>
             <h1 className="text-lg font-black text-slate-900">Receipt</h1>
             <p className="text-xs text-slate-600">{receipt.receiptNumber}</p>
@@ -303,7 +303,7 @@ export default function ReceiptPrint({ receipt, backUrl, backLabel = 'Back' }: P
           </div>
         </div>
 
-        <div className="receipt-page mx-auto flex max-w-4xl flex-col gap-6 print:max-w-none">
+        <div className="receipt-page mx-auto flex max-w-7xl flex-col gap-6 print:max-w-none">
           <ReceiptForm receipt={receipt} copyLabel="Customer Copy" />
           {/* <ReceiptForm receipt={receipt} copyLabel="Office Copy" /> */}
         </div>

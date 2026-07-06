@@ -1188,7 +1188,7 @@ export default function ConversationView({
             )}
 
             {/* Main Image */}
-            <div className="max-w-4xl max-h-[80vh] flex items-center justify-center">
+            <div className="max-w-7xl max-h-[80vh] flex items-center justify-center">
               <img
                 src={URL.createObjectURL(selectedImages[previewImageIndex])}
                 alt={selectedImages[previewImageIndex].name}

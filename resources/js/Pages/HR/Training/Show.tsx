@@ -40,7 +40,7 @@ export default function Show({ training }: Props) {
   return (
     <AppLayout title={training.title}>
       <Head title={training.title} />
-      <div className="max-w-4xl mx-auto py-8 space-y-6">
+      <div className="max-w-7xl mx-auto py-8 space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">{training.title}</h1>

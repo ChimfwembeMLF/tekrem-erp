@@ -60,7 +60,7 @@ export default function FAQ() {
         </div>
 
 
-           <div className="max-w-4xl mx-auto space-y-4">
+           <div className="max-w-7xl mx-auto space-y-4">
           {faqs.map((faq, index) => (
             <div
               key={index}
