@@ -119,7 +119,7 @@ jobs:
           ls -lR
 
 
-      - name: SSH run post-deployment hooks (optional)
+      - name: SSH run post-deployment hooks and update code
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -128,6 +128,13 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           script: |
             cd ${{ secrets.SERVER_PATH }}
+            git fetch origin main
+            git checkout -f main
+            git reset --hard origin/main
+            composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+            npm install
+            npm run build
             php artisan migrate --force
             php artisan config:cache
             php artisan route:cache
+            php artisan view:cache
