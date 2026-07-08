@@ -6,9 +6,15 @@ cmds = [
     "composer install --no-interaction --optimize-autoloader --no-dev"
 ]
 
-# Skip Node.js/Yarn installation entirely
+[phases.build]
+exclude = true
+
+[phases.caddy]
+exclude = true
+
 [build]
 excludeNodeModules = true
+exclude = true
 
 [start]
 cmd = "php artisan serve --host=0.0.0.0 --port=8080"
