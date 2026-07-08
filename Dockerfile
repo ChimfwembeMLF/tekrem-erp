@@ -1,4 +1,4 @@
-FROM serversideup/php:8.2-fpm-nginx
+FROM --platform=linux/amd64 serversideup/php:8.2-fpm-nginx
 
 # Install GD extension (required for phpoffice/phpspreadsheet)
 USER root
@@ -10,6 +10,16 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install -j$(nproc) gd \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Install other required extensions (if needed)
+RUN docker-php-ext-install -j$(nproc) \
+    zip \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    pdo_mysql
+
 USER www-data
 
 # Copy application
