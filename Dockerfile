@@ -1,35 +1,36 @@
 FROM --platform=linux/amd64 serversideup/php:8.2-fpm-nginx
 
-# Install GD extension (required for phpoffice/phpspreadsheet)
 USER root
+
+# Install GD and other required extensions
 RUN apt-get update && apt-get install -y \
     libfreetype-dev \
     libjpeg62-turbo-dev \
     libpng-dev \
+    libzip-dev \
+    libonig-dev \
+    libxml2-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) gd \
+    && docker-php-ext-install -j$(nproc) \
+        gd \
+        zip \
+        mbstring \
+        exif \
+        pcntl \
+        bcmath \
+        pdo_mysql \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-
-# Install other required extensions (if needed)
-RUN docker-php-ext-install -j$(nproc) \
-    zip \
-    mbstring \
-    exif \
-    pcntl \
-    bcmath \
-    pdo_mysql
 
 USER www-data
 
 # Copy application
 COPY --chown=www-data:www-data . /var/www/html
 
-# Set working directory
 WORKDIR /var/www/html
 
-# Install PHP dependencies
-RUN composer install --no-interaction --optimize-autoloader --no-dev
+# Install PHP dependencies (ignore platform requirements for GD)
+RUN composer install --no-interaction --optimize-autoloader --no-dev --ignore-platform-req=ext-gd
 
 # Create .env file from environment variables at runtime
 RUN echo '#!/bin/sh\n\
