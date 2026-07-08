@@ -1,7 +1,9 @@
 FROM php:8.2-fpm
 
 # Install system dependencies (including zip and git)
-RUN apt-get update && apt-get install -y \
+RUN apt-get clean && \
+    apt-get update --fix-missing && \
+    apt-get install -y \
     git \
     curl \
     libpng-dev \
@@ -10,7 +12,9 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     nginx \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
