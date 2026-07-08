@@ -1,10 +1,16 @@
 FROM php:8.2-fpm
 
-# Install system dependencies
+# Install system dependencies (including zip and git)
 RUN apt-get update && apt-get install -y \
-    git curl libpng-dev libonig-dev libxml2-dev zip unzip \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
     nginx \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -14,6 +20,9 @@ WORKDIR /var/www/html
 
 # Copy existing app files
 COPY . .
+
+# Fix Git ownership issue
+RUN git config --global --add safe.directory /var/www/html
 
 # Install PHP dependencies
 RUN composer install --no-interaction --optimize-autoloader
