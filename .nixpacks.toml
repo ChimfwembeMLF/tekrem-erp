@@ -1,0 +1,16 @@
+[phases.setup]
+nixPackages = ["php", "composer", "nodejs", "yarn"]
+
+[phases.install]
+cmds = [
+    "composer install --no-interaction --optimize-autoloader --no-dev",
+    "yarn install --frozen-lockfile"
+]
+
+[phases.build]
+cmds = [
+    "yarn run build"
+]
+
+[start]
+cmd = "php artisan serve --host=0.0.0.0 --port=8080"
