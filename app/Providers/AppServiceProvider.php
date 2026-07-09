@@ -31,6 +31,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (config('app.env') === 'production') {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
+
         Route::bind('recruitment', fn (string $value) => JobPosting::findOrFail($value));
         Route::bind('application', fn (string $value) => JobApplication::findOrFail($value));
 

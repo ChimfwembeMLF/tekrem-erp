@@ -11,14 +11,18 @@ import { getCsrfToken, getXsrfToken, notifySessionExpired } from '@/lib/http';
 
 window.Pusher = Pusher;
 
+const getMeta = (name: string) => {
+    return document.querySelector(`meta[name="${name}"]`)?.getAttribute('content') || undefined;
+};
+
 const echo = new Echo({
     broadcaster:       'reverb',
-    key:               import.meta.env.VITE_REVERB_APP_KEY,
+    key:               getMeta('reverb-app-key') || import.meta.env.VITE_REVERB_APP_KEY,
     Pusher,
-    wsHost:            import.meta.env.VITE_REVERB_HOST,
-    wsPort:            Number(import.meta.env.VITE_REVERB_PORT) || 8080,
-    wssPort:           Number(import.meta.env.VITE_REVERB_PORT) || 443,
-    forceTLS:          (import.meta.env.VITE_REVERB_SCHEME ?? 'http') === 'https',
+    wsHost:            getMeta('reverb-host') || import.meta.env.VITE_REVERB_HOST,
+    wsPort:            Number(getMeta('reverb-port') || import.meta.env.VITE_REVERB_PORT) || 8080,
+    wssPort:           Number(getMeta('reverb-port') || import.meta.env.VITE_REVERB_PORT) || 443,
+    forceTLS:          (getMeta('reverb-scheme') || import.meta.env.VITE_REVERB_SCHEME ?? 'http') === 'https',
     enabledTransports: ['ws', 'wss'],
     authorizer: (channel) => ({
         authorize: (socketId, callback) => {
