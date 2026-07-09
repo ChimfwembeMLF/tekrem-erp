@@ -3,18 +3,15 @@ FROM node:20-alpine AS frontend-builder
 
 WORKDIR /app
 
-# Install pnpm
-RUN npm install -g pnpm
-
-# Copy package configuration and lockfile
-COPY package.json pnpm-lock.yaml ./
+# Copy package configuration and lockfiles
+COPY package.json yarn.lock* package-lock.json* ./
 
 # Install frontend dependencies
-RUN pnpm install --frozen-lockfile
+RUN if [ -f yarn.lock ]; then yarn install; else npm install; fi
 
 # Copy the rest of the application files and build
 COPY . .
-RUN pnpm build
+RUN if [ -f yarn.lock ]; then yarn run build; else npm run build; fi
 
 # --- Stage 2: Final Runtime Environment ---
 FROM dunglas/frankenphp:1-php8.4 AS runner
@@ -45,8 +42,10 @@ RUN install-php-extensions \
 # Use the production php.ini
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
-# Copy custom PHP configuration overrides
-COPY docker/uploads.ini $PHP_INI_DIR/conf.d/uploads.ini
+# Configure custom PHP overrides inline (no external files needed)
+RUN echo "upload_max_filesize = 100M" > $PHP_INI_DIR/conf.d/uploads.ini && \
+    echo "post_max_size = 100M" >> $PHP_INI_DIR/conf.d/uploads.ini && \
+    echo "memory_limit = 512M" >> $PHP_INI_DIR/conf.d/uploads.ini
 
 # Set working directory
 WORKDIR /app
@@ -75,17 +74,12 @@ RUN mkdir -p \
     && chown -R www-data:www-data /app \
     && chmod -R 775 storage bootstrap/cache
 
-# Copy custom Caddyfile and entrypoint script
-COPY docker/Caddyfile /etc/caddy/Caddyfile
-COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
-
-# Expose port 80 (HTTP) for Traefik proxy
+# Expose port 80 (HTTP)
 EXPOSE 80
 
-# Health check: hit the /health endpoint every 30 seconds
+# Health check: hit the standard Laravel 11/12 health check endpoint /up
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-  CMD curl -f http://localhost:80/health || exit 1
+  CMD curl -f http://localhost:80/up || exit 1
 
-# Run entrypoint script
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+# Run FrankenPHP using its built-in production web server configuration
+CMD ["frankenphp", "php-server", "-r", "public"]
