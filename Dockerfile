@@ -7,7 +7,7 @@ WORKDIR /app
 COPY package.json yarn.lock* package-lock.json* ./
 
 # Install frontend dependencies
-RUN if [ -f yarn.lock ]; then yarn install --frozen-lockfile; else npm ci; fi
+RUN if [ -f yarn.lock ]; then yarn install; else npm install; fi
 
 # Copy the rest of the application files and build
 COPY . .
