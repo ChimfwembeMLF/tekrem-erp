@@ -60,6 +60,7 @@ export default function ShowPayroll({ payroll }: ShowPayrollProps) {
                   <Button variant="outline"><Edit className="h-4 w-4 mr-2" />Edit</Button>
                 </Link>
                 {payroll.status === 'pending' && (
+                  <>
                     <Button 
                       variant="success"
                       onClick={() => router.post(route('hr.payroll.approve', payroll.id))}
@@ -84,6 +85,7 @@ export default function ShowPayroll({ payroll }: ShowPayrollProps) {
                         Reject
                       </Button>
                     </div>
+                  </>
                 )}
               </div>
             </div>
