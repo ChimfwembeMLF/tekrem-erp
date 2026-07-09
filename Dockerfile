@@ -74,12 +74,19 @@ RUN mkdir -p \
     && chown -R www-data:www-data /app \
     && chmod -R 775 storage bootstrap/cache
 
+# Copy the entrypoint script and make it executable
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Expose port 80 (HTTP)
 EXPOSE 80
 
 # Health check: hit the standard Laravel 11/12 health check endpoint /up
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
   CMD curl -f http://localhost:80/up || exit 1
+
+# Use the entrypoint script
+ENTRYPOINT ["docker-entrypoint.sh"]
 
 # Run FrankenPHP using its built-in production web server configuration
 CMD ["frankenphp", "php-server", "-r", "public"]
