@@ -24,9 +24,25 @@ class OrganizationBillingController extends Controller
     {
         $organization = $this->currentOrganization($request);
 
+        $transactions = \App\Models\Finance\MomoTransaction::query()
+            ->where('organization_id', $organization->id)
+            ->where('transactable_type', \App\Models\OrganizationSubscription::class)
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(fn ($t) => [
+                'id' => $t->id,
+                'transaction_number' => $t->transaction_number,
+                'amount' => $t->amount,
+                'currency' => $t->currency,
+                'status' => $t->status,
+                'created_at' => $t->created_at->toISOString(),
+                'phone_number' => $t->customer_phone,
+            ]);
+
         return Inertia::render('Organization/Billing', [
             'billing' => $this->billingService->summary($organization),
             'plans' => BillingPlanPresenter::publicPlans(),
+            'transactions' => $transactions,
         ]);
     }
 

@@ -57,6 +57,7 @@ import {
   MessageCircle,
   Heart,
   ShoppingBag,
+  Building2,
 } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import useRoute from '@/Hooks/useRoute';

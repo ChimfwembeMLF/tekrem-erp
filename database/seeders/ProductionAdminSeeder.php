@@ -44,6 +44,9 @@ class ProductionAdminSeeder extends Seeder
         if (!$admin->hasRole('admin')) {
             $admin->assignRole('admin');
         }
+        if (!$admin->hasRole('super_user')) {
+            $admin->assignRole('super_user');
+        }
 
         $this->command->info("Admin user ready: {$email}");
     }

@@ -6,6 +6,7 @@ use App\Models\Finance\MomoProvider;
 use App\Models\Finance\MomoTransaction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Jobs\SimulatePawaPayCallbackJob;
 
 class PawaPayTransactionService
 {
@@ -244,6 +245,10 @@ class PawaPayTransactionService
                 'type' => $type,
                 'payment_id' => $paymentId,
             ]);
+
+            if ($this->pawaPayService->getConfiguration()['env'] !== 'production') {
+                SimulatePawaPayCallbackJob::dispatch($transaction->id)->delay(now()->addSeconds(3));
+            }
 
             return [
                 'success' => true,

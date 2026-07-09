@@ -2,7 +2,7 @@ import { Link, useForm, Head } from '@inertiajs/react';
 import React, { useState } from 'react';
 import useRoute from '@/Hooks/useRoute';
 import useTypedPage from '@/Hooks/useTypedPage';
-import { AuthCard, FormInput, FormCheckbox, AuthButton, LinkButton } from '@/Components/Auth';
+import { AuthCard, FormInput, FormCheckbox, AuthButton, LinkButton, GoogleAuthButton } from '@/Components/Auth';
 import ReCaptcha from '@/Components/ReCaptcha';
 
 export default function Register() {
@@ -148,6 +148,8 @@ export default function Register() {
           >
             Register
           </AuthButton>
+
+          <GoogleAuthButton className="mt-2" />
 
           <div className="text-center">
             <LinkButton href={route('login')}>

@@ -7,6 +7,7 @@ interface UseConversationChannelOptions {
   currentUserId?: number | string | null;
   onMessage?: (message: Record<string, unknown>) => void;
   typingUrl?: string;
+  typingPayload?: Record<string, unknown>;
   enabled?: boolean;
 }
 
@@ -15,6 +16,7 @@ export function useConversationChannel({
   currentUserId,
   onMessage,
   typingUrl,
+  typingPayload = {},
   enabled = true,
 }: UseConversationChannelOptions) {
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
@@ -96,7 +98,7 @@ export function useConversationChannel({
         fetchWithSession(typingUrl, {
           method: 'POST',
           headers: getBroadcastHeaders(),
-          body: JSON.stringify({ is_typing: true }),
+          body: JSON.stringify({ is_typing: true, ...typingPayload }),
         }).catch(() => {});
         isTypingRef.current = true;
       }, 300);
@@ -107,7 +109,7 @@ export function useConversationChannel({
       fetchWithSession(typingUrl, {
         method: 'POST',
         headers: getBroadcastHeaders(),
-        body: JSON.stringify({ is_typing: false }),
+        body: JSON.stringify({ is_typing: false, ...typingPayload }),
       }).catch(() => {});
       isTypingRef.current = false;
     }

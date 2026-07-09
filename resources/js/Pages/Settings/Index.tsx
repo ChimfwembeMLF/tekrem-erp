@@ -16,7 +16,8 @@ import {
   HardDrive,
   TrendingUp,
   ChevronRight,
-  DollarSign
+  DollarSign,
+  Building
 } from 'lucide-react';
 import useRoute from '@/Hooks/useRoute';
 
@@ -51,6 +52,14 @@ export default function SettingsIndex({ settings, stats }: SettingsIndexProps) {
       href: route('settings.general'),
       color: 'text-blue-600',
       bgColor: 'bg-blue-50 dark:bg-blue-950'
+    },
+    {
+      title: 'Workspace Settings',
+      description: 'Configure your company details, logo, and custom domain configuration',
+      icon: <Building className="h-6 w-6" />,
+      href: route('settings.organization'),
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-50 dark:bg-orange-950'
     },
     {
       title: 'User Management',

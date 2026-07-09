@@ -1,22 +1,9 @@
-import React, { useState } from "react";
-import { signInWithGoogle } from "@/firebase-auth";
+import React from "react";
 import { Button } from "@/Components/ui/button";
 
-type AuthedUser = {
-  id: number | string;
-  name?: string;
-  email?: string;
-  [key: string]: unknown;
-};
-
-type GoogleAuthResponse =
-  | { ok: true; user: AuthedUser }
-  | { ok: false; error?: string };
-
 type Props = {
-  onAuth?: (user: AuthedUser) => void;
-  endpoint?: string; // default: /api/auth/google
   className?: string;
+  label?: string;
 };
 
 function GoogleIcon({ className }: { className?: string }) {
@@ -48,66 +35,22 @@ function GoogleIcon({ className }: { className?: string }) {
 }
 
 export default function GoogleAuthButton({
-  onAuth,
-  endpoint = "/api/auth/google",
   className,
+  label = "Continue with Google",
 }: Props) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleGoogleAuth = async () => {
-    if (isLoading) return;
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const result = await signInWithGoogle();
-
-      if (!result?.user) {
-        setError(result?.error?.message ?? "Google sign-in failed.");
-        return;
-      }
-
-      const idToken = await result.user.getIdToken();
-
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken }),
-      });
-
-      const payload = (await res.json()) as GoogleAuthResponse;
-
-      if (!res.ok || !payload.ok) {
-        setError(payload.error ?? "Google authentication failed.");
-        return;
-      }
-
-      onAuth?.(payload.user);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Something went wrong.";
-      setError(msg);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className={className}>
       <Button
         type="button"
         variant="outline"
         className="w-full justify-center gap-2"
-        onClick={handleGoogleAuth}
-        disabled={isLoading}
+        asChild
       >
-        <GoogleIcon className="h-4 w-4" />
-        {isLoading ? "Signing in..." : "Continue with Google"}
+        <a href="/auth/google/redirect">
+          <GoogleIcon className="h-4 w-4" />
+          {label}
+        </a>
       </Button>
-
-      {error && (
-        <p className="mt-2 text-sm text-red-600 dark:text-red-500">{error}</p>
-      )}
     </div>
   );
 }

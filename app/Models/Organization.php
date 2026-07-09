@@ -129,4 +129,22 @@ class Organization extends Model
     {
         return $this->onboarding_completed_at !== null;
     }
+
+    public function canUseCustomDomain(): bool
+    {
+        $plan = $this->currentPlan();
+        
+        // First check the current plan
+        if ($plan && $plan->allow_custom_domain) {
+            return true;
+        }
+        
+        $subscription = $this->activeSubscription;
+        // Then check if they purchased the add-on
+        if ($subscription && isset($subscription->metadata['custom_domain_addon']) && $subscription->metadata['custom_domain_addon'] === true) {
+            return true;
+        }
+        
+        return false;
+    }
 }

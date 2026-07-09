@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
@@ -60,15 +60,30 @@ export default function ShowPayroll({ payroll }: ShowPayrollProps) {
                   <Button variant="outline"><Edit className="h-4 w-4 mr-2" />Edit</Button>
                 </Link>
                 {payroll.status === 'pending' && (
-                  <>
-                    <form method="post" action={route('hr.payroll.approve', payroll.id)} style={{ display: 'inline' }}>
-                      <Button type="submit" variant="success">Approve</Button>
-                    </form>
-                    <form method="post" action={route('hr.payroll.reject', payroll.id)} style={{ display: 'inline', marginLeft: 8 }}>
-                      <input type="text" name="reason" placeholder="Rejection reason" required className="border rounded px-2 py-1 mr-2" />
-                      <Button type="submit" variant="destructive">Reject</Button>
-                    </form>
-                  </>
+                    <Button 
+                      variant="success"
+                      onClick={() => router.post(route('hr.payroll.approve', payroll.id))}
+                    >
+                      Approve
+                    </Button>
+                    <div style={{ display: 'inline-flex', marginLeft: 8, alignItems: 'center' }}>
+                      <input 
+                        type="text" 
+                        name="reason" 
+                        id="rejectReason"
+                        placeholder="Rejection reason" 
+                        className="border rounded px-2 py-1 mr-2" 
+                      />
+                      <Button 
+                        variant="destructive"
+                        onClick={() => {
+                          const reason = (document.getElementById('rejectReason') as HTMLInputElement).value;
+                          router.post(route('hr.payroll.reject', payroll.id), { reason });
+                        }}
+                      >
+                        Reject
+                      </Button>
+                    </div>
                 )}
               </div>
             </div>

@@ -23,6 +23,10 @@ class EnsureOrganizationMember
             return $next($request);
         }
 
+        if ($user->hasRole('customer')) {
+            return redirect()->route('customer.dashboard');
+        }
+
         if (! $this->context->check()) {
             abort(403, 'No organization context.');
         }

@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/Components/ui/select';
-import { AlertCircle, CheckCircle2, CreditCard, Loader2, Smartphone, XCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle2, CreditCard, Loader2, Smartphone, XCircle, History } from 'lucide-react';
 import useRoute from '@/Hooks/useRoute';
 import { formatZmw } from '@/lib/formatCurrency';
 
@@ -46,9 +46,18 @@ interface Props {
     networks: Array<{ code: string; label: string }>;
   };
   plans: Plan[];
+  transactions: Array<{
+    id: number;
+    transaction_number: string;
+    amount: string;
+    currency: string;
+    status: string;
+    created_at: string;
+    phone_number: string | null;
+  }>;
 }
 
-export default function OrganizationBilling({ billing, plans }: Props) {
+export default function OrganizationBilling({ billing, plans, transactions = [] }: Props) {
   const route = useRoute();
   const page = usePage<{ flash?: { billing_payment?: { subscription_id: number; transaction_number: string } } }>();
   const pendingPayment = page.props.flash?.billing_payment;
@@ -280,6 +289,61 @@ export default function OrganizationBilling({ billing, plans }: Props) {
             </CardContent>
           </Card>
         )}
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <History className="h-5 w-5" />
+              Transaction History
+            </CardTitle>
+            <CardDescription>
+              Your recent subscription payments.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {transactions.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">
+                No billing transactions found.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="text-xs text-muted-foreground uppercase bg-muted/50 border-b">
+                    <tr>
+                      <th className="px-4 py-3 font-medium">Date</th>
+                      <th className="px-4 py-3 font-medium">Reference</th>
+                      <th className="px-4 py-3 font-medium">Amount</th>
+                      <th className="px-4 py-3 font-medium">Phone</th>
+                      <th className="px-4 py-3 font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {transactions.map((t) => (
+                      <tr key={t.id} className="border-b last:border-0 hover:bg-muted/50">
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          {new Date(t.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3 font-mono text-xs">{t.transaction_number}</td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          {formatZmw(Number(t.amount))}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">{t.phone_number || '—'}</td>
+                        <td className="px-4 py-3">
+                          <Badge 
+                            variant={t.status === 'completed' ? 'default' : (t.status === 'failed' ? 'destructive' : 'secondary')}
+                            className={t.status === 'completed' ? 'bg-emerald-500 hover:bg-emerald-600' : ''}
+                          >
+                            {t.status}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </AppLayout>
   );

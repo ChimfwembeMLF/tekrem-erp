@@ -64,11 +64,13 @@ class BillingPlanController extends Controller
             'features.*' => 'string|max:255',
             'is_active' => 'boolean',
             'is_public' => 'boolean',
+            'allow_custom_domain' => 'boolean',
             'sort_order' => 'integer|min:0|max:999',
         ]);
 
         $data['is_active'] = $request->boolean('is_active', true);
         $data['is_public'] = $request->boolean('is_public', true);
+        $data['allow_custom_domain'] = $request->boolean('allow_custom_domain', false);
         $data['enabled_modules'] = array_values($data['enabled_modules'] ?? []);
         $data['features'] = array_values(array_filter($data['features'] ?? []));
 
@@ -96,6 +98,7 @@ class BillingPlanController extends Controller
             'features' => $plan->features ?? [],
             'is_active' => $plan->is_active,
             'is_public' => $plan->is_public,
+            'allow_custom_domain' => (bool) $plan->allow_custom_domain,
             'sort_order' => $plan->sort_order,
             'subscriber_count' => $plan->subscriptions()->count(),
         ];

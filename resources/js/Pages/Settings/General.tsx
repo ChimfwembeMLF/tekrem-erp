@@ -71,6 +71,7 @@ export default function GeneralSettings({ settings }: GeneralSettingsProps) {
   ];
 
   const currencies = [
+    { value: 'ZMW', label: 'Zambian Kwacha (ZMW)' },
     { value: 'USD', label: 'US Dollar (USD)' },
     { value: 'EUR', label: 'Euro (EUR)' },
     { value: 'GBP', label: 'British Pound (GBP)' },

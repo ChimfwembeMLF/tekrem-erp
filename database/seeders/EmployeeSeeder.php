@@ -17,7 +17,7 @@ class EmployeeSeeder extends Seeder
             [
                 'name' => 'Chimfwembe Kangwa',
                 'email' => 'chimfwembe@company.com',
-                'role' => 'superuser',
+                'role' => 'super_user',
             ],
             [
                 'name' => 'Joseph Banda',
@@ -53,7 +53,7 @@ class EmployeeSeeder extends Seeder
 
         // Create roles if not exist
         $roles = [
-            'superuser', 'operations', 'designer', 'marketing', 'sales', 'project_manager', 'creative'
+            'super_user', 'operations', 'designer', 'marketing', 'sales', 'project_manager', 'creative'
         ];
         foreach ($roles as $role) {
             Role::firstOrCreate(['name' => $role]);

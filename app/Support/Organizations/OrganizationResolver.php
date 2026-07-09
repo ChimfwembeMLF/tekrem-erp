@@ -85,14 +85,17 @@ class OrganizationResolver
             $subdomain = str_replace('.'.strtolower($appDomain), '', $host);
 
             return Organization::query()
-                ->where(function ($query) use ($subdomain) {
-                    $query->where('subdomain', $subdomain)
-                        ->orWhere('slug', $subdomain);
-                })
+                ->where('subdomain', $subdomain)
                 ->first();
         }
 
-        return Organization::query()->where('custom_domain', $host)->first();
+        $organization = Organization::query()->where('custom_domain', $host)->first();
+
+        if ($organization && $organization->canUseCustomDomain()) {
+            return $organization;
+        }
+
+        return null;
     }
 
     protected function defaultOrganization(): Organization

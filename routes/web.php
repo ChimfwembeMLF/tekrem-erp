@@ -5,6 +5,12 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\WebsiteController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\Auth\GoogleAuthController;
+
+// Google Auth Routes
+Route::get('auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('google.redirect');
+Route::get('auth/google/callback', [GoogleAuthController::class, 'callback'])->name('google.callback');
+Route::get('api/v1/auth/google/redirect', [GoogleAuthController::class, 'callback']);
 
 // Legal pages
 Route::get('/terms-of-service', function () {
@@ -1295,6 +1301,11 @@ Route::middleware([
         Route::get('/', [\App\Http\Controllers\Settings\SettingsController::class, 'index'])->name('index');
         Route::get('/general', [\App\Http\Controllers\Settings\SettingsController::class, 'general'])->name('general');
         Route::put('/general', [\App\Http\Controllers\Settings\SettingsController::class, 'updateGeneral'])->name('general.update');
+        
+        // Organization (Workspace) Settings
+        Route::get('/organization', [\App\Http\Controllers\Settings\OrganizationSettingsController::class, 'edit'])->name('organization');
+        Route::put('/organization', [\App\Http\Controllers\Settings\OrganizationSettingsController::class, 'update'])->name('organization.update');
+        
         Route::get('/users', [\App\Http\Controllers\Settings\SettingsController::class, 'users'])->name('users');
         Route::put('/users', [\App\Http\Controllers\Settings\SettingsController::class, 'updateUsers'])->name('users.update');
         Route::get('/notifications', [\App\Http\Controllers\Settings\SettingsController::class, 'notifications'])->name('notifications');

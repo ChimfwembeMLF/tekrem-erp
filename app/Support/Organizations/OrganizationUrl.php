@@ -13,7 +13,7 @@ class OrganizationUrl
 
     public function hostFor(Organization $organization): ?string
     {
-        if (filled($organization->custom_domain)) {
+        if (filled($organization->custom_domain) && $organization->canUseCustomDomain()) {
             return strtolower((string) $organization->custom_domain);
         }
 
@@ -23,7 +23,7 @@ class OrganizationUrl
             return null;
         }
 
-        $subdomain = $organization->subdomain ?: $organization->slug;
+        $subdomain = $organization->subdomain;
 
         if (! filled($subdomain)) {
             return null;
@@ -59,7 +59,7 @@ class OrganizationUrl
      */
     public function payloadFor(Organization $organization, string $path = '/'): array
     {
-        if (filled($organization->custom_domain)) {
+        if (filled($organization->custom_domain) && $organization->canUseCustomDomain()) {
             $url = $this->forOrganization($organization, $path);
 
             return [

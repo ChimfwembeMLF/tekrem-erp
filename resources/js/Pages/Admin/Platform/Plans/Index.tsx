@@ -33,6 +33,7 @@ interface Plan {
   max_products: number | null;
   max_orders_per_month: number | null;
   enabled_modules: string[];
+  allow_custom_domain: boolean;
   features: string[];
   is_active: boolean;
   is_public: boolean;
@@ -57,6 +58,7 @@ const emptyPlan = {
   max_products: '',
   max_orders_per_month: '',
   enabled_modules: [] as string[],
+  allow_custom_domain: false,
   features: [''],
   is_active: true,
   is_public: true,
@@ -68,7 +70,9 @@ export default function PlansIndex({ plans, modules }: Props) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Plan | null>(null);
 
-  const { data, setData, post, put, processing, reset, errors } = useForm({ ...emptyPlan }).transform((payload) => ({
+  const { data, setData, post, put, processing, reset, errors, transform } = useForm({ ...emptyPlan });
+
+  transform((payload: any) => ({
     ...payload,
     max_users: payload.max_users === '' ? null : Number(payload.max_users),
     max_products: payload.max_products === '' ? null : Number(payload.max_products),
@@ -97,6 +101,7 @@ export default function PlansIndex({ plans, modules }: Props) {
       max_products: plan.max_products?.toString() ?? '',
       max_orders_per_month: plan.max_orders_per_month?.toString() ?? '',
       enabled_modules: plan.enabled_modules,
+      allow_custom_domain: plan.allow_custom_domain,
       features: plan.features.length ? plan.features : [''],
       is_active: plan.is_active,
       is_public: plan.is_public,
@@ -276,6 +281,10 @@ export default function PlansIndex({ plans, modules }: Props) {
               <label className="flex items-center gap-2 text-sm">
                 <Checkbox checked={data.is_public} onCheckedChange={(v) => setData('is_public', v === true)} />
                 Public (signup)
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <Checkbox checked={data.allow_custom_domain} onCheckedChange={(v) => setData('allow_custom_domain', v === true)} />
+                Allow custom domain
               </label>
             </div>
             <DialogFooter>

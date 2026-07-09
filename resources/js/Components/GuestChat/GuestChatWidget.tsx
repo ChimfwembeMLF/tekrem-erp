@@ -150,6 +150,7 @@ export default function GuestChatWidget({
     conversationId: conversation?.id ?? null,
     currentUserId: guestSession ? `guest_${guestSession.id}` : null,
     typingUrl: '/guest-chat/typing',
+    typingPayload: { session_id: guestSession?.session_id },
     enabled: initialized && !!conversation?.id,
     onMessage: (incoming) => {
       const next = incoming as unknown as Message;
@@ -224,24 +225,25 @@ export default function GuestChatWidget({
     }
   }, [embedded, source]);
 
-  useEffect(() => {
-    async function setupPush() {
-      if ('Notification' in window && window.navigator.serviceWorker) {
-        await requestNotificationPermission();
-        const token = await getFcmToken();
-        if (token && guestSession) {
-          fetchWithSession('/guest-chat/push-token', {
-            method: 'POST',
-            body: JSON.stringify({ session_id: guestSession.session_id, token }),
-          }).catch(() => {});
-        }
-        listenForForegroundMessages((payload: any) => {
-          toast('New chat message', { description: payload?.notification?.body });
-        });
-      }
-    }
-    if (initialized && guestSession) setupPush();
-  }, [initialized, guestSession]);
+  // Firebase push notifications have been removed per user request
+  // useEffect(() => {
+  //   async function setupPush() {
+  //     if ('Notification' in window && window.navigator.serviceWorker) {
+  //       await requestNotificationPermission();
+  //       const token = await getFcmToken();
+  //       if (token && guestSession) {
+  //         fetchWithSession('/guest-chat/push-token', {
+  //           method: 'POST',
+  //           body: JSON.stringify({ session_id: guestSession.session_id, token }),
+  //         }).catch(() => {});
+  //       }
+  //       listenForForegroundMessages((payload: any) => {
+  //         toast('New chat message', { description: payload?.notification?.body });
+  //       });
+  //     }
+  //   }
+  //   if (initialized && guestSession) setupPush();
+  // }, [initialized, guestSession]);
 
   useEffect(() => {
     if (isOpen) {
@@ -257,9 +259,14 @@ export default function GuestChatWidget({
 
   useEffect(() => {
     if (!isOpen || !initialized || messages.length === 0) return;
+    const session_id = localStorage.getItem('guest_chat_session_id');
+    if (!session_id) return;
     fetchWithSession('/guest-chat/read', {
       method: 'POST',
-      body: JSON.stringify({ message_ids: messages.filter(m => m.status !== 'read').map(m => m.id) }),
+      body: JSON.stringify({ 
+        message_ids: messages.filter(m => m.status !== 'read').map(m => m.id),
+        session_id
+      }),
     }).catch(() => {});
   }, [isOpen, initialized, messages]);
 
@@ -271,6 +278,9 @@ export default function GuestChatWidget({
       fd.append('message', newMessage);
       fd.append('message_type', 'text');
       attachments.forEach(f => fd.append('attachments[]', f));
+      const session_id = localStorage.getItem('guest_chat_session_id');
+      if (session_id) fd.append('session_id', session_id);
+      
       const res = await fetchWithSession('/guest-chat/send', {
         method: 'POST',
         headers: getBroadcastHeaders(null),
@@ -301,9 +311,10 @@ export default function GuestChatWidget({
 
   const updateGuestInfo = async () => {
     try {
+      const session_id = localStorage.getItem('guest_chat_session_id');
       const res = await fetchWithSession('/guest-chat/update-info', {
         method: 'POST',
-        body: JSON.stringify(guestInfo),
+        body: JSON.stringify({ ...guestInfo, session_id }),
       });
       if (!res.ok) throw new Error();
       const data = await res.json();

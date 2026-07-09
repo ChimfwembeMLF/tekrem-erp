@@ -24,6 +24,7 @@ import {
     Menu,
     Users,
     FileText,
+    Building,
     Megaphone,
     Mail,
     ShoppingBag,
