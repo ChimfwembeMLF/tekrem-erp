@@ -56,8 +56,7 @@ COPY --from=frontend-builder /app/public/build ./public/build
 
 # Install PHP dependencies
 ENV COMPOSER_ALLOW_SUPERUSER=1
-RUN if [ -f .env ]; then sed -i 's/^APP_NAME=\(.*\)$/APP_NAME="\1"/' .env; fi && \
-    composer install --no-dev --optimize-autoloader --no-interaction --no-progress
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-progress
 
 # Ensure Laravel storage and cache directories exist and have proper permissions
 RUN mkdir -p \
