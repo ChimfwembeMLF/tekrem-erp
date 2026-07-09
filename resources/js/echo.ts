@@ -17,12 +17,12 @@ const getMeta = (name: string) => {
 
 const echo = new Echo({
     broadcaster:       'reverb',
-    key:               getMeta('reverb-app-key') || import.meta.env.VITE_REVERB_APP_KEY,
+    key:               getMeta('reverb-app-key') ?? import.meta.env.VITE_REVERB_APP_KEY,
     Pusher,
-    wsHost:            getMeta('reverb-host') || import.meta.env.VITE_REVERB_HOST,
-    wsPort:            Number(getMeta('reverb-port') || import.meta.env.VITE_REVERB_PORT) || 8080,
-    wssPort:           Number(getMeta('reverb-port') || import.meta.env.VITE_REVERB_PORT) || 443,
-    forceTLS:          (getMeta('reverb-scheme') || import.meta.env.VITE_REVERB_SCHEME ?? 'http') === 'https',
+    wsHost:            getMeta('reverb-host') ?? import.meta.env.VITE_REVERB_HOST,
+    wsPort:            Number(getMeta('reverb-port') ?? import.meta.env.VITE_REVERB_PORT) || 8080,
+    wssPort:           Number(getMeta('reverb-port') ?? import.meta.env.VITE_REVERB_PORT) || 443,
+    forceTLS:          (getMeta('reverb-scheme') ?? import.meta.env.VITE_REVERB_SCHEME ?? 'http') === 'https',
     enabledTransports: ['ws', 'wss'],
     authorizer: (channel) => ({
         authorize: (socketId, callback) => {
