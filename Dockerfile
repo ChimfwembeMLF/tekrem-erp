@@ -1,42 +1,91 @@
-# Stage 1: Build the Node.js (React/Vite) assets
-FROM node:22-alpine AS node_builder
+# --- Stage 1: Build Frontend Assets ---
+FROM node:20-alpine AS frontend-builder
+
 WORKDIR /app
-# Copy package files and install dependencies
-COPY package.json yarn.lock* package-lock.json* ./
-# Use yarn if yarn.lock exists, otherwise npm
-RUN if [ -f yarn.lock ]; then yarn install --frozen-lockfile; else npm ci; fi
-# Copy the rest of the application
+
+# Install pnpm
+RUN npm install -g pnpm
+
+# Copy package configuration and lockfile
+COPY package.json pnpm-lock.yaml ./
+
+# Install frontend dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy the rest of the application files and build
 COPY . .
-# Build the Vite assets
-RUN if [ -f yarn.lock ]; then yarn run build; else npm run build; fi
+RUN pnpm build
 
-# Stage 2: Production PHP server with Nginx
-# The serversideup image is highly optimized for Laravel production
-FROM serversideup/php:8.2-fpm-nginx
+# --- Stage 2: Final Runtime Environment ---
+FROM dunglas/frankenphp:1-php8.4 AS runner
 
-# Switch to root to install necessary PHP extensions
-USER root
-# serversideup images come with `install-php-extensions` script
-RUN install-php-extensions gd zip pdo_mysql pcntl redis
+# Install system dependencies (git, unzip, and curl are required)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    unzip \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Switch back to the unprivileged www-data user
-USER www-data
+# Update install-php-extensions to the latest version to avoid PECL errors for PHP 8.4
+ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
-# Copy the entire Laravel application to the web root
-COPY --chown=www-data:www-data . /var/www/html
+# Install PHP extensions
+RUN install-php-extensions \
+    bcmath \
+    gd \
+    intl \
+    opcache \
+    pdo_mysql \
+    pdo_pgsql \
+    pcntl \
+    zip \
+    redis \
+    memcached
 
-# Copy the built React assets from the node_builder stage
-COPY --chown=www-data:www-data --from=node_builder /app/public/build /var/www/html/public/build
+# Use the production php.ini
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+
+# Copy custom PHP configuration overrides
+COPY docker/uploads.ini $PHP_INI_DIR/conf.d/uploads.ini
+
+# Set working directory
+WORKDIR /app
+
+# Copy Composer from the official Docker image
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Copy application files
+COPY . .
+
+# Copy compiled frontend assets from Stage 1
+COPY --from=frontend-builder /app/public/build ./public/build
 
 # Install PHP dependencies
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+ENV COMPOSER_ALLOW_SUPERUSER=1
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-progress
 
-# Cache Laravel configurations for production performance
-RUN php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache
+# Ensure Laravel storage and cache directories exist and have proper permissions
+RUN mkdir -p \
+    storage/app/public \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/framework/cache \
+    storage/logs \
+    bootstrap/cache \
+    && chown -R www-data:www-data /app \
+    && chmod -R 775 storage bootstrap/cache
 
-# Expose the default port used by serversideup Nginx
-EXPOSE 8080
+# Copy custom Caddyfile and entrypoint script
+COPY docker/Caddyfile /etc/caddy/Caddyfile
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# The base image automatically starts supervisord, which manages Nginx and PHP-FPM
+# Expose port 80 (HTTP) for Traefik proxy
+EXPOSE 80
+
+# Health check: hit the /health endpoint every 30 seconds
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD curl -f http://localhost:80/health || exit 1
+
+# Run entrypoint script
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
