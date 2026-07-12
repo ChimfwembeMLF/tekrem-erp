@@ -21,7 +21,8 @@
         "pusher/pusher-php-server": "^7.2",
         "spatie/laravel-activitylog": "^4.10",
         "spatie/laravel-permission": "^6.18",
-        "tightenco/ziggy": "^2.0"
+        "tightenco/ziggy": "^2.0",
+        "ext-zip": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
