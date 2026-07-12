@@ -11,6 +11,9 @@ use App\Http\Controllers\Auth\GoogleAuthController;
 Route::get('auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('google.redirect');
 Route::get('auth/google/callback', [GoogleAuthController::class, 'callback'])->name('google.callback');
 Route::get('api/v1/auth/google/redirect', [GoogleAuthController::class, 'callback']);
+Route::get('auth/tekrem/redirect', [AppHttpControllersAuthTekremAuthController::class, 'redirect'])->name('auth.tekrem.redirect');
+Route::get('auth/tekrem/callback', [AppHttpControllersAuthTekremAuthController::class, 'callback'])->name('auth.tekrem.callback');
+
 
 // Legal pages
 Route::get('/terms-of-service', function () {

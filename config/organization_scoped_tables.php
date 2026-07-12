@@ -177,4 +177,11 @@ return [
     'approval_steps',
     'site_visitors',
     'site_page_views',
+    'guest_sessions',
+    'guest_inquiries',
+    'guest_quote_requests',
+    'guest_support_tickets',
+    'guest_project_inquiries',
+    'message_comments',
+
 ];

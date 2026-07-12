@@ -23,6 +23,13 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        //
+        if (class_exists(\Laravel\Socialite\Facades\Socialite::class)) {
+            \Laravel\Socialite\Facades\Socialite::extend('tekrem', function ($app) {
+                $config = $app['config']['services.tekrem'];
+                return \Laravel\Socialite\Facades\Socialite::buildProvider(
+                    \App\Support\Auth\TekremProvider::class, $config
+                );
+            });
+        }
     }
 }

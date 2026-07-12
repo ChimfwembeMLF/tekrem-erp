@@ -4,3 +4,5 @@ export { default as FormCheckbox } from './FormCheckbox';
 export { default as AuthButton } from './AuthButton';
 export { default as LinkButton } from './LinkButton';
 export { default as GoogleAuthButton } from './GoogleAuthButton';
+export { default as TekremAuthButton } from './TekremAuthButton';
+

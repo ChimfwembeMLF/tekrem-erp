@@ -5,13 +5,15 @@ namespace App\Models\Guest;
 use App\Models\User;
 use App\Models\Finance\Quotation;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Concerns\BelongsToOrganization;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
 class GuestQuoteRequest extends Model
 {
-    use HasFactory;
+    use BelongsToOrganization, HasFactory;
 
     /**
      * The attributes that are mass assignable.
@@ -19,6 +21,8 @@ class GuestQuoteRequest extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'organization_id',
+
         'reference_number',
         'name',
         'email',

@@ -2,8 +2,10 @@ import { Link, useForm, Head } from '@inertiajs/react';
 import React, { useState } from 'react';
 import useRoute from '@/Hooks/useRoute';
 import useTypedPage from '@/Hooks/useTypedPage';
-import { AuthCard, FormInput, FormCheckbox, AuthButton, LinkButton, GoogleAuthButton } from '@/Components/Auth';
+import { AuthCard, FormInput, FormCheckbox, AuthButton, LinkButton, GoogleAuthButton, TekremAuthButton } from '@/Components/Auth';
 import ReCaptcha from '@/Components/ReCaptcha';
+
+
 
 interface Props {
   canResetPassword: boolean;
@@ -109,6 +111,7 @@ export default function Login({ canResetPassword, status }: Props) {
           </AuthButton>
 
           <GoogleAuthButton className="mt-2" />
+          <TekremAuthButton className="mt-2" />
 
           <div className="flex flex-col space-y-2 sm:flex-row sm:justify-between sm:space-y-0 text-center sm:text-left">
             {canResetPassword && (

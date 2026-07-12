@@ -4,13 +4,15 @@ namespace App\Models\Guest;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Concerns\BelongsToOrganization;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
 class GuestInquiry extends Model
 {
-    use HasFactory;
+    use BelongsToOrganization, HasFactory;
 
     /**
      * The attributes that are mass assignable.
@@ -18,6 +20,8 @@ class GuestInquiry extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'organization_id',
+
         'reference_number',
         'type',
         'name',

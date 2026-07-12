@@ -23,9 +23,14 @@ interface Organization {
 interface Props {
   organization: Organization;
   canUseCustomDomain: boolean;
+  hasAiModule: boolean;
+  aiSettings: {
+    openai_api_key: string | null;
+    anthropic_api_key: string | null;
+  };
 }
 
-export default function OrganizationSettings({ organization, canUseCustomDomain }: Props) {
+export default function OrganizationSettings({ organization, canUseCustomDomain, hasAiModule, aiSettings }: Props) {
   const { data, setData, put, processing, errors } = useForm({
     name: organization.name || '',
     email: organization.email || '',
@@ -33,6 +38,8 @@ export default function OrganizationSettings({ organization, canUseCustomDomain 
     website: organization.website || '',
     address: organization.address || '',
     custom_domain: organization.custom_domain || '',
+    openai_api_key: aiSettings?.openai_api_key || '',
+    anthropic_api_key: aiSettings?.anthropic_api_key || '',
   });
 
   const submit = (e: React.FormEvent) => {
@@ -222,6 +229,45 @@ export default function OrganizationSettings({ organization, canUseCustomDomain 
               </div>
             </CardContent>
           </Card>
+
+          {hasAiModule && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="h-5 w-5" />
+                  AI Settings (Bring Your Own Key)
+                </CardTitle>
+                <CardDescription>
+                  Enter your own API keys to utilize the AI features without platform quotas.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="openai_api_key">OpenAI API Key</Label>
+                  <Input
+                    id="openai_api_key"
+                    type="password"
+                    value={data.openai_api_key}
+                    onChange={(e) => setData('openai_api_key', e.target.value)}
+                    placeholder="sk-..."
+                  />
+                  {errors.openai_api_key && <p className="text-sm text-destructive">{errors.openai_api_key}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="anthropic_api_key">Anthropic API Key</Label>
+                  <Input
+                    id="anthropic_api_key"
+                    type="password"
+                    value={data.anthropic_api_key}
+                    onChange={(e) => setData('anthropic_api_key', e.target.value)}
+                    placeholder="sk-ant-..."
+                  />
+                  {errors.anthropic_api_key && <p className="text-sm text-destructive">{errors.anthropic_api_key}</p>}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <div className="flex justify-end">
             <Button type="submit" disabled={processing} size="lg">

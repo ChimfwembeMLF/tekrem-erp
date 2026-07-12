@@ -28,6 +28,13 @@ return [
         'key' => env('RESEND_KEY'),
     ],
 
+    'tekrem' => [
+        'client_id' => env('TEKREM_CLIENT_ID'),
+        'client_secret' => env('TEKREM_CLIENT_SECRET'),
+        'redirect' => env('TEKREM_REDIRECT_URI', '/auth/tekrem/callback'),
+        'base_url' => env('TEKREM_AUTH_URL', 'https://auth.tekreminnovations.com'),
+    ],
+
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),

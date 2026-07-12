@@ -3,13 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Concerns\BelongsToOrganization;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class GuestSession extends Model
 {
-    use HasFactory;
+    use BelongsToOrganization, HasFactory;
 
     /**
      * The attributes that are mass assignable.
@@ -17,6 +19,8 @@ class GuestSession extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'organization_id',
+
         'session_id',
         'guest_name',
         'guest_email',

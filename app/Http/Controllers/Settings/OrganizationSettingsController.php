@@ -21,9 +21,17 @@ class OrganizationSettingsController extends Controller
             abort(404, 'No organization found.');
         }
 
+        $openAiKey = \App\Models\Setting::get('integration.openai.api_key', '', ['organization_id' => $organization->id]);
+        $anthropicKey = \App\Models\Setting::get('integration.anthropic.api_key', '', ['organization_id' => $organization->id]);
+
         return Inertia::render('Settings/Organization', [
             'organization' => $organization,
             'canUseCustomDomain' => $organization->canUseCustomDomain(),
+            'aiSettings' => [
+                'openai_api_key' => $openAiKey,
+                'anthropic_api_key' => $anthropicKey,
+            ],
+            'hasAiModule' => $organization->hasModule('ai'),
         ]);
     }
 
@@ -46,6 +54,8 @@ class OrganizationSettingsController extends Controller
             'phone' => 'nullable|string|max:50',
             'website' => 'nullable|url|max:255',
             'address' => 'nullable|string|max:500',
+            'openai_api_key' => 'nullable|string|max:255',
+            'anthropic_api_key' => 'nullable|string|max:255',
         ];
 
         if ($canUseCustomDomain) {
@@ -53,6 +63,14 @@ class OrganizationSettingsController extends Controller
         }
 
         $validated = $request->validate($rules);
+
+        // Save AI settings
+        if ($organization->hasModule('ai')) {
+            \App\Models\Setting::set('integration.openai.api_key', $validated['openai_api_key'] ?? '', ['organization_id' => $organization->id]);
+            \App\Models\Setting::set('integration.anthropic.api_key', $validated['anthropic_api_key'] ?? '', ['organization_id' => $organization->id]);
+        }
+        
+        unset($validated['openai_api_key'], $validated['anthropic_api_key']);
 
         // If they can't use custom domains, ensure they can't inject it manually
         if (!$canUseCustomDomain) {
