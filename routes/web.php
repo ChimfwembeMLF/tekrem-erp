@@ -6,13 +6,14 @@ use App\Http\Controllers\WebsiteController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\Auth\TekremAuthController;
 
 // Google Auth Routes
 Route::get('auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('google.redirect');
 Route::get('auth/google/callback', [GoogleAuthController::class, 'callback'])->name('google.callback');
 Route::get('api/v1/auth/google/redirect', [GoogleAuthController::class, 'callback']);
-Route::get('auth/tekrem/redirect', [AppHttpControllersAuthTekremAuthController::class, 'redirect'])->name('auth.tekrem.redirect');
-Route::get('auth/tekrem/callback', [AppHttpControllersAuthTekremAuthController::class, 'callback'])->name('auth.tekrem.callback');
+Route::get('auth/tekrem/redirect', [TekremAuthController::class, 'redirect'])->name('auth.tekrem.redirect');
+Route::get('auth/tekrem/callback', [TekremAuthController::class, 'callback'])->name('auth.tekrem.callback');
 
 
 // Legal pages
