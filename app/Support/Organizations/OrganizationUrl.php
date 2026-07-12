@@ -23,13 +23,15 @@ class OrganizationUrl
             return null;
         }
 
-        $subdomain = $organization->subdomain;
+        if ($organization->canUseSubdomain()) {
+            $subdomain = $organization->subdomain;
 
-        if (! filled($subdomain)) {
-            return null;
+            if (filled($subdomain)) {
+                return strtolower($subdomain).'.'.strtolower((string) $appDomain);
+            }
         }
 
-        return strtolower($subdomain).'.'.strtolower((string) $appDomain);
+        return strtolower((string) $appDomain);
     }
 
     public function forOrganization(
@@ -45,6 +47,14 @@ class OrganizationUrl
 
         $path = '/'.ltrim($path, '/');
 
+        // If not using a custom domain and not using a subdomain, prepend the organisation slug
+        $usesCustomDomain = filled($organization->custom_domain) && $organization->canUseCustomDomain();
+        $usesSubdomain = $organization->canUseSubdomain() && filled($organization->subdomain);
+        
+        if (! $usesCustomDomain && ! $usesSubdomain) {
+            $path = '/organisation/' . $organization->slug . $path;
+        }
+
         if (! $absolute) {
             return $path;
         }
@@ -55,7 +65,7 @@ class OrganizationUrl
     }
 
     /**
-     * @return array{host: ?string, url: ?string, type: 'subdomain'|'custom_domain'|null}
+     * @return array{host: ?string, url: ?string, type: 'path_based'|'custom_domain'|null}
      */
     public function payloadFor(Organization $organization, string $path = '/'): array
     {
@@ -74,7 +84,7 @@ class OrganizationUrl
         return [
             'host' => $host,
             'url' => $host ? $this->forOrganization($organization, $path) : null,
-            'type' => $host ? 'subdomain' : null,
+            'type' => $host ? 'path_based' : null,
         ];
     }
 }

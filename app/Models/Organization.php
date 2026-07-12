@@ -147,4 +147,20 @@ class Organization extends Model
         
         return false;
     }
+
+    public function canUseSubdomain(): bool
+    {
+        if ($this->canUseCustomDomain()) {
+            return true;
+        }
+
+        $plan = $this->currentPlan();
+        
+        // If they have a paid plan, allow subdomains
+        if ($plan && $plan->price_monthly > 0) {
+            return true;
+        }
+
+        return false;
+    }
 }

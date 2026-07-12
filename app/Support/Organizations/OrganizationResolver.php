@@ -13,6 +13,10 @@ class OrganizationResolver
 
     public function resolve(Request $request): Organization
     {
+        if ($this->context->check()) {
+            return $this->context->get();
+        }
+
         if ($organization = $this->fromSession($request)) {
             return $this->bind($organization);
         }
@@ -84,9 +88,14 @@ class OrganizationResolver
         if ($appDomain && str_ends_with($host, '.'.strtolower($appDomain))) {
             $subdomain = str_replace('.'.strtolower($appDomain), '', $host);
 
-            return Organization::query()
+            $organization = Organization::query()
                 ->where('subdomain', $subdomain)
                 ->first();
+
+            if ($organization && $organization->canUseSubdomain()) {
+                return $organization;
+            }
+            return null;
         }
 
         $organization = Organization::query()->where('custom_domain', $host)->first();

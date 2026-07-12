@@ -55,16 +55,26 @@ class CreateNewUser implements CreatesNewUsers
             'password' => Hash::make($input['password']),
         ]);
 
+        // Get the active organization
+        $organization = null;
+        if (app(\App\Support\Organizations\OrganizationContext::class)->check()) {
+            $organization = app(\App\Support\Organizations\OrganizationContext::class)->get();
+        }
+
         // Automatically create a client for the user
         $client = \App\Models\Client::create([
             'name' => $user->name,
             'email' => $user->email,
             'user_id' => $user->id,
             'status' => 'active',
+            'organization_id' => $organization?->id,
         ]);
 
-        // Optionally, you can add logic to associate the user with the client if you want a many-to-many relationship
-        // $user->clients()->attach($client->id);
+        if ($organization) {
+            // Link user to the organization
+            $user->organizations()->attach($organization->id, ['role' => 'customer']);
+            $user->update(['current_organization_id' => $organization->id]);
+        }
 
         // Notify the user
         $user->notify(new UserRegistered($user));

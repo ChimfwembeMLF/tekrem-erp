@@ -15,6 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->trustProxies(at: '*');
+        $middleware->prepend(\App\Http\Middleware\InitializeTenancyByPath::class);
+
 
         $middleware->alias([
             'staff.employee' => \App\Http\Middleware\EnsureStaffEmployee::class,
