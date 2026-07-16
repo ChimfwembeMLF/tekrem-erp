@@ -15,6 +15,13 @@ class TekremProvider extends AbstractProvider implements ProviderInterface
      * @var array
      */
     protected $scopes = ['openid', 'profile', 'email'];
+
+    /**
+     * The separating character for the requested scopes.
+     *
+     * @var string
+     */
+    protected $scopeSeparator = ' ';
     /**
      * Get the base URL from config.
      *
