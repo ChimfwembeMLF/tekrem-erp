@@ -10,6 +10,12 @@ use Laravel\Socialite\Two\User;
 class TekremProvider extends AbstractProvider implements ProviderInterface
 {
     /**
+     * The scopes being requested.
+     *
+     * @var array
+     */
+    protected $scopes = ['openid', 'profile', 'email'];
+    /**
      * Get the base URL from config.
      *
      * @return string
