@@ -22,6 +22,13 @@ class TekremProvider extends AbstractProvider implements ProviderInterface
      * @var string
      */
     protected $scopeSeparator = ' ';
+
+    /**
+     * Indicates if the provider uses PKCE.
+     *
+     * @var bool
+     */
+    protected $usesPKCE = true;
     /**
      * Get the base URL from config.
      *
