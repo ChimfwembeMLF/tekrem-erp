@@ -68,7 +68,7 @@ class TekremProvider extends AbstractProvider implements ProviderInterface
      */
     protected function getUserByToken($token)
     {
-        $response = $this->getHttpClient()->get($this->getBaseUrl() . '/api/user', [
+        $response = $this->getHttpClient()->get($this->getBaseUrl() . '/oauth/userinfo', [
             'headers' => [
                 'Authorization' => 'Bearer ' . $token,
                 'Accept' => 'application/json',
@@ -87,11 +87,11 @@ class TekremProvider extends AbstractProvider implements ProviderInterface
     protected function mapUserToObject(array $user)
     {
         return (new User)->setRaw($user)->map([
-            'id'       => $user['id'] ?? null,
+            'id'       => $user['sub'] ?? null,
             'nickname' => $user['username'] ?? null,
             'name'     => $user['name'] ?? null,
             'email'    => $user['email'] ?? null,
-            'avatar'   => $user['avatar'] ?? null,
+            'avatar'   => $user['picture'] ?? null,
         ]);
     }
 }
